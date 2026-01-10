@@ -189,7 +189,40 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       onChange={e => setSettings({...settings, companyAddress: e.target.value})}
                       placeholder="Line 1&#10;Line 2&#10;Postcode&#10;Phone / Email"
                     />
+                  
+                {/* VAT Registration Section */}
+                <div className="p-10 border-t border-slate-100 space-y-6">
+                  <div className="flex items-center justify-between bg-amber-50 p-7 rounded-[32px] border border-amber-100">
+                    <div className="flex gap-4">
+                      <div className="p-3 bg-white rounded-2xl border border-amber-200 shadow-sm flex items-center justify-center text-amber-600"><Landmark size={20}/></div>
+                      <div>
+                        <p className="text-sm font-black text-slate-900 uppercase tracking-tight">VAT Registered Business</p>
+                        <p className="text-[10px] font-medium text-slate-500 italic mt-0.5">Toggle if your business is registered for VAT with HMRC.</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSettings({ ...settings, isVatRegistered: !settings.isVatRegistered })}
+                      className={}
+                    >
+                      <div className={} />
+                    </button>
                   </div>
+
+                  {settings.isVatRegistered && (
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">VAT Registration Number</label>
+                      <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-amber-400 focus-within:bg-white transition-all">
+                        <Hash size={18} className="text-slate-400 mr-3 shrink-0" />
+                        <input
+                          type="text"
+                          className="w-full bg-transparent border-none py-5 outline-none text-slate-900 font-bold text-sm"
+                          value={settings.vatNumber || ''}
+                          onChange={e => setSettings({...settings, vatNumber: e.target.value.toUpperCase()})}
+                          placeholder="GB 123 4567 89"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

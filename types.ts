@@ -140,6 +140,8 @@ export interface AppSettings {
   companyLogo?: string;
   footerLogos?: string[]; 
   companyAddress: string;
+  vatNumber?: string;
+  isVatRegistered: boolean;
   enableVat: boolean;
   enableCis: boolean;
   quotePrefix: string;

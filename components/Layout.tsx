@@ -26,7 +26,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       <aside className="hidden md:flex w-64 bg-slate-900 text-white flex-col h-screen sticky top-0">
         <div className="p-6 flex items-center gap-3 border-b border-slate-800">
           <Hammer className="text-amber-500 w-8 h-8" />
-          <h1 className="text-xl font-bold tracking-tight text-white">JobPacks<span className="text-amber-500">Pro</span></h1>
+          <h1 className="text-xl font-bold tracking-tight text-white">TradeMate<span className="text-amber-500">Pro</span></h1>
         </div>
         <nav className="flex-1 p-4 space-y-2">
           {navItems.map((item) => (
@@ -82,7 +82,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         <header className="md:hidden bg-slate-900 text-white p-4 flex items-center justify-between sticky top-0 z-[50] shadow-md">
           <div className="flex items-center gap-2">
             <Hammer className="text-amber-500" size={24} />
-            <span className="font-black text-lg tracking-tight">JobPacks<span className="text-amber-500">Pro</span></span>
+            <span className="font-black text-lg tracking-tight">TradeMate<span className="text-amber-500">Pro</span></span>
           </div>
         </header>
         <div className="p-4 md:p-8 max-w-7xl mx-auto">
