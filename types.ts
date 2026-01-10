@@ -152,3 +152,38 @@ export interface AppSettings {
   showBreakdown: boolean;
   defaultDisplayOptions: QuoteDisplayOptions;
 }
+
+export interface Expense {
+  id: string;
+  jobPackId?: string;
+  vendor: string;
+  description?: string;
+  amount: number;
+  vatAmount: number;
+  category: 'materials' | 'tools' | 'fuel' | 'subcontractor' | 'office' | 'insurance' | 'other';
+  receiptStoragePath?: string;
+  receiptExtractedText?: string;
+  expenseDate: string;
+  isReconciled: boolean;
+  reconciledTransactionId?: string;
+  paymentMethod: 'card' | 'cash' | 'bank_transfer' | 'cheque';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BankTransaction {
+  id: string;
+  transactionDate: string;
+  description: string;
+  amount: number;
+  balance?: number;
+  reference?: string;
+  transactionType?: string;
+  isReconciled: boolean;
+  reconciledExpenseId?: string;
+  reconciledInvoiceId?: string;
+  importBatchId?: string;
+  bankName?: string;
+  accountLastFour?: string;
+  createdAt: string;
+}

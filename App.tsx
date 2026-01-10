@@ -10,6 +10,7 @@ import { QuotesList } from './components/QuotesList';
 import { InvoicesList } from './components/InvoicesList';
 import { ScheduleCalendar } from './components/ScheduleCalendar';
 import { Home } from './components/Home';
+import { ExpensesPage } from './components/ExpensesPage';
 import { useData } from './src/contexts/DataContext';
 import { useAuth } from './src/contexts/AuthContext';
 import { Quote, JobPack, Customer } from './types';
@@ -24,7 +25,7 @@ const App: React.FC = () => {
     addProject, saveProject,
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'home' | 'jobpacks' | 'quotes' | 'invoices' | 'customers' | 'settings' | 'view' | 'jobpack_detail' | 'quote_edit' | 'schedule'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'jobpacks' | 'quotes' | 'invoices' | 'customers' | 'settings' | 'view' | 'jobpack_detail' | 'quote_edit' | 'schedule' | 'expenses'>('home');
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [viewingQuoteId, setViewingQuoteId] = useState<string | null>(null);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
@@ -100,6 +101,7 @@ const App: React.FC = () => {
       {activeTab === 'jobpack_detail' && activeProjectId && (activeProject ? <JobPackView project={activeProject} customers={customers} quotes={quotes.filter(q => q.projectId === activeProjectId)} onSaveProject={handleSaveProject} onViewQuote={handleViewQuote} onCreateQuote={() => handleCreateQuote(activeProjectId)} onBack={() => setActiveTab('jobpacks')} /> : <div className="flex flex-col items-center justify-center py-20 text-slate-400"><AlertCircle size={48} className="text-amber-500 mb-4" /><p>Job Pack Not Found</p><button onClick={() => setActiveTab('jobpacks')} className="mt-4 bg-slate-900 text-white px-4 py-2 rounded">Back</button></div>)}
       {activeTab === 'quotes' && <QuotesList quotes={[...quotes].filter(q => q.type === 'estimate' || q.type === 'quotation').sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())} customers={customers} settings={settings} onViewQuote={handleViewQuote} onEditQuote={handleEditQuote} onCreateQuote={() => handleCreateQuote()} />}
       {activeTab === 'invoices' && <InvoicesList quotes={[...quotes].filter(q => q.type === 'invoice').sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())} customers={customers} settings={settings} onViewQuote={handleViewQuote} onCreateInvoice={() => handleCreateQuote()} />}
+      {activeTab === 'expenses' && <ExpensesPage projects={projects} />}
       {activeTab === 'customers' && <CustomerManager customers={customers} setCustomers={setCustomers} />}
       {activeTab === 'settings' && <SettingsPage settings={settings} setSettings={setSettings} />}
       {activeTab === 'quote_edit' && <QuoteCreator existingQuote={quotes.find(q => q.id === editingQuoteId)} projectId={activeProjectId || undefined} customers={customers} settings={settings} onSave={handleSaveQuote} onAddCustomer={handleAddCustomer} onCancel={() => activeProjectId ? setActiveTab('jobpack_detail') : setActiveTab('quotes')} />}

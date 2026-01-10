@@ -540,3 +540,144 @@ export const userSettingsService = {
     return data?.signedUrl;
   },
 };
+
+
+// ============================================
+// EXPENSES
+// ============================================
+
+export const expensesService = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('expenses')
+      .select()
+      .order('expense_date', { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  async create(expense) {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('expenses')
+      .insert({ ...expense, user_id: user.id })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async update(id, updates) {
+    const { data, error } = await supabase
+      .from('expenses')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async delete(id) {
+    const { error } = await supabase
+      .from('expenses')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async uploadReceipt(expenseId, file) {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) throw new Error('Not authenticated');
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = user.id + '/' + expenseId + '/' + Date.now() + '.' + fileExt;
+
+    const { error: uploadError } = await supabase.storage
+      .from('receipts')
+      .upload(fileName, file);
+    if (uploadError) throw uploadError;
+
+    await this.update(expenseId, { receipt_storage_path: fileName });
+
+    return fileName;
+  },
+
+  async getReceiptUrl(storagePath) {
+    const { data } = await supabase.storage
+      .from('receipts')
+      .createSignedUrl(storagePath, 3600);
+    return data?.signedUrl;
+  },
+};
+
+// ============================================
+// BANK TRANSACTIONS
+// ============================================
+
+export const bankTransactionsService = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('bank_transactions')
+      .select()
+      .order('transaction_date', { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  async getUnreconciled() {
+    const { data, error } = await supabase
+      .from('bank_transactions')
+      .select('*')
+      .eq('is_reconciled', false)
+      .order('transaction_date', { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  async importBatch(transactions: any[]) {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) throw new Error('Not authenticated');
+
+    const withUserId = transactions.map(t => ({ ...t, user_id: user.id }));
+
+    const { data, error } = await supabase
+      .from('bank_transactions')
+      .insert(withUserId)
+      .select();
+    if (error) throw error;
+    return data;
+  },
+
+  async reconcileWithExpense(transactionId: string, expenseId: string) {
+    const { error: txError } = await supabase
+      .from('bank_transactions')
+      .update({ is_reconciled: true, reconciled_expense_id: expenseId })
+      .eq('id', transactionId);
+    if (txError) throw txError;
+
+    const { error: expError } = await supabase
+      .from('expenses')
+      .update({ is_reconciled: true, reconciled_transaction_id: transactionId })
+      .eq('id', expenseId);
+    if (expError) throw expError;
+  },
+
+  async reconcileWithInvoice(transactionId: string, invoiceId: string) {
+    const { error } = await supabase
+      .from('bank_transactions')
+      .update({ is_reconciled: true, reconciled_invoice_id: invoiceId })
+      .eq('id', transactionId);
+    if (error) throw error;
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('bank_transactions')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+};

@@ -189,7 +189,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       onChange={e => setSettings({...settings, companyAddress: e.target.value})}
                       placeholder="Line 1&#10;Line 2&#10;Postcode&#10;Phone / Email"
                     />
-                  
+                  </div>
+                </div>
+
                 {/* VAT Registration Section */}
                 <div className="p-10 border-t border-slate-100 space-y-6">
                   <div className="flex items-center justify-between bg-amber-50 p-7 rounded-[32px] border border-amber-100">
@@ -202,9 +204,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     </div>
                     <button
                       onClick={() => setSettings({ ...settings, isVatRegistered: !settings.isVatRegistered })}
-                      className={}
-                    >
-                      <div className={} />
+                      className={`relative w-14 h-8 rounded-full transition-colors ${settings.isVatRegistered ? "bg-amber-500" : "bg-slate-300"}`}>
+                      <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-all ${settings.isVatRegistered ? "left-7" : "left-1"}`} />
                     </button>
                   </div>
 
