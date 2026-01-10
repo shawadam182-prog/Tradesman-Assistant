@@ -1,0 +1,417 @@
+
+import React, { useState } from 'react';
+import { AppSettings, QuoteDisplayOptions } from '../types';
+import { 
+  Save, Building2, Calculator, MapPin, 
+  PoundSterling, CheckCircle, FileText, 
+  Settings2, Info, Palette, ReceiptText,
+  ChevronRight, Building, Upload, X, Image as ImageIcon,
+  Plus, Eye, EyeOff, HardHat, Package, Landmark, ShieldCheck, Hash
+} from 'lucide-react';
+
+interface SettingsPageProps {
+  settings: AppSettings;
+  setSettings: (settings: AppSettings) => void;
+}
+
+type SettingsCategory = 'company' | 'quotes' | 'invoices';
+
+export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSettings }) => {
+  const [activeCategory, setActiveCategory] = useState<SettingsCategory>('company');
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const handleNumericChange = (field: keyof AppSettings, val: string) => {
+    if (val === '') {
+      setSettings({ ...settings, [field]: 0 });
+      return;
+    }
+    const num = parseFloat(val);
+    if (!isNaN(num)) {
+      setSettings({ ...settings, [field]: num });
+    }
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>, isFooter: boolean = false) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const base64 = ev.target?.result as string;
+        if (isFooter) {
+          setSettings({ ...settings, footerLogos: [...(settings.footerLogos || []), base64] });
+        } else {
+          setSettings({ ...settings, companyLogo: base64 });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeFooterLogo = (index: number) => {
+    const newList = [...(settings.footerLogos || [])];
+    newList.splice(index, 1);
+    setSettings({ ...settings, footerLogos: newList });
+  };
+
+  const toggleDisplayOption = (key: keyof QuoteDisplayOptions) => {
+    setSettings({
+      ...settings,
+      defaultDisplayOptions: {
+        ...settings.defaultDisplayOptions,
+        [key]: !settings.defaultDisplayOptions[key]
+      }
+    });
+  };
+
+  const handleSave = () => {
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
+  };
+
+  const CategoryButton = ({ id, label, icon: Icon, color }: { id: SettingsCategory, label: string, icon: any, color: string }) => (
+    <button
+      onClick={() => setActiveCategory(id)}
+      className={`w-full flex items-center justify-between p-5 rounded-[24px] transition-all border-2 ${
+        activeCategory === id 
+        ? 'bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-200' 
+        : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'
+      }`}
+    >
+      <div className="flex items-center gap-4 text-left">
+        <div className={`p-2.5 rounded-2xl ${activeCategory === id ? color : 'bg-slate-50 text-slate-400'}`}>
+          <Icon size={22} />
+        </div>
+        <div>
+          <span className="font-black text-[11px] uppercase tracking-widest block">{label}</span>
+          <span className={`text-[9px] font-bold ${activeCategory === id ? 'text-white/60' : 'text-slate-400'}`}>
+            {id === 'company' ? 'Profile & Address' : id === 'quotes' ? 'Rates & Design' : 'Payment Terms'}
+          </span>
+        </div>
+      </div>
+      <ChevronRight size={18} className={activeCategory === id ? 'text-amber-500' : 'text-slate-200'} />
+    </button>
+  );
+
+  return (
+    <div className="max-w-6xl mx-auto">
+      <div className="flex flex-col md:flex-row gap-10">
+        
+        {/* Sidebar Navigation */}
+        <aside className="md:w-80 shrink-0 space-y-4">
+          <div className="mb-10 px-2">
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Business Hub</h2>
+            <p className="text-slate-500 text-sm font-medium italic">Adjust your trading preferences</p>
+          </div>
+          
+          <div className="space-y-3">
+            <CategoryButton id="company" label="My Company" icon={Building} color="bg-amber-500 text-slate-900" />
+            <CategoryButton id="quotes" label="Quote Preferences" icon={FileText} color="bg-blue-500 text-white" />
+            <CategoryButton id="invoices" label="Invoice Preferences" icon={ReceiptText} color="bg-emerald-500 text-white" />
+          </div>
+
+          <div className="pt-10 border-t border-slate-100">
+            <button 
+              onClick={handleSave}
+              className="w-full flex items-center justify-center gap-3 bg-slate-900 text-amber-500 p-5 rounded-[24px] font-black hover:bg-black transition-all shadow-xl shadow-slate-200 uppercase text-xs tracking-widest border-b-4 border-slate-950 active:translate-y-1 active:border-b-0"
+            >
+              <Save size={18} />
+              Save Configuration
+            </button>
+            {saveSuccess && (
+              <div className="mt-4 flex items-center justify-center gap-2 text-green-600 font-black animate-in fade-in slide-in-from-top-2 text-[10px] uppercase tracking-widest">
+                <CheckCircle size={14} /> Settings Synchronized
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* Dynamic Content Area */}
+        <main className="flex-1 min-h-[600px]">
+          {activeCategory === 'company' && (
+            <div className="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="p-10 border-b border-slate-100 bg-slate-50/50">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-3 bg-amber-100 text-amber-600 rounded-2xl"><Building2 size={24} /></div>
+                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Company Identity</h3>
+                </div>
+                <p className="text-slate-500 text-sm font-medium italic">These details form the header of every professional document you generate.</p>
+              </div>
+              <div className="p-10 space-y-10">
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Main Business Logo</label>
+                  <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-200">
+                    <div className="w-32 h-32 rounded-[24px] bg-white border-2 border-slate-100 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+                      {settings.companyLogo ? (
+                        <img src={settings.companyLogo} className="w-full h-full object-contain" alt="Logo" />
+                      ) : (
+                        <ImageIcon className="text-slate-200" size={40} />
+                      )}
+                    </div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <p className="text-sm font-black text-slate-900 mb-1">Upload your brand mark</p>
+                      <p className="text-[10px] text-slate-500 italic mb-4">Recommended: PNG or JPG, square or wide format.</p>
+                      <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                        <label className="cursor-pointer bg-slate-900 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2">
+                          <Upload size={14} />
+                          Browse Files
+                          <input type="file" className="hidden" accept="image/*" onChange={(e) => handleLogoUpload(e)} />
+                        </label>
+                        {settings.companyLogo && (
+                          <button 
+                            onClick={() => setSettings({ ...settings, companyLogo: undefined })}
+                            className="bg-white border border-slate-200 text-red-500 px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-50 transition-all flex items-center gap-2"
+                          >
+                            <X size={14} /> Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Trading Name</label>
+                  <input 
+                    type="text" 
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] p-5 focus:border-amber-400 focus:bg-white outline-none text-slate-900 font-bold text-sm transition-all" 
+                    value={settings.companyName}
+                    onChange={e => setSettings({...settings, companyName: e.target.value})}
+                    placeholder="e.g. Acme Construction Ltd"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Business Address & Contact</label>
+                  <div className="flex items-start bg-slate-50 border-2 border-slate-100 rounded-[20px] px-4 focus-within:border-amber-400 focus-within:bg-white transition-all">
+                    <MapPin size={18} className="text-slate-400 mt-5 mr-2 shrink-0" />
+                    <textarea 
+                      className="w-full bg-transparent border-none py-5 outline-none text-slate-900 font-bold text-sm min-h-[140px] leading-relaxed" 
+                      value={settings.companyAddress}
+                      onChange={e => setSettings({...settings, companyAddress: e.target.value})}
+                      placeholder="Line 1&#10;Line 2&#10;Postcode&#10;Phone / Email"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeCategory === 'quotes' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
+                <div className="p-10 border-b border-slate-100 bg-slate-50/50">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl"><Calculator size={24} /></div>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Quote Preferences</h3>
+                  </div>
+                  <p className="text-slate-500 text-sm font-medium italic">Standard trade rates and tax settings for new estimates.</p>
+                </div>
+                <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Labour Rate (£/hr)</label>
+                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-amber-400 focus-within:bg-white transition-all">
+                      <PoundSterling size={18} className="text-slate-400 mr-3 shrink-0" />
+                      <input 
+                        type="number" 
+                        className="w-full bg-transparent border-none py-5 outline-none text-slate-900 font-bold text-sm" 
+                        value={settings.defaultLabourRate || ''}
+                        onChange={e => handleNumericChange('defaultLabourRate', e.target.value)}
+                        placeholder="65.00"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Standard VAT Rate (%)</label>
+                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-amber-400 focus-within:bg-white transition-all">
+                      <Landmark size={18} className="text-slate-400 mr-3 shrink-0" />
+                      <input 
+                        type="number" 
+                        className="w-full bg-transparent border-none py-5 outline-none text-slate-900 font-bold text-sm" 
+                        value={settings.defaultTaxRate || ''}
+                        onChange={e => handleNumericChange('defaultTaxRate', e.target.value)}
+                        placeholder="20"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Reference Prefix</label>
+                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-amber-400 focus-within:bg-white transition-all">
+                      <Hash size={18} className="text-slate-400 mr-3 shrink-0" />
+                      <input 
+                        type="text" 
+                        className="w-full bg-transparent border-none py-5 outline-none text-slate-900 font-bold text-sm" 
+                        value={settings.quotePrefix}
+                        onChange={e => setSettings({...settings, quotePrefix: e.target.value.toUpperCase()})}
+                        placeholder="EST-"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
+                <div className="p-10 border-b border-slate-100 bg-slate-50/50">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-3 bg-purple-100 text-purple-600 rounded-2xl"><Eye size={24} /></div>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Default Visibility</h3>
+                  </div>
+                  <p className="text-slate-500 text-sm font-medium italic">Set business-wide standards for what clients see on your quotes.</p>
+                </div>
+                <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 px-2 pb-2 border-b border-slate-100">
+                      <Package size={16} className="text-amber-500" />
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-900">Materials Defaults</h4>
+                    </div>
+                    {[
+                      { key: 'showMaterials', label: 'Show Section', info: 'Master toggle for materials.' },
+                      { key: 'showMaterialQty', label: 'Show Quantities', info: 'Display item counts.' },
+                      { key: 'showMaterialUnitPrice', label: 'Show Unit Prices', info: 'Display individual costs.' },
+                      { key: 'showMaterialLineTotals', label: 'Show Line Totals', info: 'Display row subtotals.' },
+                      { key: 'showMaterialSectionTotal', label: 'Show Section Total', info: 'Show materials subtotal.' }
+                    ].map(option => (
+                      <div key={option.key} className="flex items-center justify-between group">
+                        <div className="max-w-[180px]">
+                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-tight">{option.label}</p>
+                          <p className="text-[8px] text-slate-400 font-bold italic">{option.info}</p>
+                        </div>
+                        <button 
+                          onClick={() => toggleDisplayOption(option.key as keyof QuoteDisplayOptions)}
+                          className={`w-10 h-6 rounded-full relative transition-all duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'bg-purple-500' : 'bg-slate-200'}`}
+                        >
+                          <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'translate-x-4' : 'translate-x-0'}`} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 px-2 pb-2 border-b border-slate-100">
+                      <HardHat size={16} className="text-blue-500" />
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-900">Labour Defaults</h4>
+                    </div>
+                    {[
+                      { key: 'showLabour', label: 'Show Section', info: 'Master toggle for site work.' },
+                      { key: 'showLabourQty', label: 'Show Hours', info: 'Display estimated time.' },
+                      { key: 'showLabourUnitPrice', label: 'Show Hourly Rate', info: 'Display trade rate.' },
+                      { key: 'showLabourLineTotals', label: 'Show Subtotals', info: 'Display row subtotals.' },
+                      { key: 'showLabourSectionTotal', label: 'Show Section Total', info: 'Show labour subtotal.' }
+                    ].map(option => (
+                      <div key={option.key} className="flex items-center justify-between group">
+                        <div className="max-w-[180px]">
+                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-tight">{option.label}</p>
+                          <p className="text-[8px] text-slate-400 font-bold italic">{option.info}</p>
+                        </div>
+                        <button 
+                          onClick={() => toggleDisplayOption(option.key as keyof QuoteDisplayOptions)}
+                          className={`w-10 h-6 rounded-full relative transition-all duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'bg-blue-500' : 'bg-slate-200'}`}
+                        >
+                          <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'translate-x-4' : 'translate-x-0'}`} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden p-10 space-y-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-center justify-between bg-slate-50 p-7 rounded-[32px] border border-slate-100">
+                    <div className="flex gap-4">
+                      <div className="p-3 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><Landmark size={20}/></div>
+                      <div>
+                        <p className="text-sm font-black text-slate-900 uppercase tracking-tight">Show VAT on Documents</p>
+                        <p className="text-[10px] font-medium text-slate-500 italic mt-0.5">Include standard UK tax calculations.</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setSettings({ ...settings, enableVat: !settings.enableVat })}
+                      className={`w-14 h-8 rounded-full relative transition-all duration-300 ${settings.enableVat ? 'bg-amber-500 shadow-lg shadow-amber-200' : 'bg-slate-300'}`}
+                    >
+                      <div className={`absolute top-1 left-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${settings.enableVat ? 'translate-x-6' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-slate-50 p-7 rounded-[32px] border border-slate-100">
+                    <div className="flex gap-4">
+                      <div className="p-3 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><ShieldCheck size={20}/></div>
+                      <div>
+                        <p className="text-sm font-black text-slate-900 uppercase tracking-tight">Show CIS Deductions</p>
+                        <p className="text-[10px] font-medium text-slate-500 italic mt-0.5">Subcontractor tax (Construction Industry Scheme).</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setSettings({ ...settings, enableCis: !settings.enableCis })}
+                      className={`w-14 h-8 rounded-full relative transition-all duration-300 ${settings.enableCis ? 'bg-blue-500 shadow-lg shadow-blue-200' : 'bg-slate-300'}`}
+                    >
+                      <div className={`absolute top-1 left-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${settings.enableCis ? 'translate-x-6' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-5">
+                  <div className="flex items-center gap-2 px-1">
+                    <Palette size={16} className="text-amber-500" />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Visual Design Theme</label>
+                  </div>
+                  <div className="grid grid-cols-3 gap-6">
+                    {['slate', 'amber', 'blue'].map(color => (
+                      <button 
+                        key={color}
+                        onClick={() => setSettings({ ...settings, costBoxColor: color as any })}
+                        className={`flex flex-col items-center gap-4 p-6 rounded-[32px] border-2 transition-all ${settings.costBoxColor === color ? 'border-amber-500 bg-amber-50/20 shadow-lg' : 'border-slate-100 bg-white hover:border-slate-200'}`}
+                      >
+                        <div className={`w-12 h-12 rounded-[14px] shadow-lg ${color === 'slate' ? 'bg-slate-900' : color === 'amber' ? 'bg-amber-500' : 'bg-blue-600'}`}></div>
+                        <span className="text-[10px] font-black uppercase tracking-widest">{color}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeCategory === 'invoices' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
+                <div className="p-10 border-b border-slate-100 bg-slate-50/50">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-3 bg-emerald-100 text-emerald-600 rounded-2xl"><ReceiptText size={24} /></div>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Invoice Preferences</h3>
+                  </div>
+                  <p className="text-slate-500 text-sm font-medium italic">Configure payment instructions and legal terms for final billing.</p>
+                </div>
+                <div className="p-10 space-y-10">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Invoice Reference Prefix</label>
+                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
+                      <Hash size={18} className="text-slate-400 mr-3 shrink-0" />
+                      <input 
+                        type="text" 
+                        className="w-full bg-transparent border-none py-5 outline-none text-slate-900 font-bold text-sm" 
+                        value={settings.invoicePrefix}
+                        onChange={e => setSettings({...settings, invoicePrefix: e.target.value.toUpperCase()})}
+                        placeholder="INV-"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 px-1">
+                      <Settings2 size={16} className="text-emerald-500" />
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Invoice Footer & Payment Terms</label>
+                    </div>
+                    <textarea 
+                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-[32px] p-7 text-slate-900 font-medium text-sm outline-none focus:bg-white focus:border-emerald-500 transition-all min-h-[200px] leading-relaxed" 
+                      value={settings.defaultInvoiceNotes}
+                      onChange={e => setSettings({...settings, defaultInvoiceNotes: e.target.value})}
+                      placeholder="e.g. Please settle this invoice within 14 days. Bank: ACME Ltd, Account: 01234567, Sort: 00-00-00."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+};
