@@ -10,7 +10,7 @@ import {
   Pencil, CheckCircle2, CalendarRange, ArrowRight,
   UserPlus, User, Mail, Phone, Hammer, MapPinned, LocateFixed
 } from 'lucide-react';
-import { parseScheduleVoiceInput, parseCustomerVoiceInput, formatAddressAI, reverseGeocode } from '../services/geminiService';
+import { parseScheduleVoiceInput, parseCustomerVoiceInput, formatAddressAI, reverseGeocode } from '../src/services/geminiService';
 
 interface ScheduleCalendarProps {
   entries: ScheduleEntry[];

@@ -6,7 +6,7 @@ import {
   AlertCircle, CheckCircle2, Mic, MicOff, Sparkles, Loader2, MapPinned,
   Building, User as UserIcon, Pencil, Navigation, LocateFixed
 } from 'lucide-react';
-import { parseCustomerVoiceInput, formatAddressAI, reverseGeocode } from '../services/geminiService';
+import { parseCustomerVoiceInput, formatAddressAI, reverseGeocode } from '../src/services/geminiService';
 
 interface CustomerManagerProps {
   customers: Customer[];

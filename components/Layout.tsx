@@ -1,14 +1,15 @@
 
 import React from 'react';
-import { Users, FileText, Settings, Hammer, Briefcase, ReceiptText, CalendarDays, Home } from 'lucide-react';
+import { Users, FileText, Settings, Hammer, Briefcase, ReceiptText, CalendarDays, Home, LogOut } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
   activeTab: string;
   setActiveTab: (tab: any) => void;
+  onSignOut?: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onSignOut }) => {
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'jobpacks', label: 'Job Packs', icon: Briefcase },
@@ -43,7 +44,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             </button>
           ))}
         </nav>
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-slate-800">{onSignOut && (<button onClick={onSignOut} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"><LogOut size={20} /><span className="font-bold text-sm">Sign Out</span></button>)}
           <div className="flex items-center gap-3 px-2">
             <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center font-black text-slate-900 text-xs">JS</div>
             <div className="text-sm">

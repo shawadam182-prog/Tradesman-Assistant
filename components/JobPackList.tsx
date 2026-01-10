@@ -6,7 +6,7 @@ import {
   CheckCircle2, AlertCircle, Loader2, UserPlus, X, Mic, 
   MicOff, Sparkles, MapPinned, Mail, Phone, MapPin, Hammer, LocateFixed
 } from 'lucide-react';
-import { parseCustomerVoiceInput, formatAddressAI, reverseGeocode } from '../services/geminiService';
+import { parseCustomerVoiceInput, formatAddressAI, reverseGeocode } from '../src/services/geminiService';
 
 interface JobPackListProps {
   projects: JobPack[];

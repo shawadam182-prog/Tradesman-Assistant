@@ -7,7 +7,7 @@ import {
   Calendar, ArrowRight, Sparkles, 
   Timer, Loader2, MicOff, StickyNote, Eraser
 } from 'lucide-react';
-import { parseReminderVoiceInput } from '../services/geminiService';
+import { parseReminderVoiceInput } from '../src/services/geminiService';
 
 interface HomeProps {
   schedule: ScheduleEntry[];

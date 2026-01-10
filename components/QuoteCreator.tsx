@@ -7,7 +7,7 @@ import {
   parseCustomerVoiceInput,
   formatAddressAI,
   reverseGeocode
-} from '../services/geminiService';
+} from '../src/services/geminiService';
 import { 
   ArrowLeft, Mic, Sparkles, Plus, 
   Trash2, Loader2, Camera,

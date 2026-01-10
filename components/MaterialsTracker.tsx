@@ -6,7 +6,7 @@ import {
   Plus, Minus, X, Send, ListPlus, PencilLine,
   Info
 } from 'lucide-react';
-import { parseVoiceCommandForItems } from '../services/geminiService';
+import { parseVoiceCommandForItems } from '../src/services/geminiService';
 
 interface MaterialsTrackerProps {
   project: JobPack;
