@@ -1,8 +1,10 @@
 import React from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider, useData } from './contexts/DataContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { LoginPage } from './components/Auth/LoginPage';
 import { PWAPrompt, OfflineIndicator } from './components/PWAPrompt';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import MainApp from '../App';
 import { Loader2 } from 'lucide-react';
 
@@ -40,7 +42,11 @@ const DataAwareApp: React.FC = () => {
     );
   }
 
-  return <MainApp />;
+  return (
+    <ErrorBoundary>
+      <MainApp />
+    </ErrorBoundary>
+  );
 };
 
 // Protected app wrapper
@@ -66,9 +72,11 @@ const ProtectedApp: React.FC = () => {
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <OfflineIndicator />
-      <ProtectedApp />
-      <PWAPrompt />
+      <ToastProvider>
+        <OfflineIndicator />
+        <ProtectedApp />
+        <PWAPrompt />
+      </ToastProvider>
     </AuthProvider>
   );
 };

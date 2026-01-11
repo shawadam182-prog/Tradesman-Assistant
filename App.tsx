@@ -17,13 +17,16 @@ import { VATSummaryPage } from './components/VATSummaryPage';
 import { PayablesPage } from './components/PayablesPage';
 import { FilingCabinetPage } from './components/FilingCabinetPage';
 import { MaterialsLibrary } from './components/MaterialsLibrary';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useData } from './src/contexts/DataContext';
 import { useAuth } from './src/contexts/AuthContext';
+import { useToast } from './src/contexts/ToastContext';
 import { Quote, JobPack, Customer } from './types';
 import { AlertCircle, ArrowLeft, FileWarning } from 'lucide-react';
 
 const App: React.FC = () => {
   const { signOut } = useAuth();
+  const toast = useToast();
   const {
     customers, quotes, projects, schedule, settings,
     setCustomers, setSettings, updateSettings,
@@ -60,8 +63,10 @@ const App: React.FC = () => {
       const saved = await saveQuote(quote);
       setViewingQuoteId(saved.id);
       setActiveTab('view');
+      toast.success('Quote Saved', quote.title);
     } catch (error) {
       console.error('Failed to save quote:', error);
+      toast.error('Save Failed', 'Could not save quote');
     }
   };
 
@@ -101,8 +106,10 @@ const App: React.FC = () => {
       // Update original quote status to invoiced
       await updateQuoteStatus(viewingQuoteId, 'invoiced');
       setViewingQuoteId(saved.id);
+      toast.success('Invoice Created', 'Quote converted to invoice');
     } catch (error) {
       console.error('Failed to convert to invoice:', error);
+      toast.error('Conversion Failed', 'Could not create invoice');
     }
   };
 
@@ -124,8 +131,10 @@ const App: React.FC = () => {
       };
       const saved = await saveQuote(duplicatedQuote);
       setViewingQuoteId(saved.id);
+      toast.info('Quote Duplicated', 'Created as new draft');
     } catch (error) {
       console.error('Failed to duplicate quote:', error);
+      toast.error('Duplicate Failed', 'Could not copy quote');
     }
   };
 

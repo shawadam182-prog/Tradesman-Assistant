@@ -1,12 +1,13 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Customer } from '../types';
-import { 
-  Search, UserPlus, Phone, Mail, MapPin, Trash2, Edit2, X, 
+import {
+  Search, UserPlus, Phone, Mail, MapPin, Trash2, Edit2, X,
   AlertCircle, CheckCircle2, Mic, MicOff, Sparkles, Loader2, MapPinned,
   Building, User as UserIcon, Pencil, Navigation, LocateFixed
 } from 'lucide-react';
 import { parseCustomerVoiceInput, formatAddressAI, reverseGeocode } from '../src/services/geminiService';
+import { useToast } from '../src/contexts/ToastContext';
 
 interface CustomerManagerProps {
   customers: Customer[];
@@ -14,12 +15,12 @@ interface CustomerManagerProps {
 }
 
 export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, setCustomers }) => {
+  const toast = useToast();
   // Explicitly type searchTerm as string to avoid unknown inference issues
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [editingId, setEditingId] = useState<string | 'new' | null>(null);
   const [customerForm, setCustomerForm] = useState<Partial<Customer>>({});
   const [error, setError] = useState<string | null>(null);
-  const [showSuccess, setShowSuccess] = useState<string | null>(null);
   
   // Autocomplete
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
@@ -180,16 +181,15 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
         company: customerForm.company || '',
       };
       setCustomers([...customers, customer]);
-      setShowSuccess("Contact Added Successfully!");
+      toast.success('Contact Added', `${customerForm.name} added to directory`);
     } else if (editingId) {
       setCustomers(customers.map(c => c.id === editingId ? { ...c, ...customerForm } as Customer : c));
-      setShowSuccess("Contact Updated!");
+      toast.success('Contact Updated', 'Changes saved successfully');
     }
 
     setCustomerForm({});
     setEditingId(null);
     setError(null);
-    setTimeout(() => setShowSuccess(null), 3000);
   };
 
   const startEdit = (customer: Customer) => {
@@ -202,8 +202,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
   const deleteCustomer = (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete ${name}?`)) {
       setCustomers(customers.filter(c => c.id !== id));
-      setShowSuccess("Contact Deleted");
-      setTimeout(() => setShowSuccess(null), 3000);
+      toast.success('Contact Deleted', `${name} removed from directory`);
     }
   };
 
@@ -230,11 +229,6 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
           <p className="text-sm text-slate-500 font-medium italic">Manage your active site clients and project owners.</p>
         </div>
         <div className="flex items-center gap-3">
-          {showSuccess && (
-            <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-green-100 animate-in fade-in slide-in-from-right-4">
-              <CheckCircle2 size={16} /> {showSuccess}
-            </div>
-          )}
           {!editingId && (
             <button 
               onClick={() => { setEditingId('new'); setCustomerForm({}); }} 

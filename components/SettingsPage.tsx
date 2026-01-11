@@ -8,6 +8,8 @@ import {
   ChevronRight, Building, Upload, X, Image as ImageIcon,
   Plus, Eye, EyeOff, HardHat, Package, Landmark, ShieldCheck, Hash, Loader2
 } from 'lucide-react';
+import { useToast } from '../src/contexts/ToastContext';
+import { handleApiError } from '../src/utils/errorHandler';
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -18,8 +20,8 @@ interface SettingsPageProps {
 type SettingsCategory = 'company' | 'quotes' | 'invoices';
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSettings, onSave }) => {
+  const toast = useToast();
   const [activeCategory, setActiveCategory] = useState<SettingsCategory>('company');
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const handleNumericChange = (field: keyof AppSettings, val: string) => {
@@ -67,18 +69,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
 
   const handleSave = async () => {
     if (!onSave) {
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      toast.success('Settings Saved', 'Your preferences have been updated');
       return;
     }
 
     setSaving(true);
     try {
       await onSave(settings);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      toast.success('Settings Saved', 'Your preferences have been synchronized');
     } catch (error) {
       console.error('Failed to save settings:', error);
+      const { message } = handleApiError(error);
+      toast.error('Save Failed', message);
     } finally {
       setSaving(false);
     }
@@ -134,11 +136,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
               {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
               {saving ? 'Saving...' : 'Save Configuration'}
             </button>
-            {saveSuccess && (
-              <div className="mt-4 flex items-center justify-center gap-2 text-green-600 font-black animate-in fade-in slide-in-from-top-2 text-[10px] uppercase tracking-widest">
-                <CheckCircle size={14} /> Settings Synchronized
-              </div>
-            )}
           </div>
         </aside>
 

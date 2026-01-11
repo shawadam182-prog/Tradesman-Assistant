@@ -6,6 +6,9 @@ import {
   CheckCircle, AlertCircle, RefreshCw
 } from 'lucide-react';
 import { payablesService, vendorsService, Payable } from '../src/services/dataService';
+import { ExpensesListSkeleton } from './Skeletons';
+import { useToast } from '../src/contexts/ToastContext';
+import { handleApiError } from '../src/utils/errorHandler';
 
 interface Vendor {
   id: string;
@@ -32,6 +35,7 @@ const CATEGORIES = [
 ];
 
 export const PayablesPage: React.FC = () => {
+  const toast = useToast();
   const [payables, setPayables] = useState<Payable[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -157,8 +161,10 @@ export const PayablesPage: React.FC = () => {
 
       if (editingPayable) {
         await payablesService.update(editingPayable.id, payableData);
+        toast.success('Bill Updated', 'Changes saved successfully');
       } else {
         await payablesService.create(payableData);
+        toast.success('Bill Added', `£${formData.amount} bill from ${formData.vendor_name}`);
       }
 
       setShowAddModal(false);
@@ -166,6 +172,8 @@ export const PayablesPage: React.FC = () => {
       await loadData();
     } catch (error) {
       console.error('Failed to save:', error);
+      const { message } = handleApiError(error);
+      toast.error('Save Failed', message);
     } finally {
       setProcessing(null);
     }
@@ -176,8 +184,11 @@ export const PayablesPage: React.FC = () => {
     try {
       await payablesService.markPaid(id);
       await loadData();
+      toast.success('Marked as Paid', 'Bill payment recorded');
     } catch (error) {
       console.error('Failed to mark paid:', error);
+      const { message } = handleApiError(error);
+      toast.error('Update Failed', message);
     } finally {
       setProcessing(null);
     }
@@ -189,8 +200,11 @@ export const PayablesPage: React.FC = () => {
     try {
       await payablesService.delete(id);
       await loadData();
+      toast.success('Bill Deleted', 'Bill removed successfully');
     } catch (error) {
       console.error('Failed to delete:', error);
+      const { message } = handleApiError(error);
+      toast.error('Delete Failed', message);
     } finally {
       setProcessing(null);
     }
@@ -206,8 +220,23 @@ export const PayablesPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <div className="space-y-2">
+            <div className="skeleton h-8 w-32 rounded-lg" />
+            <div className="skeleton h-4 w-48 rounded-lg" />
+          </div>
+          <div className="skeleton h-10 w-28 rounded-xl" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-white rounded-2xl p-5 border border-slate-200">
+              <div className="skeleton h-3 w-20 mb-2 rounded" />
+              <div className="skeleton h-7 w-24 rounded" />
+            </div>
+          ))}
+        </div>
+        <ExpensesListSkeleton />
       </div>
     );
   }

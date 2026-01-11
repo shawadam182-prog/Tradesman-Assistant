@@ -8,8 +8,11 @@ import {
   Phone, Home, Truck, HardHat, Hammer, Lightbulb, Sparkles,
   Clock, TrendingUp
 } from 'lucide-react';
-import { expensesService, expenseCategoriesService, vendorKeywordsService, vendorsService } from '../src/services/dataService';
+import { expensesService, expenseCategoriesService, vendorKeywordsService, vendorsService, filingService } from '../src/services/dataService';
 import { CategoryManager } from './CategoryManager';
+import { ExpensesListSkeleton } from './Skeletons';
+import { useToast } from '../src/contexts/ToastContext';
+import { handleApiError } from '../src/utils/errorHandler';
 
 interface Expense {
   id: string;
@@ -93,6 +96,7 @@ const getIconComponent = (iconName: string): React.FC<any> => {
 };
 
 export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
+  const toast = useToast();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,6 +106,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [scanning, setScanning] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [suggestedCategory, setSuggestedCategory] = useState<{ id: string; name: string } | null>(null);
   const [vendorSuggestions, setVendorSuggestions] = useState<Vendor[]>([]);
   const [showVendorDropdown, setShowVendorDropdown] = useState(false);
@@ -201,6 +206,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setReceiptFile(file); // Store file for later upload
     const reader = new FileReader();
     reader.onload = (ev) => { setReceiptPreview(ev.target?.result as string); };
     reader.readAsDataURL(file);
@@ -244,7 +250,8 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
     if (!formData.vendor || !formData.amount) return;
     setSaving(true);
     try {
-      await expensesService.create({
+      // Step 1: Create the expense
+      const expense = await expensesService.create({
         vendor: formData.vendor,
         description: formData.description || null,
         amount: parseFloat(formData.amount),
@@ -254,22 +261,72 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
         payment_method: formData.payment_method,
         job_pack_id: formData.job_pack_id || null,
       });
+
+      // Step 2: If there's a receipt file, file it to the cabinet AND link to expense
+      if (receiptFile && expense?.id) {
+        try {
+          // Calculate tax year from expense date (UK tax year: April 6 - April 5)
+          const expenseDate = new Date(formData.expense_date);
+          const year = expenseDate.getFullYear();
+          const month = expenseDate.getMonth();
+          const day = expenseDate.getDate();
+          const taxYear = (month > 3 || (month === 3 && day >= 6))
+            ? `${year}/${year + 1}`
+            : `${year - 1}/${year}`;
+
+          // Upload to filing cabinet with expense link
+          const filedDoc = await filingService.upload(receiptFile, {
+            name: `Receipt - ${formData.vendor} - £${formData.amount}`,
+            description: formData.description || `Receipt from ${formData.vendor}`,
+            category: 'receipt',
+            vendor_name: formData.vendor,
+            document_date: formData.expense_date,
+            job_pack_id: formData.job_pack_id || undefined,
+            expense_id: expense.id, // Link directly during creation
+            tax_year: taxYear,
+          });
+
+          // Update the expense with the receipt storage path
+          if (filedDoc?.storage_path) {
+            await expensesService.update(expense.id, {
+              receipt_storage_path: filedDoc.storage_path
+            });
+          }
+        } catch (fileError) {
+          console.error('Failed to file receipt (expense still saved):', fileError);
+        }
+      }
+
+      // Step 3: Learn the vendor keyword for auto-categorization
       const selectedCat = categories.find(c => c.name === formData.category);
       if (selectedCat && formData.vendor.length >= 3) {
         try { await vendorKeywordsService.learnKeyword(formData.vendor, selectedCat.id); }
         catch (err) { console.log('Keyword learning skipped:', err); }
       }
+
       await loadData();
       resetForm();
       setShowAddModal(false);
-    } catch (error) { console.error('Failed to save expense:', error); }
+      toast.success('Expense Saved', `£${formData.amount} expense recorded`);
+    } catch (error) {
+      console.error('Failed to save expense:', error);
+      const { message } = handleApiError(error);
+      toast.error('Save Failed', message);
+    }
     finally { setSaving(false); }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this expense?')) return;
-    try { await expensesService.delete(id); setExpenses(prev => prev.filter(e => e.id !== id)); }
-    catch (error) { console.error('Failed to delete:', error); }
+    try {
+      await expensesService.delete(id);
+      setExpenses(prev => prev.filter(e => e.id !== id));
+      toast.success('Deleted', 'Expense removed successfully');
+    } catch (error) {
+      console.error('Failed to delete:', error);
+      const { message } = handleApiError(error);
+      toast.error('Delete Failed', message);
+    }
   };
 
   const resetForm = () => {
@@ -280,6 +337,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
       payment_method: 'card', job_pack_id: '',
     });
     setReceiptPreview(null);
+    setReceiptFile(null);
     setSuggestedCategory(null);
     setVendorSuggestions([]);
     setShowVendorDropdown(false);
@@ -302,7 +360,18 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
     return categories.find(c => c.name === categoryName) || { name: categoryName, icon: 'tag', color: '#64748b' };
   };
 
-  if (loading) return (<div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-amber-500" /></div>);
+  if (loading) return (
+    <div className="max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-8">
+        <div className="space-y-2">
+          <div className="skeleton h-8 w-32 rounded-lg" />
+          <div className="skeleton h-4 w-48 rounded-lg" />
+        </div>
+        <div className="skeleton h-12 w-32 rounded-2xl" />
+      </div>
+      <ExpensesListSkeleton />
+    </div>
+  );
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -435,7 +504,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                 {receiptPreview ? (
                   <div className="relative">
                     <img src={receiptPreview} className="w-full h-48 object-cover rounded-2xl" alt="Receipt" />
-                    <button onClick={() => { setReceiptPreview(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="absolute top-2 right-2 p-2 bg-white rounded-full shadow"><X size={16} /></button>
+                    <button onClick={() => { setReceiptPreview(null); setReceiptFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="absolute top-2 right-2 p-2 bg-white rounded-full shadow"><X size={16} /></button>
                     {scanning && (<div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center"><div className="text-center text-white"><Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /><p className="text-sm font-bold">Scanning receipt...</p></div></div>)}
                   </div>
                 ) : (
