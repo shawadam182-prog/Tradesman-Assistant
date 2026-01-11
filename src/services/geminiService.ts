@@ -64,6 +64,16 @@ export interface ParsedReminder {
   time: string;
 }
 
+export interface ParsedReceipt {
+  vendor: string;
+  amount: number;
+  vatAmount?: number;
+  date: string;
+  category: string;
+  description?: string;
+  paymentMethod?: string;
+}
+
 // API Functions
 export const analyzeJobRequirements = async (
   prompt: string,
@@ -116,4 +126,10 @@ export const formatAddressAI = async (partialAddress: string): Promise<string> =
 export const reverseGeocode = async (_lat: number, _lng: number): Promise<string | null> => {
   console.warn('reverseGeocode is not implemented in Edge Functions - use browser geolocation or a geocoding API');
   return null;
+};
+
+export const parseReceiptImage = async (
+  imageBase64: string
+): Promise<ParsedReceipt> => {
+  return callGemini<ParsedReceipt>('parseReceipt', { imageBase64 });
 };

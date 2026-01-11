@@ -207,6 +207,56 @@ const actions: Record<string, (data: any) => Promise<any>> = {
 
     return { formattedAddress: result.response.text()?.trim() || address };
   },
+
+  // Parse receipt image for expense data
+  async parseReceipt({ imageBase64 }: { imageBase64: string }) {
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      systemInstruction: `You are an expense receipt parser for UK tradesmen.
+        Analyze the receipt image and extract:
+        - vendor: The store/supplier name
+        - amount: Total amount paid (GBP)
+        - vatAmount: VAT amount if shown (GBP), default 0 if not visible
+        - date: Receipt date in YYYY-MM-DD format
+        - category: One of: materials, tools, fuel, subcontractor, office, insurance, other
+        - description: Brief description of items purchased
+        - paymentMethod: One of: card, cash, bank_transfer, cheque (infer from receipt if possible)
+
+        Be precise with numbers. If VAT is 20%, calculate it if not shown.
+        For builders merchants, default category to 'materials'.
+        For petrol stations, default to 'fuel'.`,
+    });
+
+    const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+
+    const result = await model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [
+          { text: 'Extract expense details from this receipt:' },
+          { inlineData: { mimeType: 'image/jpeg', data: base64Data } }
+        ]
+      }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: SchemaType.OBJECT,
+          properties: {
+            vendor: { type: SchemaType.STRING },
+            amount: { type: SchemaType.NUMBER },
+            vatAmount: { type: SchemaType.NUMBER },
+            date: { type: SchemaType.STRING },
+            category: { type: SchemaType.STRING },
+            description: { type: SchemaType.STRING },
+            paymentMethod: { type: SchemaType.STRING },
+          },
+          required: ['vendor', 'amount', 'date', 'category'],
+        },
+      },
+    });
+
+    return JSON.parse(result.response.text());
+  },
 };
 
 Deno.serve(async (req) => {
