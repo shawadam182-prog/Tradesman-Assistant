@@ -205,7 +205,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
             )
           }));
         }
-      } catch (error) {} finally { setLoading(false); }
+      } catch (error) { console.error('Voice command parsing failed:', error); } finally { setLoading(false); }
     } else { setAiInput(prev => (prev + ' ' + transcript).trim()); }
   };
 
@@ -242,7 +242,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         )
       }));
       setAiInput(''); setAttachedImage(null);
-    } catch (error) { alert("AI analysis failed."); } finally { setLoading(false); }
+    } catch (error) { console.error('AI analysis failed:', error); alert("AI analysis failed."); } finally { setLoading(false); }
   };
 
   const addSection = () => {

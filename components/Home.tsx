@@ -247,7 +247,7 @@ export const Home: React.FC<HomeProps> = ({
         navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
       });
       location = { lat: position.coords.latitude, lng: position.coords.longitude };
-    } catch (e) {}
+    } catch (e) { console.warn('Could not get clock-out location:', e); }
     const completedSession: SiteLog = {
       ...siteSession.currentSession,
       clockOutTime: new Date().toISOString(),
