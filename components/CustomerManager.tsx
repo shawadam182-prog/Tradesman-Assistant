@@ -37,39 +37,75 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
   const activeFieldVoiceRef = useRef<string | null>(null);
   const recognitionRef = useRef<any>(null);
 
+  const [interimTranscript, setInterimTranscript] = useState('');
+
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
+      recognition.continuous = true; // Keep listening through pauses
+      recognition.interimResults = true; // Show what's being heard
       recognition.lang = 'en-GB';
+      recognition.maxAlternatives = 1;
+
+      let finalTranscript = '';
+      let silenceTimeout: NodeJS.Timeout | null = null;
 
       recognition.onend = () => {
-        setIsListeningGlobal(false);
-        setActiveFieldVoice(null);
-        isListeningGlobalRef.current = false;
-        activeFieldVoiceRef.current = null;
-      };
-      recognition.onerror = () => {
-        setIsListeningGlobal(false);
-        setActiveFieldVoice(null);
-        isListeningGlobalRef.current = false;
-        activeFieldVoiceRef.current = null;
-      };
-
-      recognition.onresult = async (event: any) => {
-        if (!event.results?.[0]?.[0]?.transcript) return;
-        const transcript = event.results[0][0].transcript;
-        const wasGlobal = isListeningGlobalRef.current;
-        const targetField = activeFieldVoiceRef.current;
-
-        if (wasGlobal) {
-          await handleParsedSpeech(transcript);
-        } else if (targetField) {
-          setCustomerForm(prev => ({ ...prev, [targetField]: transcript }));
+        // Process final transcript when recognition ends
+        if (finalTranscript && isListeningGlobalRef.current) {
+          handleParsedSpeech(finalTranscript);
         }
+        setIsListeningGlobal(false);
+        setActiveFieldVoice(null);
+        setInterimTranscript('');
+        isListeningGlobalRef.current = false;
+        activeFieldVoiceRef.current = null;
+        finalTranscript = '';
+        if (silenceTimeout) clearTimeout(silenceTimeout);
       };
+
+      recognition.onerror = (e: any) => {
+        // Ignore no-speech errors, they're normal
+        if (e.error !== 'no-speech') {
+          console.error('Speech recognition error:', e.error);
+        }
+        setIsListeningGlobal(false);
+        setActiveFieldVoice(null);
+        setInterimTranscript('');
+        isListeningGlobalRef.current = false;
+        activeFieldVoiceRef.current = null;
+        if (silenceTimeout) clearTimeout(silenceTimeout);
+      };
+
+      recognition.onresult = (event: any) => {
+        let interim = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interim += transcript;
+          }
+        }
+
+        // Show interim results to user
+        setInterimTranscript(finalTranscript + interim);
+
+        // For single field voice input (not magic fill), update immediately
+        const targetField = activeFieldVoiceRef.current;
+        if (targetField && !isListeningGlobalRef.current) {
+          setCustomerForm(prev => ({ ...prev, [targetField]: (finalTranscript + interim).trim() }));
+        }
+
+        // Reset silence timeout - stop after 2 seconds of silence
+        if (silenceTimeout) clearTimeout(silenceTimeout);
+        silenceTimeout = setTimeout(() => {
+          recognition.stop();
+        }, 2000);
+      };
+
       recognitionRef.current = recognition;
     }
     return () => {
@@ -267,22 +303,40 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
               </div>
             </div>
             
-            <button 
+            <button
               type="button"
-              onClick={startGlobalListening} 
+              onClick={startGlobalListening}
               disabled={isProcessing}
               className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase transition-all border shadow-sm ${
-                isListeningGlobal 
-                  ? 'bg-red-500 text-white border-red-600 animate-pulse' 
+                isListeningGlobal
+                  ? 'bg-red-500 text-white border-red-600 animate-pulse'
                   : isProcessing
                   ? 'bg-amber-500 text-white border-amber-600'
                   : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50'
               }`}
             >
               {isProcessing ? <Loader2 size={14} className="animate-spin" /> : isListeningGlobal ? <MicOff size={14} /> : <Sparkles size={14} />}
-              {isProcessing ? 'Analyzing...' : isListeningGlobal ? 'Listening' : 'Magic Fill (Voice)'}
+              {isProcessing ? 'Analyzing...' : isListeningGlobal ? 'Tap to stop' : 'Magic Fill (Voice)'}
             </button>
           </div>
+
+          {/* Live transcript display */}
+          {(isListeningGlobal || interimTranscript) && (
+            <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`w-2 h-2 rounded-full ${isListeningGlobal ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
+                <span className="text-[10px] font-bold text-slate-400 uppercase">
+                  {isListeningGlobal ? 'Listening... speak now' : 'Processing...'}
+                </span>
+              </div>
+              <p className="text-white text-sm min-h-[2rem]">
+                {interimTranscript || 'Say customer name, phone, address...'}
+              </p>
+              {isListeningGlobal && (
+                <p className="text-slate-500 text-xs mt-2">Stops automatically after 2 seconds of silence</p>
+              )}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
