@@ -121,11 +121,14 @@ export const formatAddressAI = async (partialAddress: string): Promise<string> =
   }
 };
 
-// Note: reverseGeocode requires Google Maps grounding which isn't available in Edge Functions
-// Consider using a dedicated geocoding service or the browser's Geolocation API
-export const reverseGeocode = async (_lat: number, _lng: number): Promise<string | null> => {
-  console.warn('reverseGeocode is not implemented in Edge Functions - use browser geolocation or a geocoding API');
-  return null;
+export const reverseGeocode = async (lat: number, lng: number): Promise<string | null> => {
+  try {
+    const result = await callGemini<{ address: string | null; error?: string }>('reverseGeocode', { lat, lng });
+    return result.address;
+  } catch (error) {
+    console.error('reverseGeocode failed:', error);
+    return null;
+  }
 };
 
 export const parseReceiptImage = async (

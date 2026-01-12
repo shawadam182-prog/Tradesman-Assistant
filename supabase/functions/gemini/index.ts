@@ -14,7 +14,7 @@ const actions: Record<string, (data: any) => Promise<any>> = {
   // Analyze job requirements from text/image
   async analyzeJob({ prompt, imageBase64 }: { prompt: string; imageBase64?: string }) {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       systemInstruction: `You are a professional UK construction quantity surveyor.
         Analyze the text and image provided to generate a list of materials and estimated labour hours.
         Use UK market prices in Sterling (£) for 2024-2025.
@@ -69,13 +69,29 @@ const actions: Record<string, (data: any) => Promise<any>> = {
   // Parse voice command for material items
   async parseVoiceItems({ command }: { command: string }) {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: `Parse the user's UK-based notes or voice commands to extract a clean list of material items.
-        Return an array of objects with name, quantity, unit, and unitPrice.`,
+      model: 'gemini-2.0-flash',
+      systemInstruction: `You are an expert at parsing messy voice-to-text for UK construction materials.
+        The input may have speech recognition errors and informal trade language.
+
+        Extract material items with:
+        - name: Material name (clean it up, e.g. "two by four" = "2x4 timber")
+        - quantity: Number of items (default 1 if unclear)
+        - unit: UK units - m, m2, pack, bag, box, roll, sheet, length, each (default "each")
+        - unitPrice: Estimated UK trade price in GBP (use sensible defaults)
+
+        Common voice patterns:
+        - "couple of" = 2
+        - "few" = 3
+        - "dozen" = 12
+        - "metre/meter" = m
+        - "square metre" = m2
+        - Recognise UK trade materials: plasterboard, 2x4, 4x2, noggins, joists, PIR, kingspan, etc.
+
+        Return an array. If nothing parseable, return empty array.`,
     });
 
     const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: `Extract construction material items from this input: "${command}"` }] }],
+      contents: [{ role: 'user', parts: [{ text: `Parse these materials from voice: "${command}"` }] }],
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: {
@@ -100,13 +116,27 @@ const actions: Record<string, (data: any) => Promise<any>> = {
   // Parse customer voice input
   async parseCustomer({ input }: { input: string }) {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: `Extract Name, Company, Email, Phone, and Address from the user's input.
-        Return a JSON object. Use UK formats where applicable.`,
+      model: 'gemini-2.0-flash',
+      systemInstruction: `You are an expert at parsing messy voice-to-text transcriptions for UK tradesmen.
+        The input may contain speech recognition errors, missing punctuation, and informal language.
+
+        Extract these fields from the input:
+        - name: Person's full name (required - make your best guess)
+        - company: Business/company name (can be empty string if not mentioned)
+        - email: Email address (can be empty string if not mentioned)
+        - phone: UK phone number - format as 07xxx or 01234 xxx xxx (can be empty string)
+        - address: UK address (can be empty string if not mentioned)
+
+        Common voice errors to handle:
+        - "at" often means "@" in emails
+        - Numbers may be spelled out ("oh seven" = "07")
+        - Postcodes may be run together
+
+        Always return valid JSON. Use empty strings for missing fields, never null.`,
     });
 
     const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: `Extract customer details from this description: "${input}"` }] }],
+      contents: [{ role: 'user', parts: [{ text: `Parse this voice transcription for customer details: "${input}"` }] }],
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: {
@@ -128,22 +158,35 @@ const actions: Record<string, (data: any) => Promise<any>> = {
 
   // Parse schedule voice input
   async parseSchedule({ input }: { input: string }) {
-    const today = new Date().toISOString();
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: `Extract a calendar event from the input.
-        - title: The name of the task/event.
-        - start: Start date/time as ISO string.
-        - end: End date/time as ISO string (if not specified, default to 1 hour after start).
-        - location: If a project name or address is mentioned.
-        - description: Any extra context.
+    const now = new Date();
+    const today = now.toISOString();
+    const dayOfWeek = now.toLocaleDateString('en-GB', { weekday: 'long' });
 
-        Handle relative dates like 'tomorrow', 'next week', 'Friday at 2pm'.
-        Return a JSON object.`,
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction: `You are an expert at parsing messy voice-to-text for UK tradesman scheduling.
+        The input may have speech recognition errors and informal language.
+
+        Extract a calendar event:
+        - title: Short description of the job/task (required)
+        - start: Start date/time as ISO string (required)
+        - end: End date/time as ISO string (default to start + 2 hours for jobs, +1 hour for meetings)
+        - location: Address or job site name (empty string if not mentioned)
+        - description: Any extra notes (empty string if none)
+
+        Handle UK informal time references:
+        - "tomorrow morning" = 9am tomorrow
+        - "tomorrow afternoon" = 2pm tomorrow
+        - "Monday" = next Monday if today is after Monday
+        - "half 8" = 8:30
+        - "couple of hours" = 2 hours
+        - "all day" = 8am to 5pm
+
+        Always return valid JSON with ISO date strings.`,
     });
 
     const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: `Today's date/time is ${today}. User says: "${input}"` }] }],
+      contents: [{ role: 'user', parts: [{ text: `Today is ${dayOfWeek}, ${today}. Parse this scheduling request: "${input}"` }] }],
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: {
@@ -167,7 +210,7 @@ const actions: Record<string, (data: any) => Promise<any>> = {
   async parseReminder({ input }: { input: string }) {
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       systemInstruction: `Extract a task and a time from the user's input.
         - text: The task to be reminded about.
         - time: The specific time in 24-hour HH:mm format.
@@ -197,8 +240,8 @@ const actions: Record<string, (data: any) => Promise<any>> = {
   // Format address
   async formatAddress({ address }: { address: string }) {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: `Return ONLY the formatted Royal Mail multi-line string. Do not add chatter.`,
+      model: 'gemini-2.0-flash',
+      systemInstruction: `Return ONLY the formatted Royal Mail multi-line UK address. No extra text.`,
     });
 
     const result = await model.generateContent({
@@ -208,10 +251,54 @@ const actions: Record<string, (data: any) => Promise<any>> = {
     return { formattedAddress: result.response.text()?.trim() || address };
   },
 
+  // Reverse geocode coordinates to address
+  async reverseGeocode({ lat, lng }: { lat: number; lng: number }) {
+    try {
+      // Use OpenStreetMap Nominatim (free, no API key needed)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'TradeMate-App/1.0',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Geocoding request failed');
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        return { address: null, error: data.error };
+      }
+
+      // Format UK address from components
+      const addr = data.address || {};
+      const parts = [
+        addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : addr.road,
+        addr.suburb || addr.neighbourhood,
+        addr.city || addr.town || addr.village,
+        addr.county,
+        addr.postcode,
+      ].filter(Boolean);
+
+      return {
+        address: parts.join(', '),
+        fullAddress: data.display_name,
+        postcode: addr.postcode || null,
+      };
+    } catch (error) {
+      console.error('Reverse geocode error:', error);
+      return { address: null, error: 'Failed to determine address' };
+    }
+  },
+
   // Parse receipt image for expense data
   async parseReceipt({ imageBase64 }: { imageBase64: string }) {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       systemInstruction: `You are an expense receipt parser for UK tradesmen.
         Analyze the receipt image and extract:
         - vendor: The store/supplier name
