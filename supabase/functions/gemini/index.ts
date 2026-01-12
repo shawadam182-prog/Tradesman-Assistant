@@ -117,26 +117,35 @@ const actions: Record<string, (data: any) => Promise<any>> = {
   async parseCustomer({ input }: { input: string }) {
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.0-flash',
-      systemInstruction: `You are an expert at parsing messy voice-to-text transcriptions for UK tradesmen.
-        The input may contain speech recognition errors, missing punctuation, and informal language.
+      systemInstruction: `You are parsing voice input from a UK tradesman adding a new client/customer.
 
-        Extract these fields from the input:
-        - name: Person's full name (required - make your best guess)
-        - company: Business/company name (can be empty string if not mentioned)
-        - email: Email address (can be empty string if not mentioned)
-        - phone: UK phone number - format as 07xxx or 01234 xxx xxx (can be empty string)
-        - address: UK address (can be empty string if not mentioned)
+        CRITICAL DISTINCTION:
+        - name: The PERSON's name (human being) - e.g. "John Smith", "Mrs Jones", "Dave"
+        - company: Their BUSINESS name (if they have one) - e.g. "Smith & Sons Roofing", "ABC Ltd"
 
-        Common voice errors to handle:
+        Many customers are private homeowners with NO company - leave company as empty string.
+        The tradesman is usually saying something like "John Smith, 42 High Street" or "Mrs Jones on 07700 123456"
+
+        DO NOT put a company name in the name field.
+        DO NOT put the person's name in the company field.
+        If only one name-like thing is mentioned, it's probably the PERSON's name, not a company.
+
+        Extract:
+        - name: Person's full name (required - the human being)
+        - company: Their business name ONLY if explicitly mentioned (empty string if private customer)
+        - email: Email address (empty string if not mentioned)
+        - phone: UK phone number - format as 07xxx or 01234 xxx xxx (empty string if not mentioned)
+        - address: UK address (empty string if not mentioned)
+
+        Voice recognition fixes:
         - "at" often means "@" in emails
         - Numbers may be spelled out ("oh seven" = "07")
-        - Postcodes may be run together
 
-        Always return valid JSON. Use empty strings for missing fields, never null.`,
+        Return valid JSON. Empty strings for missing fields.`,
     });
 
     const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: `Parse this voice transcription for customer details: "${input}"` }] }],
+      contents: [{ role: 'user', parts: [{ text: `New customer voice input: "${input}"` }] }],
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: {
