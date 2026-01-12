@@ -1,7 +1,9 @@
 
 import React from 'react';
 import { Quote, Customer, AppSettings } from '../types';
-import { ReceiptText, Eye, Search, CheckCircle2, AlertCircle, Plus, Hash, User, ChevronRight } from 'lucide-react';
+import { ReceiptText, Eye, Search, CheckCircle2, AlertCircle, Plus, Hash, User, ChevronRight, Trash2 } from 'lucide-react';
+import { hapticTap } from '../src/hooks/useHaptic';
+import { useToast } from '../src/contexts/ToastContext';
 
 interface InvoicesListProps {
   quotes: Quote[];
@@ -9,12 +11,29 @@ interface InvoicesListProps {
   settings: AppSettings;
   onViewQuote: (id: string) => void;
   onCreateInvoice: () => void;
+  onDeleteInvoice?: (id: string) => Promise<void>;
 }
 
-export const InvoicesList: React.FC<InvoicesListProps> = ({ 
-  quotes, customers, settings, onViewQuote, onCreateInvoice 
+export const InvoicesList: React.FC<InvoicesListProps> = ({
+  quotes, customers, settings, onViewQuote, onCreateInvoice, onDeleteInvoice
 }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
+  const toast = useToast();
+
+  const handleDelete = async (e: React.MouseEvent, invoice: Quote) => {
+    e.stopPropagation();
+    hapticTap();
+
+    const customer = customers.find(c => c.id === invoice.customerId);
+    if (window.confirm(`Delete invoice "${invoice.title}" for ${customer?.name || 'Unknown'}? This cannot be undone.`)) {
+      try {
+        await onDeleteInvoice?.(invoice.id);
+        toast.success('Invoice Deleted', `"${invoice.title}" has been removed`);
+      } catch (err) {
+        toast.error('Delete Failed', 'Could not delete invoice');
+      }
+    }
+  };
 
   const calculateQuoteTotal = (quote: Quote) => {
     // Fix: Aggregate totals from all sections instead of accessing items directly on the quote
@@ -123,6 +142,15 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                     <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl transition-all border border-emerald-100 group-hover:scale-105">
                       <Eye size={20} />
                     </div>
+                    {onDeleteInvoice && (
+                      <button
+                        onClick={(e) => handleDelete(e, invoice)}
+                        className="p-3 bg-white text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        title="Delete invoice"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                     <div className="p-3 bg-white text-slate-300 group-hover:text-amber-500 group-hover:translate-x-1 transition-all">
                       <ChevronRight size={20} />
                     </div>

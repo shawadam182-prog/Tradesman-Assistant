@@ -1,14 +1,16 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { JobPack, Customer, Quote, SiteNote, SitePhoto, SiteDocument } from '../types';
-import { 
-  ArrowLeft, Camera, Mic, FileText, Plus, Trash2, 
+import {
+  ArrowLeft, Camera, Mic, FileText, Plus, Trash2,
   Clock, CheckCircle2, Image as ImageIcon,
   MessageSquare, History, FileDown, Paperclip, Loader2, Send,
   FileCheck, ReceiptText, FolderOpen, Sparkles, PackageSearch, Navigation,
   StickyNote, Eraser, MicOff, Ruler, X, RotateCw, Pencil, Check
 } from 'lucide-react';
 import { MaterialsTracker } from './MaterialsTracker';
+import { hapticTap } from '../src/hooks/useHaptic';
+import { useToast } from '../src/contexts/ToastContext';
 
 interface JobPackViewProps {
   project: JobPack;
@@ -18,17 +20,19 @@ interface JobPackViewProps {
   onViewQuote: (id: string) => void;
   onCreateQuote: () => void;
   onBack: () => void;
+  onDeleteProject?: (id: string) => Promise<void>;
 }
 
-export const JobPackView: React.FC<JobPackViewProps> = ({ 
-  project, customers, quotes, onSaveProject, onViewQuote, onCreateQuote, onBack 
+export const JobPackView: React.FC<JobPackViewProps> = ({
+  project, customers, quotes, onSaveProject, onViewQuote, onCreateQuote, onBack, onDeleteProject
 }) => {
   const [activeTab, setActiveTab] = useState<'log' | 'photos' | 'drawings' | 'materials' | 'finance'>('log');
   const [isRecording, setIsRecording] = useState(false);
   const recognitionInstance = useRef<any>(null);
-  
+  const toast = useToast();
+
   const [notepadContent, setNotepadContent] = useState(project.notepad || '');
-  
+
   // Modal states
   const [selectedImage, setSelectedImage] = useState<{item: SitePhoto, type: 'photo' | 'drawing'} | null>(null);
   const [rotation, setRotation] = useState(0);
@@ -38,6 +42,20 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   // Title editing state
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempTitle, setTempTitle] = useState(project.title);
+
+  // Delete entire job pack
+  const handleDeleteProject = async () => {
+    hapticTap();
+    if (window.confirm(`Delete job pack "${project.title}"? This will remove all photos, drawings, notes, and materials. This cannot be undone.`)) {
+      try {
+        await onDeleteProject?.(project.id);
+        toast.success('Job Pack Deleted', `"${project.title}" has been removed`);
+        onBack();
+      } catch (err) {
+        toast.error('Delete Failed', 'Could not delete job pack');
+      }
+    }
+  };
 
   // Keep internal notepad state in sync with project prop when it changes externally
   useEffect(() => {
@@ -311,9 +329,18 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
 
       <div className="flex items-center justify-between border-b border-slate-200 pb-4">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-3 bg-white hover:bg-slate-50 rounded-2xl text-slate-400 hover:text-slate-900 transition-all border border-slate-200 shadow-sm">
+          <button onClick={onBack} className="p-3 bg-white hover:bg-slate-50 rounded-2xl text-slate-400 hover:text-slate-900 transition-all border border-slate-200 shadow-sm min-w-[44px] min-h-[44px] flex items-center justify-center">
             <ArrowLeft size={20} />
           </button>
+          {onDeleteProject && (
+            <button
+              onClick={handleDeleteProject}
+              className="p-3 bg-white hover:bg-red-50 rounded-2xl text-slate-300 hover:text-red-500 transition-all border border-slate-200 hover:border-red-200 shadow-sm min-w-[44px] min-h-[44px] flex items-center justify-center"
+              title="Delete job pack"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
           <div>
             <div className="flex items-center gap-2 group/title">
               <FolderOpen className="text-amber-500 shrink-0" size={18}/>

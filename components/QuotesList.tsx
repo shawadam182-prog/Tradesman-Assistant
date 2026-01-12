@@ -1,7 +1,9 @@
 
 import React from 'react';
 import { Quote, Customer, AppSettings } from '../types';
-import { FileText, Plus, Eye, MoreVertical, Search, Hash, User, ChevronRight } from 'lucide-react';
+import { FileText, Plus, Eye, Search, Hash, User, ChevronRight, Trash2 } from 'lucide-react';
+import { hapticTap } from '../src/hooks/useHaptic';
+import { useToast } from '../src/contexts/ToastContext';
 
 interface QuotesListProps {
   quotes: Quote[];
@@ -10,12 +12,29 @@ interface QuotesListProps {
   onViewQuote: (id: string) => void;
   onEditQuote: (id: string) => void;
   onCreateQuote: () => void;
+  onDeleteQuote?: (id: string) => Promise<void>;
 }
 
-export const QuotesList: React.FC<QuotesListProps> = ({ 
-  quotes, customers, settings, onViewQuote, onEditQuote, onCreateQuote 
+export const QuotesList: React.FC<QuotesListProps> = ({
+  quotes, customers, settings, onViewQuote, onEditQuote, onCreateQuote, onDeleteQuote
 }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
+  const toast = useToast();
+
+  const handleDelete = async (e: React.MouseEvent, quote: Quote) => {
+    e.stopPropagation(); // Don't trigger row click
+    hapticTap();
+
+    const customer = customers.find(c => c.id === quote.customerId);
+    if (window.confirm(`Delete quote "${quote.title}" for ${customer?.name || 'Unknown'}? This cannot be undone.`)) {
+      try {
+        await onDeleteQuote?.(quote.id);
+        toast.success('Quote Deleted', `"${quote.title}" has been removed`);
+      } catch (err) {
+        toast.error('Delete Failed', 'Could not delete quote');
+      }
+    }
+  };
 
   const calculateQuoteTotal = (quote: Quote) => {
     // Fix: Aggregate totals from all sections instead of accessing items directly on the quote
@@ -119,6 +138,15 @@ export const QuotesList: React.FC<QuotesListProps> = ({
                     <div className="p-3 bg-amber-50 text-amber-600 rounded-xl transition-all border border-amber-100 group-hover:scale-105">
                       <Eye size={20} />
                     </div>
+                    {onDeleteQuote && (
+                      <button
+                        onClick={(e) => handleDelete(e, quote)}
+                        className="p-3 bg-white text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        title="Delete quote"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                     <div className="p-3 bg-white text-slate-300 group-hover:text-amber-500 group-hover:translate-x-1 transition-all">
                       <ChevronRight size={20} />
                     </div>
