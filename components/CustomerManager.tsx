@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { parseCustomerVoiceInput, formatAddressAI, reverseGeocode } from '../src/services/geminiService';
 import { useToast } from '../src/contexts/ToastContext';
+import { validateCustomerData } from '../src/utils/inputValidation';
 
 interface CustomerManagerProps {
   customers: Customer[];
@@ -166,24 +167,35 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerForm.name?.trim()) {
-      setError("Customer name is required.");
+
+    // Validate and sanitize input
+    const validation = validateCustomerData(customerForm);
+    if (!validation.valid) {
+      const firstError = Object.values(validation.errors)[0];
+      setError(firstError);
       return;
     }
 
     if (editingId === 'new') {
       const customer: Customer = {
         id: Math.random().toString(36).substr(2, 9),
-        name: customerForm.name.trim(),
-        email: customerForm.email || '',
-        phone: customerForm.phone || '',
-        address: customerForm.address || '',
-        company: customerForm.company || '',
+        name: validation.sanitized.name,
+        email: validation.sanitized.email,
+        phone: validation.sanitized.phone,
+        address: validation.sanitized.address,
+        company: validation.sanitized.company || '',
       };
       setCustomers([...customers, customer]);
-      toast.success('Contact Added', `${customerForm.name} added to directory`);
+      toast.success('Contact Added', `${validation.sanitized.name} added to directory`);
     } else if (editingId) {
-      setCustomers(customers.map(c => c.id === editingId ? { ...c, ...customerForm } as Customer : c));
+      setCustomers(customers.map(c => c.id === editingId ? {
+        ...c,
+        name: validation.sanitized.name,
+        email: validation.sanitized.email,
+        phone: validation.sanitized.phone,
+        address: validation.sanitized.address,
+        company: validation.sanitized.company || '',
+      } as Customer : c));
       toast.success('Contact Updated', 'Changes saved successfully');
     }
 

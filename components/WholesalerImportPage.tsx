@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../src/contexts/DataContext';
 import type { WholesalerPreset } from '../types';
+import { validateCsvFile } from '../src/utils/fileValidation';
 
 interface ParsedMaterial {
   productCode?: string;
@@ -228,6 +229,13 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate CSV file
+    const validation = validateCsvFile(file);
+    if (!validation.valid) {
+      setError(validation.error || 'Invalid file');
+      return;
+    }
 
     setError(null);
     setFileName(file.name);

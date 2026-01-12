@@ -187,6 +187,7 @@ function dbQuoteToApp(dbQuote: any): Quote {
     projectId: dbQuote.job_pack_id || undefined,
     date: dbQuote.date,
     updatedAt: dbQuote.updated_at,
+    createdAt: dbQuote.created_at || dbQuote.date,
     title: dbQuote.title,
     sections: dbQuote.sections || [],
     labourRate: Number(dbQuote.labour_rate) || 65,

@@ -1,7 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { JobPack, Customer, Quote, SiteNote, SitePhoto, SiteDocument } from '../types';
-import { GoogleGenAI } from "@google/genai";
 import { 
   ArrowLeft, Camera, Mic, FileText, Plus, Trash2, 
   Clock, CheckCircle2, Image as ImageIcon,

@@ -5,6 +5,7 @@ import {
   ChevronDown, Trash2, RefreshCw
 } from 'lucide-react';
 import { bankTransactionsService } from '../src/services/dataService';
+import { validateCsvFile } from '../src/utils/fileValidation';
 
 interface ParsedTransaction {
   date: string;
@@ -139,6 +140,13 @@ export const BankImportPage: React.FC = () => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate CSV file
+    const validation = validateCsvFile(file);
+    if (!validation.valid) {
+      setError(validation.error || 'Invalid file');
+      return;
+    }
 
     setError(null);
     const reader = new FileReader();

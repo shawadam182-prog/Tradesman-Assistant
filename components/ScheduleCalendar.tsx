@@ -249,7 +249,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
     const curr = new Date(currentDate);
     const day = curr.getDay();
     const diff = curr.getDate() - day + (day === 0 ? -6 : 1);
-    const startOfWeek = new Date(curr.setDate(diff));
+    const startOfWeek = new Date(curr); startOfWeek.setDate(diff);
     
     const days = [];
     for (let i = 0; i < 7; i++) {

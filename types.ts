@@ -55,8 +55,9 @@ export interface QuoteDisplayOptions {
 export interface Quote {
   id: string;
   customerId: string;
-  projectId?: string; 
+  projectId?: string;
   date: string;
+  createdAt: string;
   updatedAt: string;
   title: string; // The overall document title
   sections: QuoteSection[];

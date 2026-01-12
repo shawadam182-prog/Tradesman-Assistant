@@ -72,12 +72,14 @@ export const Home: React.FC<HomeProps> = ({
   const noteRecognitionRef = useRef<any>(null);
 
   useEffect(() => {
+    try {
     const savedReminders = localStorage.getItem('bq_home_reminders');
     const savedNotes = localStorage.getItem('bq_home_quick_notes');
     const savedSiteSession = localStorage.getItem('bq_site_log');
     if (savedReminders) setReminders(JSON.parse(savedReminders));
     if (savedNotes) setQuickNotes(savedNotes);
     if (savedSiteSession) setSiteSession(JSON.parse(savedSiteSession));
+    } catch (e) { console.error("Failed to parse localStorage data:", e); }
   }, []);
 
   useEffect(() => {

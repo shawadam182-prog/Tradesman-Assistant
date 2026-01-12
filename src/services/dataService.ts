@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/database.types';
+import { validateImageFile, validateDocumentFile, validateCsvFile } from '../utils/fileValidation';
 
 type Tables = Database['public']['Tables'];
 
@@ -166,6 +167,12 @@ export const siteNotesService = {
 
 export const sitePhotosService = {
   async upload(jobPackId: string, file: File, caption?: string, tags?: string[], isDrawing = false) {
+    // Validate file before upload
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      throw new Error(validation.error || 'Invalid file');
+    }
+
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) throw new Error('Not authenticated');
 
@@ -232,6 +239,12 @@ export const sitePhotosService = {
 
 export const siteDocumentsService = {
   async upload(jobPackId: string, file: File, summary?: string) {
+    // Validate file before upload
+    const validation = validateDocumentFile(file);
+    if (!validation.valid) {
+      throw new Error(validation.error || 'Invalid file');
+    }
+
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) throw new Error('Not authenticated');
 
@@ -512,6 +525,12 @@ export const userSettingsService = {
   },
 
   async uploadLogo(file: File) {
+    // Validate file before upload
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      throw new Error(validation.error || 'Invalid file');
+    }
+
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) throw new Error('Not authenticated');
 
@@ -588,7 +607,13 @@ export const expensesService = {
     if (error) throw error;
   },
 
-  async uploadReceipt(expenseId, file) {
+  async uploadReceipt(expenseId: string, file: File) {
+    // Validate file before upload (receipt can be image or document)
+    const validation = validateDocumentFile(file);
+    if (!validation.valid) {
+      throw new Error(validation.error || 'Invalid file');
+    }
+
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) throw new Error('Not authenticated');
 
@@ -979,6 +1004,12 @@ export const filingService = {
     payable_id?: string;
     tax_year?: string;
   }) {
+    // Validate file before upload
+    const validation = validateDocumentFile(file);
+    if (!validation.valid) {
+      throw new Error(validation.error || 'Invalid file');
+    }
+
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) throw new Error('Not authenticated');
 
