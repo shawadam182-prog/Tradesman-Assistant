@@ -203,7 +203,12 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
       company: newCustomer.company || '',
     };
     onAddCustomer(customer);
-    setDraft(prev => ({ ...prev, customerId: customer.id }));
+    setDraft(prev => ({
+      ...prev,
+      customerId: customer.id,
+      location: prev.location || customer.address || ''
+    }));
+    setLinkType('customer');
     setIsAddingCustomer(false);
     setNewCustomer({});
     setCustomerError(null);
@@ -788,16 +793,16 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                 <div className="space-y-10">
                   <div className="space-y-3">
                     <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic">Booking Reference *</label>
-                    <div className="flex gap-3">
-                      <input className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-[36px] p-7 font-black text-3xl text-slate-950 outline-none focus:border-amber-400 focus:bg-white transition-all shadow-inner" value={draft.title || ''} onChange={e => setDraft({...draft, title: e.target.value})} placeholder="e.g. Groundworks" />
+                    <div className="flex gap-2">
+                      <input className="flex-1 min-w-0 bg-slate-50 border-2 border-slate-100 rounded-[36px] px-6 py-5 font-black text-2xl text-slate-950 outline-none focus:border-amber-400 focus:bg-white transition-all shadow-inner" value={draft.title || ''} onChange={e => setDraft({...draft, title: e.target.value})} placeholder="e.g. Groundworks" />
                       <button
                         type="button"
                         onClick={() => isListeningTitle ? titleRecognitionRef.current?.stop() : titleRecognitionRef.current?.start()}
-                        className={`p-7 rounded-[36px] shadow-lg transition-all active:scale-95 ${
+                        className={`shrink-0 w-[70px] h-[70px] rounded-[36px] shadow-lg transition-all active:scale-95 flex items-center justify-center ${
                           isListeningTitle ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-900 text-amber-500 hover:bg-black'
                         }`}
                       >
-                        <Mic size={32} />
+                        <Mic size={28} />
                       </button>
                     </div>
                   </div>
