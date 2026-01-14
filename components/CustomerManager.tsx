@@ -292,8 +292,8 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
       </div>
 
       {editingId ? (
-        <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-xl animate-in fade-in slide-in-from-bottom-4">
-          <div className="flex justify-between items-center mb-8">
+        <div className="bg-white p-4 md:p-8 rounded-[32px] border border-slate-200 shadow-xl animate-in fade-in slide-in-from-bottom-4 pb-[200px] md:pb-8">
+          <div className="flex justify-between items-center mb-6 md:mb-8">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200">
                 {editingId === 'new' ? <UserPlus size={24} /> : <Pencil size={24} />}
@@ -341,149 +341,152 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Name Field */}
               <div className="space-y-1">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 italic">
-                    <UserIcon size={12} /> Full Name *
-                  </label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 italic px-1">
+                  <UserIcon size={12} /> Full Name *
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    autoComplete="name"
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-2 md:py-4 pr-12 text-slate-950 font-bold text-base outline-none focus:bg-white focus:border-amber-500 transition-all"
+                    value={customerForm.name || ''}
+                    placeholder="e.g. John Smith"
+                    onChange={e => setCustomerForm({...customerForm, name: e.target.value})}
+                  />
                   <button
                     type="button"
                     onClick={() => { hapticTap(); startFieldListening('name'); }}
-                    className={`p-2 rounded-lg border transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${activeFieldVoice === 'name' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 hover:border-amber-400 bg-white shadow-sm'}`}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all ${activeFieldVoice === 'name' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 bg-transparent'}`}
                   >
-                    <Mic size={16} />
+                    <Mic size={18} />
                   </button>
                 </div>
-                <input
-                  type="text"
-                  autoComplete="name"
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-slate-950 font-bold text-base outline-none focus:bg-white focus:border-amber-500 transition-all"
-                  value={customerForm.name || ''}
-                  placeholder="e.g. John Smith"
-                  onChange={e => setCustomerForm({...customerForm, name: e.target.value})}
-                />
               </div>
 
               {/* Company Field */}
               <div className="space-y-1">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 italic">
-                    <Building size={12} /> Company Name
-                  </label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 italic px-1">
+                  <Building size={12} /> Company Name
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    autoComplete="organization"
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-2 md:py-4 pr-12 text-slate-950 font-bold text-base outline-none focus:bg-white focus:border-amber-500 transition-all"
+                    value={customerForm.company || ''}
+                    placeholder="e.g. Smith & Co Roofing"
+                    onChange={e => setCustomerForm({...customerForm, company: e.target.value})}
+                  />
                   <button
                     type="button"
                     onClick={() => { hapticTap(); startFieldListening('company'); }}
-                    className={`p-2 rounded-lg border transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${activeFieldVoice === 'company' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 hover:border-amber-400 bg-white shadow-sm'}`}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all ${activeFieldVoice === 'company' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 bg-transparent'}`}
                   >
-                    <Mic size={16} />
+                    <Mic size={18} />
                   </button>
                 </div>
-                <input
-                  type="text"
-                  autoComplete="organization"
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-slate-950 font-bold text-base outline-none focus:bg-white focus:border-amber-500 transition-all"
-                  value={customerForm.company || ''}
-                  placeholder="e.g. Smith & Co Roofing"
-                  onChange={e => setCustomerForm({...customerForm, company: e.target.value})}
-                />
               </div>
 
               {/* Email Field - with proper type for mobile keyboard */}
               <div className="space-y-1">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 italic">
-                    <Mail size={12} /> Email Address
-                  </label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 italic px-1">
+                  <Mail size={12} /> Email Address
+                </label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-2 md:py-4 pr-12 text-slate-950 font-bold text-base outline-none focus:bg-white focus:border-amber-500 transition-all"
+                    value={customerForm.email || ''}
+                    placeholder="john@example.com"
+                    onChange={e => setCustomerForm({...customerForm, email: e.target.value})}
+                  />
                   <button
                     type="button"
                     onClick={() => { hapticTap(); startFieldListening('email'); }}
-                    className={`p-2 rounded-lg border transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${activeFieldVoice === 'email' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 hover:border-amber-400 bg-white shadow-sm'}`}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all ${activeFieldVoice === 'email' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 bg-transparent'}`}
                   >
-                    <Mic size={16} />
+                    <Mic size={18} />
                   </button>
                 </div>
-                <input
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-slate-950 font-bold text-base outline-none focus:bg-white focus:border-amber-500 transition-all"
-                  value={customerForm.email || ''}
-                  placeholder="john@example.com"
-                  onChange={e => setCustomerForm({...customerForm, email: e.target.value})}
-                />
               </div>
 
               {/* Phone Field - with proper type for mobile keyboard */}
               <div className="space-y-1">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 italic">
-                    <Phone size={12} /> Phone Number
-                  </label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 italic px-1">
+                  <Phone size={12} /> Phone Number
+                </label>
+                <div className="relative">
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-2 md:py-4 pr-12 text-slate-950 font-bold text-base outline-none focus:bg-white focus:border-amber-500 transition-all"
+                    value={customerForm.phone || ''}
+                    placeholder="07123 456789"
+                    onChange={e => setCustomerForm({...customerForm, phone: e.target.value})}
+                  />
                   <button
                     type="button"
                     onClick={() => { hapticTap(); startFieldListening('phone'); }}
-                    className={`p-2 rounded-lg border transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${activeFieldVoice === 'phone' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 hover:border-amber-400 bg-white shadow-sm'}`}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all ${activeFieldVoice === 'phone' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 bg-transparent'}`}
                   >
-                    <Mic size={16} />
+                    <Mic size={18} />
                   </button>
                 </div>
-                <input
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-slate-950 font-bold text-base outline-none focus:bg-white focus:border-amber-500 transition-all"
-                  value={customerForm.phone || ''}
-                  placeholder="07123 456789"
-                  onChange={e => setCustomerForm({...customerForm, phone: e.target.value})}
-                />
               </div>
 
               <div className="md:col-span-2 space-y-1 relative">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5 italic"><MapPin size={12} /> Main Site Address</label>
-                  <div className="flex gap-2 flex-wrap">
+                <label className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5 italic px-1">
+                  <MapPin size={12} /> Main Site Address
+                </label>
+                <div className="relative">
+                  <textarea
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-2 md:py-4 pr-32 text-slate-950 font-bold text-sm outline-none min-h-[80px] md:min-h-[100px] focus:bg-white focus:border-amber-500 transition-all"
+                    placeholder="Street, Town, Postcode..."
+                    value={customerForm.address || ''}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setCustomerForm({...customerForm, address: val});
+                      setAddressSearchTerm(val);
+                      setShowAddressSuggestions(true);
+                    }}
+                    onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
+                  />
+                  <div className="absolute right-2 top-2 flex gap-1">
                     <button
                       type="button"
                       onClick={() => { hapticTap(); startFieldListening('address'); }}
-                      className={`p-2 rounded-lg border transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${activeFieldVoice === 'address' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 hover:border-amber-400 bg-white shadow-sm'}`}
+                      className={`p-2 rounded-lg transition-all ${activeFieldVoice === 'address' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 bg-transparent'}`}
+                      title="Voice input"
                     >
-                      <Mic size={16} />
+                      <Mic size={18} />
                     </button>
                     <button
                       type="button"
                       onClick={() => { hapticTap(); handleUseCurrentLocation(); }}
                       disabled={isLocating}
-                      className="min-h-[44px] px-4 text-[10px] font-black uppercase text-blue-600 hover:text-blue-700 flex items-center gap-2 disabled:opacity-30 bg-blue-50 rounded-xl active:scale-95"
+                      className="p-2 rounded-lg transition-all text-blue-500 hover:text-blue-700 disabled:opacity-30 bg-transparent"
+                      title="Use current location"
                     >
-                      {isLocating ? <Loader2 size={14} className="animate-spin" /> : <LocateFixed size={16} />}
-                      <span className="hidden sm:inline">Use Location</span>
+                      {isLocating ? <Loader2 size={18} className="animate-spin" /> : <LocateFixed size={18} />}
                     </button>
                     <button
                       type="button"
                       onClick={() => { hapticTap(); handleVerifyAddress(); }}
                       disabled={!customerForm.address || isVerifyingAddress}
-                      className="min-h-[44px] px-4 text-[10px] font-black uppercase text-amber-600 hover:text-amber-700 flex items-center gap-2 disabled:opacity-30 bg-amber-50 rounded-xl active:scale-95"
+                      className="p-2 rounded-lg transition-all text-amber-500 hover:text-amber-700 disabled:opacity-30 bg-transparent"
+                      title="AI verify address"
                     >
-                      {isVerifyingAddress ? <Loader2 size={14} className="animate-spin" /> : <MapPinned size={16} />}
-                      <span className="hidden sm:inline">AI Verify</span>
+                      {isVerifyingAddress ? <Loader2 size={18} className="animate-spin" /> : <MapPinned size={18} />}
                     </button>
                   </div>
                 </div>
-                <textarea 
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-slate-950 font-bold text-sm outline-none min-h-[100px] focus:bg-white focus:border-amber-500 transition-all" 
-                  placeholder="Street, Town, Postcode..." 
-                  value={customerForm.address || ''} 
-                  onChange={e => {
-                    const val = e.target.value;
-                    setCustomerForm({...customerForm, address: val});
-                    setAddressSearchTerm(val);
-                    setShowAddressSuggestions(true);
-                  }} 
-                  onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
-                />
                 {showAddressSuggestions && filteredAddresses.length > 0 && (
                   <div className="absolute z-50 left-0 right-0 mt-2 bg-white border-2 border-slate-100 rounded-[24px] shadow-2xl animate-in slide-in-from-top-2 overflow-hidden">
                     {filteredAddresses.map((addr, i) => (

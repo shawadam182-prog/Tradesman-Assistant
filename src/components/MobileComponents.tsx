@@ -50,7 +50,7 @@ export const MobileButton: React.FC<MobileButtonProps> = ({
     }
   };
 
-  const baseClasses = 'min-h-[48px] px-6 py-3 rounded-2xl font-black text-sm uppercase tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-transform';
+  const baseClasses = 'min-h-[48px] px-6 py-2 md:py-3 rounded-2xl font-black text-sm uppercase tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-transform';
 
   const variantClasses = {
     primary: 'bg-amber-500 text-white shadow-lg shadow-amber-500/20 disabled:bg-amber-300',
@@ -217,7 +217,7 @@ export const MobileInput: React.FC<MobileInputProps> = ({
         placeholder={placeholder}
         disabled={disabled}
         className={`
-          w-full min-h-[48px] bg-slate-50 border-2 rounded-2xl px-4 py-3
+          w-full min-h-[48px] bg-slate-50 border-2 rounded-2xl px-4 py-2 md:py-3
           text-base font-bold text-slate-900 outline-none
           focus:border-amber-400 focus:bg-white
           disabled:opacity-50 disabled:cursor-not-allowed
@@ -264,7 +264,7 @@ export const MobileTextarea: React.FC<MobileTextareaProps> = ({
         placeholder={placeholder}
         rows={rows}
         className="
-          w-full min-h-[100px] bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-3
+          w-full min-h-[80px] md:min-h-[100px] bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-2 md:py-3
           text-base font-medium text-slate-900 outline-none resize-none
           focus:border-amber-400 focus:bg-white
         "

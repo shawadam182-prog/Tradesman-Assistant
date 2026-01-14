@@ -493,11 +493,11 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div className="p-4 md:p-6 border-b border-slate-100 flex items-center justify-between">
               <h2 className="text-xl font-black text-slate-900">Add Expense</h2>
               <button onClick={() => { setShowAddModal(false); resetForm(); }} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"><X size={20} /></button>
             </div>
-            <div className="p-6 space-y-6">
+            <div className="p-4 md:p-6 space-y-4 md:space-y-6">
               <div>
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Scan Receipt (Optional)</label>
                 <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} className="hidden" />
@@ -515,7 +515,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div className="col-span-2 relative">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Vendor *</label>
                   <input
@@ -525,7 +525,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                     onChange={(e) => setFormData(prev => ({ ...prev, vendor: e.target.value }))}
                     onFocus={() => formData.vendor.length >= 2 && vendorSuggestions.length > 0 && setShowVendorDropdown(true)}
                     placeholder="e.g. Screwfix, Travis Perkins"
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-4 py-2 md:py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     autoComplete="off"
                   />
                   {/* Vendor Autocomplete Dropdown */}
@@ -563,7 +563,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">£</span>
                     <input type="number" step="0.01" value={formData.amount} onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                      placeholder="0.00" className="w-full pl-8 pr-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent" />
+                      placeholder="0.00" className="w-full pl-8 pr-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent" />
                   </div>
                 </div>
                 <div>
@@ -571,18 +571,18 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">£</span>
                     <input type="number" step="0.01" value={formData.vat_amount} onChange={(e) => setFormData(prev => ({ ...prev, vat_amount: e.target.value }))}
-                      placeholder="0.00" className="w-full pl-8 pr-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent" />
+                      placeholder="0.00" className="w-full pl-8 pr-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent" />
                   </div>
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Date</label>
                   <input type="date" value={formData.expense_date} onChange={(e) => setFormData(prev => ({ ...prev, expense_date: e.target.value }))}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent" />
+                    className="w-full px-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent" />
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Payment Method</label>
                   <select value={formData.payment_method} onChange={(e) => setFormData(prev => ({ ...prev, payment_method: e.target.value }))}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                    className="w-full px-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent">
                     {PAYMENT_METHODS.map(pm => (<option key={pm.id} value={pm.id}>{pm.label}</option>))}
                   </select>
                 </div>
@@ -610,7 +610,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                 <div className="col-span-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Link to Job (Optional)</label>
                   <select value={formData.job_pack_id} onChange={(e) => setFormData(prev => ({ ...prev, job_pack_id: e.target.value }))}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                    className="w-full px-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent">
                     <option value="">No job linked</option>
                     {projects.map(p => (<option key={p.id} value={p.id}>{p.title}</option>))}
                   </select>
@@ -619,16 +619,17 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Description (Optional)</label>
                   <textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="What was this expense for?" rows={2}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none" />
+                    className="w-full px-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none" />
                 </div>
               </div>
             </div>
-            <div className="p-6 border-t border-slate-100 flex gap-3">
-              <button onClick={() => { setShowAddModal(false); resetForm(); }} className="flex-1 px-6 py-3 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-colors">Cancel</button>
+            <div className="p-4 md:p-6 border-t border-slate-100 flex gap-2 md:gap-3">
+              <button onClick={() => { setShowAddModal(false); resetForm(); }} className="flex-1 px-4 md:px-6 py-2 md:py-3 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-colors">Cancel</button>
               <button onClick={handleSave} disabled={!formData.vendor || !formData.amount || saving}
-                className="flex-1 px-6 py-3 bg-amber-500 text-slate-900 rounded-xl font-black hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                className="flex-1 px-4 md:px-6 py-2 md:py-3 bg-amber-500 text-slate-900 rounded-xl font-black hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                 {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check size={20} />}
-                Save Expense
+                <span className="hidden sm:inline">Save Expense</span>
+                <span className="sm:hidden">Save</span>
               </button>
             </div>
           </div>
