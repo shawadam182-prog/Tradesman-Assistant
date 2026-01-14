@@ -310,7 +310,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
                     : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50'
                 }`}
               >
-                {isProcessing ? <Loader2 size={10} className="md:w-3 md:h-3" className="animate-spin" /> : isListeningGlobal ? <MicOff size={10} className="md:w-3 md:h-3" /> : <Sparkles size={10} className="md:w-3 md:h-3" />}
+                {isProcessing ? <Loader2 size={10} className="md:w-3 md:h-3 animate-spin" /> : isListeningGlobal ? <MicOff size={10} className="md:w-3 md:h-3" /> : <Sparkles size={10} className="md:w-3 md:h-3" />}
                 <span className="hidden sm:inline">{isProcessing ? 'Analyzing...' : isListeningGlobal ? 'Stop' : 'Voice'}</span>
               </button>
             </div>
@@ -370,9 +370,9 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
                   <button
                     type="button"
                     onClick={() => { hapticTap(); startFieldListening('company'); }}
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all ${activeFieldVoice === 'company' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 bg-transparent'}`}
+                    className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 md:p-2 rounded-lg transition-all ${activeFieldVoice === 'company' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 bg-transparent'}`}
                   >
-                    <Mic size={18} />
+                    <Mic size={14} className="md:w-[18px] md:h-[18px]" />
                   </button>
                 </div>
               </div>
@@ -395,9 +395,9 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
                   <button
                     type="button"
                     onClick={() => { hapticTap(); startFieldListening('email'); }}
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all ${activeFieldVoice === 'email' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 bg-transparent'}`}
+                    className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 md:p-2 rounded-lg transition-all ${activeFieldVoice === 'email' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 bg-transparent'}`}
                   >
-                    <Mic size={18} />
+                    <Mic size={14} className="md:w-[18px] md:h-[18px]" />
                   </button>
                 </div>
               </div>
@@ -420,9 +420,9 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
                   <button
                     type="button"
                     onClick={() => { hapticTap(); startFieldListening('phone'); }}
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all ${activeFieldVoice === 'phone' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 bg-transparent'}`}
+                    className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 md:p-2 rounded-lg transition-all ${activeFieldVoice === 'phone' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 bg-transparent'}`}
                   >
-                    <Mic size={18} />
+                    <Mic size={14} className="md:w-[18px] md:h-[18px]" />
                   </button>
                 </div>
               </div>
