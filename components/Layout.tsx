@@ -164,7 +164,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
 
       {/* Mobile Nav - Grid Layout */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-[100] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] safe-area-bottom">
-        <div className="grid grid-cols-3 gap-1 px-2 py-2">
+        <div className="grid grid-cols-3 gap-0.5 px-1.5 py-1.5">
           {primaryNavItems.map((item) => (
             <button
               key={item.id}
@@ -176,14 +176,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                   setActiveTab(item.id);
                 }
               }}
-              className={`flex flex-col items-center justify-center gap-0.5 min-h-[60px] px-2 py-2 rounded-xl active:scale-95 transition-all ${
+              className={`flex flex-col items-center justify-center gap-0 min-h-[52px] px-1 py-1.5 rounded-xl active:scale-95 transition-all ${
                 activeTab === item.id
                   ? 'text-amber-600 bg-amber-50'
                   : 'text-slate-400 active:bg-slate-100'
               }`}
             >
-              <item.icon size={22} strokeWidth={activeTab === item.id ? 2.5 : 2} />
-              <span className={`text-[9px] font-black uppercase tracking-tight text-center leading-tight mt-0.5 ${activeTab === item.id ? 'opacity-100' : 'opacity-60'}`}>
+              <item.icon size={20} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+              <span className={`text-[8px] font-black uppercase tracking-tight text-center leading-tight mt-0.5 ${activeTab === item.id ? 'opacity-100' : 'opacity-60'}`}>
                 {item.label}
               </span>
             </button>
