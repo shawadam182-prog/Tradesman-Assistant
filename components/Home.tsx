@@ -432,76 +432,68 @@ export const Home: React.FC<HomeProps> = ({
         </div>
       </div>
 
-      {/* Quick Actions Bar - Optimized for mobile touch */}
-      <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 -mx-4 px-4">
+      {/* Quick Actions Bar - 2x2 grid on mobile, row on desktop */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <button
           onClick={() => { hapticTap(); onCreateJob?.(); }}
-          className="flex-shrink-0 flex items-center gap-3 bg-blue-500 text-white px-5 py-4 min-h-[56px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-blue-500/20"
+          className="flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-3 min-h-[48px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-blue-500/20"
         >
-          <Briefcase size={22} />
-          <span className="font-black text-sm uppercase tracking-wide whitespace-nowrap">New Job</span>
+          <Briefcase size={18} />
+          <span className="font-black text-xs uppercase tracking-wide whitespace-nowrap">New Job</span>
         </button>
         <button
           onClick={() => { hapticTap(); onCreateQuote?.(); }}
-          className="flex-shrink-0 flex items-center gap-3 bg-amber-500 text-white px-5 py-4 min-h-[56px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-amber-500/20"
+          className="flex items-center justify-center gap-2 bg-amber-500 text-white px-3 py-3 min-h-[48px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-amber-500/20"
         >
-          <FileText size={22} />
-          <span className="font-black text-sm uppercase tracking-wide whitespace-nowrap">New Quote</span>
+          <FileText size={18} />
+          <span className="font-black text-xs uppercase tracking-wide whitespace-nowrap">New Quote</span>
         </button>
         <button
           onClick={() => { hapticTap(); onLogExpense?.(); }}
-          className="flex-shrink-0 flex items-center gap-3 bg-emerald-500 text-white px-5 py-4 min-h-[56px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-emerald-500/20"
+          className="flex items-center justify-center gap-2 bg-emerald-500 text-white px-3 py-3 min-h-[48px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-emerald-500/20"
         >
-          <Receipt size={22} />
-          <span className="font-black text-sm uppercase tracking-wide whitespace-nowrap">Expense</span>
+          <Receipt size={18} />
+          <span className="font-black text-xs uppercase tracking-wide whitespace-nowrap">Expense</span>
         </button>
         <button
           onClick={() => { hapticTap(); onAddCustomer?.(); }}
-          className="flex-shrink-0 flex items-center gap-3 bg-purple-500 text-white px-5 py-4 min-h-[56px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-purple-500/20"
+          className="flex items-center justify-center gap-2 bg-purple-500 text-white px-3 py-3 min-h-[48px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-purple-500/20"
         >
-          <UserPlus size={22} />
-          <span className="font-black text-sm uppercase tracking-wide whitespace-nowrap">Customer</span>
+          <UserPlus size={18} />
+          <span className="font-black text-xs uppercase tracking-wide whitespace-nowrap">Customer</span>
         </button>
       </div>
 
       {/* Today's Stats Card */}
-      <div className="bg-white rounded-[32px] border border-slate-200 p-6 shadow-sm">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-2xl">
-            <div className="p-3 bg-blue-500 text-white rounded-xl">
-              <Calendar size={20} />
+      <div className="bg-white rounded-[32px] border border-slate-200 p-4 sm:p-6 shadow-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <div className="flex flex-col items-center text-center p-4 bg-blue-50 rounded-2xl">
+            <div className="p-2.5 bg-blue-500 text-white rounded-xl mb-2">
+              <Calendar size={18} />
             </div>
-            <div>
-              <p className="text-2xl font-black text-slate-900">{todayStats.jobsToday}</p>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Jobs Today</p>
-            </div>
+            <p className="text-2xl font-black text-slate-900">{todayStats.jobsToday}</p>
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider leading-tight mt-1">Jobs<br/>Today</p>
           </div>
-          <div className="flex items-center gap-4 p-4 bg-emerald-50 rounded-2xl">
-            <div className="p-3 bg-emerald-500 text-white rounded-xl">
-              <PoundSterling size={20} />
+          <div className="flex flex-col items-center text-center p-4 bg-emerald-50 rounded-2xl">
+            <div className="p-2.5 bg-emerald-500 text-white rounded-xl mb-2">
+              <PoundSterling size={18} />
             </div>
-            <div>
-              <p className="text-2xl font-black text-slate-900">{todayStats.weeklyRevenue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}</p>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">This Week</p>
-            </div>
+            <p className="text-xl font-black text-slate-900">{todayStats.weeklyRevenue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}</p>
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider leading-tight mt-1">This<br/>Week</p>
           </div>
-          <div className="flex items-center gap-4 p-4 bg-amber-50 rounded-2xl">
-            <div className="p-3 bg-amber-500 text-white rounded-xl">
-              <FileWarning size={20} />
+          <div className="flex flex-col items-center text-center p-4 bg-amber-50 rounded-2xl">
+            <div className="p-2.5 bg-amber-500 text-white rounded-xl mb-2">
+              <FileWarning size={18} />
             </div>
-            <div>
-              <p className="text-2xl font-black text-slate-900">{todayStats.outstandingInvoices}</p>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Outstanding</p>
-            </div>
+            <p className="text-2xl font-black text-slate-900">{todayStats.outstandingInvoices}</p>
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider leading-tight mt-1">Outstanding</p>
           </div>
-          <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-2xl">
-            <div className="p-3 bg-purple-500 text-white rounded-xl">
-              <Clock size={20} />
+          <div className="flex flex-col items-center text-center p-4 bg-purple-50 rounded-2xl">
+            <div className="p-2.5 bg-purple-500 text-white rounded-xl mb-2">
+              <Clock size={18} />
             </div>
-            <div>
-              <p className="text-2xl font-black text-slate-900">{todayStats.pendingQuotes}</p>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Pending Quotes</p>
-            </div>
+            <p className="text-2xl font-black text-slate-900">{todayStats.pendingQuotes}</p>
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider leading-tight mt-1">Pending<br/>Quotes</p>
           </div>
         </div>
       </div>
