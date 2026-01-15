@@ -252,22 +252,29 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
           // Get a valid fallback category
           const fallbackCategory = categories[0]?.name || 'Materials';
 
-          // Build the new form data
-          const newFormData = {
-            vendor: result.vendor || formData.vendor || '',
-            description: result.description || formData.description || '',
-            amount: result.amount?.toString() || formData.amount || '',
-            vat_amount: result.vatAmount?.toString() || formData.vat_amount || '',
-            category: matchedCategory || formData.category || fallbackCategory,
-            expense_date: result.date || formData.expense_date || new Date().toISOString().split('T')[0],
-            payment_method: result.paymentMethod || formData.payment_method || 'card',
-            job_pack_id: formData.job_pack_id || '',
-          };
+          console.log('Parsed receipt data:', result);
 
-          console.log('Setting form data to:', newFormData);
-          // Update form data directly - setTimeout was causing updates to be lost on mobile
-          setFormData(newFormData);
+          // Use functional update to ensure we always work with latest state
+          // This avoids stale closure issues on mobile
+          setFormData(prev => {
+            const updated = {
+              vendor: result.vendor || prev.vendor || '',
+              description: result.description || prev.description || '',
+              amount: result.amount != null ? String(result.amount) : prev.amount || '',
+              vat_amount: result.vatAmount != null ? String(result.vatAmount) : prev.vat_amount || '',
+              category: matchedCategory || prev.category || fallbackCategory,
+              expense_date: result.date || prev.expense_date || new Date().toISOString().split('T')[0],
+              payment_method: result.paymentMethod || prev.payment_method || 'card',
+              job_pack_id: prev.job_pack_id || '',
+            };
+            console.log('Updating form from', prev, 'to', updated);
+            return updated;
+          });
+
+          // Force a re-render by also updating scanning state after form data
+          setScanning(false);
           toast.success('Receipt Scanned', `${result.vendor} - £${result.amount}`);
+          return; // Exit early since we've already set scanning to false
         } else {
           toast.info('Receipt uploaded', 'Unable to read details. Please fill in manually.');
         }
