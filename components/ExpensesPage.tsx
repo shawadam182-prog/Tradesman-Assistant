@@ -113,6 +113,9 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
   const vendorInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Force re-render counter for mobile state update issues
+  const [, forceUpdate] = useState(0);
+
   // Persist modal state to handle iOS PWA state loss when camera opens
   const [showAddModal, setShowAddModalState] = useState(() => {
     try {
@@ -127,19 +130,52 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
     } catch { /* ignore */ }
   };
 
-  const [formData, setFormData] = useState({
-    vendor: '',
-    description: '',
-    amount: '',
-    vat_amount: '',
-    category: '',
-    expense_date: new Date().toISOString().split('T')[0],
-    payment_method: 'card',
-    job_pack_id: '',
+  // Restore form data from sessionStorage if available (for mobile camera return)
+  const [formData, setFormDataState] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('expenseFormData');
+      if (saved) {
+        sessionStorage.removeItem('expenseFormData');
+        return JSON.parse(saved);
+      }
+    } catch { /* ignore */ }
+    return {
+      vendor: '',
+      description: '',
+      amount: '',
+      vat_amount: '',
+      category: '',
+      expense_date: new Date().toISOString().split('T')[0],
+      payment_method: 'card',
+      job_pack_id: '',
+    };
   });
+
+  // Wrapper to persist form data for mobile camera return
+  const setFormData = (data: typeof formData | ((prev: typeof formData) => typeof formData)) => {
+    const newData = typeof data === 'function' ? data(formData) : data;
+    setFormDataState(newData);
+    try {
+      sessionStorage.setItem('expenseFormData', JSON.stringify(newData));
+    } catch { /* ignore */ }
+  };
+
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { loadData(); }, []);
+
+  // Handle visibility change (for when returning from camera on mobile)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && fileInputRef.current?.files?.[0]) {
+        console.log('Visibility changed, found pending file');
+        const file = fileInputRef.current.files[0];
+        processFile(file);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [categories]); // Include categories in deps for category matching
 
   const loadData = async () => {
     setLoading(true);
@@ -225,6 +261,8 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
       setReceiptPreview(previewUrl);
       setReceiptFile(file);
       setScanning(true);
+      // Force re-render on mobile
+      forceUpdate(n => n + 1);
       console.log('Set preview, file, and scanning state');
 
       // Convert to base64 and send to AI
@@ -268,6 +306,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
           // Use setTimeout to ensure state update happens in a clean context on mobile
           setTimeout(() => {
             setFormData(newFormData);
+            forceUpdate(n => n + 1);
           }, 0);
           toast.success('Receipt scanned successfully!');
         } else {
@@ -291,16 +330,16 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
     const file = e.target.files?.[0];
     console.log('File selected:', file?.name, file?.size);
 
-    // Reset input value so the same file can be selected again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-
     if (!file) {
       console.log('No file selected');
       return;
     }
     await processFile(file);
+
+    // Reset input value AFTER processing so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   // Trigger the hidden file input
