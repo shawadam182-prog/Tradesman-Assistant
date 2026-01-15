@@ -451,67 +451,55 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 pb-32">
-      {/* iOS Style Sticky Header / Action Bar */}
-      <div className="sticky-action-bar flex justify-between items-center shadow-sm">
-        <button
-          onClick={() => { hapticTap(); onCancel(); }}
-          className="text-slate-500 font-bold text-sm px-2"
-        >
-          Cancel
-        </button>
-        <div className="flex gap-3">
-          <button
-            onClick={() => { hapticTap(); onSave(formData as Quote); }}
-            className="text-slate-900 font-bold text-sm bg-slate-100 px-4 py-2 rounded-xl"
-          >
-            Save Draft
+    <div className="max-w-4xl mx-auto pb-32 bg-slate-50 min-h-screen">
+      {/* Unified Header */}
+      <div className="sticky top-0 z-40 bg-white border-b border-slate-100 p-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-3">
+          <button onClick={() => { hapticTap(); onCancel(); }} className="p-2 -ml-2 text-slate-400 hover:text-slate-700">
+            <ArrowLeft size={20} />
           </button>
-          <button
-            onClick={() => { hapticSuccess(); onSave({...formData as Quote, status: 'sent'}); }}
-            className="bg-amber-500 text-white font-bold text-sm px-6 py-2 rounded-xl shadow-amber-200 shadow-md"
-          >
-            Save & Send
-          </button>
+          <h1 className="text-lg font-bold text-slate-900">{existingQuote ? 'Edit Document' : 'New Quote'}</h1>
+        </div>
+        <div className="flex gap-2">
+           <button
+             onClick={() => { hapticTap(); onSave(formData as Quote); }}
+             className="text-amber-600 font-bold text-sm px-3 py-1.5 bg-amber-50 rounded-lg"
+           >
+             Save
+           </button>
         </div>
       </div>
 
-      <div className="ios-form-group mx-2 shadow-sm">
-        <div className="ios-form-item">
-          <label className="ios-label">Title</label>
-          <input type="text" className="ios-input" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Project Title" />
-          <button type="button" onClick={() => isListeningTitle ? titleRecognitionRef.current?.stop() : titleRecognitionRef.current?.start()} className={`p-2 ${isListeningTitle ? 'text-red-500' : 'text-slate-400'}`}><Mic size={18} /></button>
-        </div>
-        <div className="ios-form-item relative" ref={dropdownRef}>
-          <label className="ios-label">Client</label>
-          <div className="flex-1 flex items-center">
-             <input type="text" className="ios-input flex-1" value={customerSearch} onFocus={() => setShowCustomerDropdown(true)} onChange={e => setCustomerSearch(e.target.value)} placeholder="Search..." />
-             <button onClick={() => setIsAddingCustomer(true)} className="p-1.5 bg-slate-100 text-amber-600 rounded-lg ml-2"><UserPlus size={16} /></button>
+      <div className="p-4 space-y-6">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+          <div className="grid grid-cols-2 gap-4 mb-4">
+             <div className="col-span-2">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Project Title</label>
+                <input type="text" className="w-full text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-amber-500 transition-colors placeholder:text-slate-300" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Enter title..." />
+             </div>
+             <div className="relative" ref={dropdownRef}>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Client</label>
+                <div className="flex items-center gap-2">
+                   <input type="text" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-amber-500 transition-colors placeholder:text-slate-300" value={customerSearch} onFocus={() => setShowCustomerDropdown(true)} onChange={e => setCustomerSearch(e.target.value)} placeholder="Select client" />
+                   <button onClick={() => setIsAddingCustomer(true)} className="p-1 bg-slate-50 text-amber-600 rounded-md"><UserPlus size={14}/></button>
+                </div>
+                {showCustomerDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-100 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+                    {customers.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase())).map(c => (
+                      <button key={c.id} onClick={() => { setFormData({ ...formData, customerId: c.id }); setCustomerSearch(c.name); setShowCustomerDropdown(false); }} className="w-full text-left p-3 hover:bg-slate-50 border-b border-slate-50 flex flex-col">
+                        <span className="font-bold text-slate-900">{c.name}</span>
+                        {c.company && <span className="text-xs text-slate-500">{c.company}</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+             </div>
+             <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Date</label>
+                <input type="date" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-amber-500 transition-colors" value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})} />
+             </div>
           </div>
-          {showCustomerDropdown && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-100 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
-              {customers.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase())).map(c => (
-                <button key={c.id} onClick={() => { setFormData({ ...formData, customerId: c.id }); setCustomerSearch(c.name); setShowCustomerDropdown(false); }} className="w-full text-left p-3 hover:bg-slate-50 border-b border-slate-50 flex flex-col">
-                  <span className="font-bold text-slate-900">{c.name}</span>
-                  {c.company && <span className="text-xs text-slate-500">{c.company}</span>}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
-        <div className="ios-form-item">
-          <label className="ios-label">Date</label>
-          <input type="date" className="ios-input" value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})} />
-        </div>
-        <div className="ios-form-item">
-          <label className="ios-label">Type</label>
-          <select className="ios-input appearance-none bg-transparent" value={formData.type} onChange={e => handleTypeChange(e.target.value as any)}>
-            <option value="estimate">Estimate</option>
-            <option value="quotation">Quotation</option>
-            <option value="invoice">Invoice</option>
-          </select>
-        </div>
-      </div>
 
       {/* Register Client Modal */}
       {isAddingCustomer && (
@@ -719,37 +707,43 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                 </div>
               </div>
 
-              {/* Material Items - Clean List Style */}
-              <div className="bg-white rounded-xl border border-slate-100 overflow-hidden">
-                <div className="divide-y divide-slate-50">
-                  {section.items.map((item) => (
-                    <div key={item.id} className="p-3">
-                        <div className="flex items-start gap-3 mb-2">
-                           <div className="flex-1">
-                              <input type="text" className="w-full font-bold text-sm text-slate-900 outline-none placeholder:text-slate-300" value={item.name} onChange={e => updateItem(section.id, item.id, { name: e.target.value })} placeholder="Item description" />
-                              <input type="text" className="w-full text-xs text-slate-400 outline-none placeholder:text-slate-200" value={item.description} onChange={e => updateItem(section.id, item.id, { description: e.target.value })} placeholder="Optional details" />
-                           </div>
-                           <button onClick={() => removeItem(section.id, item.id)} className="text-slate-300 hover:text-red-500 p-1"><Trash2 size={16}/></button>
-                        </div>
-                        <div className="flex items-center gap-3">
-                           <div className="flex-1 flex items-center bg-slate-50 rounded-lg px-2">
-                              <input type="number" className="w-full bg-transparent text-sm font-semibold p-2 outline-none text-center" value={item.quantity || ''} onChange={e => updateItem(section.id, item.id, { quantity: parseFloat(e.target.value) || 0 })} placeholder="0" />
-                              <span className="text-xs text-slate-400">Qty</span>
-                           </div>
-                           <div className="flex-1 flex items-center bg-slate-50 rounded-lg px-2">
-                              <span className="text-xs text-slate-400">£</span>
-                              <input type="number" className="w-full bg-transparent text-sm font-semibold p-2 outline-none text-right" value={item.unitPrice || ''} onChange={e => updateItem(section.id, item.id, { unitPrice: parseFloat(e.target.value) || 0 })} placeholder="0.00" />
-                           </div>
-                           <div className="w-20 text-right font-bold text-slate-900 text-sm">
-                              £{item.totalPrice.toFixed(2)}
-                           </div>
-                        </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                   <button onClick={() => addMaterialToSection(section.id)} className="flex-1 py-3 border-2 border-dashed border-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:border-amber-200 hover:text-amber-500 transition-all flex items-center justify-center gap-2"><Plus size={14}/> Add Item</button>
-                   <button onClick={() => openLibraryForSection(section.id)} className="flex-1 py-3 border-2 border-slate-200 bg-slate-50 text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:border-amber-400 hover:bg-amber-50 hover:text-amber-600 transition-all flex items-center justify-center gap-2"><Library size={14}/> Add from Library</button>
+              {/* Material Items - Amazing List Style */}
+              <div className="space-y-3">
+                {section.items.map((item) => (
+                  <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 relative group overflow-hidden">
+                      <div className="flex justify-between items-start mb-3">
+                         <div className="flex-1 mr-4">
+                            <input type="text" className="w-full font-bold text-base text-slate-900 outline-none placeholder:text-slate-300 bg-transparent" value={item.name} onChange={e => updateItem(section.id, item.id, { name: e.target.value })} placeholder="Item Name" />
+                            <input type="text" className="w-full text-xs text-slate-500 outline-none placeholder:text-slate-300 bg-transparent mt-1" value={item.description} onChange={e => updateItem(section.id, item.id, { description: e.target.value })} placeholder="Description (optional)" />
+                         </div>
+                         <button onClick={() => removeItem(section.id, item.id)} className="p-2 bg-slate-50 text-slate-300 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors"><Trash2 size={16}/></button>
+                      </div>
+
+                      <div className="flex gap-3 bg-slate-50 p-2 rounded-lg">
+                         <div className="flex-1">
+                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1 pl-1">Qty</label>
+                            <input type="number" className="w-full bg-white rounded-md text-sm font-bold p-2 text-center shadow-sm outline-none focus:ring-2 focus:ring-amber-100" value={item.quantity || ''} onChange={e => updateItem(section.id, item.id, { quantity: parseFloat(e.target.value) || 0 })} placeholder="0" />
+                         </div>
+                         <div className="flex-1">
+                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1 pl-1">Price (£)</label>
+                            <input type="number" className="w-full bg-white rounded-md text-sm font-bold p-2 text-center shadow-sm outline-none focus:ring-2 focus:ring-amber-100" value={item.unitPrice || ''} onChange={e => updateItem(section.id, item.id, { unitPrice: parseFloat(e.target.value) || 0 })} placeholder="0.00" />
+                         </div>
+                         <div className="flex-1 flex flex-col justify-end">
+                            <div className="w-full bg-slate-900 rounded-md p-2 text-center">
+                               <span className="text-white text-sm font-bold">£{item.totalPrice.toFixed(2)}</span>
+                            </div>
+                         </div>
+                      </div>
+                  </div>
+                ))}
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                   <button onClick={() => addMaterialToSection(section.id)} className="flex items-center justify-center gap-2 py-4 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-xs uppercase tracking-wider shadow-sm hover:bg-slate-50 active:scale-95 transition-all">
+                      <Plus size={16} className="text-amber-500"/> Add Item
+                   </button>
+                   <button onClick={() => openLibraryForSection(section.id)} className="flex items-center justify-center gap-2 py-4 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-xs uppercase tracking-wider shadow-sm hover:bg-slate-50 active:scale-95 transition-all">
+                      <Library size={16} className="text-blue-500"/> Library
+                   </button>
                 </div>
               </div>
 
@@ -807,6 +801,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
             {settings.enableCis && <div className="flex justify-between md:justify-end gap-6"><span className="text-red-400 uppercase tracking-widest">CIS</span><span className="text-red-400/80">-£{totals.cis.toFixed(2)}</span></div>}
           </div>
         </div>
+      </div>
       </div>
 
       {/* Materials Library Modal */}

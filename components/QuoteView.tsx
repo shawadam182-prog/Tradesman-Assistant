@@ -222,46 +222,47 @@ ${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know 
 
   return (
     <div className="max-w-4xl mx-auto space-y-4 pb-24">
-      <div className="flex flex-col gap-4 print:hidden">
-        <div className="flex items-center justify-between">
-          <button onClick={onBack} className="flex items-center gap-1.5 text-slate-400 hover:text-slate-800 transition-colors py-2">
-            <ArrowLeft size={16} />
-            <span className="font-black text-[10px] uppercase tracking-widest">Back</span>
+      {/* Unified Header */}
+      <div className="sticky top-0 z-40 bg-white border-b border-slate-100 p-4 flex items-center justify-between shadow-sm -mx-4 md:mx-0 print:hidden mb-4">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="p-2 -ml-2 text-slate-400 hover:text-slate-700">
+            <ArrowLeft size={20} />
           </button>
-          <div className="flex flex-wrap gap-2">
+          <h1 className="text-lg font-bold text-slate-900">{activeQuote.type === 'invoice' ? 'Invoice' : 'Quote'} Details</h1>
+        </div>
+        <div className="flex gap-2">
+           <button onClick={onEdit} className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100"><Edit3 size={18} /></button>
+           <button onClick={handleWhatsAppShare} className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100"><MessageCircle size={18} /></button>
+           <button onClick={handleDownloadPDF} disabled={isDownloading} className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100">
+             {isDownloading ? <Loader2 size={18} className="animate-spin"/> : <FileDown size={18} />}
+           </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4 print:hidden">
+        {/* Secondary Actions Row */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
             <button
               onClick={() => setShowCustomiser(!showCustomiser)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-bold transition-all text-[10px] uppercase tracking-widest shadow-sm border ${
-                showCustomiser ? 'bg-purple-600 text-white border-purple-700' : 'bg-white text-purple-600 border-purple-100 hover:border-purple-300'
-              }`}
+              className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-100 text-slate-600 text-xs font-bold shadow-sm"
             >
-              <Settings2 size={14} />
-              Layout {showCustomiser ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
+              <Settings2 size={14} /> Layout
             </button>
-            <button onClick={onEdit} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-bold hover:bg-slate-50 transition-all text-[10px] uppercase tracking-widest shadow-sm"><Edit3 size={14} /> Edit</button>
             {onDuplicate && (
-              <button onClick={onDuplicate} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-bold hover:bg-slate-50 transition-all text-[10px] uppercase tracking-widest shadow-sm">
-                <Copy size={14} /> Copy
+              <button onClick={onDuplicate} className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-100 text-slate-600 text-xs font-bold shadow-sm">
+                <Copy size={14} /> Duplicate
               </button>
             )}
             {activeQuote.type !== 'invoice' && onConvertToInvoice && activeQuote.status === 'accepted' && (
-              <button onClick={onConvertToInvoice} className="flex items-center gap-2 bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-black hover:bg-emerald-600 transition-all text-[10px] uppercase tracking-widest shadow-md shadow-emerald-200">
-                <ReceiptText size={14} /> Convert to Invoice
+              <button onClick={onConvertToInvoice} className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-bold shadow-sm border border-emerald-100">
+                <ReceiptText size={14} /> To Invoice
               </button>
             )}
-            <button onClick={handleWhatsAppShare} className="flex items-center gap-2 bg-green-500 text-white px-3 py-1.5 rounded-lg font-black hover:bg-green-600 transition-all text-[10px] uppercase tracking-widest shadow-md shadow-green-200">
-              <MessageCircle size={14} /> WhatsApp
-            </button>
             {customer?.address && (
-              <button onClick={handleOpenMaps} className="flex items-center gap-2 bg-blue-500 text-white px-3 py-1.5 rounded-lg font-black hover:bg-blue-600 transition-all text-[10px] uppercase tracking-widest shadow-md shadow-blue-200">
-                <MapPin size={14} /> Maps
+              <button onClick={handleOpenMaps} className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 text-blue-600 text-xs font-bold shadow-sm border border-blue-100">
+                <MapPin size={14} /> Map
               </button>
             )}
-            <button onClick={handleDownloadPDF} disabled={isDownloading} className="flex items-center gap-2 bg-amber-500 text-white px-4 py-1.5 rounded-lg font-black hover:bg-amber-600 transition-all text-[10px] uppercase tracking-widest shadow-md shadow-amber-200 disabled:opacity-50">
-              {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />}
-              {isDownloading ? 'Working...' : 'PDF'}
-            </button>
-          </div>
         </div>
 
         {showCustomiser && (

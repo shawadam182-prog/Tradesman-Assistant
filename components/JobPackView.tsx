@@ -327,71 +327,41 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
         </div>
       )}
 
-      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-        <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-3 bg-white hover:bg-slate-50 rounded-2xl text-slate-400 hover:text-slate-900 transition-all border border-slate-200 shadow-sm min-w-[44px] min-h-[44px] flex items-center justify-center">
+      {/* Unified Header */}
+      <div className="sticky top-0 z-40 bg-white border-b border-slate-100 p-4 flex items-center justify-between shadow-sm -mx-4 md:mx-0 mb-4">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="p-2 -ml-2 text-slate-400 hover:text-slate-700">
             <ArrowLeft size={20} />
           </button>
-          {onDeleteProject && (
-            <button
-              onClick={handleDeleteProject}
-              className="p-3 bg-white hover:bg-red-50 rounded-2xl text-slate-300 hover:text-red-500 transition-all border border-slate-200 hover:border-red-200 shadow-sm min-w-[44px] min-h-[44px] flex items-center justify-center"
-              title="Delete job pack"
-            >
-              <Trash2 size={18} />
-            </button>
-          )}
-          <div>
-            <div className="flex items-center gap-2 group/title">
-              <FolderOpen className="text-amber-500 shrink-0" size={18}/>
-              {isEditingTitle ? (
-                <div className="flex items-center gap-2">
-                  <input 
-                    autoFocus
-                    className="text-base md:text-2xl font-black text-slate-900 tracking-tight bg-slate-50 border-b-2 border-amber-500 outline-none px-1"
-                    value={tempTitle}
-                    onChange={e => setTempTitle(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') handleSaveTitle();
-                      if (e.key === 'Escape') { setTempTitle(project.title); setIsEditingTitle(false); }
-                    }}
-                  />
-                  <button onClick={handleSaveTitle} className="p-1.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-all shadow-sm">
-                    <Check size={16} />
-                  </button>
-                  <button onClick={() => { setTempTitle(project.title); setIsEditingTitle(false); }} className="p-1.5 bg-slate-100 text-slate-400 rounded-lg hover:bg-slate-200 transition-all shadow-sm">
-                    <X size={16} />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsEditingTitle(true)}>
-                  <h2 className="text-base md:text-2xl font-black text-slate-900 tracking-tight hover:text-amber-600 transition-colors">{project.title}</h2>
-                  <Pencil size={14} className="text-slate-300 opacity-0 group-hover/title:opacity-100 transition-opacity" />
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{customer?.name} • {customer?.company || 'Private Client'}</p>
-              {customer?.address && (
+          <div className="flex flex-col">
+             {isEditingTitle ? (
+               <input
+                 autoFocus
+                 className="text-lg font-bold text-slate-900 outline-none bg-slate-50 rounded px-2 -ml-2"
+                 value={tempTitle}
+                 onChange={e => setTempTitle(e.target.value)}
+                 onBlur={handleSaveTitle}
+               />
+             ) : (
+               <h1 onClick={() => setIsEditingTitle(true)} className="text-lg font-bold text-slate-900 flex items-center gap-2 cursor-text">
+                 {project.title}
+               </h1>
+             )}
+             <p className="text-xs text-slate-500">{customer?.name || 'No Client'}</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+           {customer?.address && (
                 <a 
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(customer.address)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[9px] font-black text-amber-600 uppercase bg-amber-50 px-2 py-0.5 rounded-md hover:bg-amber-100 transition-all group/nav"
+                  className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100"
                 >
-                  <Navigation size={10} className="group-hover/nav:animate-pulse" /> Map Site
+                  <Navigation size={18} />
                 </a>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={handleAddPhoto} className="p-3 bg-white border-2 border-slate-200 text-slate-700 rounded-2xl hover:border-amber-400 transition-all shadow-sm">
-            <Camera size={24} />
-          </button>
-          <button onClick={toggleRecording} className={`p-3 rounded-2xl transition-all shadow-md ${isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-900 text-white hover:bg-black'}`}>
-            <Mic size={24} />
-          </button>
+           )}
+           {onDeleteProject && <button onClick={handleDeleteProject} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><Trash2 size={18} /></button>}
         </div>
       </div>
 
