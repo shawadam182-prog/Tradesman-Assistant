@@ -501,7 +501,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-8">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Expenses</h1>
-          <p className="text-slate-500 text-sm font-medium">Track receipts and business costs</p>
+          <p className="text-slate-500 text-sm font-medium">Track receipts and business costs <span className="text-red-500 font-bold">[v15-DEBUG]</span></p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => setShowCategoryManager(true)} className="flex items-center gap-2 bg-white text-slate-600 px-4 py-3 rounded-2xl font-bold text-sm border border-slate-200 hover:bg-slate-50 transition-colors">
