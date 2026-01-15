@@ -105,6 +105,8 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [scanning, setScanning] = useState(false);
+  const [debugLog, setDebugLog] = useState<string[]>([]); // Visible debug log
+  const addDebug = (msg: string) => setDebugLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [suggestedCategory, setSuggestedCategory] = useState<{ id: string; name: string } | null>(null);
@@ -233,39 +235,39 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
   };
 
   const processFile = async (file: File) => {
-    console.log('processFile started:', file.name, file.type, file.size);
+    setDebugLog([]); // Clear previous logs
+    addDebug(`1. File selected: ${file.name} (${file.size} bytes)`);
+
     try {
-      // Set preview immediately using object URL (synchronous, more reliable on mobile)
       const previewUrl = URL.createObjectURL(file);
-      console.log('Created preview URL:', previewUrl);
       setReceiptPreview(previewUrl);
       setReceiptFile(file);
       setScanning(true);
-      console.log('Set preview, file, and scanning state');
+      addDebug('2. Preview set, starting scan...');
 
-      // Convert to base64 and send to AI
       const base64 = await fileToBase64(file);
+      addDebug(`3. Converted to base64 (${base64.length} chars)`);
+
+      addDebug('4. Calling AI API...');
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gemini`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ action: 'parseReceipt', data: { imageBase64: base64 } }),
       });
 
+      addDebug(`5. API responded: ${response.status}`);
+
       if (response.ok) {
         const result = await response.json();
-        console.log('AI response:', result);
+        addDebug(`6. Parsed result: vendor=${result.vendor}, amount=${result.amount}`);
+
         if (result.vendor || result.amount) {
-          // Map AI category to user's actual category (case-insensitive match)
           let matchedCategory: string | null = null;
           if (result.category) {
-            const found = categories.find(c =>
-              c.name.toLowerCase() === result.category.toLowerCase()
-            );
+            const found = categories.find(c => c.name.toLowerCase() === result.category.toLowerCase());
             matchedCategory = found?.name || null;
-            console.log('Category mapping:', result.category, '->', matchedCategory);
           }
 
-          // Build new form data with ONLY API values - no closure dependencies
           const newFormData = {
             vendor: String(result.vendor || ''),
             description: String(result.description || ''),
@@ -277,27 +279,27 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
             job_pack_id: '',
           };
 
-          console.log('About to update form with:', newFormData);
+          addDebug(`7. Built newFormData: ${JSON.stringify(newFormData).slice(0, 100)}...`);
+          addDebug('8. Calling setFormData...');
 
-          // Store in sessionStorage and reload page to force fresh state
-          try {
-            sessionStorage.setItem('scannedExpense', JSON.stringify(newFormData));
-            sessionStorage.setItem('expenseModalOpen', 'true');
-          } catch { /* ignore */ }
+          setFormData(newFormData);
 
-          // Force page reload to pick up the sessionStorage data
-          window.location.reload();
+          addDebug('9. setFormData called, setting scanning=false');
+          setScanning(false);
+
+          addDebug('10. DONE - Check if fields updated!');
+          toast.success('Receipt Scanned', `${result.vendor} - £${result.amount}`);
           return;
         } else {
+          addDebug('6b. No vendor/amount in result');
           toast.info('Receipt uploaded', 'Unable to read details. Please fill in manually.');
         }
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('AI scan failed:', response.status, errorData);
+        addDebug(`5b. API error: ${response.status}`);
         toast.info('Receipt uploaded', 'AI scanning failed. Please fill in manually.');
       }
     } catch (error) {
-      console.error('Receipt processing failed:', error);
+      addDebug(`ERROR: ${error}`);
       toast.info('Receipt uploaded', 'Please fill in the details manually.');
     } finally {
       setScanning(false);
@@ -619,6 +621,19 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
               <button onClick={() => { setShowAddModal(false); resetForm(); }} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"><X size={20} /></button>
             </div>
             <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+              {/* DEBUG LOG PANEL - visible on screen */}
+              {debugLog.length > 0 && (
+                <div className="p-3 bg-yellow-50 border border-yellow-300 rounded-xl text-xs font-mono max-h-40 overflow-y-auto">
+                  <div className="font-bold text-yellow-800 mb-1">DEBUG LOG:</div>
+                  {debugLog.map((log, i) => (
+                    <div key={i} className="text-yellow-700">{log}</div>
+                  ))}
+                  <div className="mt-2 font-bold text-blue-800">
+                    Current formData.vendor: "{formData.vendor}" | amount: "{formData.amount}"
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Scan Receipt (Optional)</label>
                 {receiptPreview ? (
