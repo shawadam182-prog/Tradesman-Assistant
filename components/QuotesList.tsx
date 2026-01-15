@@ -124,12 +124,12 @@ export const QuotesList: React.FC<QuotesListProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between sm:justify-end gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-50">
+                <div className="flex items-center justify-between sm:justify-end gap-3 md:gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-50">
                   <div className="flex flex-col items-start sm:items-end">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">
                       Estimate Total
                     </p>
-                    <p className="font-black text-slate-900 text-xl tracking-tight">
+                    <p className="font-black text-slate-900 text-sm md:text-xl tracking-tight">
                       £{calculateQuoteTotal(quote).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>

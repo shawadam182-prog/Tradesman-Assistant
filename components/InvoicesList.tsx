@@ -125,7 +125,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between sm:justify-end gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-50">
+                <div className="flex items-center justify-between sm:justify-end gap-3 md:gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-50">
                   <div className="flex flex-col items-start sm:items-end">
                     <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest mb-1 ${
                       isPaid ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
@@ -133,7 +133,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                       {isPaid ? <CheckCircle2 size={10}/> : <AlertCircle size={10}/>}
                       {invoice.status}
                     </div>
-                    <p className="font-black text-slate-900 text-xl tracking-tight">
+                    <p className="font-black text-slate-900 text-sm md:text-xl tracking-tight">
                       £{calculateQuoteTotal(invoice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>

@@ -362,7 +362,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
 
   if (loading) return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-4 md:mb-8">
         <div className="space-y-2">
           <div className="skeleton h-8 w-32 rounded-lg" />
           <div className="skeleton h-4 w-48 rounded-lg" />
@@ -375,7 +375,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-8">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Expenses</h1>
           <p className="text-slate-500 text-sm font-medium">Track receipts and business costs</p>
@@ -411,7 +411,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 md:mb-8">
         <div className="bg-white rounded-2xl p-5 border border-slate-200">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Expenses</p>
           <p className="text-2xl font-black text-slate-900">{filteredExpenses.length}</p>
@@ -430,7 +430,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex flex-col md:flex-row gap-4 mb-3 md:mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input type="text" placeholder="Search vendors..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
@@ -508,7 +508,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                     {scanning && (<div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center"><div className="text-center text-white"><Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /><p className="text-sm font-bold">Scanning receipt...</p></div></div>)}
                   </div>
                 ) : (
-                  <button onClick={() => fileInputRef.current?.click()} className="w-full p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-amber-500 hover:bg-amber-50 transition-colors">
+                  <button onClick={() => fileInputRef.current?.click()} className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-amber-500 hover:bg-amber-50 transition-colors">
                     <Camera className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                     <p className="text-sm font-bold text-slate-600">Tap to scan receipt</p>
                     <p className="text-xs text-slate-400">AI will auto-fill the details</p>

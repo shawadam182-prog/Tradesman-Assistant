@@ -310,11 +310,11 @@ ${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know 
 
       <div ref={documentRef} className="bg-white rounded-[32px] shadow-2xl border border-slate-200 overflow-hidden print:border-none print:shadow-none">
         <div className="bg-slate-900 text-white px-8 py-3 flex justify-end items-center">
-          <h2 className="text-xl font-black uppercase tracking-[0.2em]">{activeQuote.type || 'estimate'}</h2>
+          <h2 className="text-sm md:text-xl font-black uppercase tracking-[0.2em]">{activeQuote.type || 'estimate'}</h2>
         </div>
 
         <div className="grid grid-cols-2 gap-0 border-b border-slate-100">
-          <div className="p-8 bg-slate-50/50 border-r border-slate-100">
+          <div className="p-4 md:p-8 bg-slate-50/50 border-r border-slate-100">
             <div className="flex items-center gap-4 mb-4">
               {displayOptions.showLogo && (
                 settings.companyLogo ? (
@@ -330,7 +330,7 @@ ${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know 
             </div>
             <p className="text-xs text-slate-500 font-medium max-w-[240px] leading-relaxed whitespace-pre-line">{settings?.companyAddress}</p>
           </div>
-          <div className="p-8 text-right">
+          <div className="p-4 md:p-8 text-right">
             <div className="flex items-center gap-2 mb-4 justify-end"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Client Details</p><User className="text-slate-400" size={18} /></div>
             <h2 className="text-lg font-black text-slate-900 mb-1">{customer?.name || 'Unassigned Client'}</h2>
             {customer?.address && <p className="text-xs text-slate-500 font-bold ml-auto max-w-[240px] whitespace-pre-line leading-relaxed">{customer.address}</p>}
@@ -453,11 +453,11 @@ ${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know 
         })}
 
         <div className={`${currentThemeClass} p-10 avoid-break relative overflow-hidden`}>
-          <div className="absolute top-0 right-0 p-8 opacity-5"><PoundSterling size={120} /></div>
+          <div className="absolute top-0 right-0 p-4 md:p-8 opacity-5"><PoundSterling size={120} /></div>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
             <div className="flex-1 max-w-lg">
               {displayOptions.showNotes && activeQuote?.notes && (
-                <div className="mb-8">
+                <div className="mb-4 md:mb-8">
                   <div className="flex items-center gap-2 mb-3 opacity-60"><Info size={14}/><span className="text-[9px] font-black uppercase tracking-widest italic">Terms & Important Information</span></div>
                   <p className="text-[10px] opacity-70 italic leading-relaxed whitespace-pre-line">{activeQuote.notes}</p>
                 </div>

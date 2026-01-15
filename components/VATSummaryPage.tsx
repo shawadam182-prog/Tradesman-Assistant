@@ -308,9 +308,9 @@ export const VATSummaryPage: React.FC = () => {
     return (
       <div className="max-w-2xl mx-auto py-16 text-center">
         <div className="bg-amber-50 rounded-3xl border border-amber-200 p-10">
-          <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-6" />
+          <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-3 md:mb-6" />
           <h2 className="text-2xl font-black text-slate-900 mb-3">VAT Registration Required</h2>
-          <p className="text-slate-600 mb-6">
+          <p className="text-slate-600 mb-3 md:mb-6">
             You need to enable VAT registration in Settings to use the VAT Summary features.
           </p>
           <p className="text-sm text-slate-500">
@@ -324,7 +324,7 @@ export const VATSummaryPage: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-8">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">VAT Summary</h1>
           <p className="text-slate-500 text-sm font-medium">Track your VAT position for HMRC returns</p>
@@ -375,7 +375,7 @@ export const VATSummaryPage: React.FC = () => {
 
       {/* Upcoming Deadline Alert */}
       {upcomingDeadline && (
-        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-8 flex items-center gap-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4 md:mb-8 flex items-center gap-4">
           <div className="p-3 bg-blue-100 rounded-xl">
             <Clock className="w-6 h-6 text-blue-600" />
           </div>
@@ -393,7 +393,7 @@ export const VATSummaryPage: React.FC = () => {
 
       {/* Flat Rate Scheme Selector */}
       {vatScheme === 'flat_rate' && (
-        <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 mb-8">
+        <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 mb-4 md:mb-8">
           <div className="flex items-center gap-3 mb-3">
             <Percent className="w-5 h-5 text-purple-600" />
             <span className="font-bold text-purple-900">Flat Rate Scheme Business Type</span>
@@ -411,11 +411,11 @@ export const VATSummaryPage: React.FC = () => {
       )}
 
       {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mb-4 md:mb-8">
         {vatScheme === 'standard' ? (
           <>
             {/* Input VAT (Reclaimable) */}
-            <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-3xl border border-emerald-200 p-6">
+            <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-3xl border border-emerald-200 p-3 md:p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-3 bg-emerald-100 rounded-2xl">
                   <ArrowDownRight className="w-6 h-6 text-emerald-600" />
@@ -430,7 +430,7 @@ export const VATSummaryPage: React.FC = () => {
             </div>
 
             {/* Output VAT (Owed) */}
-            <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-3xl border border-red-200 p-6">
+            <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-3xl border border-red-200 p-3 md:p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-3 bg-red-100 rounded-2xl">
                   <ArrowUpRight className="w-6 h-6 text-red-600" />
@@ -445,7 +445,7 @@ export const VATSummaryPage: React.FC = () => {
             </div>
 
             {/* Net VAT Position */}
-            <div className={`rounded-3xl border p-6 ${
+            <div className={`rounded-3xl border p-3 md:p-6 ${
               filteredData.summary.netVat >= 0
                 ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200'
                 : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
@@ -474,7 +474,7 @@ export const VATSummaryPage: React.FC = () => {
         ) : (
           <>
             {/* Flat Rate - Gross Sales */}
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl border border-slate-200 p-6">
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl border border-slate-200 p-3 md:p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-3 bg-slate-200 rounded-2xl">
                   <PoundSterling className="w-6 h-6 text-slate-600" />
@@ -488,7 +488,7 @@ export const VATSummaryPage: React.FC = () => {
             </div>
 
             {/* Flat Rate - VAT Due */}
-            <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-3xl border border-purple-200 p-6">
+            <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-3xl border border-purple-200 p-3 md:p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-3 bg-purple-100 rounded-2xl">
                   <Percent className="w-6 h-6 text-purple-600" />
@@ -502,7 +502,7 @@ export const VATSummaryPage: React.FC = () => {
             </div>
 
             {/* Flat Rate - You Keep */}
-            <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-3xl border border-emerald-200 p-6">
+            <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-3xl border border-emerald-200 p-3 md:p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-3 bg-emerald-100 rounded-2xl">
                   <TrendingUp className="w-6 h-6 text-emerald-600" />
@@ -520,7 +520,7 @@ export const VATSummaryPage: React.FC = () => {
       </div>
 
       {/* Mileage VAT Calculator */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 mb-8">
+      <div className="bg-white rounded-3xl border border-slate-200 p-3 md:p-6 mb-4 md:mb-8">
         <button
           onClick={() => setShowMileageCalc(!showMileageCalc)}
           className="w-full flex items-center justify-between"
@@ -563,7 +563,7 @@ export const VATSummaryPage: React.FC = () => {
 
       {/* Quarterly Breakdown */}
       {selectedQuarter === 'all' && quarterSummaries.length > 0 && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 mb-8">
+        <div className="bg-white rounded-3xl border border-slate-200 p-3 md:p-6 mb-4 md:mb-8">
           <h2 className="font-black text-slate-900 mb-4 flex items-center gap-2">
             <Calendar size={20} className="text-amber-500" />
             Quarterly Breakdown
@@ -605,7 +605,7 @@ export const VATSummaryPage: React.FC = () => {
 
       {/* Category Breakdown */}
       {categoryBreakdown.length > 0 && vatScheme === 'standard' && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6">
+        <div className="bg-white rounded-3xl border border-slate-200 p-3 md:p-6">
           <h2 className="font-black text-slate-900 mb-4 flex items-center gap-2">
             <Receipt size={20} className="text-amber-500" />
             Input VAT by Category
@@ -628,7 +628,7 @@ export const VATSummaryPage: React.FC = () => {
       )}
 
       {/* HMRC Notice */}
-      <div className="mt-8 p-6 bg-slate-50 rounded-2xl border border-slate-200">
+      <div className="mt-8 p-3 md:p-6 bg-slate-50 rounded-2xl border border-slate-200">
         <p className="text-xs text-slate-500">
           <strong>Making Tax Digital (MTD):</strong> If your taxable turnover exceeds £85,000, you must submit VAT returns
           digitally through MTD-compatible software. This summary can be exported and used as a reference for your submissions.
