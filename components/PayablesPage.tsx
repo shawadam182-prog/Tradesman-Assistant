@@ -221,14 +221,14 @@ export const PayablesPage: React.FC = () => {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-4 md:mb-8">
           <div className="space-y-2">
             <div className="skeleton h-8 w-32 rounded-lg" />
             <div className="skeleton h-4 w-48 rounded-lg" />
           </div>
           <div className="skeleton h-10 w-28 rounded-xl" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 md:mb-8">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="bg-white rounded-2xl p-5 border border-slate-200">
               <div className="skeleton h-3 w-20 mb-2 rounded" />
@@ -244,7 +244,7 @@ export const PayablesPage: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-8">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Bills to Pay</h1>
           <p className="text-slate-500 text-sm font-medium">Track supplier invoices and payment deadlines</p>
@@ -268,7 +268,7 @@ export const PayablesPage: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 md:mb-8">
         <div className="bg-white rounded-2xl p-5 border border-slate-200">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Outstanding</p>
           <p className="text-2xl font-black text-slate-900">£{stats.totalOutstanding.toFixed(2)}</p>
@@ -288,7 +288,7 @@ export const PayablesPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex flex-col md:flex-row gap-4 mb-3 md:mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input

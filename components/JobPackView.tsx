@@ -225,12 +225,12 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pb-24">
+    <div className="max-w-6xl mx-auto space-y-3 md:space-y-6 pb-24">
       {/* Large View Modal */}
       {selectedImage && (
         <div className="fixed inset-0 z-[1000] bg-slate-900/90 backdrop-blur-xl flex flex-col animate-in fade-in duration-300">
           {/* Header Controls */}
-          <div className="flex items-center justify-between p-6 bg-slate-900/50 border-b border-white/10">
+          <div className="flex items-center justify-between p-3 md:p-6 bg-slate-900/50 border-b border-white/10">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-white/10 rounded-2xl text-white">
                 {selectedImage.type === 'photo' ? <ImageIcon size={24} /> : <Ruler size={24} />}
@@ -262,7 +262,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           </div>
 
           {/* Main Viewport */}
-          <div className="flex-1 flex flex-col md:flex-row items-center justify-center p-8 gap-8 overflow-hidden">
+          <div className="flex-1 flex flex-col md:flex-row items-center justify-center p-4 md:p-8 gap-8 overflow-hidden">
             <div className="flex-1 w-full h-full flex items-center justify-center relative overflow-hidden bg-slate-950/50 rounded-[40px] border border-white/5">
               <img 
                 src={selectedImage.item.url} 
@@ -273,7 +273,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
             </div>
 
             {/* Annotation Sidebar */}
-            <div className="w-full md:w-80 bg-white/5 p-8 rounded-[40px] border border-white/10 flex flex-col gap-6">
+            <div className="w-full md:w-80 bg-white/5 p-4 md:p-8 rounded-[40px] border border-white/10 flex flex-col gap-3 md:gap-6">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Annotations</h4>
@@ -348,7 +348,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
                 <div className="flex items-center gap-2">
                   <input 
                     autoFocus
-                    className="text-2xl font-black text-slate-900 tracking-tight bg-slate-50 border-b-2 border-amber-500 outline-none px-1"
+                    className="text-base md:text-2xl font-black text-slate-900 tracking-tight bg-slate-50 border-b-2 border-amber-500 outline-none px-1"
                     value={tempTitle}
                     onChange={e => setTempTitle(e.target.value)}
                     onKeyDown={e => {
@@ -365,7 +365,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
                 </div>
               ) : (
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsEditingTitle(true)}>
-                  <h2 className="text-2xl font-black text-slate-900 tracking-tight hover:text-amber-600 transition-colors">{project.title}</h2>
+                  <h2 className="text-base md:text-2xl font-black text-slate-900 tracking-tight hover:text-amber-600 transition-colors">{project.title}</h2>
                   <Pencil size={14} className="text-slate-300 opacity-0 group-hover/title:opacity-100 transition-opacity" />
                 </div>
               )}
@@ -517,7 +517,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
       )}
 
       {activeTab === 'finance' && (
-        <div className="space-y-6 animate-in fade-in">
+        <div className="space-y-3 md:space-y-6 animate-in fade-in">
           <div className="flex justify-between items-center">
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Financials</h3>
             <button onClick={onCreateQuote} className="bg-amber-500 text-white px-6 py-2 rounded-xl text-xs font-black uppercase shadow-lg">+ New Doc</button>

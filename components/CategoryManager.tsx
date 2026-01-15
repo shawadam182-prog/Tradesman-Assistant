@@ -167,7 +167,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+        <div className="flex items-center justify-between p-3 md:p-6 border-b border-slate-100">
           <div>
             <h2 className="text-xl font-black text-slate-900">Manage Categories</h2>
             <p className="text-sm text-slate-500">Add, edit, or remove expense categories</p>
@@ -181,7 +181,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 md:p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-amber-500" />

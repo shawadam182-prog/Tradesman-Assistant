@@ -414,7 +414,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
       </div>
 
       {/* Progress Steps */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center gap-4 mb-4 md:mb-8">
         {['Upload', 'Preview', 'Import'].map((label, idx) => {
           const stepNum = idx + 1;
           const isActive = (step === 'upload' && stepNum === 1) ||
@@ -447,8 +447,8 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
 
       {/* Step 1: Upload */}
       {step === 'upload' && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-8">
-          <div className="text-center mb-8">
+        <div className="bg-white rounded-3xl border border-slate-200 p-4 md:p-8">
+          <div className="text-center mb-4 md:mb-8">
             <FileSpreadsheet className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <h2 className="text-xl font-black text-slate-900 mb-2">Upload Price List CSV</h2>
             <p className="text-slate-500 text-sm">Export a price list from your wholesaler account and upload it here</p>
@@ -464,14 +464,14 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-full p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-amber-500 hover:bg-amber-50 transition-colors group"
+            className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-amber-500 hover:bg-amber-50 transition-colors group"
           >
             <Upload className="w-10 h-10 text-slate-400 group-hover:text-amber-500 mx-auto mb-3 transition-colors" />
             <p className="font-bold text-slate-600 group-hover:text-amber-600 mb-1">Click to upload CSV</p>
             <p className="text-xs text-slate-400">Supports: Jewson, Travis Perkins, Selco, Buildbase, Howdens, and more</p>
           </button>
 
-          <div className="mt-8 p-6 bg-slate-50 rounded-2xl">
+          <div className="mt-8 p-3 md:p-6 bg-slate-50 rounded-2xl">
             <h3 className="font-black text-sm text-slate-700 mb-3 flex items-center gap-2">
               <Building2 size={16} />
               How to export from your wholesaler
@@ -491,7 +491,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
       {step === 'preview' && (
         <div className="space-y-6">
           {/* Wholesaler Selection */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-6">
+          <div className="bg-white rounded-3xl border border-slate-200 p-3 md:p-6">
             <h3 className="font-black text-sm text-slate-700 mb-4">Select Your Wholesaler</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {Object.entries(WHOLESALER_PRESETS).map(([id, preset]) => (
@@ -530,7 +530,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
 
           {/* Column Mapping (for custom) */}
           {selectedWholesaler === 'custom' && (
-            <div className="bg-white rounded-3xl border border-slate-200 p-6">
+            <div className="bg-white rounded-3xl border border-slate-200 p-3 md:p-6">
               <h3 className="font-black text-sm text-slate-700 mb-4">Column Mapping</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
@@ -578,7 +578,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
           )}
 
           {/* Markup Settings */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-6">
+          <div className="bg-white rounded-3xl border border-slate-200 p-3 md:p-6">
             <h3 className="font-black text-sm text-slate-700 mb-4 flex items-center gap-2">
               <PoundSterling size={16} />
               Default Markup
@@ -696,8 +696,8 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
 
       {/* Step 3: Complete */}
       {step === 'complete' && importResult && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center">
-          <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
+        <div className="bg-white rounded-3xl border border-slate-200 p-4 md:p-8 text-center">
+          <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3 md:mb-6">
             <Check className="w-10 h-10 text-emerald-600" />
           </div>
           <h2 className="text-2xl font-black text-slate-900 mb-2">Import Complete!</h2>
@@ -708,7 +708,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
           </p>
 
           {importResult.errors.length > 0 && (
-            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-left mb-6">
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-left mb-3 md:mb-6">
               <p className="font-bold text-amber-700 text-sm mb-2">Errors:</p>
               <ul className="text-xs text-amber-600 space-y-1 max-h-32 overflow-auto">
                 {importResult.errors.slice(0, 10).map((err, idx) => (

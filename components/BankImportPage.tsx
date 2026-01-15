@@ -248,7 +248,7 @@ export const BankImportPage: React.FC = () => {
       </div>
 
       {/* Progress Steps */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center gap-4 mb-4 md:mb-8">
         {['Upload', 'Preview', 'Import'].map((label, idx) => {
           const stepNum = idx + 1;
           const isActive = (step === 'upload' && stepNum === 1) ||
@@ -281,8 +281,8 @@ export const BankImportPage: React.FC = () => {
 
       {/* Step 1: Upload */}
       {step === 'upload' && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-8">
-          <div className="text-center mb-8">
+        <div className="bg-white rounded-3xl border border-slate-200 p-4 md:p-8">
+          <div className="text-center mb-4 md:mb-8">
             <FileSpreadsheet className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <h2 className="text-xl font-black text-slate-900 mb-2">Upload Bank Statement</h2>
             <p className="text-slate-500 text-sm">Export a CSV file from your online banking and upload it here</p>
@@ -298,14 +298,14 @@ export const BankImportPage: React.FC = () => {
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-full p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-amber-500 hover:bg-amber-50 transition-colors group"
+            className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-amber-500 hover:bg-amber-50 transition-colors group"
           >
             <Upload className="w-10 h-10 text-slate-400 group-hover:text-amber-500 mx-auto mb-3 transition-colors" />
             <p className="font-bold text-slate-600 group-hover:text-amber-600 mb-1">Click to upload CSV</p>
             <p className="text-xs text-slate-400">Supports most UK banks: Starling, Monzo, Lloyds, Barclays, NatWest</p>
           </button>
 
-          <div className="mt-8 p-6 bg-slate-50 rounded-2xl">
+          <div className="mt-8 p-3 md:p-6 bg-slate-50 rounded-2xl">
             <h3 className="font-black text-sm text-slate-700 mb-3 flex items-center gap-2">
               <Building2 size={16} />
               How to export from your bank
@@ -324,7 +324,7 @@ export const BankImportPage: React.FC = () => {
       {step === 'preview' && (
         <div className="space-y-6">
           {/* Bank Selection */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-6">
+          <div className="bg-white rounded-3xl border border-slate-200 p-3 md:p-6">
             <h3 className="font-black text-sm text-slate-700 mb-4">Select Your Bank</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {Object.entries(BANK_PRESETS).map(([id, preset]) => (
@@ -347,7 +347,7 @@ export const BankImportPage: React.FC = () => {
 
           {/* Column Mapping (for custom) */}
           {selectedBank === 'custom' && (
-            <div className="bg-white rounded-3xl border border-slate-200 p-6">
+            <div className="bg-white rounded-3xl border border-slate-200 p-3 md:p-6">
               <h3 className="font-black text-sm text-slate-700 mb-4">Column Mapping</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {['date', 'description', 'amount', 'balance'].map((field) => (
@@ -460,12 +460,12 @@ export const BankImportPage: React.FC = () => {
 
       {/* Step 3: Complete */}
       {step === 'complete' && importResult && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center">
-          <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
+        <div className="bg-white rounded-3xl border border-slate-200 p-4 md:p-8 text-center">
+          <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3 md:mb-6">
             <Check className="w-10 h-10 text-emerald-600" />
           </div>
           <h2 className="text-2xl font-black text-slate-900 mb-2">Import Complete!</h2>
-          <p className="text-slate-500 mb-8">
+          <p className="text-slate-500 mb-4 md:mb-8">
             Successfully imported {importResult.success} transactions
           </p>
 

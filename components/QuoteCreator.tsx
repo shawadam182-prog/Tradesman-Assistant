@@ -445,7 +445,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-20">
+    <div className="max-w-4xl mx-auto space-y-3 md:space-y-6 pb-20">
       {/* Header with actions */}
       <div className="flex items-center justify-between gap-2">
         <button
@@ -473,7 +473,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         </div>
       </div>
 
-      <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="bg-white p-4 md:p-8 rounded-[32px] border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="space-y-1">
           <div className="flex justify-between items-center px-1">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Document Title</label>
@@ -558,7 +558,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       )}
 
       {/* Global AI Magic Builder targeting sections */}
-      <div className="bg-amber-500/5 border-2 border-amber-500/10 p-6 rounded-[32px] shadow-sm group">
+      <div className="bg-amber-500/5 border-2 border-amber-500/10 p-3 md:p-6 rounded-[32px] shadow-sm group">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-700 italic flex items-center gap-2"><Sparkles size={14} className="animate-pulse"/> AI Magic Item Builder</h3>
@@ -601,7 +601,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                     <div className="h-8 w-8 bg-slate-100 rounded-xl flex items-center justify-center font-black text-xs text-slate-500">{sectionIdx + 1}</div>
                     <input 
                       type="text" 
-                      className="bg-transparent text-xl font-black text-slate-900 outline-none focus:text-amber-600 transition-colors w-full" 
+                      className="bg-transparent text-sm md:text-xl font-black text-slate-900 outline-none focus:text-amber-600 transition-colors w-full" 
                       value={section.title} 
                       onChange={e => updateSectionTitle(section.id, e.target.value)} 
                       placeholder="Job Section Title (e.g. Rewire Kitchen)"
@@ -693,7 +693,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       </div>
 
       {/* Global Terms & Financial Summary */}
-      <div className="bg-white p-8 rounded-[32px] border border-slate-200 space-y-6 shadow-sm">
+      <div className="bg-white p-4 md:p-8 rounded-[32px] border border-slate-200 space-y-3 md:space-y-6 shadow-sm">
         <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
           <div className="h-10 w-10 bg-slate-900 text-amber-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg"><FileText size={20} /></div>
           <div><h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Document Terms & Document-wide Rates</h3><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Apply to all sections</p></div>
@@ -702,18 +702,18 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
           <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><PoundSterling size={12} className="text-amber-500" /> Default Hourly Rate</label><input type="number" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-slate-950 font-black text-sm outline-none focus:border-amber-400 transition-all" value={formData.labourRate || ''} onChange={e => setFormData({...formData, labourRate: parseFloat(e.target.value) || 0})} placeholder="65.00" /></div>
           <div className="space-y-2"><label className="text-[10px] font-black text-amber-600 uppercase tracking-widest px-1 flex items-center gap-2 italic"><Percent size={12} className="text-amber-500" /> Global Markup %</label><input type="number" className="w-full bg-amber-50 border-2 border-amber-100 rounded-2xl p-4 text-amber-900 font-black text-sm outline-none focus:border-amber-400 transition-all" value={formData.markupPercent || ''} onChange={e => setFormData({...formData, markupPercent: parseFloat(e.target.value) || 0})} placeholder="15" /></div>
         </div>
-        <div className="pt-4 space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><FileText size={14} className="text-amber-500" /> Document Footer / Terms</label><textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-[28px] p-6 text-slate-900 font-medium text-sm outline-none focus:border-amber-400 transition-all min-h-[140px]" value={formData.notes || ''} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Final notes, bank details etc..." /></div>
+        <div className="pt-4 space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><FileText size={14} className="text-amber-500" /> Document Footer / Terms</label><textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-[28px] p-3 md:p-6 text-slate-900 font-medium text-sm outline-none focus:border-amber-400 transition-all min-h-[140px]" value={formData.notes || ''} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Final notes, bank details etc..." /></div>
       </div>
 
       <div className="bg-slate-900 text-white p-10 rounded-[40px] shadow-2xl relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform"><PoundSterling size={120} /></div>
+        <div className="absolute top-0 right-0 p-4 md:p-8 opacity-10 group-hover:scale-110 transition-transform"><PoundSterling size={120} /></div>
         <div className="flex flex-col md:flex-row justify-between items-end gap-10">
           <div><div className="flex items-center gap-2 mb-2 text-slate-500"><span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] italic">Consolidated Total</span><div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div></div><p className="text-6xl font-black tracking-tighter">£{totals.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div>
           <div className="text-right text-[11px] font-bold space-y-2 w-full md:w-auto">
-            <div className="flex justify-between md:justify-end gap-6 border-b border-slate-800 pb-2"><span className="text-slate-500 uppercase tracking-widest">Materials Total</span><span className="text-slate-300 italic">£{totals.materialsTotal.toFixed(2)}</span></div>
-            <div className="flex justify-between md:justify-end gap-6 border-b border-slate-800 pb-2"><span className="text-slate-500 uppercase tracking-widest">Net Sections</span><span className="text-slate-300 italic">£{totals.subtotal.toFixed(2)}</span></div>
-            <div className="flex justify-between md:justify-end gap-6 border-b border-slate-800 pb-2"><span className="text-amber-500 uppercase tracking-widest">Markup</span><span className="text-amber-500/80">£{totals.markup.toFixed(2)}</span></div>
-            {settings.enableVat && <div className="flex justify-between md:justify-end gap-6 border-b border-slate-800 pb-2"><span className="text-blue-400 uppercase tracking-widest">VAT</span><span className="text-blue-400/80">£{totals.tax.toFixed(2)}</span></div>}
+            <div className="flex justify-between md:justify-end gap-3 md:gap-6 border-b border-slate-800 pb-2"><span className="text-slate-500 uppercase tracking-widest">Materials Total</span><span className="text-slate-300 italic">£{totals.materialsTotal.toFixed(2)}</span></div>
+            <div className="flex justify-between md:justify-end gap-3 md:gap-6 border-b border-slate-800 pb-2"><span className="text-slate-500 uppercase tracking-widest">Net Sections</span><span className="text-slate-300 italic">£{totals.subtotal.toFixed(2)}</span></div>
+            <div className="flex justify-between md:justify-end gap-3 md:gap-6 border-b border-slate-800 pb-2"><span className="text-amber-500 uppercase tracking-widest">Markup</span><span className="text-amber-500/80">£{totals.markup.toFixed(2)}</span></div>
+            {settings.enableVat && <div className="flex justify-between md:justify-end gap-3 md:gap-6 border-b border-slate-800 pb-2"><span className="text-blue-400 uppercase tracking-widest">VAT</span><span className="text-blue-400/80">£{totals.tax.toFixed(2)}</span></div>}
             {settings.enableCis && <div className="flex justify-between md:justify-end gap-6"><span className="text-red-400 uppercase tracking-widest">CIS</span><span className="text-red-400/80">-£{totals.cis.toFixed(2)}</span></div>}
           </div>
         </div>
@@ -723,7 +723,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       {showMaterialsLibrary && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[200] flex items-center justify-center p-4">
           <div className="bg-white rounded-[40px] max-w-5xl w-full max-h-[90vh] overflow-auto shadow-2xl border border-slate-200">
-            <div className="sticky top-0 bg-white border-b border-slate-100 p-6 flex justify-between items-center z-10">
+            <div className="sticky top-0 bg-white border-b border-slate-100 p-3 md:p-6 flex justify-between items-center z-10">
               <div>
                 <h3 className="text-xl font-black text-slate-900">Add from Materials Library</h3>
                 <p className="text-sm text-slate-500">Select a material to add to your quote</p>

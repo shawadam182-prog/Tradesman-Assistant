@@ -153,7 +153,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
               <div className="p-10 space-y-10">
                 <div className="space-y-4">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Main Business Logo</label>
-                  <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-200">
+                  <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-6 p-3 md:p-6 bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-200">
                     <div className="w-32 h-32 rounded-[24px] bg-white border-2 border-slate-100 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
                       {settings.companyLogo ? (
                         <img src={settings.companyLogo} className="w-full h-full object-contain" alt="Logo" />
@@ -207,7 +207,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 </div>
 
                 {/* VAT Registration Section */}
-                <div className="p-10 border-t border-slate-100 space-y-6">
+                <div className="p-10 border-t border-slate-100 space-y-3 md:space-y-6">
                   <div className="flex items-center justify-between bg-amber-50 p-7 rounded-[32px] border border-amber-100">
                     <div className="flex gap-4">
                       <div className="p-3 bg-white rounded-2xl border border-amber-200 shadow-sm flex items-center justify-center text-amber-600"><Landmark size={20}/></div>
@@ -362,7 +362,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
               </div>
 
               <div className="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden p-10 space-y-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                   <div className="flex items-center justify-between bg-slate-50 p-7 rounded-[32px] border border-slate-100">
                     <div className="flex gap-4">
                       <div className="p-3 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><Landmark size={20}/></div>
@@ -401,12 +401,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     <Palette size={16} className="text-amber-500" />
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Visual Design Theme</label>
                   </div>
-                  <div className="grid grid-cols-3 gap-6">
+                  <div className="grid grid-cols-3 gap-3 md:gap-6">
                     {['slate', 'amber', 'blue'].map(color => (
                       <button 
                         key={color}
                         onClick={() => setSettings({ ...settings, costBoxColor: color as any })}
-                        className={`flex flex-col items-center gap-4 p-6 rounded-[32px] border-2 transition-all ${settings.costBoxColor === color ? 'border-amber-500 bg-amber-50/20 shadow-lg' : 'border-slate-100 bg-white hover:border-slate-200'}`}
+                        className={`flex flex-col items-center gap-4 p-3 md:p-6 rounded-[32px] border-2 transition-all ${settings.costBoxColor === color ? 'border-amber-500 bg-amber-50/20 shadow-lg' : 'border-slate-100 bg-white hover:border-slate-200'}`}
                       >
                         <div className={`w-12 h-12 rounded-[14px] shadow-lg ${color === 'slate' ? 'bg-slate-900' : color === 'amber' ? 'bg-amber-500' : 'bg-blue-600'}`}></div>
                         <span className="text-[10px] font-black uppercase tracking-widest">{color}</span>

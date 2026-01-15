@@ -282,7 +282,7 @@ export const ReconciliationPage: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-8">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Reconciliation</h1>
           <p className="text-slate-500 text-sm font-medium">Match bank transactions with expenses and invoices</p>
@@ -297,7 +297,7 @@ export const ReconciliationPage: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 md:mb-8">
         <div className="bg-white rounded-2xl p-5 border border-slate-200">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Transactions</p>
           <p className="text-2xl font-black text-slate-900">{stats.total}</p>
@@ -318,7 +318,7 @@ export const ReconciliationPage: React.FC = () => {
 
       {/* Suggested Matches */}
       {suggestions.length > 0 && (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl border border-blue-200 p-6 mb-8">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl border border-blue-200 p-3 md:p-6 mb-4 md:mb-8">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-blue-100 rounded-xl">
               <Sparkles className="w-5 h-5 text-blue-600" />
@@ -414,7 +414,7 @@ export const ReconciliationPage: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex flex-col md:flex-row gap-4 mb-3 md:mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
@@ -563,7 +563,7 @@ export const ReconciliationPage: React.FC = () => {
             </div>
 
             {/* Expense List */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-3 md:p-6">
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
                 Unreconciled Expenses ({unreconciledExpenses.length})
               </p>

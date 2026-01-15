@@ -181,7 +181,7 @@ export const FilingCabinetPage: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-8">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Filing Cabinet</h1>
           <p className="text-slate-500 text-sm font-medium">Store and organize all your business documents</p>
@@ -197,7 +197,7 @@ export const FilingCabinetPage: React.FC = () => {
 
       {/* Expiring Documents Alert */}
       {expiringDocs.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-8">
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-4 md:mb-8">
           <div className="flex items-center gap-3 mb-3">
             <AlertTriangle className="w-5 h-5 text-amber-600" />
             <h3 className="font-bold text-amber-800">Documents Expiring Soon</h3>
@@ -223,7 +223,7 @@ export const FilingCabinetPage: React.FC = () => {
       )}
 
       {/* Stats by Category */}
-      <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 mb-8">
+      <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 mb-4 md:mb-8">
         {CATEGORIES.map(cat => (
           <button
             key={cat.id}
@@ -243,7 +243,7 @@ export const FilingCabinetPage: React.FC = () => {
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
+      <div className="relative mb-3 md:mb-6">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
         <input
           type="text"
@@ -393,7 +393,7 @@ export const FilingCabinetPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full p-8 border-2 border-dashed border-slate-200 rounded-xl text-center hover:border-amber-500 hover:bg-amber-50 transition-colors"
+                    className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-xl text-center hover:border-amber-500 hover:bg-amber-50 transition-colors"
                   >
                     <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                     <p className="font-bold text-slate-600">Click to select file</p>

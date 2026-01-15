@@ -212,10 +212,10 @@ export const JobPackList: React.FC<JobPackListProps> = ({
   }, [customers, addressSearchTerm]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 md:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Job Packs</h2>
+          <h2 className="text-base md:text-2xl font-black text-slate-900 tracking-tight">Job Packs</h2>
           <p className="text-slate-500 font-medium text-sm italic">Organize site documentation by project.</p>
         </div>
         <button onClick={() => setIsAdding(true)} className="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-amber-600 transition-all flex items-center gap-2"><FolderPlus size={18} /> New Job Pack</button>
@@ -223,13 +223,13 @@ export const JobPackList: React.FC<JobPackListProps> = ({
 
       {isAdding && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 pb-28 md:pb-4 overflow-y-auto">
-          <div className="bg-white rounded-[48px] p-8 md:p-12 max-w-2xl w-full shadow-2xl border border-slate-200 my-auto animate-in zoom-in-95 duration-300">
+          <div className="bg-white rounded-[48px] p-4 md:p-8 md:p-12 max-w-2xl w-full shadow-2xl border border-slate-200 my-auto animate-in zoom-in-95 duration-300">
             {isAddingCustomer ? (
               <div className="space-y-8 animate-in slide-in-from-right-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-4">
                     <div className="h-12 w-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg"><UserPlus size={24}/></div>
-                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Register Client</h3>
+                    <h3 className="text-sm md:text-xl font-black text-slate-900 uppercase tracking-tight">Register Client</h3>
                   </div>
                   <button onClick={() => { setIsAddingCustomer(false); setCustomerError(null); }} className="text-slate-400 hover:text-slate-900 transition-colors"><X size={24}/></button>
                 </div>
@@ -246,7 +246,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                   {isProcessing ? 'Analyzing...' : isListening && !activeFieldVoiceRef.current ? 'Listening...' : 'Magic Fill (Voice)'}
                 </button>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                   {[
                     { id: 'name', label: 'Full Name *', icon: User, placeholder: 'e.g. John Smith' },
                     { id: 'company', label: 'Company', icon: Hammer, placeholder: 'Optional' },
@@ -326,8 +326,8 @@ export const JobPackList: React.FC<JobPackListProps> = ({
               </div>
             ) : (
               <div className="space-y-8">
-                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Project Setup</h3>
-                <div className="space-y-6">
+                <h3 className="text-base md:text-2xl font-black text-slate-900 uppercase tracking-tight">Project Setup</h3>
+                <div className="space-y-3 md:space-y-6">
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Project Title (Optional)</label>
                     <input className="w-full border-2 border-slate-100 bg-slate-50 rounded-[24px] p-5 font-bold text-slate-950 focus:border-amber-400 focus:bg-white outline-none transition-all shadow-inner" placeholder="e.g. Miller - Extension" value={newTitle} onChange={e => setNewTitle(e.target.value)} />
@@ -358,13 +358,13 @@ export const JobPackList: React.FC<JobPackListProps> = ({
 
       <div className="relative"><Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} /><input type="text" placeholder="Search active projects..." className="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 pl-12 pr-4 font-bold text-slate-900 focus:border-amber-200 outline-none shadow-sm transition-all" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} /></div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         {filtered.map(project => (
           <div key={project.id} onClick={() => onOpenProject(project.id)} className="bg-white rounded-[32px] border-2 border-slate-100 p-7 hover:border-amber-500 transition-all group cursor-pointer shadow-sm hover:shadow-2xl relative overflow-hidden flex flex-col h-full">
             <div className="absolute top-0 left-0 w-2 h-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <div className="flex justify-between items-start mb-6"><div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${project.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>{project.status}</div><div className="p-2 bg-slate-50 rounded-xl group-hover:bg-amber-50 group-hover:text-amber-500 transition-colors"><ArrowRight size={18} className="text-slate-300 group-hover:translate-x-1 transition-transform" /></div></div>
-            <h3 className="text-xl font-black text-slate-900 group-hover:text-amber-600 transition-colors mb-2 leading-tight">{project.title}</h3>
-            <div className="space-y-3 mb-8"><div className="flex items-center gap-2 text-slate-500 text-xs font-bold italic"><User size={14} className="text-slate-400" /> <span className="truncate">{customers.find(c => c.id === project.customerId)?.name || 'Unknown Client'}</span></div><div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-tight"><Clock size={14} className="text-slate-400" /> Updated {new Date(project.updatedAt).toLocaleDateString()}</div></div>
+            <div className="flex justify-between items-start mb-3 md:mb-6"><div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${project.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>{project.status}</div><div className="p-2 bg-slate-50 rounded-xl group-hover:bg-amber-50 group-hover:text-amber-500 transition-colors"><ArrowRight size={18} className="text-slate-300 group-hover:translate-x-1 transition-transform" /></div></div>
+            <h3 className="text-sm md:text-xl font-black text-slate-900 group-hover:text-amber-600 transition-colors mb-2 leading-tight">{project.title}</h3>
+            <div className="space-y-3 mb-4 md:mb-8"><div className="flex items-center gap-2 text-slate-500 text-xs font-bold italic"><User size={14} className="text-slate-400" /> <span className="truncate">{customers.find(c => c.id === project.customerId)?.name || 'Unknown Client'}</span></div><div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-tight"><Clock size={14} className="text-slate-400" /> Updated {new Date(project.updatedAt).toLocaleDateString()}</div></div>
             <div className="grid grid-cols-3 gap-3 mt-auto pt-6 border-t border-slate-50 text-center"><div className="bg-slate-50 rounded-2xl p-3"><p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">Photos</p><p className="text-sm font-black text-slate-900">{project.photos.length}</p></div><div className="bg-slate-50 rounded-2xl p-3"><p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">Notes</p><p className="text-sm font-black text-slate-900">{project.notes.length}</p></div><div className="bg-slate-50 rounded-2xl p-3"><p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">Docs</p><p className="text-sm font-black text-slate-900">{project.documents.length}</p></div></div>
           </div>
         ))}
