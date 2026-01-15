@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import {
   Receipt, Camera, Plus, Filter, Search, Trash2,
   Calendar, Tag, Building2, X, Check, Loader2,
@@ -249,30 +250,27 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
             console.log('Category mapping:', result.category, '->', matchedCategory);
           }
 
-          // Get a valid fallback category
-          const fallbackCategory = categories[0]?.name || 'Materials';
+          // Build new form data with ONLY API values - no closure dependencies
+          const newFormData = {
+            vendor: String(result.vendor || ''),
+            description: String(result.description || ''),
+            amount: String(result.amount || ''),
+            vat_amount: String(result.vatAmount || ''),
+            category: matchedCategory || 'Materials',
+            expense_date: String(result.date || new Date().toISOString().split('T')[0]),
+            payment_method: String(result.paymentMethod || 'card'),
+            job_pack_id: '',
+          };
 
-          console.log('Parsed receipt data:', result);
+          console.log('About to update form with:', newFormData);
 
-          // Use functional update to ensure we always work with latest state
-          // This avoids stale closure issues on mobile
-          setFormData(prev => {
-            const updated = {
-              vendor: result.vendor || prev.vendor || '',
-              description: result.description || prev.description || '',
-              amount: result.amount != null ? String(result.amount) : prev.amount || '',
-              vat_amount: result.vatAmount != null ? String(result.vatAmount) : prev.vat_amount || '',
-              category: matchedCategory || prev.category || fallbackCategory,
-              expense_date: result.date || prev.expense_date || new Date().toISOString().split('T')[0],
-              payment_method: result.paymentMethod || prev.payment_method || 'card',
-              job_pack_id: prev.job_pack_id || '',
-            };
-            console.log('Updating form from', prev, 'to', updated);
-            return updated;
+          // Use flushSync to force immediate DOM update on mobile
+          flushSync(() => {
+            setFormData(newFormData);
+            setScanning(false);
           });
 
-          // Force a re-render by also updating scanning state after form data
-          setScanning(false);
+          console.log('Form updated, showing toast');
           toast.success('Receipt Scanned', `${result.vendor} - £${result.amount}`);
           return; // Exit early since we've already set scanning to false
         } else {
