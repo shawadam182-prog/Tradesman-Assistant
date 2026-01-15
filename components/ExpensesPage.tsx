@@ -203,13 +203,23 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
   };
 
   const processFile = async (file: File) => {
-    setReceiptFile(file); // Store file for later upload
-    const reader = new FileReader();
-    reader.onload = (ev) => { setReceiptPreview(ev.target?.result as string); };
-    reader.readAsDataURL(file);
-
-    setScanning(true);
     try {
+      setReceiptFile(file);
+      setScanning(true);
+
+      // Set preview image
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          setReceiptPreview(ev.target?.result as string);
+        } catch (e) {
+          console.error('Failed to set preview:', e);
+        }
+      };
+      reader.onerror = () => console.error('FileReader error');
+      reader.readAsDataURL(file);
+
+      // Convert to base64 and send to AI
       const base64 = await fileToBase64(file);
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gemini`, {
         method: 'POST',
@@ -235,10 +245,12 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
           toast.info('Receipt uploaded', 'Unable to read details. Please fill in manually.');
         }
       } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('AI scan failed:', response.status, errorData);
         toast.info('Receipt uploaded', 'AI scanning failed. Please fill in manually.');
       }
     } catch (error) {
-      console.error('OCR failed:', error);
+      console.error('Receipt processing failed:', error);
       toast.info('Receipt uploaded', 'Please fill in the details manually.');
     } finally {
       setScanning(false);
@@ -253,18 +265,29 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
 
   // Mobile-compatible file picker - creates input dynamically for better browser support
   const triggerFileSelect = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment';
-    input.onchange = async (e: Event) => {
-      const target = e.target as HTMLInputElement;
-      const file = target.files?.[0];
-      if (file) {
-        await processFile(file);
-      }
-    };
-    input.click();
+    try {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment';
+      input.onchange = async (e: Event) => {
+        try {
+          const target = e.target as HTMLInputElement;
+          const file = target.files?.[0];
+          if (file) {
+            await processFile(file);
+          }
+        } catch (error) {
+          console.error('File selection handler error:', error);
+          toast.error('Upload Failed', 'Could not process the image');
+          setScanning(false);
+        }
+      };
+      input.click();
+    } catch (error) {
+      console.error('File picker error:', error);
+      toast.error('Upload Failed', 'Could not open file picker');
+    }
   };
 
   const fileToBase64 = (file: File): Promise<string> => {
