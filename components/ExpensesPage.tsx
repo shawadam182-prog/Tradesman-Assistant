@@ -234,16 +234,16 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
             expense_date: result.data.date || prev.expense_date,
             payment_method: result.data.paymentMethod || prev.payment_method,
           }));
-          showToast('Receipt scanned successfully!', 'success');
+          toast.success('Receipt scanned successfully!');
         } else {
-          showToast('Receipt uploaded, but unable to read details. Please fill in manually.', 'info');
+          toast.info('Receipt uploaded', 'Unable to read details. Please fill in manually.');
         }
       } else {
-        showToast('Receipt uploaded, but AI scanning failed. Please fill in manually.', 'info');
+        toast.info('Receipt uploaded', 'AI scanning failed. Please fill in manually.');
       }
     } catch (error) {
       console.error('OCR failed:', error);
-      showToast('Receipt uploaded. Please fill in the details manually.', 'info');
+      toast.info('Receipt uploaded', 'Please fill in the details manually.');
     } finally {
       setScanning(false);
     }
@@ -293,7 +293,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
             year: 'numeric'
           });
           const filedDoc = await filingService.upload(receiptFile, {
-            name: `${formData.vendor} - £${formData.amount.toFixed(2)} (${receiptDate})`,
+            name: `${formData.vendor} - £${parseFloat(formData.amount).toFixed(2)} (${receiptDate})`,
             description: formData.description || `Receipt from ${formData.vendor} dated ${receiptDate}`,
             category: 'receipt',
             vendor_name: formData.vendor,
