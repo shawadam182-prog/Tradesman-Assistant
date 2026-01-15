@@ -206,6 +206,8 @@ const App: React.FC = () => {
         projects={projects}
         quotes={quotes}
         onNavigateToSchedule={() => setActiveTab('schedule')}
+        onNavigateToInvoices={() => setActiveTab('invoices')}
+        onNavigateToQuotes={() => setActiveTab('quotes')}
         onCreateJob={() => setActiveTab('jobpacks')}
         onCreateQuote={() => handleCreateQuote()}
         onLogExpense={() => setActiveTab('expenses')}

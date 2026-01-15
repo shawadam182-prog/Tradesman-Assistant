@@ -8,10 +8,11 @@ import {
   Timer, Loader2, MicOff, StickyNote, Eraser,
   Briefcase, FileText, Receipt, UserPlus,
   PoundSterling, FileWarning, AlertTriangle,
-  LogIn, LogOut
+  LogIn, LogOut, ChevronDown, ChevronUp, BarChart3
 } from 'lucide-react';
 import { parseReminderVoiceInput } from '../src/services/geminiService';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
+import { BusinessDashboard } from './BusinessDashboard';
 
 interface HomeProps {
   schedule: ScheduleEntry[];
@@ -19,6 +20,8 @@ interface HomeProps {
   projects: JobPack[];
   quotes: Quote[];
   onNavigateToSchedule: () => void;
+  onNavigateToInvoices?: () => void;
+  onNavigateToQuotes?: () => void;
   onCreateJob?: () => void;
   onCreateQuote?: () => void;
   onLogExpense?: () => void;
@@ -53,6 +56,8 @@ export const Home: React.FC<HomeProps> = ({
   projects,
   quotes,
   onNavigateToSchedule,
+  onNavigateToInvoices,
+  onNavigateToQuotes,
   onCreateJob,
   onCreateQuote,
   onLogExpense,
@@ -65,6 +70,10 @@ export const Home: React.FC<HomeProps> = ({
   const [isProcessingReminder, setIsProcessingReminder] = useState(false);
   const [siteSession, setSiteSession] = useState<SiteSession>({ currentSession: null, history: [] });
   const [elapsedTime, setElapsedTime] = useState<string>('0h 0m');
+  const [showDashboard, setShowDashboard] = useState<boolean>(() => {
+    const saved = localStorage.getItem('bq_show_dashboard');
+    return saved !== 'false'; // Default to true
+  });
 
   const [newReminderText, setNewReminderText] = useState('');
   const [newReminderTime, setNewReminderTime] = useState('');
@@ -94,6 +103,10 @@ export const Home: React.FC<HomeProps> = ({
   useEffect(() => {
     localStorage.setItem('bq_site_log', JSON.stringify(siteSession));
   }, [siteSession]);
+
+  useEffect(() => {
+    localStorage.setItem('bq_show_dashboard', showDashboard.toString());
+  }, [showDashboard]);
 
   // Update elapsed time when on site
   useEffect(() => {
@@ -430,6 +443,39 @@ export const Home: React.FC<HomeProps> = ({
             {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
+      </div>
+
+      {/* Business Dashboard - Collapsible */}
+      <div className="bg-white rounded-2xl md:rounded-[32px] border-2 border-slate-100 shadow-sm overflow-hidden">
+        <button
+          onClick={() => { hapticTap(); setShowDashboard(!showDashboard); }}
+          className="w-full p-3 md:p-5 flex items-center justify-between hover:bg-slate-50 transition-colors"
+        >
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="p-2 md:p-3 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-xl md:rounded-2xl">
+              <BarChart3 size={18} className="md:w-6 md:h-6" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-black text-slate-900 text-sm md:text-lg uppercase tracking-tight">Business Dashboard</h3>
+              <p className="text-[9px] md:text-xs text-slate-500 font-medium italic">Revenue, invoices & pipeline</p>
+            </div>
+          </div>
+          <div className={`p-2 rounded-lg bg-slate-100 text-slate-600 transition-transform ${showDashboard ? 'rotate-180' : ''}`}>
+            <ChevronDown size={16} className="md:w-5 md:h-5" />
+          </div>
+        </button>
+        {showDashboard && (
+          <div className="p-3 md:p-6 pt-0 md:pt-0 border-t border-slate-100">
+            <BusinessDashboard
+              quotes={quotes}
+              customers={customers}
+              schedule={schedule}
+              onNavigateToInvoices={onNavigateToInvoices}
+              onNavigateToQuotes={onNavigateToQuotes}
+              onNavigateToSchedule={onNavigateToSchedule}
+            />
+          </div>
+        )}
       </div>
 
       {/* Quick Actions Grid - No Scrolling */}

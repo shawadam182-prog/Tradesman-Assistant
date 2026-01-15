@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import {
   customersService,
@@ -17,6 +17,8 @@ import {
   materialsLibraryService,
   materialsImportHistoryService,
 } from '../services/dataService';
+import { offlineService } from '../services/offlineStorage';
+import { syncManager } from '../services/syncManager';
 import type { Customer, Quote, JobPack, ScheduleEntry, AppSettings } from '../../types';
 
 // Default settings
@@ -242,6 +244,7 @@ function dbSettingsToApp(dbSettings: any): AppSettings {
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
+  const isOnlineRef = useRef(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -251,12 +254,77 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Track online status
+  useEffect(() => {
+    const handleOnline = () => { isOnlineRef.current = true; };
+    const handleOffline = () => { isOnlineRef.current = false; };
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Load from IndexedDB cache
+  const loadFromCache = useCallback(async () => {
+    try {
+      const [cachedCustomers, cachedQuotes, cachedSchedule, cachedJobPacks] = await Promise.all([
+        offlineService.customers.getAll(),
+        offlineService.quotes.getAll(),
+        offlineService.schedule.getAll(),
+        offlineService.jobPacks.getAll(),
+      ]);
+
+      if (cachedCustomers.length > 0) setCustomers(cachedCustomers as Customer[]);
+      if (cachedQuotes.length > 0) setQuotes(cachedQuotes as Quote[]);
+      if (cachedSchedule.length > 0) setSchedule(cachedSchedule as ScheduleEntry[]);
+      if (cachedJobPacks.length > 0) setProjects(cachedJobPacks as JobPack[]);
+
+      return cachedCustomers.length > 0 || cachedQuotes.length > 0;
+    } catch (err) {
+      console.warn('Failed to load from cache:', err);
+      return false;
+    }
+  }, []);
+
+  // Save to IndexedDB cache
+  const saveToCache = useCallback(async (data: {
+    customers?: Customer[];
+    quotes?: Quote[];
+    schedule?: ScheduleEntry[];
+    projects?: JobPack[];
+  }) => {
+    try {
+      await Promise.all([
+        data.customers && offlineService.customers.sync(data.customers),
+        data.quotes && offlineService.quotes.sync(data.quotes),
+        data.schedule && offlineService.schedule.sync(data.schedule),
+        data.projects && offlineService.jobPacks.sync(data.projects),
+      ].filter(Boolean));
+    } catch (err) {
+      console.warn('Failed to save to cache:', err);
+    }
+  }, []);
+
   // Fetch all data
   const fetchData = useCallback(async () => {
     if (!user) return;
 
     setLoading(true);
     setError(null);
+
+    // If offline, load from cache only
+    if (!navigator.onLine) {
+      const hasCache = await loadFromCache();
+      if (hasCache) {
+        setLoading(false);
+        return;
+      }
+      setError('No internet connection and no cached data available');
+      setLoading(false);
+      return;
+    }
 
     try {
       const results = await Promise.allSettled([
@@ -269,33 +337,54 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const [customersResult, jobPacksResult, quotesResult, scheduleResult, settingsResult] = results;
 
+      const loadedCustomers: Customer[] = [];
+      const loadedQuotes: Quote[] = [];
+      const loadedProjects: JobPack[] = [];
+      const loadedSchedule: ScheduleEntry[] = [];
+
       // Process successful results, use empty arrays for failures
       if (customersResult.status === 'fulfilled') {
-        setCustomers(customersResult.value.map((c: any) => ({
+        const mapped = customersResult.value.map((c: any) => ({
           id: c.id,
           name: c.name,
           email: c.email || '',
           phone: c.phone || '',
           address: c.address || '',
           company: c.company || undefined,
-        })));
+        }));
+        loadedCustomers.push(...mapped);
+        setCustomers(mapped);
       }
 
       if (jobPacksResult.status === 'fulfilled') {
-        setProjects(jobPacksResult.value.map(dbJobPackToApp));
+        const mapped = jobPacksResult.value.map(dbJobPackToApp);
+        loadedProjects.push(...mapped);
+        setProjects(mapped);
       }
 
       if (quotesResult.status === 'fulfilled') {
-        setQuotes(quotesResult.value.map(dbQuoteToApp));
+        const mapped = quotesResult.value.map(dbQuoteToApp);
+        loadedQuotes.push(...mapped);
+        setQuotes(mapped);
       }
 
       if (scheduleResult.status === 'fulfilled') {
-        setSchedule(scheduleResult.value.map(dbScheduleToApp));
+        const mapped = scheduleResult.value.map(dbScheduleToApp);
+        loadedSchedule.push(...mapped);
+        setSchedule(mapped);
       }
 
       if (settingsResult.status === 'fulfilled' && settingsResult.value) {
         setSettings(dbSettingsToApp(settingsResult.value));
       }
+
+      // Cache data to IndexedDB for offline use
+      await saveToCache({
+        customers: loadedCustomers,
+        quotes: loadedQuotes,
+        schedule: loadedSchedule,
+        projects: loadedProjects,
+      });
 
       // Check if any critical services failed
       const failures = results.filter(r => r.status === 'rejected');
@@ -304,11 +393,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err: any) {
       console.error('Error fetching data:', err);
-      setError(err.message || 'Failed to load data');
+      // Try loading from cache as fallback
+      const hasCache = await loadFromCache();
+      if (!hasCache) {
+        setError(err.message || 'Failed to load data');
+      }
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, loadFromCache, saveToCache]);
 
   useEffect(() => {
     fetchData();

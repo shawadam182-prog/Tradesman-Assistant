@@ -2,8 +2,10 @@ import React from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider, useData } from './contexts/DataContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { OfflineProvider } from './contexts/OfflineContext';
 import { LoginPage } from './components/Auth/LoginPage';
-import { PWAPrompt, OfflineIndicator } from './components/PWAPrompt';
+import { PWAPrompt, OfflineIndicator as PWAOfflineIndicator } from './components/PWAPrompt';
+import { OfflineIndicator } from '../components/OfflineIndicator';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import MainApp from '../App';
 import { Loader2 } from 'lucide-react';
@@ -62,9 +64,12 @@ const ProtectedApp: React.FC = () => {
   }
 
   return (
-    <DataProvider>
-      <DataAwareApp />
-    </DataProvider>
+    <OfflineProvider>
+      <DataProvider>
+        <DataAwareApp />
+        <OfflineIndicator />
+      </DataProvider>
+    </OfflineProvider>
   );
 };
 
@@ -73,7 +78,7 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <ToastProvider>
-        <OfflineIndicator />
+        <PWAOfflineIndicator />
         <ProtectedApp />
         <PWAPrompt />
       </ToastProvider>
