@@ -418,122 +418,122 @@ export const Home: React.FC<HomeProps> = ({
   };
 
   return (
-    <div className="space-y-8 pb-10 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div className="space-y-4 md:space-y-8 pb-10 max-w-5xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 md:gap-4">
         <div>
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Daily Brief</h2>
-          <p className="text-slate-500 font-medium italic mt-1">Ready for the site. Your immediate priorities at a glance.</p>
+          <h2 className="text-xl md:text-4xl font-black text-slate-900 tracking-tight">Daily Brief</h2>
+          <p className="text-xs md:text-base text-slate-500 font-medium italic mt-0.5 md:mt-1">Ready for the site. Your immediate priorities at a glance.</p>
         </div>
-        <div className="bg-white border-2 border-slate-100 rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3">
-          <Clock size={20} className="text-amber-500" />
-          <span className="font-black text-slate-900 text-lg">
+        <div className="bg-white border-2 border-slate-100 rounded-xl md:rounded-2xl px-3 py-1.5 md:px-5 md:py-3 shadow-sm flex items-center gap-2 md:gap-3">
+          <Clock size={14} className="md:w-5 md:h-5 text-amber-500" />
+          <span className="font-black text-slate-900 text-sm md:text-lg">
             {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
       </div>
 
       {/* Quick Actions Grid - No Scrolling */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2 md:gap-3">
         <button
           onClick={() => { hapticTap(); onCreateJob?.(); }}
-          className="flex flex-col items-center justify-center gap-3 bg-blue-500 text-white p-6 min-h-[100px] rounded-[28px] active:scale-95 transition-all shadow-xl shadow-blue-500/20 hover:shadow-2xl group"
+          className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-blue-500 text-white p-3 md:p-6 min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-blue-500/20 hover:shadow-2xl group"
         >
-          <div className="p-3 bg-white/20 rounded-2xl group-active:scale-90 transition-transform">
-            <Briefcase size={28} />
+          <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
+            <Briefcase size={20} className="md:w-7 md:h-7" />
           </div>
-          <span className="font-black text-sm uppercase tracking-widest leading-none">New Job</span>
+          <span className="font-black text-[10px] md:text-sm uppercase tracking-wider md:tracking-widest leading-none">New Job</span>
         </button>
         <button
           onClick={() => { hapticTap(); onCreateQuote?.(); }}
-          className="flex flex-col items-center justify-center gap-3 bg-amber-500 text-white p-6 min-h-[100px] rounded-[28px] active:scale-95 transition-all shadow-xl shadow-amber-500/20 hover:shadow-2xl group"
+          className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-amber-500 text-white p-3 md:p-6 min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-amber-500/20 hover:shadow-2xl group"
         >
-          <div className="p-3 bg-white/20 rounded-2xl group-active:scale-90 transition-transform">
-            <FileText size={28} />
+          <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
+            <FileText size={20} className="md:w-7 md:h-7" />
           </div>
-          <span className="font-black text-sm uppercase tracking-widest leading-none">New Quote</span>
+          <span className="font-black text-[10px] md:text-sm uppercase tracking-wider md:tracking-widest leading-none">New Quote</span>
         </button>
         <button
           onClick={() => { hapticTap(); onLogExpense?.(); }}
-          className="flex flex-col items-center justify-center gap-3 bg-emerald-500 text-white p-6 min-h-[100px] rounded-[28px] active:scale-95 transition-all shadow-xl shadow-emerald-500/20 hover:shadow-2xl group"
+          className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-emerald-500 text-white p-3 md:p-6 min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-emerald-500/20 hover:shadow-2xl group"
         >
-          <div className="p-3 bg-white/20 rounded-2xl group-active:scale-90 transition-transform">
-            <Receipt size={28} />
+          <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
+            <Receipt size={20} className="md:w-7 md:h-7" />
           </div>
-          <span className="font-black text-sm uppercase tracking-widest leading-none">Expense</span>
+          <span className="font-black text-[10px] md:text-sm uppercase tracking-wider md:tracking-widest leading-none">Expense</span>
         </button>
         <button
           onClick={() => { hapticTap(); onAddCustomer?.(); }}
-          className="flex flex-col items-center justify-center gap-3 bg-purple-500 text-white p-6 min-h-[100px] rounded-[28px] active:scale-95 transition-all shadow-xl shadow-purple-500/20 hover:shadow-2xl group"
+          className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-purple-500 text-white p-3 md:p-6 min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-purple-500/20 hover:shadow-2xl group"
         >
-          <div className="p-3 bg-white/20 rounded-2xl group-active:scale-90 transition-transform">
-            <UserPlus size={28} />
+          <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
+            <UserPlus size={20} className="md:w-7 md:h-7" />
           </div>
-          <span className="font-black text-sm uppercase tracking-widest leading-none">Customer</span>
+          <span className="font-black text-[10px] md:text-sm uppercase tracking-wider md:tracking-widest leading-none">Customer</span>
         </button>
       </div>
 
       {/* Today's Stats Card */}
-      <div className="bg-white rounded-[32px] border border-slate-200 p-6 shadow-sm">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="flex flex-col items-center justify-center gap-3 p-4 bg-blue-50 rounded-2xl text-center">
-            <div className="p-3 bg-blue-500 text-white rounded-xl">
-              <Calendar size={20} />
+      <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 p-3 md:p-6 shadow-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+          <div className="flex flex-col items-center justify-center gap-1.5 md:gap-3 p-2 md:p-4 bg-blue-50 rounded-xl md:rounded-2xl text-center">
+            <div className="p-1.5 md:p-3 bg-blue-500 text-white rounded-lg md:rounded-xl">
+              <Calendar size={14} className="md:w-5 md:h-5" />
             </div>
-            <p className="text-2xl font-black text-slate-900 leading-none">{todayStats.jobsToday}</p>
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">Jobs<br/>Today</p>
+            <p className="text-lg md:text-2xl font-black text-slate-900 leading-none">{todayStats.jobsToday}</p>
+            <p className="text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">Jobs<br/>Today</p>
           </div>
-          <div className="flex flex-col items-center justify-center gap-3 p-4 bg-emerald-50 rounded-2xl text-center">
-            <div className="p-3 bg-emerald-500 text-white rounded-xl">
-              <PoundSterling size={20} />
+          <div className="flex flex-col items-center justify-center gap-1.5 md:gap-3 p-2 md:p-4 bg-emerald-50 rounded-xl md:rounded-2xl text-center">
+            <div className="p-1.5 md:p-3 bg-emerald-500 text-white rounded-lg md:rounded-xl">
+              <PoundSterling size={14} className="md:w-5 md:h-5" />
             </div>
-            <p className="text-2xl font-black text-slate-900 leading-none">{todayStats.weeklyRevenue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}</p>
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">This<br/>Week</p>
+            <p className="text-sm md:text-2xl font-black text-slate-900 leading-none">{todayStats.weeklyRevenue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}</p>
+            <p className="text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">This<br/>Week</p>
           </div>
-          <div className="flex flex-col items-center justify-center gap-3 p-4 bg-amber-50 rounded-2xl text-center">
-            <div className="p-3 bg-amber-500 text-white rounded-xl">
-              <FileWarning size={20} />
+          <div className="flex flex-col items-center justify-center gap-1.5 md:gap-3 p-2 md:p-4 bg-amber-50 rounded-xl md:rounded-2xl text-center">
+            <div className="p-1.5 md:p-3 bg-amber-500 text-white rounded-lg md:rounded-xl">
+              <FileWarning size={14} className="md:w-5 md:h-5" />
             </div>
-            <p className="text-2xl font-black text-slate-900 leading-none">{todayStats.outstandingInvoices}</p>
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">Outstanding</p>
+            <p className="text-lg md:text-2xl font-black text-slate-900 leading-none">{todayStats.outstandingInvoices}</p>
+            <p className="text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">Outstanding</p>
           </div>
-          <div className="flex flex-col items-center justify-center gap-3 p-4 bg-purple-50 rounded-2xl text-center">
-            <div className="p-3 bg-purple-500 text-white rounded-xl">
-              <Clock size={20} />
+          <div className="flex flex-col items-center justify-center gap-1.5 md:gap-3 p-2 md:p-4 bg-purple-50 rounded-xl md:rounded-2xl text-center">
+            <div className="p-1.5 md:p-3 bg-purple-500 text-white rounded-lg md:rounded-xl">
+              <Clock size={14} className="md:w-5 md:h-5" />
             </div>
-            <p className="text-2xl font-black text-slate-900 leading-none">{todayStats.pendingQuotes}</p>
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">Pending<br/>Quotes</p>
+            <p className="text-lg md:text-2xl font-black text-slate-900 leading-none">{todayStats.pendingQuotes}</p>
+            <p className="text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">Pending<br/>Quotes</p>
           </div>
         </div>
       </div>
 
       <div className="relative group">
         {!nextJob ? (
-          <div onClick={onNavigateToSchedule} className="bg-white border-4 border-dashed border-slate-100 rounded-[48px] p-16 text-center cursor-pointer hover:border-amber-200 transition-all flex flex-col items-center">
-            <Calendar size={60} className="text-slate-200 mb-4" />
-            <p className="text-slate-400 font-black uppercase tracking-widest">No upcoming jobs found</p>
+          <div onClick={onNavigateToSchedule} className="bg-white border-4 border-dashed border-slate-100 rounded-2xl md:rounded-[48px] p-8 md:p-16 text-center cursor-pointer hover:border-amber-200 transition-all flex flex-col items-center">
+            <Calendar size={40} className="md:w-[60px] md:h-[60px] text-slate-200 mb-2 md:mb-4" />
+            <p className="text-slate-400 font-black uppercase tracking-widest text-xs md:text-base">No upcoming jobs found</p>
           </div>
         ) : (
-          <div className="bg-slate-900 rounded-[48px] p-10 md:p-12 text-white shadow-2xl overflow-hidden relative border-b-8 border-amber-600">
+          <div className="bg-slate-900 rounded-2xl md:rounded-[48px] p-4 md:p-10 lg:p-12 text-white shadow-2xl overflow-hidden relative border-b-4 md:border-b-8 border-amber-600">
             <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 pointer-events-none">
               <Navigation size={200} />
             </div>
             
-            <div className="flex flex-col md:flex-row justify-between items-start gap-10 relative z-10">
-              <div className="space-y-6 flex-1">
-                <div className="flex items-center gap-3">
-                  <div className="px-4 py-2 bg-amber-500 rounded-full text-slate-900 text-[10px] font-black uppercase tracking-widest animate-pulse">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-10 relative z-10">
+              <div className="space-y-3 md:space-y-6 flex-1">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="px-3 py-1 md:px-4 md:py-2 bg-amber-500 rounded-full text-slate-900 text-[9px] md:text-[10px] font-black uppercase tracking-widest animate-pulse">
                     Next Job
                   </div>
-                  <div className="text-amber-500 font-black text-xs uppercase tracking-widest flex items-center gap-2">
-                    <Timer size={14} /> {getTimeUntil(nextJob.start)}
+                  <div className="text-amber-500 font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1 md:gap-2">
+                    <Timer size={12} className="md:w-[14px] md:h-[14px]" /> {getTimeUntil(nextJob.start)}
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <h3 className="text-4xl md:text-5xl font-black tracking-tight leading-none">{nextJob.title}</h3>
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2 text-slate-400 font-bold text-lg italic">
-                      <Clock size={20} className="text-amber-500" />
+                <div className="space-y-1 md:space-y-2">
+                  <h3 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight leading-none">{nextJob.title}</h3>
+                  <div className="flex items-center gap-3 md:gap-6">
+                    <div className="flex items-center gap-1.5 md:gap-2 text-slate-400 font-bold text-sm md:text-lg italic">
+                      <Clock size={16} className="md:w-5 md:h-5 text-amber-500" />
                       {new Date(nextJob.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — {new Date(nextJob.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
@@ -592,9 +592,9 @@ export const Home: React.FC<HomeProps> = ({
       </div>
 
       {/* On Site Clock + Week Preview Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
         {/* On Site Clock */}
-        <div className={`rounded-[32px] p-6 ${siteSession.currentSession ? 'bg-emerald-500' : 'bg-slate-900'} text-white shadow-lg`}>
+        <div className={`rounded-2xl md:rounded-[32px] p-4 md:p-6 ${siteSession.currentSession ? 'bg-emerald-500' : 'bg-slate-900'} text-white shadow-lg`}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-widest opacity-70 mb-1">

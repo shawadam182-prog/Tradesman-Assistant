@@ -164,7 +164,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
 
       {/* Mobile Nav - Grid Layout */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-[100] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] safe-area-bottom">
-        <div className="grid grid-cols-3 gap-0.5 px-1.5 py-1.5">
+        <div className="grid grid-cols-3 gap-0.5 px-1 py-1">
           {primaryNavItems.map((item) => (
             <button
               key={item.id}
@@ -176,14 +176,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                   setActiveTab(item.id);
                 }
               }}
-              className={`flex flex-col items-center justify-center gap-0 min-h-[52px] px-1 py-1.5 rounded-xl active:scale-95 transition-all ${
+              className={`flex flex-col items-center justify-center gap-0 min-h-[44px] px-1 py-1 rounded-lg active:scale-95 transition-all ${
                 activeTab === item.id
                   ? 'text-amber-600 bg-amber-50'
                   : 'text-slate-400 active:bg-slate-100'
               }`}
             >
-              <item.icon size={20} strokeWidth={activeTab === item.id ? 2.5 : 2} />
-              <span className={`text-[8px] font-black uppercase tracking-tight text-center leading-tight mt-0.5 ${activeTab === item.id ? 'opacity-100' : 'opacity-60'}`}>
+              <item.icon size={18} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+              <span className={`text-[7px] font-black uppercase tracking-tight text-center leading-tight mt-0.5 ${activeTab === item.id ? 'opacity-100' : 'opacity-60'}`}>
                 {item.label}
               </span>
             </button>
@@ -195,18 +195,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       {showMoreMenu && (
         <div className="md:hidden fixed inset-0 z-[150] bg-black/50 backdrop-blur-sm" onClick={() => setShowMoreMenu(false)}>
           <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl max-h-[70vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
-              <h3 className="font-black text-lg text-slate-900">More Options</h3>
-              <button onClick={() => setShowMoreMenu(false)} className="p-2 rounded-lg hover:bg-slate-100 active:scale-95">
-                <X size={20} className="text-slate-500" />
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-3 py-2 flex items-center justify-between">
+              <h3 className="font-black text-base text-slate-900">More Options</h3>
+              <button onClick={() => setShowMoreMenu(false)} className="p-1.5 rounded-lg hover:bg-slate-100 active:scale-95">
+                <X size={18} className="text-slate-500" />
               </button>
             </div>
-            <div className="overflow-y-auto max-h-[calc(70vh-60px)] p-3">
+            <div className="overflow-y-auto max-h-[calc(70vh-50px)] p-2">
               {navGroups.map((group) => (
-                <div key={group.id} className="mb-3">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg mb-1.5">
-                    <group.icon size={16} className="text-slate-600" />
-                    <span className="font-black text-xs uppercase tracking-wider text-slate-700">{group.label}</span>
+                <div key={group.id} className="mb-2">
+                  <div className="flex items-center gap-2 px-2 py-1.5 bg-slate-50 rounded-lg mb-1">
+                    <group.icon size={14} className="text-slate-600" />
+                    <span className="font-black text-[10px] uppercase tracking-wider text-slate-700">{group.label}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-1.5">
                     {group.items.map((item) => {
@@ -216,14 +216,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                         <button
                           key={item.id}
                           onClick={() => handleMoreMenuItemClick(item.id)}
-                          className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl active:scale-95 transition-all ${
+                          className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl active:scale-95 transition-all ${
                             activeTab === item.id
                               ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20'
                               : 'bg-slate-100 text-slate-600 active:bg-slate-200'
                           }`}
                         >
-                          <item.icon size={24} strokeWidth={activeTab === item.id ? 2.5 : 2} />
-                          <span className={`text-[10px] font-black uppercase tracking-tight text-center leading-tight`}>
+                          <item.icon size={20} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+                          <span className={`text-[9px] font-black uppercase tracking-tight text-center leading-tight`}>
                             {item.label}
                           </span>
                         </button>
