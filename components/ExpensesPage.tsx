@@ -613,6 +613,12 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                     <img src={receiptPreview} className="w-full h-48 object-cover rounded-2xl" alt="Receipt" />
                     <button onClick={() => { setReceiptPreview(null); setReceiptFile(null); }} className="absolute top-2 right-2 p-2 bg-white rounded-full shadow"><X size={16} /></button>
                     {scanning && (<div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center"><div className="text-center text-white"><Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /><p className="text-sm font-bold">Scanning receipt...</p></div></div>)}
+                    {/* Debug: Show if state updated */}
+                    {formData.vendor && (
+                      <div className="mt-2 p-2 bg-green-100 border border-green-300 rounded-lg text-xs">
+                        <strong>State updated:</strong> {formData.vendor} - £{formData.amount}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <label htmlFor="receipt-file-input" className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-amber-500 hover:bg-amber-50 transition-colors cursor-pointer block">
