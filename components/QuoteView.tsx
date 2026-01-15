@@ -395,20 +395,20 @@ ${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know 
                         </tbody>
                       </table>
 
-                      {/* Mobile Cards */}
-                      <div className="md:hidden space-y-3">
+                      {/* Mobile Cards - Compact */}
+                      <div className="md:hidden space-y-2">
                         {(section.items || []).map(item => (
-                          <div key={item.id} className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                            <div className="flex justify-between items-start mb-2">
-                              <div>
-                                <p className="text-sm font-bold text-slate-900">{item.name}</p>
-                                {item.description && <p className="text-[10px] text-slate-500 italic leading-tight">{item.description}</p>}
+                          <div key={item.id} className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm flex justify-between items-center gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-slate-900 text-xs truncate">{item.name}</span>
+                                {displayOptions.showMaterialQty && <span className="text-[10px] px-1.5 py-0.5 bg-slate-50 rounded text-slate-600 font-medium whitespace-nowrap">{item.quantity} {item.unit}</span>}
                               </div>
-                              {displayOptions.showMaterialLineTotals && <p className="text-sm font-black text-slate-900">£{(item.totalPrice * markupMultiplier).toFixed(2)}</p>}
+                              {item.description && <p className="text-[9px] text-slate-400 italic truncate leading-tight">{item.description}</p>}
                             </div>
-                            <div className="flex justify-between items-center text-[10px] text-slate-500 border-t border-slate-50 pt-2 mt-2">
-                              {displayOptions.showMaterialQty && <span>Qty: <strong className="text-slate-700">{item.quantity} {item.unit}</strong></span>}
-                              {displayOptions.showMaterialUnitPrice && <span>Unit: <strong className="text-slate-700">£{(item.unitPrice * markupMultiplier).toFixed(2)}</strong></span>}
+                            <div className="text-right">
+                              {displayOptions.showMaterialLineTotals && <p className="text-xs font-black text-slate-900">£{(item.totalPrice * markupMultiplier).toFixed(2)}</p>}
+                              {displayOptions.showMaterialUnitPrice && <p className="text-[9px] text-slate-400">@ £{(item.unitPrice * markupMultiplier).toFixed(2)}</p>}
                             </div>
                           </div>
                         ))}

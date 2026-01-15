@@ -437,12 +437,12 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
              </div>
           </div>
 
-          <div className="bg-[#fffdf2] rounded-[32px] border-2 border-amber-100 shadow-xl relative min-h-[500px] overflow-hidden flex flex-col">
+          <div className="bg-[#fffdf2] rounded-[24px] border border-amber-100 shadow-xl relative min-h-[400px] overflow-hidden flex flex-col">
             {/* Notepad lines decoration */}
             <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px)', backgroundSize: '100% 2.5rem' }}></div>
             
             <textarea 
-              className="w-full flex-1 bg-transparent p-6 md:p-10 text-lg font-medium text-slate-800 outline-none resize-none leading-[2.5rem] relative z-10 placeholder:text-amber-200 placeholder:italic"
+              className="w-full flex-1 bg-transparent p-4 md:p-10 text-base md:text-lg font-medium text-slate-800 outline-none resize-none leading-[2.5rem] relative z-10 placeholder:text-amber-200 placeholder:italic"
               placeholder="Start typing your site notes here, or use the mic to dictate..."
               value={notepadContent}
               onChange={(e) => {
@@ -451,15 +451,15 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
               }}
             />
             
-            <div className="p-4 border-t border-amber-50 bg-[#fffef7] flex justify-between items-center text-[9px] font-black text-amber-300 uppercase tracking-widest italic relative z-10 px-10">
-              <span>Job Pack Ref: {project.id}</span>
-              <span>Last Synchronized: {new Date(project.updatedAt).toLocaleTimeString()}</span>
+            <div className="p-3 border-t border-amber-50 bg-[#fffef7] flex justify-between items-center text-[8px] font-black text-amber-300 uppercase tracking-widest italic relative z-10 px-4 md:px-10">
+              <span>Ref: {project.id.substr(0,8)}</span>
+              <span>Saved: {new Date(project.updatedAt).toLocaleTimeString()}</span>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 px-6 py-3 bg-amber-50 rounded-2xl border border-amber-100 text-[10px] font-bold text-amber-700 italic">
-             <Sparkles size={12} className="shrink-0" />
-             Notes are automatically saved to the Job Pack as you type. Use dictation for hands-free site updates.
+          <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 rounded-xl border border-amber-100 text-[9px] font-bold text-amber-700 italic">
+             <Sparkles size={10} className="shrink-0" />
+             Notes saved automatically. Use dictation for hands-free updates.
           </div>
         </div>
       )}

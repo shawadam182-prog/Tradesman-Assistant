@@ -479,23 +479,23 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         </div>
       </div>
 
-      <div className="bg-white p-3 md:p-5 rounded-[32px] border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="space-y-1">
+      <div className="bg-white p-3 md:p-5 rounded-[24px] border border-slate-200 shadow-sm grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="space-y-1 col-span-2 md:col-span-1">
           <div className="flex justify-between items-center px-1">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Document Title</label>
-            <button type="button" onClick={() => isListeningTitle ? titleRecognitionRef.current?.stop() : titleRecognitionRef.current?.start()} className={`p-1 rounded-md border ${isListeningTitle ? 'bg-red-500 text-white animate-pulse' : 'text-slate-400 bg-white shadow-sm'}`}><Mic size={12} /></button>
+            <button type="button" onClick={() => isListeningTitle ? titleRecognitionRef.current?.stop() : titleRecognitionRef.current?.start()} className={`p-1 rounded-md border ${isListeningTitle ? 'bg-red-500 text-white animate-pulse' : 'text-slate-400 bg-white shadow-sm'}`}><Mic size={10} /></button>
           </div>
-          <input type="text" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none focus:border-amber-400 focus:bg-white transition-all text-slate-950" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Full House Refurbishment" />
+          <input type="text" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-amber-400 focus:bg-white transition-all text-slate-950" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Full House Refurbishment" />
         </div>
         
-        <div className="space-y-1 relative" ref={dropdownRef}>
+        <div className="space-y-1 relative col-span-2 md:col-span-1" ref={dropdownRef}>
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Assign Client</label>
           <div className="flex gap-2">
             <div className="flex-1 relative">
-              <input type="text" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none text-slate-950 focus:border-amber-400 focus:bg-white transition-all" value={customerSearch} onFocus={() => setShowCustomerDropdown(true)} onChange={e => setCustomerSearch(e.target.value)} placeholder="Search clients..." />
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+              <input type="text" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-sm font-bold outline-none text-slate-950 focus:border-amber-400 focus:bg-white transition-all" value={customerSearch} onFocus={() => setShowCustomerDropdown(true)} onChange={e => setCustomerSearch(e.target.value)} placeholder="Search clients..." />
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
             </div>
-            <button onClick={() => setIsAddingCustomer(true)} className="p-4 bg-slate-900 text-amber-500 rounded-2xl hover:bg-black transition-all shadow-sm" title="Add New Client"><UserPlus size={20} /></button>
+            <button onClick={() => setIsAddingCustomer(true)} className="px-3 bg-slate-900 text-amber-500 rounded-xl hover:bg-black transition-all shadow-sm" title="Add New Client"><UserPlus size={16} /></button>
           </div>
           {showCustomerDropdown && (
             <div className="absolute z-50 left-0 right-0 mt-2 bg-white border-2 border-slate-100 rounded-[24px] shadow-2xl max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-2">
@@ -512,14 +512,14 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         <div className="space-y-1">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Issue Date</label>
           <div className="relative">
-            <input type="date" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none text-slate-950 focus:border-amber-400 focus:bg-white transition-all cursor-pointer" value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})} />
-            <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={16} />
+            <input type="date" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-sm font-bold outline-none text-slate-950 focus:border-amber-400 focus:bg-white transition-all cursor-pointer" value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})} />
+            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={14} />
           </div>
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Document Category</label>
-          <select className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold outline-none text-slate-950 focus:border-amber-400 focus:bg-white transition-all cursor-pointer" value={formData.type} onChange={e => handleTypeChange(e.target.value as any)}>
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Category</label>
+          <select className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-sm font-bold outline-none text-slate-950 focus:border-amber-400 focus:bg-white transition-all cursor-pointer" value={formData.type} onChange={e => handleTypeChange(e.target.value as any)}>
             <option value="estimate">Estimate</option>
             <option value="quotation">Quotation</option>
             <option value="invoice">Invoice</option>
@@ -667,35 +667,38 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       )}
 
       {/* Global AI Magic Builder targeting sections */}
-      <div className="bg-amber-500/5 border-2 border-amber-500/10 p-2 md:p-4 rounded-[24px] shadow-sm group">
-        <div className="flex items-center justify-between mb-2">
+      <details className="group bg-amber-500/5 border border-amber-500/10 p-2 md:p-4 rounded-[20px] shadow-sm">
+        <summary className="flex items-center justify-between cursor-pointer list-none">
           <div className="flex items-center gap-2">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-700 italic flex items-center gap-2"><Sparkles size={14} className="animate-pulse"/> AI Magic Item Builder</h3>
-            <div className="h-4 w-px bg-amber-200 mx-2"></div>
-            <div className="flex items-center gap-2">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Targets:</span>
-              <select className="bg-white border border-amber-100 rounded-lg text-[9px] font-black uppercase px-2 py-1 outline-none text-amber-600 cursor-pointer" value={targetSectionId || ''} onChange={e => setTargetSectionId(e.target.value)}>
+            <div className="p-1.5 bg-amber-100 rounded-lg text-amber-600"><Sparkles size={14} /></div>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.1em] text-amber-700 italic">AI Magic Builder</h3>
+          </div>
+          <ChevronDown size={16} className="text-amber-400 transition-transform group-open:rotate-180" />
+        </summary>
+
+        <div className="mt-3 pt-3 border-t border-amber-100/50">
+          <div className="flex items-center gap-2 mb-2">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Target:</span>
+              <select className="bg-white border border-amber-100 rounded-lg text-[9px] font-black uppercase px-2 py-1 outline-none text-amber-600 cursor-pointer flex-1" value={targetSectionId || ''} onChange={e => setTargetSectionId(e.target.value)}>
                 {(formData.sections || []).map((s, idx) => <option key={s.id} value={s.id}>{s.title || `Job ${idx+1}`}</option>)}
               </select>
-            </div>
           </div>
-          <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest opacity-60 hidden md:inline">Speech or Photos</span>
+          <div className="relative mb-2">
+            <textarea className="w-full bg-white border border-amber-100 rounded-xl p-3 min-h-[60px] text-xs font-bold text-slate-900 outline-none focus:border-amber-400 transition-all placeholder:text-amber-300/60 shadow-inner" placeholder="Describe items..." value={aiInput} onChange={e => setAiInput(e.target.value)} />
+            <button onClick={() => isListening ? recognitionRef.current?.stop() : recognitionRef.current?.start()} className={`absolute right-2 bottom-2 p-1.5 rounded-lg shadow-sm transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-amber-500 text-white hover:bg-amber-600'}`}>
+              {isListening ? <MicOff size={14} /> : <Mic size={14} />}
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.onchange = (e: any) => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload = (ev) => setAttachedImage(ev.target?.result as string); r.readAsDataURL(f); } }; i.click(); }} className="flex-1 bg-white border border-amber-100 text-amber-600 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-amber-50 transition-all shadow-sm flex items-center justify-center gap-1.5">
+              <Camera size={12} /> {attachedImage ? 'Photo Attached' : 'Photo'}
+            </button>
+            <button onClick={runAIAnalysis} disabled={loading || (!aiInput && !attachedImage)} className="flex-1 bg-slate-900 text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-xl hover:bg-black disabled:opacity-30 flex items-center justify-center gap-1.5 transition-all">
+              {loading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} Generate
+            </button>
+          </div>
         </div>
-        <div className="relative mb-2">
-          <textarea className="w-full bg-white border-2 border-amber-100 rounded-[20px] p-3 md:p-4 min-h-[80px] text-sm font-bold text-slate-900 outline-none focus:border-amber-400 transition-all placeholder:text-amber-300/60 shadow-inner" placeholder="Describe items for the selected section..." value={aiInput} onChange={e => setAiInput(e.target.value)} />
-          <button onClick={() => isListening ? recognitionRef.current?.stop() : recognitionRef.current?.start()} className={`absolute right-2 bottom-2 p-2 rounded-xl shadow-xl transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-amber-500 text-white hover:bg-amber-600'}`}>
-            {isListening ? <MicOff size={16} /> : <Mic size={16} />}
-          </button>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.onchange = (e: any) => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload = (ev) => setAttachedImage(ev.target?.result as string); r.readAsDataURL(f); } }; i.click(); }} className="flex-1 bg-white border-2 border-amber-100 text-amber-600 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-50 transition-all shadow-sm flex items-center justify-center gap-2">
-            <Camera size={14} /> {attachedImage ? 'Photo Attached' : 'Attach Photo'}
-          </button>
-          <button onClick={runAIAnalysis} disabled={loading || (!aiInput && !attachedImage)} className="flex-1 bg-slate-900 text-white px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-black disabled:opacity-30 flex items-center justify-center gap-2 transition-all">
-            {loading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} Analyze Job Details
-          </button>
-        </div>
-      </div>
+      </details>
 
       {/* Multiple Sections / Jobs List */}
       <div className="space-y-4 md:space-y-6">
