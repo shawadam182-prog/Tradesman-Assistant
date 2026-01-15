@@ -273,16 +273,11 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
           setFormData(newFormData);
           setScanning(false);
 
-          // ALSO directly set input values via refs (bypasses React on mobile)
-          // This is a fallback for mobile browsers that ignore React's controlled inputs
-          requestAnimationFrame(() => {
-            if (vendorInputRef.current) vendorInputRef.current.value = newFormData.vendor;
-            if (amountInputRef.current) amountInputRef.current.value = newFormData.amount;
-            if (vatInputRef.current) vatInputRef.current.value = newFormData.vat_amount;
-            if (dateInputRef.current) dateInputRef.current.value = newFormData.expense_date;
-            if (descriptionInputRef.current) descriptionInputRef.current.value = newFormData.description;
-            console.log('Directly set input values via refs');
-          });
+          // NUCLEAR OPTION: Close and reopen modal to force complete remount
+          setShowAddModal(false);
+          setTimeout(() => {
+            setShowAddModal(true);
+          }, 100);
 
           toast.success('Receipt Scanned', `${result.vendor} - £${result.amount}`);
           return; // Exit early since we've already set scanning to false
