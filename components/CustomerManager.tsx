@@ -13,11 +13,12 @@ import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 
 interface CustomerManagerProps {
   customers: Customer[];
-  setCustomers: (customers: Customer[]) => void;
+  addCustomer: (customer: Omit<Customer, 'id'>) => Promise<Customer>;
+  updateCustomer: (id: string, updates: Partial<Customer>) => Promise<void>;
   deleteCustomer: (id: string) => Promise<void>;
 }
 
-export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, setCustomers, deleteCustomer: deleteCustomerProp }) => {
+export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, addCustomer: addCustomerProp, updateCustomer: updateCustomerProp, deleteCustomer: deleteCustomerProp }) => {
   const toast = useToast();
   // Explicitly type searchTerm as string to avoid unknown inference issues
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -203,7 +204,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate and sanitize input
@@ -214,32 +215,34 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
       return;
     }
 
-    if (editingId === 'new') {
-      const customer: Customer = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: validation.sanitized.name,
-        email: validation.sanitized.email,
-        phone: validation.sanitized.phone,
-        address: validation.sanitized.address,
-        company: validation.sanitized.company || '',
-      };
-      setCustomers([...customers, customer]);
-      toast.success('Contact Added', `${validation.sanitized.name} added to directory`);
-    } else if (editingId) {
-      setCustomers(customers.map(c => c.id === editingId ? {
-        ...c,
-        name: validation.sanitized.name,
-        email: validation.sanitized.email,
-        phone: validation.sanitized.phone,
-        address: validation.sanitized.address,
-        company: validation.sanitized.company || '',
-      } as Customer : c));
-      toast.success('Contact Updated', 'Changes saved successfully');
-    }
+    try {
+      if (editingId === 'new') {
+        await addCustomerProp({
+          name: validation.sanitized.name,
+          email: validation.sanitized.email,
+          phone: validation.sanitized.phone,
+          address: validation.sanitized.address,
+          company: validation.sanitized.company || '',
+        });
+        toast.success('Contact Added', `${validation.sanitized.name} added to directory`);
+      } else if (editingId) {
+        await updateCustomerProp(editingId, {
+          name: validation.sanitized.name,
+          email: validation.sanitized.email,
+          phone: validation.sanitized.phone,
+          address: validation.sanitized.address,
+          company: validation.sanitized.company || '',
+        });
+        toast.success('Contact Updated', 'Changes saved successfully');
+      }
 
-    setCustomerForm({});
-    setEditingId(null);
-    setError(null);
+      setCustomerForm({});
+      setEditingId(null);
+      setError(null);
+    } catch (error) {
+      console.error('Failed to save customer:', error);
+      toast.error('Save Failed', 'Could not save customer');
+    }
   };
 
   const startEdit = (customer: Customer) => {

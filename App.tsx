@@ -39,7 +39,7 @@ const App: React.FC = () => {
   const {
     customers, quotes, projects, schedule, settings,
     setCustomers, setSettings, updateSettings,
-    addCustomer, deleteCustomer, saveQuote, updateQuote, updateQuoteStatus, deleteQuote,
+    addCustomer, updateCustomer, deleteCustomer, saveQuote, updateQuote, updateQuoteStatus, deleteQuote,
     addProject, saveProject, deleteProject,
     addScheduleEntry, updateScheduleEntry, deleteScheduleEntry,
   } = useData();
@@ -87,8 +87,14 @@ const App: React.FC = () => {
     try { await saveProject(project); } catch (error) { console.error('Failed:', error); }
   };
 
-  const handleAddCustomer = async (customer: Customer) => {
-    try { await addCustomer(customer); } catch (error) { console.error('Failed:', error); }
+  const handleAddCustomer = async (customer: Customer): Promise<Customer> => {
+    try {
+      return await addCustomer(customer);
+    } catch (error) {
+      console.error('Failed:', error);
+      toast.error('Failed to Add', 'Could not create customer');
+      throw error;
+    }
   };
 
   const handleUpdateQuoteStatus = async (id: string, status: Quote['status']) => {
@@ -193,7 +199,7 @@ const App: React.FC = () => {
         {activeTab === 'payables' && <PayablesPage />}
         {activeTab === 'files' && <FilingCabinetPage />}
         {activeTab === 'materials' && <MaterialsLibrary onBack={() => setActiveTab('home')} />}
-        {activeTab === 'customers' && <CustomerManager customers={customers} setCustomers={setCustomers} deleteCustomer={deleteCustomer} />}
+        {activeTab === 'customers' && <CustomerManager customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer} deleteCustomer={deleteCustomer} />}
         {activeTab === 'settings' && <SettingsPage settings={settings} setSettings={setSettings} onSave={updateSettings} />}
         {activeTab === 'quote_edit' && <QuoteCreator existingQuote={quotes.find(q => q.id === editingQuoteId)} projectId={activeProjectId || undefined} customers={customers} settings={settings} onSave={handleSaveQuote} onAddCustomer={handleAddCustomer} onCancel={() => activeProjectId ? setActiveTab('jobpack_detail') : setActiveTab('quotes')} />}
         {activeTab === 'view' && viewingQuoteId && (activeViewQuote ? <QuoteView quote={activeViewQuote} customer={activeViewCustomer || { id: 'unknown', name: 'Unassigned Client', email: '', phone: '', address: 'N/A' }} settings={settings} onEdit={() => handleEditQuote(viewingQuoteId)} onBack={() => activeProjectId ? setActiveTab('jobpack_detail') : (activeViewQuote.type === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes'))} onUpdateStatus={(status) => handleUpdateQuoteStatus(viewingQuoteId, status)} onUpdateQuote={handleUpdateQuote} onConvertToInvoice={handleConvertToInvoice} onDuplicate={handleDuplicateQuote} /> : <div className="flex flex-col items-center justify-center py-20 text-slate-400"><FileWarning size={48} className="text-amber-500 mb-4" /><p>Document Not Found</p><button onClick={() => setActiveTab('quotes')} className="mt-4 bg-slate-900 text-white px-4 py-2 rounded">Back</button></div>)}

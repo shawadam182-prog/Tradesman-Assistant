@@ -18,7 +18,7 @@ interface ScheduleCalendarProps {
   entries: ScheduleEntry[];
   projects: JobPack[];
   customers: Customer[];
-  onAddCustomer: (customer: Customer) => void;
+  onAddCustomer: (customer: Customer) => Promise<Customer>;
   onAddEntry: (entry: Omit<ScheduleEntry, 'id'>) => Promise<ScheduleEntry>;
   onUpdateEntry: (id: string, updates: Partial<ScheduleEntry>) => Promise<void>;
   onDeleteEntry: (id: string) => Promise<void>;
@@ -189,7 +189,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
     );
   };
 
-  const saveQuickCustomer = () => {
+  const saveQuickCustomer = async () => {
     if (!newCustomer.name?.trim()) {
       setCustomerError("Client name is required.");
       return;
@@ -202,16 +202,21 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
       address: newCustomer.address || '',
       company: newCustomer.company || '',
     };
-    onAddCustomer(customer);
-    setDraft(prev => ({
-      ...prev,
-      customerId: customer.id,
-      location: prev.location || customer.address || ''
-    }));
-    setLinkType('customer');
-    setIsAddingCustomer(false);
-    setNewCustomer({});
-    setCustomerError(null);
+
+    try {
+      const createdCustomer = await onAddCustomer(customer);
+      setDraft(prev => ({
+        ...prev,
+        customerId: createdCustomer.id,
+        location: prev.location || createdCustomer.address || ''
+      }));
+      setLinkType('customer');
+      setIsAddingCustomer(false);
+      setNewCustomer({});
+      setCustomerError(null);
+    } catch (error) {
+      setCustomerError("Failed to create customer. Please try again.");
+    }
   };
 
   // Get current location for schedule entry

@@ -13,7 +13,7 @@ interface JobPackListProps {
   customers: Customer[];
   onOpenProject: (id: string) => void;
   onAddProject: (project: JobPack) => void;
-  onAddCustomer: (customer: Customer) => void;
+  onAddCustomer: (customer: Customer) => Promise<Customer>;
 }
 
 export const JobPackList: React.FC<JobPackListProps> = ({ 
@@ -153,7 +153,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
     );
   };
 
-  const handleQuickAddCustomer = (e?: React.FormEvent | React.MouseEvent) => {
+  const handleQuickAddCustomer = async (e?: React.FormEvent | React.MouseEvent) => {
     if (e) e.preventDefault();
     setCustomerError(null);
 
@@ -170,12 +170,16 @@ export const JobPackList: React.FC<JobPackListProps> = ({
       address: newCustomer.address || '',
       company: newCustomer.company || '',
     };
-    
-    onAddCustomer(customer);
-    setSelectedCustomer(customer.id);
-    setIsAddingCustomer(false);
-    setNewCustomer({});
-    setCustomerError(null);
+
+    try {
+      const createdCustomer = await onAddCustomer(customer);
+      setSelectedCustomer(createdCustomer.id);
+      setIsAddingCustomer(false);
+      setNewCustomer({});
+      setCustomerError(null);
+    } catch (error) {
+      setCustomerError("Failed to create customer. Please try again.");
+    }
   };
 
   const handleCreateProject = () => {
