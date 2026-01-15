@@ -164,7 +164,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
 
       {/* Mobile Nav - Grid Layout */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-[100] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] safe-area-bottom">
-        <div className="grid grid-cols-3 gap-0.5 px-1 py-1">
+        <div className="grid grid-cols-6 gap-0.5 px-1 py-1">
           {primaryNavItems.map((item) => (
             <button
               key={item.id}

@@ -221,7 +221,7 @@ ${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know 
   const reference = `${prefix}${numStr}`;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 pb-10">
+    <div className="max-w-4xl mx-auto space-y-4 pb-24">
       <div className="flex flex-col gap-4 print:hidden">
         <div className="flex items-center justify-between">
           <button onClick={onBack} className="flex items-center gap-1.5 text-slate-400 hover:text-slate-800 transition-colors py-2">
@@ -313,7 +313,7 @@ ${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know 
           <h2 className="text-sm md:text-xl font-black uppercase tracking-[0.2em]">{activeQuote.type || 'estimate'}</h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-0 border-b border-slate-100">
+        <div className="flex flex-col md:grid md:grid-cols-2 gap-0 border-b border-slate-100">
           <div className="p-4 md:p-8 bg-slate-50/50 border-r border-slate-100">
             <div className="flex items-center gap-4 mb-4">
               {displayOptions.showLogo && (
@@ -357,7 +357,7 @@ ${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know 
           const rawLabourTotal = (section.labourHours || 0) * (activeQuote.labourRate || settings.defaultLabourRate || 0);
           
           return (
-            <div key={section.id} className={`p-8 ${idx % 2 === 1 ? 'bg-slate-50/30' : 'bg-white'} border-b border-slate-100 last:border-b-0 space-y-8`}>
+            <div key={section.id} className={`p-4 md:p-8 ${idx % 2 === 1 ? 'bg-slate-50/30' : 'bg-white'} border-b border-slate-100 last:border-b-0 space-y-8`}>
               <div className="flex items-center gap-3">
                  <div className="h-8 w-8 bg-slate-900 text-amber-500 rounded-lg flex items-center justify-center font-black text-xs">{idx + 1}</div>
                  <h4 className="text-lg font-black text-slate-900 uppercase tracking-widest">{section.title}</h4>
@@ -372,26 +372,48 @@ ${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know 
                   </div>
 
                   {displayOptions.showMaterialItems && (section.items || []).length > 0 && (
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-100">
-                          <th className="py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">Item Description</th>
-                          {displayOptions.showMaterialQty && <th className="py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center w-20">Qty</th>}
-                          {displayOptions.showMaterialUnitPrice && <th className="py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right w-24">Unit (£)</th>}
-                          {displayOptions.showMaterialLineTotals && <th className="py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right w-24">Total</th>}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {(section.items || []).map(item => (
-                          <tr key={item.id}>
-                            <td className="py-3 pr-4"><p className="text-sm font-bold text-slate-900">{item.name}</p>{item.description && <p className="text-[10px] text-slate-500 italic leading-tight">{item.description}</p>}</td>
-                            {displayOptions.showMaterialQty && <td className="py-3 text-center"><span className="text-xs font-black text-slate-700">{item.quantity} {item.unit}</span></td>}
-                            {displayOptions.showMaterialUnitPrice && <td className="py-3 text-right text-xs font-black text-slate-700">£{(item.unitPrice * markupMultiplier).toFixed(2)}</td>}
-                            {displayOptions.showMaterialLineTotals && <td className="py-3 text-right text-sm font-black text-slate-900">£{(item.totalPrice * markupMultiplier).toFixed(2)}</td>}
+                    <div className="w-full">
+                      {/* Desktop Table */}
+                      <table className="hidden md:table w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-100">
+                            <th className="py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">Item Description</th>
+                            {displayOptions.showMaterialQty && <th className="py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center w-20">Qty</th>}
+                            {displayOptions.showMaterialUnitPrice && <th className="py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right w-24">Unit (£)</th>}
+                            {displayOptions.showMaterialLineTotals && <th className="py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right w-24">Total</th>}
                           </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                          {(section.items || []).map(item => (
+                            <tr key={item.id}>
+                              <td className="py-3 pr-4"><p className="text-sm font-bold text-slate-900">{item.name}</p>{item.description && <p className="text-[10px] text-slate-500 italic leading-tight">{item.description}</p>}</td>
+                              {displayOptions.showMaterialQty && <td className="py-3 text-center"><span className="text-xs font-black text-slate-700">{item.quantity} {item.unit}</span></td>}
+                              {displayOptions.showMaterialUnitPrice && <td className="py-3 text-right text-xs font-black text-slate-700">£{(item.unitPrice * markupMultiplier).toFixed(2)}</td>}
+                              {displayOptions.showMaterialLineTotals && <td className="py-3 text-right text-sm font-black text-slate-900">£{(item.totalPrice * markupMultiplier).toFixed(2)}</td>}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+
+                      {/* Mobile Cards */}
+                      <div className="md:hidden space-y-3">
+                        {(section.items || []).map(item => (
+                          <div key={item.id} className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <p className="text-sm font-bold text-slate-900">{item.name}</p>
+                                {item.description && <p className="text-[10px] text-slate-500 italic leading-tight">{item.description}</p>}
+                              </div>
+                              {displayOptions.showMaterialLineTotals && <p className="text-sm font-black text-slate-900">£{(item.totalPrice * markupMultiplier).toFixed(2)}</p>}
+                            </div>
+                            <div className="flex justify-between items-center text-[10px] text-slate-500 border-t border-slate-50 pt-2 mt-2">
+                              {displayOptions.showMaterialQty && <span>Qty: <strong className="text-slate-700">{item.quantity} {item.unit}</strong></span>}
+                              {displayOptions.showMaterialUnitPrice && <span>Unit: <strong className="text-slate-700">£{(item.unitPrice * markupMultiplier).toFixed(2)}</strong></span>}
+                            </div>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
+                      </div>
+                    </div>
                   )}
 
                   {displayOptions.showMaterialSectionTotal && (
@@ -452,7 +474,7 @@ ${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know 
           );
         })}
 
-        <div className={`${currentThemeClass} p-10 avoid-break relative overflow-hidden`}>
+        <div className={`${currentThemeClass} p-6 md:p-10 avoid-break relative overflow-hidden`}>
           <div className="absolute top-0 right-0 p-4 md:p-8 opacity-5"><PoundSterling size={120} /></div>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
             <div className="flex-1 max-w-lg">
