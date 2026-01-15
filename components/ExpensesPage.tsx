@@ -471,13 +471,14 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Hidden file input for receipt capture - removed capture attr for Android compatibility */}
+      {/* Hidden file input for receipt capture - using id for label association */}
       <input
+        id="receipt-file-input"
         ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={handleFileSelect}
-        className="hidden"
+        className="sr-only"
       />
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-8">
@@ -612,13 +613,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                     {scanning && (<div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center"><div className="text-center text-white"><Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /><p className="text-sm font-bold">Scanning receipt...</p></div></div>)}
                   </div>
                 ) : (
-                  <label className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-amber-500 hover:bg-amber-50 transition-colors cursor-pointer block">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
+                  <label htmlFor="receipt-file-input" className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-amber-500 hover:bg-amber-50 transition-colors cursor-pointer block">
                     <Camera className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                     <p className="text-sm font-bold text-slate-600">Tap to scan receipt</p>
                     <p className="text-xs text-slate-400">AI will auto-fill the details</p>
