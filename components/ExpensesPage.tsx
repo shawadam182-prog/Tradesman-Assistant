@@ -111,8 +111,13 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
   const [vendorSuggestions, setVendorSuggestions] = useState<Vendor[]>([]);
   const [showVendorDropdown, setShowVendorDropdown] = useState(false);
   const [topVendors, setTopVendors] = useState<Vendor[]>([]);
-  const vendorInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Refs for directly setting input values on mobile (bypasses React controlled input issues)
+  const vendorInputRef = useRef<HTMLInputElement>(null);
+  const amountInputRef = useRef<HTMLInputElement>(null);
+  const vatInputRef = useRef<HTMLInputElement>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const descriptionInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Persist modal state to handle iOS PWA state loss when camera opens
   const [showAddModal, setShowAddModalState] = useState(() => {
@@ -264,13 +269,21 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
 
           console.log('About to update form with:', newFormData);
 
-          // Use flushSync to force immediate DOM update on mobile
-          flushSync(() => {
-            setFormData(newFormData);
-            setScanning(false);
+          // Update React state
+          setFormData(newFormData);
+          setScanning(false);
+
+          // ALSO directly set input values via refs (bypasses React on mobile)
+          // This is a fallback for mobile browsers that ignore React's controlled inputs
+          requestAnimationFrame(() => {
+            if (vendorInputRef.current) vendorInputRef.current.value = newFormData.vendor;
+            if (amountInputRef.current) amountInputRef.current.value = newFormData.amount;
+            if (vatInputRef.current) vatInputRef.current.value = newFormData.vat_amount;
+            if (dateInputRef.current) dateInputRef.current.value = newFormData.expense_date;
+            if (descriptionInputRef.current) descriptionInputRef.current.value = newFormData.description;
+            console.log('Directly set input values via refs');
           });
 
-          console.log('Form updated, showing toast');
           toast.success('Receipt Scanned', `${result.vendor} - £${result.amount}`);
           return; // Exit early since we've already set scanning to false
         } else {
@@ -626,14 +639,13 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                   </label>
                 )}
               </div>
-              {/* Key forces React to recreate inputs when data changes - fixes mobile browser caching */}
-              <div key={`form-${formData.vendor}-${formData.amount}`} className="grid grid-cols-2 gap-3 md:gap-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div className="col-span-2 relative">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Vendor *</label>
                   <input
+                    ref={vendorInputRef}
                     type="text"
-                    defaultValue={formData.vendor}
-                    key={`vendor-${formData.vendor}`}
+                    value={formData.vendor}
                     onChange={(e) => setFormData(prev => ({ ...prev, vendor: e.target.value }))}
                     onFocus={() => formData.vendor.length >= 2 && vendorSuggestions.length > 0 && setShowVendorDropdown(true)}
                     placeholder="e.g. Screwfix, Travis Perkins"
@@ -674,7 +686,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Amount (exc. VAT) *</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">£</span>
-                    <input type="number" step="0.01" key={`amount-${formData.amount}`} defaultValue={formData.amount} onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                    <input ref={amountInputRef} type="number" step="0.01" value={formData.amount} onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                       placeholder="0.00" className="w-full pl-8 pr-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent" />
                   </div>
                 </div>
@@ -682,13 +694,13 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">VAT Amount</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">£</span>
-                    <input type="number" step="0.01" key={`vat-${formData.vat_amount}`} defaultValue={formData.vat_amount} onChange={(e) => setFormData(prev => ({ ...prev, vat_amount: e.target.value }))}
+                    <input ref={vatInputRef} type="number" step="0.01" value={formData.vat_amount} onChange={(e) => setFormData(prev => ({ ...prev, vat_amount: e.target.value }))}
                       placeholder="0.00" className="w-full pl-8 pr-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent" />
                   </div>
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Date</label>
-                  <input type="date" key={`date-${formData.expense_date}`} defaultValue={formData.expense_date} onChange={(e) => setFormData(prev => ({ ...prev, expense_date: e.target.value }))}
+                  <input ref={dateInputRef} type="date" value={formData.expense_date} onChange={(e) => setFormData(prev => ({ ...prev, expense_date: e.target.value }))}
                     className="w-full px-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent" />
                 </div>
                 <div>
@@ -729,7 +741,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                 </div>
                 <div className="col-span-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Description (Optional)</label>
-                  <textarea key={`desc-${formData.description}`} defaultValue={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  <textarea ref={descriptionInputRef} value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="What was this expense for?" rows={2}
                     className="w-full px-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none" />
                 </div>
