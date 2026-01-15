@@ -225,7 +225,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-3 md:space-y-6 pb-24">
+    <div className="max-w-6xl mx-auto space-y-3 md:space-y-6 pb-28">
       {/* Large View Modal */}
       {selectedImage && (
         <div className="fixed inset-0 z-[1000] bg-slate-900/90 backdrop-blur-xl flex flex-col animate-in fade-in duration-300">
@@ -442,7 +442,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
             <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px)', backgroundSize: '100% 2.5rem' }}></div>
             
             <textarea 
-              className="w-full flex-1 bg-transparent p-10 text-lg font-medium text-slate-800 outline-none resize-none leading-[2.5rem] relative z-10 placeholder:text-amber-200 placeholder:italic"
+              className="w-full flex-1 bg-transparent p-6 md:p-10 text-lg font-medium text-slate-800 outline-none resize-none leading-[2.5rem] relative z-10 placeholder:text-amber-200 placeholder:italic"
               placeholder="Start typing your site notes here, or use the mic to dictate..."
               value={notepadContent}
               onChange={(e) => {
@@ -526,15 +526,15 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Document</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase text-right">Action</th>
+                  <th className="px-4 md:px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Document</th>
+                  <th className="px-4 md:px-6 py-4 text-[10px] font-black text-slate-400 uppercase text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {quotes.map(q => (
                   <tr key={q.id}>
-                    <td className="px-6 py-4"><p className="text-sm font-black text-slate-900">{q.title}</p></td>
-                    <td className="px-6 py-4 text-right"><button onClick={() => onViewQuote(q.id)} className="text-amber-500 font-black text-xs uppercase">View</button></td>
+                    <td className="px-4 md:px-6 py-4"><p className="text-sm font-black text-slate-900">{q.title}</p></td>
+                    <td className="px-4 md:px-6 py-4 text-right"><button onClick={() => onViewQuote(q.id)} className="text-amber-500 font-black text-xs uppercase">View</button></td>
                   </tr>
                 ))}
               </tbody>

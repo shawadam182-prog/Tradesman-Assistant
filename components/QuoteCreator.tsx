@@ -451,7 +451,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-2 md:space-y-4 pb-20">
+    <div className="max-w-4xl mx-auto space-y-2 md:space-y-4 pb-24">
       {/* Header with actions */}
       <div className="flex items-center justify-between gap-2">
         <button
@@ -740,28 +740,30 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                 </div>
                 <div className="space-y-1.5">
                   {section.items.map((item) => (
-                    <div key={item.id} className="group grid grid-cols-1 md:grid-cols-12 gap-2 items-center p-2.5 rounded-xl border-2 border-slate-50 bg-white transition-all hover:border-slate-200">
+                    <div key={item.id} className="group grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-2 items-center p-3 md:p-2.5 rounded-xl border-2 border-slate-50 bg-white transition-all hover:border-slate-200">
                       <div className="md:col-span-6 flex items-start gap-3">
                         <div className="flex flex-col gap-0.5 flex-1">
                           <input type="text" className="w-full font-black text-sm bg-transparent text-slate-950 outline-none focus:text-amber-600 transition-colors" value={item.name} onChange={e => updateItem(section.id, item.id, { name: e.target.value })} placeholder="Item name..." />
                           <input type="text" className="w-full text-[10px] bg-transparent text-slate-400 italic outline-none" value={item.description} onChange={e => updateItem(section.id, item.id, { description: e.target.value })} placeholder="Details..." />
                         </div>
                       </div>
-                      <div className="md:col-span-2 flex items-center justify-center">
-                        <div className="flex items-center bg-slate-50 rounded-xl px-2 py-1 gap-1 border border-slate-100 w-full max-w-[100px]">
+                      <div className="md:col-span-2 flex items-center justify-between md:justify-center w-full">
+                         <span className="md:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantity</span>
+                        <div className="flex items-center bg-slate-50 rounded-xl px-2 py-1 gap-1 border border-slate-100 w-24 md:w-full md:max-w-[100px]">
                           <input type="number" className="w-full text-center text-xs font-black bg-transparent text-slate-950 outline-none" value={item.quantity || ''} onChange={e => updateItem(section.id, item.id, { quantity: parseFloat(e.target.value) || 0 })} />
                           <input type="text" className="w-8 text-center text-[9px] font-black text-slate-400 uppercase bg-transparent outline-none" value={item.unit} onChange={e => updateItem(section.id, item.id, { unit: e.target.value })} placeholder="unit" />
                         </div>
                       </div>
-                      <div className="md:col-span-2 flex items-center justify-end">
-                        <div className="flex items-center gap-1 bg-slate-50 rounded-xl px-2 py-1.5 border border-slate-100 w-full max-w-[100px]">
+                      <div className="md:col-span-2 flex items-center justify-between md:justify-end w-full">
+                         <span className="md:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest">Unit Price</span>
+                        <div className="flex items-center gap-1 bg-slate-50 rounded-xl px-2 py-1.5 border border-slate-100 w-24 md:w-full md:max-w-[100px]">
                           <span className="text-[10px] font-black text-slate-400 italic">£</span>
                           <input type="number" className="w-full text-right text-xs font-black bg-transparent text-slate-950 outline-none" value={item.unitPrice || ''} onChange={e => updateItem(section.id, item.id, { unitPrice: parseFloat(e.target.value) || 0 })} />
                         </div>
                       </div>
-                      <div className="md:col-span-2 flex items-center justify-between pl-4">
+                      <div className="md:col-span-2 flex items-center justify-between md:pl-4 w-full pt-2 md:pt-0 border-t md:border-t-0 border-slate-50 md:border-none mt-1 md:mt-0">
                         <span className="text-sm font-black text-slate-900">£{item.totalPrice.toFixed(2)}</span>
-                        <button onClick={() => removeItem(section.id, item.id)} className="p-1.5 text-slate-200 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><Trash2 size={16}/></button>
+                        <button onClick={() => removeItem(section.id, item.id)} className="p-1.5 text-slate-200 hover:text-red-500 transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100"><Trash2 size={16}/></button>
                       </div>
                     </div>
                   ))}
