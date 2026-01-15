@@ -479,7 +479,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
           <input type="text" placeholder="Search vendors..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent" />
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
+        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 no-scrollbar">
           <button onClick={() => setFilterCategory(null)}
             className={`px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-colors ${!filterCategory ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}>All</button>
           {categories.map(cat => (
