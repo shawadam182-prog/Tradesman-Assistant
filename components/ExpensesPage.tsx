@@ -626,13 +626,14 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                   </label>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3 md:gap-4">
+              {/* Key forces React to recreate inputs when data changes - fixes mobile browser caching */}
+              <div key={`form-${formData.vendor}-${formData.amount}`} className="grid grid-cols-2 gap-3 md:gap-4">
                 <div className="col-span-2 relative">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Vendor *</label>
                   <input
-                    ref={vendorInputRef}
                     type="text"
-                    value={formData.vendor}
+                    defaultValue={formData.vendor}
+                    key={`vendor-${formData.vendor}`}
                     onChange={(e) => setFormData(prev => ({ ...prev, vendor: e.target.value }))}
                     onFocus={() => formData.vendor.length >= 2 && vendorSuggestions.length > 0 && setShowVendorDropdown(true)}
                     placeholder="e.g. Screwfix, Travis Perkins"
@@ -673,7 +674,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Amount (exc. VAT) *</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">£</span>
-                    <input type="number" step="0.01" value={formData.amount} onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                    <input type="number" step="0.01" key={`amount-${formData.amount}`} defaultValue={formData.amount} onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                       placeholder="0.00" className="w-full pl-8 pr-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent" />
                   </div>
                 </div>
@@ -681,13 +682,13 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">VAT Amount</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">£</span>
-                    <input type="number" step="0.01" value={formData.vat_amount} onChange={(e) => setFormData(prev => ({ ...prev, vat_amount: e.target.value }))}
+                    <input type="number" step="0.01" key={`vat-${formData.vat_amount}`} defaultValue={formData.vat_amount} onChange={(e) => setFormData(prev => ({ ...prev, vat_amount: e.target.value }))}
                       placeholder="0.00" className="w-full pl-8 pr-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent" />
                   </div>
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Date</label>
-                  <input type="date" value={formData.expense_date} onChange={(e) => setFormData(prev => ({ ...prev, expense_date: e.target.value }))}
+                  <input type="date" key={`date-${formData.expense_date}`} defaultValue={formData.expense_date} onChange={(e) => setFormData(prev => ({ ...prev, expense_date: e.target.value }))}
                     className="w-full px-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent" />
                 </div>
                 <div>
@@ -728,7 +729,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                 </div>
                 <div className="col-span-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Description (Optional)</label>
-                  <textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  <textarea key={`desc-${formData.description}`} defaultValue={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="What was this expense for?" rows={2}
                     className="w-full px-4 py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none" />
                 </div>
