@@ -594,22 +594,22 @@ export const Home: React.FC<HomeProps> = ({
       {/* On Site Clock + Week Preview Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
         {/* On Site Clock */}
-        <div className={`rounded-2xl md:rounded-[32px] p-4 md:p-6 ${siteSession.currentSession ? 'bg-emerald-500' : 'bg-slate-900'} text-white shadow-lg`}>
+        <div className={`rounded-xl md:rounded-[32px] p-3 md:p-6 ${siteSession.currentSession ? 'bg-emerald-500' : 'bg-slate-900'} text-white shadow-lg`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-widest opacity-70 mb-1">
+              <p className="text-[10px] md:text-xs font-black uppercase tracking-widest opacity-70 mb-0.5 md:mb-1">
                 {siteSession.currentSession ? 'On Site' : 'Off Site'}
               </p>
               {siteSession.currentSession ? (
                 <>
-                  <p className="text-3xl font-black">{elapsedTime}</p>
-                  <p className="text-sm opacity-80 mt-1">
+                  <p className="text-xl md:text-3xl font-black">{elapsedTime}</p>
+                  <p className="text-xs md:text-sm opacity-80 mt-0.5 md:mt-1">
                     Since {new Date(siteSession.currentSession.clockInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     {siteSession.currentSession.jobTitle && ` - ${siteSession.currentSession.jobTitle}`}
                   </p>
                 </>
               ) : (
-                <p className="text-lg font-bold opacity-60">Tap to clock in when you arrive</p>
+                <p className="text-sm md:text-lg font-bold opacity-60">Tap to clock in when you arrive</p>
               )}
             </div>
             <button
@@ -617,32 +617,32 @@ export const Home: React.FC<HomeProps> = ({
                 hapticTap();
                 siteSession.currentSession ? clockOut() : clockIn();
               }}
-              className={`h-16 w-16 min-w-[64px] rounded-[20px] flex items-center justify-center font-black text-sm active:scale-95 transition-transform ${
+              className={`h-12 w-12 md:h-16 md:w-16 min-w-[48px] md:min-w-[64px] rounded-xl md:rounded-[20px] flex items-center justify-center font-black text-sm active:scale-95 transition-transform ${
                 siteSession.currentSession
                   ? 'bg-white text-emerald-600'
                   : 'bg-amber-500 text-slate-900'
               }`}
             >
-              {siteSession.currentSession ? <LogOut size={26} /> : <LogIn size={26} />}
+              {siteSession.currentSession ? <LogOut size={20} className="md:w-[26px] md:h-[26px]" /> : <LogIn size={20} className="md:w-[26px] md:h-[26px]" />}
             </button>
           </div>
         </div>
 
         {/* Week Preview */}
-        <div className="bg-white rounded-[32px] border border-slate-200 p-6 shadow-sm">
-          <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight mb-4">Week Ahead</h3>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        <div className="bg-white rounded-xl md:rounded-[32px] border border-slate-200 p-3 md:p-6 shadow-sm">
+          <h3 className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-tight mb-2 md:mb-4">Week Ahead</h3>
+          <div className="flex gap-1.5 md:gap-2 overflow-x-auto no-scrollbar pb-1">
             {weekPreview.map((day, idx) => (
               <button
                 key={idx}
                 onClick={onNavigateToSchedule}
-                className={`flex-shrink-0 w-14 p-3 rounded-xl text-center transition-all ${
+                className={`flex-shrink-0 w-12 md:w-14 p-2 md:p-3 rounded-lg md:rounded-xl text-center transition-all ${
                   idx === 0 ? 'bg-amber-500 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-900'
                 }`}
               >
-                <p className="text-[9px] font-black uppercase">{day.dayName}</p>
-                <p className="text-lg font-black">{day.date.getDate()}</p>
-                <div className={`text-[10px] font-bold ${day.jobCount > 0 ? '' : 'opacity-40'}`}>
+                <p className="text-[8px] md:text-[9px] font-black uppercase">{day.dayName}</p>
+                <p className="text-base md:text-lg font-black">{day.date.getDate()}</p>
+                <div className={`text-[9px] md:text-[10px] font-bold ${day.jobCount > 0 ? '' : 'opacity-40'}`}>
                   {day.jobCount} {day.jobCount === 1 ? 'job' : 'jobs'}
                 </div>
               </button>
@@ -683,102 +683,102 @@ export const Home: React.FC<HomeProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-8">
         {/* Reminders Section */}
-        <div className="bg-white rounded-[40px] border border-slate-200 p-8 shadow-sm flex flex-col min-h-[500px]">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="p-4 bg-blue-50 text-blue-600 rounded-3xl">
-                <Bell size={28} />
+        <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 p-4 md:p-8 shadow-sm flex flex-col min-h-[300px] md:min-h-[500px]">
+          <div className="flex items-center justify-between mb-3 md:mb-8">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-2 md:p-4 bg-blue-50 text-blue-600 rounded-xl md:rounded-3xl">
+                <Bell size={18} className="md:w-7 md:h-7" />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Reminders</h3>
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest italic">Time-sensitive site alarms</p>
+                <h3 className="text-base md:text-2xl font-black text-slate-900 uppercase tracking-tight">Reminders</h3>
+                <p className="text-[9px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest italic">Time-sensitive site alarms</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={startVoiceReminder}
               disabled={isProcessingReminder}
-              className={`h-16 w-16 rounded-[24px] flex items-center justify-center shadow-2xl transition-all ${
-                isListeningReminder 
-                  ? 'bg-red-500 text-white animate-pulse' 
-                  : isProcessingReminder 
-                    ? 'bg-amber-500 text-white' 
+              className={`h-12 w-12 md:h-16 md:w-16 rounded-xl md:rounded-[24px] flex items-center justify-center shadow-lg md:shadow-2xl transition-all ${
+                isListeningReminder
+                  ? 'bg-red-500 text-white animate-pulse'
+                  : isProcessingReminder
+                    ? 'bg-amber-500 text-white'
                     : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
-              {isProcessingReminder ? <Loader2 size={24} className="animate-spin" /> : isListeningReminder ? <MicOff size={24} /> : <Mic size={24} />}
+              {isProcessingReminder ? <Loader2 size={18} className="md:w-6 md:h-6 animate-spin" /> : isListeningReminder ? <MicOff size={18} className="md:w-6 md:h-6" /> : <Mic size={18} className="md:w-6 md:h-6" />}
             </button>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 mb-8">
+          <div className="flex flex-col sm:flex-row gap-2 md:gap-3 mb-4 md:mb-8">
             <input
               type="text"
               placeholder="What needs reminding?..."
-              className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-[24px] p-4 min-h-[52px] font-bold text-base text-slate-900 outline-none focus:border-blue-400 transition-all"
+              className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[24px] p-2 md:p-4 min-h-[38px] md:min-h-[52px] font-bold text-sm md:text-base text-slate-900 outline-none focus:border-blue-400 transition-all"
               value={newReminderText}
               onChange={e => setNewReminderText(e.target.value)}
             />
             <input
               type="time"
-              className="w-full sm:w-40 bg-slate-50 border-2 border-slate-100 rounded-[24px] p-4 min-h-[52px] font-bold text-base text-slate-900 outline-none focus:border-blue-400 transition-all cursor-pointer"
+              className="w-full sm:w-32 md:sm:w-40 bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[24px] p-2 md:p-4 min-h-[38px] md:min-h-[52px] font-bold text-sm md:text-base text-slate-900 outline-none focus:border-blue-400 transition-all cursor-pointer"
               value={newReminderTime}
               onChange={e => setNewReminderTime(e.target.value)}
             />
             <button
               onClick={() => { hapticTap(); addReminder(); }}
               disabled={!newReminderText || !newReminderTime}
-              className="bg-slate-900 text-white px-8 min-h-[52px] rounded-[24px] shadow-lg active:scale-95 transition-transform disabled:opacity-20 font-black uppercase text-xs tracking-widest"
+              className="bg-slate-900 text-white px-4 md:px-8 min-h-[38px] md:min-h-[52px] rounded-xl md:rounded-[24px] shadow-lg active:scale-95 transition-transform disabled:opacity-20 font-black uppercase text-[10px] md:text-xs tracking-widest"
             >
               Add
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-4 no-scrollbar pr-1">
+          <div className="flex-1 overflow-y-auto space-y-2 md:space-y-4 no-scrollbar pr-1">
             {reminders.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-30 py-20">
-                <BellRing size={64} className="mb-4" />
-                <p className="text-sm font-black uppercase tracking-widest">No active alarms</p>
+              <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-30 py-12 md:py-20">
+                <BellRing size={40} className="md:w-16 md:h-16 mb-2 md:mb-4" />
+                <p className="text-xs md:text-sm font-black uppercase tracking-widest">No active alarms</p>
               </div>
             ) : (
               reminders.map(reminder => (
-                <div 
-                  key={reminder.id} 
-                  className={`p-6 rounded-[32px] border-2 transition-all flex items-center justify-between group ${
-                    reminder.isAlarming 
-                      ? 'bg-amber-500 border-amber-600 text-slate-900 animate-pulse' 
-                      : reminder.isCompleted 
-                        ? 'bg-slate-50 border-transparent opacity-40' 
+                <div
+                  key={reminder.id}
+                  className={`p-3 md:p-6 rounded-xl md:rounded-[32px] border-2 transition-all flex items-center justify-between group ${
+                    reminder.isAlarming
+                      ? 'bg-amber-500 border-amber-600 text-slate-900 animate-pulse'
+                      : reminder.isCompleted
+                        ? 'bg-slate-50 border-transparent opacity-40'
                         : 'bg-white border-slate-100 hover:border-blue-200'
                   }`}
                 >
-                  <div className="flex items-center gap-6 min-w-0">
-                    <button 
+                  <div className="flex items-center gap-3 md:gap-6 min-w-0">
+                    <button
                       onClick={() => {
                         setReminders(prev => prev.map(r => r.id === reminder.id ? { ...r, isCompleted: !r.isCompleted, isAlarming: false } : r));
                       }}
-                      className={`h-12 w-12 rounded-[20px] flex items-center justify-center shrink-0 transition-all ${
-                        reminder.isAlarming 
-                          ? 'bg-slate-900 text-white shadow-2xl' 
+                      className={`h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-[20px] flex items-center justify-center shrink-0 transition-all ${
+                        reminder.isAlarming
+                          ? 'bg-slate-900 text-white shadow-2xl'
                           : reminder.isCompleted ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400 hover:bg-blue-100 hover:text-blue-600'
                       }`}
                     >
-                      {reminder.isCompleted ? <CheckCircle2 size={24} /> : reminder.isAlarming ? <BellRing size={24} className="animate-bounce" /> : <Play size={22} />}
+                      {reminder.isCompleted ? <CheckCircle2 size={18} className="md:w-6 md:h-6" /> : reminder.isAlarming ? <BellRing size={18} className="md:w-6 md:h-6 animate-bounce" /> : <Play size={16} className="md:w-[22px] md:h-[22px]" />}
                     </button>
                     <div className="truncate">
-                      <p className={`font-black text-lg truncate ${reminder.isCompleted ? 'line-through text-slate-400' : 'text-slate-900'}`}>
+                      <p className={`font-black text-sm md:text-lg truncate ${reminder.isCompleted ? 'line-through text-slate-400' : 'text-slate-900'}`}>
                         {reminder.text}
                       </p>
-                      <p className={`text-[12px] font-black uppercase tracking-widest italic ${reminder.isAlarming ? 'text-slate-900' : 'text-slate-400'}`}>
+                      <p className={`text-[10px] md:text-[12px] font-black uppercase tracking-widest italic ${reminder.isAlarming ? 'text-slate-900' : 'text-slate-400'}`}>
                         {reminder.time}
                       </p>
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setReminders(prev => prev.filter(r => r.id !== reminder.id))}
-                    className={`p-3 transition-colors ${reminder.isAlarming ? 'text-slate-900' : 'text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100'}`}
+                    className={`p-2 md:p-3 transition-colors ${reminder.isAlarming ? 'text-slate-900' : 'text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100'}`}
                   >
-                    <Trash2 size={24} />
+                    <Trash2 size={18} className="md:w-6 md:h-6" />
                   </button>
                 </div>
               ))
@@ -787,48 +787,48 @@ export const Home: React.FC<HomeProps> = ({
         </div>
 
         {/* Quick Notes Section */}
-        <div className="bg-white rounded-[40px] border border-slate-200 p-8 shadow-sm flex flex-col min-h-[500px]">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="p-4 bg-amber-50 text-amber-600 rounded-3xl">
-                <StickyNote size={28} />
+        <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 p-4 md:p-8 shadow-sm flex flex-col min-h-[300px] md:min-h-[500px]">
+          <div className="flex items-center justify-between mb-3 md:mb-8">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-2 md:p-4 bg-amber-50 text-amber-600 rounded-xl md:rounded-3xl">
+                <StickyNote size={18} className="md:w-7 md:h-7" />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Quick Notes</h3>
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest italic">Daily site scratchpad</p>
+                <h3 className="text-base md:text-2xl font-black text-slate-900 uppercase tracking-tight">Quick Notes</h3>
+                <p className="text-[9px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest italic">Daily site scratchpad</p>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button 
+            <div className="flex gap-1.5 md:gap-2">
+              <button
                 onClick={() => setQuickNotes('')}
-                className="h-16 w-16 rounded-[24px] flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all shadow-sm"
+                className="h-10 w-10 md:h-16 md:w-16 rounded-xl md:rounded-[24px] flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all shadow-sm"
                 title="Clear Notes"
               >
-                <Eraser size={24} />
+                <Eraser size={18} className="md:w-6 md:h-6" />
               </button>
-              <button 
+              <button
                 onClick={startVoiceNote}
-                className={`h-16 w-16 rounded-[24px] flex items-center justify-center shadow-2xl transition-all ${
-                  isListeningNote 
-                    ? 'bg-red-500 text-white animate-pulse' 
+                className={`h-10 w-10 md:h-16 md:w-16 rounded-xl md:rounded-[24px] flex items-center justify-center shadow-lg md:shadow-2xl transition-all ${
+                  isListeningNote
+                    ? 'bg-red-500 text-white animate-pulse'
                     : 'bg-amber-500 text-white hover:bg-amber-600'
                 }`}
               >
-                {isListeningNote ? <MicOff size={24} /> : <Mic size={24} />}
+                {isListeningNote ? <MicOff size={18} className="md:w-6 md:h-6" /> : <Mic size={18} className="md:w-6 md:h-6" />}
               </button>
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col gap-4">
-            <textarea 
-              className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-[32px] p-8 font-medium text-slate-900 outline-none focus:border-amber-400 transition-all shadow-inner leading-relaxed text-lg resize-none placeholder:text-slate-300 placeholder:italic"
+          <div className="flex-1 flex flex-col gap-2 md:gap-4">
+            <textarea
+              className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[32px] p-4 md:p-8 font-medium text-slate-900 outline-none focus:border-amber-400 transition-all shadow-inner leading-relaxed text-sm md:text-lg resize-none placeholder:text-slate-300 placeholder:italic"
               placeholder="Jot down site measurements, material shortages, or general notes..."
               value={quickNotes}
               onChange={e => setQuickNotes(e.target.value)}
             />
-            <div className="flex items-center gap-2 px-2">
-              <Sparkles size={14} className="text-amber-500" />
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tap mic to dictate and append to your notes.</p>
+            <div className="flex items-center gap-1.5 md:gap-2 px-1 md:px-2">
+              <Sparkles size={12} className="md:w-[14px] md:h-[14px] text-amber-500" />
+              <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Tap mic to dictate and append to your notes.</p>
             </div>
           </div>
         </div>
