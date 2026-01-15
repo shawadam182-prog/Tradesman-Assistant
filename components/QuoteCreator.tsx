@@ -13,7 +13,8 @@ import {
   Trash2, Loader2, Camera,
   UserPlus, ChevronDown, X, MapPinned, MicOff, AlertCircle,
   HardHat, PoundSterling, Clock, Percent, Package, FileText, ShieldCheck,
-  Calendar, GripVertical, Copy, Layers, LocateFixed, Library
+  Calendar, GripVertical, Copy, Layers, LocateFixed, Library,
+  User, Hammer, Mail, Phone, MapPin
 } from 'lucide-react';
 import { MaterialsLibrary } from './MaterialsLibrary';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
