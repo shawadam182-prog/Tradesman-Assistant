@@ -1,15 +1,16 @@
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Customer } from '../types';
 import {
   Search, UserPlus, Phone, Mail, MapPin, Trash2, Edit2, X,
-  AlertCircle, CheckCircle2, Mic, MicOff, Sparkles, Loader2, MapPinned,
-  Building, User as UserIcon, Pencil, Navigation, LocateFixed
+  AlertCircle, CheckCircle2, Mic, MicOff, Sparkles, Loader2,
+  Building, User as UserIcon, Pencil, Navigation
 } from 'lucide-react';
-import { parseCustomerVoiceInput, formatAddressAI, reverseGeocode } from '../src/services/geminiService';
+import { parseCustomerVoiceInput } from '../src/services/geminiService';
 import { useToast } from '../src/contexts/ToastContext';
 import { validateCustomerData } from '../src/utils/inputValidation';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
+import { AddressAutocomplete } from './AddressAutocomplete';
 
 interface CustomerManagerProps {
   customers: Customer[];
@@ -26,15 +27,9 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
   const [customerForm, setCustomerForm] = useState<Partial<Customer>>({});
   const [error, setError] = useState<string | null>(null);
   
-  // Autocomplete
-  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
-  const [addressSearchTerm, setAddressSearchTerm] = useState('');
-
   const [isListeningGlobal, setIsListeningGlobal] = useState(false);
   const [activeFieldVoice, setActiveFieldVoice] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isVerifyingAddress, setIsVerifyingAddress] = useState(false);
-  const [isLocating, setIsLocating] = useState(false);
 
   const isListeningGlobalRef = useRef(false);
   const activeFieldVoiceRef = useRef<string | null>(null);
@@ -158,52 +153,6 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
     }
   };
 
-  const handleVerifyAddress = async () => {
-    if (!customerForm.address) return;
-    setIsVerifyingAddress(true);
-    try {
-      const formatted = await formatAddressAI(customerForm.address);
-      setCustomerForm(prev => ({ ...prev, address: formatted }));
-    } catch (err) {
-      setError("Address verification failed.");
-    } finally {
-      setIsVerifyingAddress(false);
-    }
-  };
-
-  const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser.");
-      return;
-    }
-
-    setIsLocating(true);
-    setError(null);
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const address = await reverseGeocode(latitude, longitude);
-          if (address) {
-            setCustomerForm(prev => ({ ...prev, address }));
-            setAddressSearchTerm(address);
-          } else {
-            setError("Could not determine address from your location.");
-          }
-        } catch (err) {
-          setError("Failed to geocode your location.");
-        } finally {
-          setIsLocating(false);
-        }
-      },
-      (err) => {
-        setIsLocating(false);
-        setError("Location access denied or unavailable.");
-      }
-    );
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -269,15 +218,6 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
     (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (c.company && c.company.toLowerCase().includes(searchTerm.toLowerCase()))
   );
-
-  // Filtered addresses for autocomplete
-  const filteredAddresses = useMemo(() => {
-    if (!addressSearchTerm || addressSearchTerm.length < 2) return [];
-    const search = addressSearchTerm.toLowerCase();
-    // Explicitly type allAddresses as string[] to ensure toLowerCase exists on elements during filter
-    const allAddresses = Array.from(new Set(customers.map(c => c.address).filter(Boolean))) as string[];
-    return allAddresses.filter(addr => addr.toLowerCase().includes(search)).slice(0, 5);
-  }, [customers, addressSearchTerm]);
 
   return (
     <div className="space-y-6">
@@ -436,71 +376,15 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
                 </div>
               </div>
 
-              <div className="md:col-span-2 space-y-0.5 relative">
-                <label className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5 italic px-1">
-                  <MapPin size={10} className="md:w-3 md:h-3" /> Main Site Address
-                </label>
-                <div className="relative">
-                  <textarea
-                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-1.5 md:px-4 md:py-4 pr-28 md:pr-32 text-slate-950 font-bold text-sm outline-none min-h-[50px] md:min-h-[100px] focus:bg-white focus:border-amber-500 transition-all"
-                    placeholder="Street, Town, Postcode..."
-                    value={customerForm.address || ''}
-                    onChange={e => {
-                      const val = e.target.value;
-                      setCustomerForm({...customerForm, address: val});
-                      setAddressSearchTerm(val);
-                      setShowAddressSuggestions(true);
-                    }}
-                    onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
-                  />
-                  <div className="absolute right-1 top-1 flex gap-0.5">
-                    <button
-                      type="button"
-                      onClick={() => { hapticTap(); startFieldListening('address'); }}
-                      className={`p-1 md:p-2 rounded-lg transition-all ${activeFieldVoice === 'address' ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-amber-500 bg-transparent'}`}
-                      title="Voice input"
-                    >
-                      <Mic size={14} className="md:w-[18px] md:h-[18px]" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { hapticTap(); handleUseCurrentLocation(); }}
-                      disabled={isLocating}
-                      className="p-1 md:p-2 rounded-lg transition-all text-blue-500 hover:text-blue-700 disabled:opacity-30 bg-transparent"
-                      title="Use current location"
-                    >
-                      {isLocating ? <Loader2 size={14} className="md:w-[18px] md:h-[18px] animate-spin" /> : <LocateFixed size={14} className="md:w-[18px] md:h-[18px]" />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { hapticTap(); handleVerifyAddress(); }}
-                      disabled={!customerForm.address || isVerifyingAddress}
-                      className="p-1 md:p-2 rounded-lg transition-all text-amber-500 hover:text-amber-700 disabled:opacity-30 bg-transparent"
-                      title="AI verify address"
-                    >
-                      {isVerifyingAddress ? <Loader2 size={14} className="md:w-[18px] md:h-[18px] animate-spin" /> : <MapPinned size={14} className="md:w-[18px] md:h-[18px]" />}
-                    </button>
-                  </div>
-                </div>
-                {showAddressSuggestions && filteredAddresses.length > 0 && (
-                  <div className="absolute z-50 left-0 right-0 mt-2 bg-white border-2 border-slate-100 rounded-[24px] shadow-2xl animate-in slide-in-from-top-2 overflow-hidden">
-                    {filteredAddresses.map((addr, i) => (
-                      <button 
-                        key={i} 
-                        type="button"
-                        onClick={() => {
-                          setCustomerForm(prev => ({ ...prev, address: addr }));
-                          setShowAddressSuggestions(false);
-                          setAddressSearchTerm('');
-                        }}
-                        className="w-full text-left p-4 hover:bg-amber-50 text-sm font-bold text-slate-900 border-b border-slate-50 last:border-0 flex items-center gap-3 transition-colors"
-                      >
-                        <MapPin size={14} className="text-amber-500" />
-                        <span className="truncate">{addr}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+              <div className="md:col-span-2">
+                <AddressAutocomplete
+                  value={customerForm.address || ''}
+                  onChange={(address) => setCustomerForm(prev => ({ ...prev, address }))}
+                  placeholder="Start typing address or postcode..."
+                  onVoiceStart={() => startFieldListening('address')}
+                  onVoiceEnd={() => recognitionRef.current?.stop()}
+                  isListening={activeFieldVoice === 'address'}
+                />
               </div>
             </div>
 

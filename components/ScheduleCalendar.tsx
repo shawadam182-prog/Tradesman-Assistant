@@ -8,10 +8,11 @@ import {
   ChevronDown, MicOff,
   LayoutGrid, List,
   Pencil, CheckCircle2, CalendarRange, ArrowRight,
-  UserPlus, User, Mail, Phone, Hammer, MapPinned, LocateFixed,
+  UserPlus, User, Mail, Phone, Hammer, MapPinned,
   Briefcase, Link2
 } from 'lucide-react';
-import { parseScheduleVoiceInput, parseCustomerVoiceInput, formatAddressAI, reverseGeocode } from '../src/services/geminiService';
+import { parseScheduleVoiceInput, parseCustomerVoiceInput } from '../src/services/geminiService';
+import { AddressAutocomplete } from './AddressAutocomplete';
 import { hapticTap } from '../src/hooks/useHaptic';
 
 interface ScheduleCalendarProps {
@@ -52,12 +53,9 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({});
   const [isListeningCustomer, setIsListeningCustomer] = useState(false);
   const [isProcessingCustomer, setIsProcessingCustomer] = useState(false);
-  const [isVerifyingAddress, setIsVerifyingAddress] = useState(false);
-  const [isLocating, setIsLocating] = useState(false);
   const [customerError, setCustomerError] = useState<string | null>(null);
 
   // Schedule entry location and linking
-  const [isLocatingEntry, setIsLocatingEntry] = useState(false);
   const [linkType, setLinkType] = useState<'none' | 'job' | 'customer'>('none');
 
   const recognitionRef = useRef<any>(null);
@@ -144,51 +142,6 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
     }
   };
 
-  const handleVerifyAddress = async () => {
-    if (!newCustomer.address) return;
-    setIsVerifyingAddress(true);
-    try {
-      const formatted = await formatAddressAI(newCustomer.address);
-      setNewCustomer(prev => ({ ...prev, address: formatted }));
-    } catch (err) {
-      setCustomerError("Address verification failed.");
-    } finally {
-      setIsVerifyingAddress(false);
-    }
-  };
-
-  const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setCustomerError("Geolocation is not supported by your browser.");
-      return;
-    }
-
-    setIsLocating(true);
-    setCustomerError(null);
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const address = await reverseGeocode(latitude, longitude);
-          if (address) {
-            setNewCustomer(prev => ({ ...prev, address }));
-          } else {
-            setCustomerError("Could not determine address from your location.");
-          }
-        } catch (err) {
-          setCustomerError("Failed to geocode your location.");
-        } finally {
-          setIsLocating(false);
-        }
-      },
-      (err) => {
-        setIsLocating(false);
-        setCustomerError("Location access denied or unavailable.");
-      }
-    );
-  };
-
   const saveQuickCustomer = async () => {
     if (!newCustomer.name?.trim()) {
       setCustomerError("Client name is required.");
@@ -217,40 +170,6 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
     } catch (error) {
       setCustomerError("Failed to create customer. Please try again.");
     }
-  };
-
-  // Get current location for schedule entry
-  const handleUseLocationForEntry = () => {
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser.");
-      return;
-    }
-
-    setIsLocatingEntry(true);
-    setError(null);
-    hapticTap();
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const address = await reverseGeocode(latitude, longitude);
-          if (address) {
-            setDraft(prev => ({ ...prev, location: address }));
-          } else {
-            setError("Could not determine address from your location.");
-          }
-        } catch (err) {
-          setError("Failed to geocode your location.");
-        } finally {
-          setIsLocatingEntry(false);
-        }
-      },
-      (err) => {
-        setIsLocatingEntry(false);
-        setError("Location access denied or unavailable.");
-      }
-    );
   };
 
   // Handle linking to job pack
@@ -781,38 +700,12 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                   </div>
 
                   {/* Address Field */}
-                  <div className="md:col-span-2 space-y-0.5 relative">
-                    <label className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5 italic px-1">
-                      <MapPin size={10} className="md:w-3 md:h-3" /> Main Site Address
-                    </label>
-                    <div className="relative">
-                      <textarea
-                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-1.5 md:px-4 md:py-4 pr-28 md:pr-32 text-slate-950 font-bold text-sm outline-none min-h-[50px] md:min-h-[100px] focus:bg-white focus:border-amber-500 transition-all"
-                        placeholder="Street, Town, Postcode..."
-                        value={newCustomer.address || ''}
-                        onChange={e => setNewCustomer({...newCustomer, address: e.target.value})}
-                      />
-                      <div className="absolute right-1 top-1 flex gap-0.5">
-                        <button
-                          type="button"
-                          onClick={handleUseCurrentLocation}
-                          disabled={isLocating}
-                          className="p-1 md:p-2 rounded-lg transition-all text-blue-500 hover:text-blue-700 disabled:opacity-30 bg-transparent"
-                          title="Use current location"
-                        >
-                          {isLocating ? <Loader2 size={14} className="md:w-[18px] md:h-[18px] animate-spin" /> : <LocateFixed size={14} className="md:w-[18px] md:h-[18px]" />}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleVerifyAddress}
-                          disabled={!newCustomer.address || isVerifyingAddress}
-                          className="p-1 md:p-2 rounded-lg transition-all text-amber-500 hover:text-amber-700 disabled:opacity-30 bg-transparent"
-                          title="AI verify address"
-                        >
-                          {isVerifyingAddress ? <Loader2 size={14} className="md:w-[18px] md:h-[18px] animate-spin" /> : <MapPinned size={14} className="md:w-[18px] md:h-[18px]" />}
-                        </button>
-                      </div>
-                    </div>
+                  <div className="md:col-span-2">
+                    <AddressAutocomplete
+                      value={newCustomer.address || ''}
+                      onChange={(address) => setNewCustomer(prev => ({ ...prev, address }))}
+                      placeholder="Start typing address or postcode..."
+                    />
                   </div>
                 </div>
 
@@ -972,37 +865,27 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                     </div>
                   )}
 
-                  {/* Location Input with Current Location Button */}
+                  {/* Location Input with Address Autocomplete */}
                   <div className="space-y-3">
                     <div className="flex flex-wrap justify-between items-center px-1 gap-2">
                       <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest italic">Project Site Address</label>
-                      <div className="flex gap-3">
+                      {selectedCustomer?.address && (
                         <button
                           type="button"
-                          onClick={handleUseLocationForEntry}
-                          disabled={isLocatingEntry}
-                          className="min-h-[44px] px-4 text-[10px] font-black uppercase text-blue-600 hover:text-blue-700 flex items-center gap-2 disabled:opacity-30 bg-blue-50 rounded-xl active:scale-95"
+                          onClick={() => { hapticTap(); setDraft({ ...draft, location: selectedCustomer.address }); }}
+                          className="min-h-[44px] px-4 text-[10px] font-black uppercase text-amber-600 hover:text-amber-700 flex items-center gap-2 bg-amber-50 rounded-xl active:scale-95"
                         >
-                          {isLocatingEntry ? <Loader2 size={14} className="animate-spin" /> : <LocateFixed size={16} />}
-                          <span className="hidden sm:inline">Current Location</span>
-                          <span className="sm:hidden">Locate</span>
+                          <MapPinned size={16} />
+                          <span className="hidden sm:inline">Use Client Address</span>
+                          <span className="sm:hidden">Client</span>
                         </button>
-                        {selectedCustomer?.address && (
-                          <button
-                            type="button"
-                            onClick={() => { hapticTap(); setDraft({ ...draft, location: selectedCustomer.address }); }}
-                            className="min-h-[44px] px-4 text-[10px] font-black uppercase text-amber-600 hover:text-amber-700 flex items-center gap-2 bg-amber-50 rounded-xl active:scale-95"
-                          >
-                            <MapPinned size={16} />
-                            <span className="hidden sm:inline">Client Address</span>
-                          </button>
-                        )}
-                      </div>
+                      )}
                     </div>
-                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[36px] px-8 focus-within:border-amber-400 focus-within:bg-white transition-all shadow-inner">
-                      <MapPin className="text-slate-300 mr-5" size={24} />
-                      <input className="w-full bg-transparent border-none py-8 font-bold text-xl text-slate-950 outline-none" value={draft.location || ''} onChange={e => setDraft({...draft, location: e.target.value})} placeholder="Location..." />
-                    </div>
+                    <AddressAutocomplete
+                      value={draft.location || ''}
+                      onChange={(location) => setDraft(prev => ({ ...prev, location }))}
+                      placeholder="Start typing address or postcode..."
+                    />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-10 rounded-[52px] bg-slate-50 border-2 border-slate-100">

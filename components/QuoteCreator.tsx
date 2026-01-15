@@ -4,19 +4,18 @@ import { Quote, Customer, AppSettings, MaterialItem, QuoteSection, QuoteDisplayO
 import {
   analyzeJobRequirements,
   parseVoiceCommandForItems,
-  parseCustomerVoiceInput,
-  formatAddressAI,
-  reverseGeocode
+  parseCustomerVoiceInput
 } from '../src/services/geminiService';
 import {
   ArrowLeft, Mic, Sparkles, Plus,
   Trash2, Loader2, Camera,
-  UserPlus, ChevronDown, X, MapPinned, MicOff, AlertCircle,
+  UserPlus, ChevronDown, X, MicOff, AlertCircle,
   HardHat, PoundSterling, Clock, Percent, Package, FileText, ShieldCheck,
-  Calendar, GripVertical, Copy, Layers, LocateFixed, Library,
+  Calendar, GripVertical, Copy, Layers, Library,
   User, Hammer, Mail, Phone, MapPin
 } from 'lucide-react';
 import { MaterialsLibrary } from './MaterialsLibrary';
+import { AddressAutocomplete } from './AddressAutocomplete';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 
 interface QuoteCreatorProps {
@@ -45,8 +44,6 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({});
   const [isListeningCustomer, setIsListeningCustomer] = useState(false);
   const [isProcessingCustomer, setIsProcessingCustomer] = useState(false);
-  const [isVerifyingAddress, setIsVerifyingAddress] = useState(false);
-  const [isLocating, setIsLocating] = useState(false);
   const [customerError, setCustomerError] = useState<string | null>(null);
 
   // Materials Library modal state
@@ -409,47 +406,6 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     }
   };
 
-  const handleVerifyAddress = async () => {
-    if (!newCustomer.address) return;
-    setIsVerifyingAddress(true);
-    try {
-      const formatted = await formatAddressAI(newCustomer.address);
-      setNewCustomer(prev => ({ ...prev, address: formatted }));
-    } catch (err) { setCustomerError("Address verification failed."); } finally { setIsVerifyingAddress(false); }
-  };
-
-  const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setCustomerError("Geolocation is not supported by your browser.");
-      return;
-    }
-
-    setIsLocating(true);
-    setCustomerError(null);
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const address = await reverseGeocode(latitude, longitude);
-          if (address) {
-            setNewCustomer(prev => ({ ...prev, address }));
-          } else {
-            setCustomerError("Could not determine address from your location.");
-          }
-        } catch (err) {
-          setCustomerError("Failed to geocode your location.");
-        } finally {
-          setIsLocating(false);
-        }
-      },
-      (err) => {
-        setIsLocating(false);
-        setCustomerError("Location access denied or unavailable.");
-      }
-    );
-  };
-
   return (
     <div className="max-w-4xl mx-auto pb-32 bg-slate-50 min-h-screen">
       {/* Unified Header */}
@@ -589,38 +545,12 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                 </div>
 
                 {/* Address Field */}
-                <div className="md:col-span-2 space-y-0.5 relative">
-                  <label className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5 italic px-1">
-                    <MapPin size={10} className="md:w-3 md:h-3" /> Main Site Address
-                  </label>
-                  <div className="relative">
-                    <textarea
-                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-1.5 md:px-4 md:py-4 pr-28 md:pr-32 text-slate-950 font-bold text-sm outline-none min-h-[50px] md:min-h-[100px] focus:bg-white focus:border-amber-500 transition-all"
-                      placeholder="Street, Town, Postcode..."
-                      value={newCustomer.address || ''}
-                      onChange={e => setNewCustomer({...newCustomer, address: e.target.value})}
-                    />
-                    <div className="absolute right-1 top-1 flex gap-0.5">
-                      <button
-                        type="button"
-                        onClick={handleUseCurrentLocation}
-                        disabled={isLocating}
-                        className="p-1 md:p-2 rounded-lg transition-all text-blue-500 hover:text-blue-700 disabled:opacity-30 bg-transparent"
-                        title="Use current location"
-                      >
-                        {isLocating ? <Loader2 size={14} className="md:w-[18px] md:h-[18px] animate-spin" /> : <LocateFixed size={14} className="md:w-[18px] md:h-[18px]" />}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleVerifyAddress}
-                        disabled={!newCustomer.address || isVerifyingAddress}
-                        className="p-1 md:p-2 rounded-lg transition-all text-amber-500 hover:text-amber-700 disabled:opacity-30 bg-transparent"
-                        title="AI verify address"
-                      >
-                        {isVerifyingAddress ? <Loader2 size={14} className="md:w-[18px] md:h-[18px] animate-spin" /> : <MapPinned size={14} className="md:w-[18px] md:h-[18px]" />}
-                      </button>
-                    </div>
-                  </div>
+                <div className="md:col-span-2">
+                  <AddressAutocomplete
+                    value={newCustomer.address || ''}
+                    onChange={(address) => setNewCustomer(prev => ({ ...prev, address }))}
+                    placeholder="Start typing address or postcode..."
+                  />
                 </div>
               </div>
 
