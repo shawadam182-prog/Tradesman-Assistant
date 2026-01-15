@@ -247,13 +247,18 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
       if (response.ok) {
         const result = await response.json();
         if (result.vendor || result.amount) {
+          // Map AI category to user's actual category (case-insensitive match)
+          const matchedCategory = result.category
+            ? categories.find(c => c.name.toLowerCase() === result.category.toLowerCase())?.name
+            : null;
+
           setFormData(prev => ({
             ...prev,
             vendor: result.vendor || prev.vendor,
             description: result.description || prev.description,
             amount: result.amount?.toString() || prev.amount,
             vat_amount: result.vatAmount?.toString() || prev.vat_amount,
-            category: result.category || prev.category,
+            category: matchedCategory || prev.category,
             expense_date: result.date || prev.expense_date,
             payment_method: result.paymentMethod || prev.payment_method,
           }));
