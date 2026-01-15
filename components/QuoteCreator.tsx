@@ -24,7 +24,7 @@ interface QuoteCreatorProps {
   customers: Customer[];
   settings: AppSettings;
   onSave: (quote: Quote) => void;
-  onAddCustomer: (customer: Customer) => void;
+  onAddCustomer: (customer: Customer) => Promise<Customer>;
   onCancel: () => void;
 }
 
@@ -382,7 +382,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     return { materialsTotal, labourTotal, subtotal, markup, tax, cis, total: (clientSubtotal + tax) - cis };
   })();
 
-  const handleQuickAddCustomer = (e: React.FormEvent) => {
+  const handleQuickAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCustomer.name?.trim()) {
       setCustomerError("Client name is required.");
@@ -396,11 +396,16 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       address: newCustomer.address || '',
       company: newCustomer.company || '',
     };
-    onAddCustomer(customer);
-    setFormData(prev => ({ ...prev, customerId: customer.id }));
-    setCustomerSearch(customer.name);
-    setIsAddingCustomer(false);
-    setNewCustomer({});
+
+    try {
+      const createdCustomer = await onAddCustomer(customer);
+      setFormData(prev => ({ ...prev, customerId: createdCustomer.id }));
+      setCustomerSearch(createdCustomer.name);
+      setIsAddingCustomer(false);
+      setNewCustomer({});
+    } catch (error) {
+      setCustomerError("Failed to create customer. Please try again.");
+    }
   };
 
   const handleVerifyAddress = async () => {
