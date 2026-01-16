@@ -6,7 +6,7 @@ import {
   Landmark, Package, HardHat, FileDown, Loader2, Navigation, PoundSterling,
   Settings2, Eye, EyeOff, ChevronDown, ChevronUp, LayoutGrid, List,
   Image as ImageIcon, AlignLeft, ReceiptText, ShieldCheck, ListChecks, FileDigit,
-  Box, Circle, Share2, Copy, MessageCircle, MapPin
+  Box, Circle, Share2, Copy, MessageCircle, MapPin, Mail
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -159,16 +159,57 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
     const numStr = (activeQuote.referenceNumber || 1).toString().padStart(4, '0');
     const docType = activeQuote.type === 'invoice' ? 'Invoice' : 'Quote';
 
+    // Build detailed breakdown
+    let breakdown = '';
+    if (activeQuote.sections && activeQuote.sections.length > 0) {
+      breakdown += '\n📋 *Work Breakdown:*\n';
+      activeQuote.sections.forEach((section, idx) => {
+        const markupMultiplier = 1 + ((activeQuote.markupPercent || 0) / 100);
+        const rawMaterialsTotal = (section.items || []).reduce((s, i) => s + (i.totalPrice || 0), 0);
+        const rawLabourTotal = (section.labourHours || 0) * (activeQuote.labourRate || settings.defaultLabourRate || 0);
+        const sectionTotal = (rawMaterialsTotal + rawLabourTotal) * markupMultiplier;
+
+        breakdown += `\n${idx + 1}. ${section.title}`;
+        if (section.items && section.items.length > 0) {
+          breakdown += `\n   • Materials: £${(rawMaterialsTotal * markupMultiplier).toFixed(2)}`;
+        }
+        if (section.labourHours && section.labourHours > 0) {
+          breakdown += `\n   • Labour (${section.labourHours}hrs): £${(rawLabourTotal * markupMultiplier).toFixed(2)}`;
+        }
+        breakdown += `\n   *Section Total: £${sectionTotal.toFixed(2)}*`;
+      });
+    }
+
+    // Build totals section
+    let totalsBreakdown = '\n\n💰 *Financial Summary:*';
+    totalsBreakdown += `\nSubtotal: £${totals.clientSubtotal.toFixed(2)}`;
+    if (settings.enableVat && displayOptions.showVat && totals.taxAmount > 0) {
+      totalsBreakdown += `\nVAT (${activeQuote.taxPercent}%): £${totals.taxAmount.toFixed(2)}`;
+    }
+    if (settings.enableCis && displayOptions.showCis && totals.cisAmount > 0) {
+      totalsBreakdown += `\nCIS Deduction: -£${totals.cisAmount.toFixed(2)}`;
+    }
+    totalsBreakdown += `\n\n*TOTAL DUE: £${totals.grandTotal.toFixed(2)}*`;
+
     const message = `Hi ${customer?.name || 'there'},
 
-Here's your ${docType} (${prefix}${numStr}) for "${activeQuote.title}":
+${activeQuote.type === 'invoice' ? '📄' : '📝'} Your ${docType} is ready!
 
-💰 Total: £${totals.grandTotal.toFixed(2)}
-📅 Date: ${activeQuote?.date ? new Date(activeQuote.date).toLocaleDateString() : 'N/A'}
+*Reference:* ${prefix}${numStr}
+*Project:* ${activeQuote.title}
+*Date:* ${activeQuote?.date ? new Date(activeQuote.date).toLocaleDateString('en-GB') : 'N/A'}
+${breakdown}
+${totalsBreakdown}
 
-${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know if you have any questions!'}
+${activeQuote.type === 'invoice'
+  ? '⏰ *Payment Terms:* Due within 14 days\n\nPlease arrange payment at your earliest convenience.'
+  : '✅ Please review and let me know if you have any questions or need any adjustments.\n\nI\'m happy to discuss the details.'}
 
-- ${settings?.companyName || 'TradeSync'}`;
+${activeQuote.notes ? `\n📌 *Additional Notes:*\n${activeQuote.notes}\n` : ''}
+---
+${settings?.companyName || 'TradeSync'}
+${settings?.phone ? `📞 ${settings.phone}` : ''}
+${settings?.email ? `📧 ${settings.email}` : ''}`;
 
     const phoneNumber = customer?.phone?.replace(/\D/g, '') || '';
     const url = phoneNumber
@@ -176,6 +217,96 @@ ${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know 
       : `https://wa.me/?text=${encodeURIComponent(message)}`;
 
     window.open(url, '_blank');
+  };
+
+  const handleEmailShare = async () => {
+    if (!documentRef.current) return;
+
+    setIsDownloading(true);
+    try {
+      const prefix = activeQuote.type === 'invoice' ? (settings.invoicePrefix || 'INV-') : (settings.quotePrefix || 'EST-');
+      const numStr = (activeQuote.referenceNumber || 1).toString().padStart(4, '0');
+      const cleanTitle = (activeQuote.title || 'estimate').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const filename = `${prefix}${numStr}_${cleanTitle}.pdf`;
+      const docType = activeQuote.type === 'invoice' ? 'Invoice' : 'Quote';
+
+      // Generate PDF as blob
+      const canvas = await html2canvas(documentRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
+      let heightLeft = scaledHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, scaledHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - scaledHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, scaledHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      // Try to use Web Share API (works great on mobile and some desktop browsers)
+      const pdfBlob = pdf.output('blob');
+      const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        // Use Web Share API to share PDF directly
+        await navigator.share({
+          title: `${docType} ${prefix}${numStr}`,
+          text: `${docType} for ${activeQuote.title} - £${totals.grandTotal.toFixed(2)}`,
+          files: [file]
+        });
+      } else {
+        // Fallback: Download PDF and open email client
+        pdf.save(filename);
+
+        // Build email content
+        const subject = `${docType} ${prefix}${numStr} - ${activeQuote.title}`;
+        const body = `Hi ${customer?.name || 'there'},
+
+Please find attached your ${docType.toLowerCase()} for "${activeQuote.title}".
+
+Reference: ${prefix}${numStr}
+Total Amount: £${totals.grandTotal.toFixed(2)}
+Date: ${activeQuote?.date ? new Date(activeQuote.date).toLocaleDateString('en-GB') : 'N/A'}
+
+${activeQuote.type === 'invoice'
+  ? 'Payment is due within 14 days. Please arrange payment at your earliest convenience.'
+  : 'Please review the details and let me know if you have any questions or require any adjustments.'}
+
+${activeQuote.notes ? `\nAdditional Notes:\n${activeQuote.notes}\n` : ''}
+Best regards,
+${settings?.companyName || 'TradeSync'}
+${settings?.phone ? `Phone: ${settings.phone}` : ''}
+
+---
+Note: Please attach the downloaded PDF file (${filename}) to this email before sending.`;
+
+        const mailtoLink = `mailto:${customer?.email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.open(mailtoLink, '_blank');
+      }
+    } catch (err) {
+      console.error('Email share failed:', err);
+      alert('Could not prepare email. Please try downloading the PDF instead.');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleOpenMaps = () => {
@@ -232,8 +363,11 @@ ${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know 
         </div>
         <div className="flex gap-2">
            <button onClick={onEdit} className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100"><Edit3 size={18} /></button>
-           <button onClick={handleWhatsAppShare} className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100"><MessageCircle size={18} /></button>
-           <button onClick={handleDownloadPDF} disabled={isDownloading} className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100">
+           <button onClick={handleEmailShare} disabled={isDownloading} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="Email with PDF">
+             {isDownloading ? <Loader2 size={18} className="animate-spin"/> : <Mail size={18} />}
+           </button>
+           <button onClick={handleWhatsAppShare} className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100" title="Share via WhatsApp"><MessageCircle size={18} /></button>
+           <button onClick={handleDownloadPDF} disabled={isDownloading} className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100" title="Download PDF">
              {isDownloading ? <Loader2 size={18} className="animate-spin"/> : <FileDown size={18} />}
            </button>
         </div>
