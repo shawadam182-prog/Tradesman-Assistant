@@ -32,6 +32,8 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const recognitionInstance = useRef<any>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const drawingInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
 
   const [notepadContent, setNotepadContent] = useState(project.notepad || '');
@@ -129,114 +131,148 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
     recognition.start();
   };
 
-  const handleAddPhoto = async () => {
+  const handleAddPhoto = () => {
     console.log('[Photo Upload] Button clicked');
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async (e: any) => {
-      console.log('[Photo Upload] File input changed');
-      const file = e.target.files[0];
-      if (!file) {
-        console.log('[Photo Upload] No file selected');
-        return;
-      }
-
-      console.log('[Photo Upload] File selected:', {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
-
-      setIsUploadingPhoto(true);
-      try {
-        console.log('[Photo Upload] Starting upload for job pack:', project.id);
-
-        // Upload to Supabase Storage
-        const dbPhoto = await sitePhotosService.upload(
-          project.id,
-          file,
-          'New Site Photo',
-          ['site'],
-          false
-        );
-
-        console.log('[Photo Upload] Upload successful, DB record:', dbPhoto);
-
-        // Get signed URL for display
-        const signedUrl = await sitePhotosService.getUrl(dbPhoto.storage_path);
-        console.log('[Photo Upload] Signed URL generated:', signedUrl ? 'Success' : 'Failed');
-
-        if (signedUrl) {
-          console.log('[Photo Upload] Photo uploaded to storage successfully');
-
-          // Refresh data from database to get the updated photo list
-          if (onRefresh) {
-            console.log('[Photo Upload] Refreshing data from database...');
-            await onRefresh();
-            console.log('[Photo Upload] Data refreshed successfully');
-          }
-
-          toast.success('Photo Added', 'Site photo uploaded successfully');
-        } else {
-          throw new Error('Failed to get photo URL');
-        }
-      } catch (err: any) {
-        console.error('[Photo Upload] ERROR:', {
-          message: err.message,
-          error: err,
-          stack: err.stack
-        });
-        toast.error('Upload Failed', err.message || 'Could not upload photo');
-      } finally {
-        setIsUploadingPhoto(false);
-        console.log('[Photo Upload] Upload process complete');
-      }
-    };
-    input.click();
-    console.log('[Photo Upload] File picker opened');
+    if (photoInputRef.current) {
+      // Reset value to allow selecting the same file again
+      photoInputRef.current.value = '';
+      photoInputRef.current.click();
+      console.log('[Photo Upload] File picker triggered');
+    } else {
+      console.error('[Photo Upload] ERROR: photoInputRef is null');
+    }
   };
 
-  const handleAddDrawing = async () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async (e: any) => {
-      const file = e.target.files[0];
-      if (!file) return;
+  const handlePhotoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('[Photo Upload] File input changed');
+    const file = e.target.files?.[0];
+    if (!file) {
+      console.log('[Photo Upload] No file selected');
+      return;
+    }
 
-      setIsUploadingPhoto(true);
-      try {
-        // Upload to Supabase Storage as drawing
-        const dbPhoto = await sitePhotosService.upload(
-          project.id,
-          file,
-          'Technical Drawing',
-          ['drawing'],
-          true  // isDrawing = true
-        );
+    console.log('[Photo Upload] File selected:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
 
-        // Get signed URL for display
-        const signedUrl = await sitePhotosService.getUrl(dbPhoto.storage_path);
+    setIsUploadingPhoto(true);
+    try {
+      console.log('[Photo Upload] Starting upload for job pack:', project.id);
 
-        if (signedUrl) {
-          // Refresh data from database to get the updated drawings list
-          if (onRefresh) {
-            await onRefresh();
-          }
+      // Upload to Supabase Storage
+      const dbPhoto = await sitePhotosService.upload(
+        project.id,
+        file,
+        'New Site Photo',
+        ['site'],
+        false
+      );
 
-          toast.success('Drawing Added', 'Technical drawing uploaded successfully');
-        } else {
-          throw new Error('Failed to get drawing URL');
+      console.log('[Photo Upload] Upload successful, DB record:', dbPhoto);
+
+      // Get signed URL for display
+      const signedUrl = await sitePhotosService.getUrl(dbPhoto.storage_path);
+      console.log('[Photo Upload] Signed URL generated:', signedUrl ? 'Success' : 'Failed');
+
+      if (signedUrl) {
+        console.log('[Photo Upload] Photo uploaded to storage successfully');
+
+        // Refresh data from database to get the updated photo list
+        if (onRefresh) {
+          console.log('[Photo Upload] Refreshing data from database...');
+          await onRefresh();
+          console.log('[Photo Upload] Data refreshed successfully');
         }
-      } catch (err: any) {
-        console.error('Drawing upload failed:', err);
-        toast.error('Upload Failed', err.message || 'Could not upload drawing');
-      } finally {
-        setIsUploadingPhoto(false);
+
+        toast.success('Photo Added', 'Site photo uploaded successfully');
+      } else {
+        throw new Error('Failed to get photo URL');
       }
-    };
-    input.click();
+    } catch (err: any) {
+      console.error('[Photo Upload] ERROR:', {
+        message: err.message,
+        error: err,
+        stack: err.stack
+      });
+      toast.error('Upload Failed', err.message || 'Could not upload photo');
+    } finally {
+      setIsUploadingPhoto(false);
+      console.log('[Photo Upload] Upload process complete');
+    }
+  };
+
+  const handleAddDrawing = () => {
+    console.log('[Drawing Upload] Button clicked');
+    if (drawingInputRef.current) {
+      // Reset value to allow selecting the same file again
+      drawingInputRef.current.value = '';
+      drawingInputRef.current.click();
+      console.log('[Drawing Upload] File picker triggered');
+    } else {
+      console.error('[Drawing Upload] ERROR: drawingInputRef is null');
+    }
+  };
+
+  const handleDrawingFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('[Drawing Upload] File input changed');
+    const file = e.target.files?.[0];
+    if (!file) {
+      console.log('[Drawing Upload] No file selected');
+      return;
+    }
+
+    console.log('[Drawing Upload] File selected:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
+
+    setIsUploadingPhoto(true);
+    try {
+      console.log('[Drawing Upload] Starting upload for job pack:', project.id);
+
+      // Upload to Supabase Storage as drawing
+      const dbPhoto = await sitePhotosService.upload(
+        project.id,
+        file,
+        'Technical Drawing',
+        ['drawing'],
+        true  // isDrawing = true
+      );
+
+      console.log('[Drawing Upload] Upload successful, DB record:', dbPhoto);
+
+      // Get signed URL for display
+      const signedUrl = await sitePhotosService.getUrl(dbPhoto.storage_path);
+      console.log('[Drawing Upload] Signed URL generated:', signedUrl ? 'Success' : 'Failed');
+
+      if (signedUrl) {
+        console.log('[Drawing Upload] Drawing uploaded to storage successfully');
+
+        // Refresh data from database to get the updated drawings list
+        if (onRefresh) {
+          console.log('[Drawing Upload] Refreshing data from database...');
+          await onRefresh();
+          console.log('[Drawing Upload] Data refreshed successfully');
+        }
+
+        toast.success('Drawing Added', 'Technical drawing uploaded successfully');
+      } else {
+        throw new Error('Failed to get drawing URL');
+      }
+    } catch (err: any) {
+      console.error('[Drawing Upload] ERROR:', {
+        message: err.message,
+        error: err,
+        stack: err.stack
+      });
+      toast.error('Upload Failed', err.message || 'Could not upload drawing');
+    } finally {
+      setIsUploadingPhoto(false);
+      console.log('[Drawing Upload] Upload process complete');
+    }
   };
 
   const openImageViewer = (item: SitePhoto, type: 'photo' | 'drawing') => {
@@ -277,6 +313,22 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
 
   return (
     <div className="max-w-6xl mx-auto space-y-3 md:space-y-6 pb-28">
+      {/* Hidden file inputs for photo and drawing upload */}
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handlePhotoFileChange}
+        className="sr-only"
+      />
+      <input
+        ref={drawingInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleDrawingFileChange}
+        className="sr-only"
+      />
+
       {/* Large View Modal */}
       {selectedImage && (
         <div className="fixed inset-0 z-[1000] bg-slate-900/90 backdrop-blur-xl flex flex-col animate-in fade-in duration-300">
