@@ -111,10 +111,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-50">
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-64 bg-slate-900 text-white flex-col h-screen sticky top-0">
-        <div className="p-6 flex items-center gap-3 border-b border-slate-800">
+        <button
+          onClick={onSignOut}
+          className="w-full p-6 flex items-center gap-3 border-b border-slate-800 hover:bg-slate-800/50 transition-colors text-left"
+          title="Go to landing page"
+        >
           <img src="/tradesync-logo.jpg" alt="TradeSync" className="h-10 rounded-lg" />
           <h1 className="text-xl font-bold tracking-tight text-white">Trade<span className="text-teal-500">Sync</span></h1>
-        </div>
+        </button>
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {navGroups.map((group) => (
             <div key={group.id} className="mb-1">
@@ -244,10 +248,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       {/* Main Content */}
       <main className="flex-1 pb-24 md:pb-0 overflow-y-auto">
         <header className="md:hidden bg-slate-900 text-white p-4 flex items-center justify-between sticky top-0 z-[50] shadow-md">
-          <div className="flex items-center gap-2">
+          <button
+            onClick={onSignOut}
+            className="flex items-center gap-2 active:opacity-70 transition-opacity"
+            title="Go to landing page"
+          >
             <img src="/tradesync-logo.jpg" alt="TradeSync" className="h-8 rounded-lg" />
             <span className="font-black text-lg tracking-tight">Trade<span className="text-teal-500">Sync</span></span>
-          </div>
+          </button>
         </header>
         <div className="p-2 md:p-8 max-w-7xl mx-auto">
           {children}

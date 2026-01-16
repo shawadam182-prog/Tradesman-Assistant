@@ -72,6 +72,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    // Clear local state first (handles mock login scenario)
+    setUser(null);
+    setSession(null);
+    // Also sign out from Supabase in case real auth is used
     await supabase.auth.signOut();
   };
 
