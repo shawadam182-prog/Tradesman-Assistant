@@ -144,7 +144,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           };
           onSaveProject({
             ...project,
-            photos: [photo, ...project.photos],
+            photos: [photo, ...(project.photos || [])],
             updatedAt: new Date().toISOString()
           });
         };
@@ -450,8 +450,8 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
               className="aspect-square relative group overflow-hidden rounded-xl border border-slate-100 cursor-pointer"
             >
               <img src={photo.url} className="w-full h-full object-cover" alt="Site" />
-              <button 
-                onClick={(e) => { e.stopPropagation(); onSaveProject({...project, photos: project.photos.filter(p => p.id !== photo.id)}); }} 
+              <button
+                onClick={(e) => { e.stopPropagation(); onSaveProject({...project, photos: (project.photos || []).filter(p => p.id !== photo.id)}); }}
                 className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
               >
                 <Trash2 size={12} />
