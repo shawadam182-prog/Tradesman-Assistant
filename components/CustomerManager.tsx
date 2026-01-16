@@ -472,30 +472,38 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, set
                     </button>
                   </div>
                 </div>
-                <textarea 
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-slate-950 font-bold text-sm outline-none min-h-[100px] focus:bg-white focus:border-amber-500 transition-all" 
-                  placeholder="Street, Town, Postcode..." 
-                  value={customerForm.address || ''} 
+                <textarea
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-slate-950 font-bold text-base outline-none min-h-[100px] focus:bg-white focus:border-amber-500 transition-all"
+                  placeholder="Street, Town, Postcode..."
+                  value={customerForm.address || ''}
                   onChange={e => {
                     const val = e.target.value;
                     setCustomerForm({...customerForm, address: val});
                     setAddressSearchTerm(val);
                     setShowAddressSuggestions(true);
-                  }} 
-                  onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
+                  }}
+                  onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 300)}
+                  onFocus={() => addressSearchTerm && setShowAddressSuggestions(true)}
                 />
                 {showAddressSuggestions && filteredAddresses.length > 0 && (
-                  <div className="absolute z-50 left-0 right-0 mt-2 bg-white border-2 border-slate-100 rounded-[24px] shadow-2xl animate-in slide-in-from-top-2 overflow-hidden">
+                  <div className="absolute z-[100] left-0 right-0 mt-2 bg-white border-2 border-slate-100 rounded-[24px] shadow-2xl animate-in slide-in-from-top-2 overflow-y-auto max-h-[40vh] md:max-h-[300px]">
                     {filteredAddresses.map((addr, i) => (
-                      <button 
-                        key={i} 
+                      <button
+                        key={i}
                         type="button"
-                        onClick={() => {
+                        onMouseDown={(e) => {
+                          e.preventDefault();
                           setCustomerForm(prev => ({ ...prev, address: addr }));
                           setShowAddressSuggestions(false);
                           setAddressSearchTerm('');
                         }}
-                        className="w-full text-left p-4 hover:bg-amber-50 text-sm font-bold text-slate-900 border-b border-slate-50 last:border-0 flex items-center gap-3 transition-colors"
+                        onTouchStart={(e) => {
+                          e.preventDefault();
+                          setCustomerForm(prev => ({ ...prev, address: addr }));
+                          setShowAddressSuggestions(false);
+                          setAddressSearchTerm('');
+                        }}
+                        className="w-full text-left p-4 active:bg-amber-100 hover:bg-amber-50 text-sm font-bold text-slate-900 border-b border-slate-50 last:border-0 flex items-center gap-3 transition-colors touch-manipulation"
                       >
                         <MapPin size={14} className="text-amber-500" />
                         <span className="truncate">{addr}</span>
