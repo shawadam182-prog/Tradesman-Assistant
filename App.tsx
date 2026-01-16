@@ -25,6 +25,7 @@ const VATSummaryPage = lazy(() => import('./components/VATSummaryPage').then(m =
 const PayablesPage = lazy(() => import('./components/PayablesPage').then(m => ({ default: m.PayablesPage })));
 const FilingCabinetPage = lazy(() => import('./components/FilingCabinetPage').then(m => ({ default: m.FilingCabinetPage })));
 const MaterialsLibrary = lazy(() => import('./components/MaterialsLibrary').then(m => ({ default: m.MaterialsLibrary })));
+const WholesalerAdmin = lazy(() => import('./components/WholesalerAdmin').then(m => ({ default: m.WholesalerAdmin })));
 
 // Loading fallback component
 const PageLoader: React.FC = () => (
@@ -34,7 +35,7 @@ const PageLoader: React.FC = () => (
 );
 
 // Valid main tabs that can be restored after page reload (e.g., returning from camera)
-const RESTORABLE_TABS = ['home', 'jobpacks', 'quotes', 'invoices', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'files', 'materials'] as const;
+const RESTORABLE_TABS = ['home', 'jobpacks', 'quotes', 'invoices', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'files', 'materials', 'wholesalers'] as const;
 type RestorableTab = typeof RESTORABLE_TABS[number];
 
 const App: React.FC = () => {
@@ -49,7 +50,7 @@ const App: React.FC = () => {
   } = useData();
 
   // Restore tab from sessionStorage (handles iOS PWA state loss when camera opens)
-  const getInitialTab = (): 'home' | 'jobpacks' | 'quotes' | 'invoices' | 'customers' | 'settings' | 'view' | 'jobpack_detail' | 'quote_edit' | 'schedule' | 'expenses' | 'bank' | 'reconcile' | 'vat' | 'payables' | 'files' | 'materials' => {
+  const getInitialTab = (): 'home' | 'jobpacks' | 'quotes' | 'invoices' | 'customers' | 'settings' | 'view' | 'jobpack_detail' | 'quote_edit' | 'schedule' | 'expenses' | 'bank' | 'reconcile' | 'vat' | 'payables' | 'files' | 'materials' | 'wholesalers' => {
     try {
       const saved = sessionStorage.getItem('activeTab') as RestorableTab | null;
       if (saved && RESTORABLE_TABS.includes(saved as RestorableTab)) {
@@ -59,7 +60,7 @@ const App: React.FC = () => {
     return 'home';
   };
 
-  const [activeTab, setActiveTabState] = useState<'home' | 'jobpacks' | 'quotes' | 'invoices' | 'customers' | 'settings' | 'view' | 'jobpack_detail' | 'quote_edit' | 'schedule' | 'expenses' | 'bank' | 'reconcile' | 'vat' | 'payables' | 'files' | 'materials'>(getInitialTab);
+  const [activeTab, setActiveTabState] = useState<'home' | 'jobpacks' | 'quotes' | 'invoices' | 'customers' | 'settings' | 'view' | 'jobpack_detail' | 'quote_edit' | 'schedule' | 'expenses' | 'bank' | 'reconcile' | 'vat' | 'payables' | 'files' | 'materials' | 'wholesalers'>(getInitialTab);
 
   // Wrapper to persist tab changes
   const setActiveTab = (tab: typeof activeTab) => {
@@ -227,6 +228,7 @@ const App: React.FC = () => {
         {activeTab === 'payables' && <PayablesPage />}
         {activeTab === 'files' && <FilingCabinetPage />}
         {activeTab === 'materials' && <MaterialsLibrary onBack={() => setActiveTab('home')} />}
+        {activeTab === 'wholesalers' && <WholesalerAdmin onBack={() => setActiveTab('home')} />}
         {activeTab === 'customers' && <CustomerManager customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer} deleteCustomer={deleteCustomer} />}
         {activeTab === 'settings' && <SettingsPage settings={settings} setSettings={setSettings} onSave={updateSettings} />}
         {activeTab === 'quote_edit' && <QuoteCreator existingQuote={quotes.find(q => q.id === editingQuoteId)} projectId={activeProjectId || undefined} customers={customers} settings={settings} onSave={handleSaveQuote} onAddCustomer={handleAddCustomer} onCancel={() => activeProjectId ? setActiveTab('jobpack_detail') : setActiveTab('quotes')} />}

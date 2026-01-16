@@ -1,7 +1,9 @@
 
 import React, { useState } from 'react';
-import { Users, FileText, Settings, Hammer, Briefcase, ReceiptText, CalendarDays, Home, LogOut, Receipt, Landmark, Link2, Calculator, CreditCard, FolderOpen, ChevronDown, ChevronRight, Wallet, Building2, Cog, Package, MoreHorizontal, X } from 'lucide-react';
+import { Users, FileText, Settings, Hammer, Briefcase, ReceiptText, CalendarDays, Home, LogOut, Receipt, Landmark, Link2, Calculator, CreditCard, FolderOpen, ChevronDown, ChevronRight, Wallet, Building2, Cog, Package, MoreHorizontal, X, QrCode, Shield } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
+import { useAuth } from '../src/contexts/AuthContext';
+import { isAdminUser } from '../src/lib/constants';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,9 +20,12 @@ interface NavGroup {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onSignOut }) => {
+  const { user } = useAuth();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['work', 'money']));
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [moreMenuGroup, setMoreMenuGroup] = useState<string | null>(null);
+
+  const isAdmin = isAdminUser(user?.id);
 
   const navGroups: NavGroup[] = [
     {
@@ -65,6 +70,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         { id: 'settings', label: 'Settings', icon: Settings },
       ]
     },
+    // Admin section - only visible to admin users
+    ...(isAdmin ? [{
+      id: 'admin',
+      label: 'Admin',
+      icon: Shield,
+      items: [
+        { id: 'wholesalers', label: 'Referrals', icon: QrCode },
+      ]
+    }] : []),
   ];
 
   // Flat list for mobile nav

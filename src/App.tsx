@@ -10,6 +10,7 @@ import { OfflineIndicator } from '../components/OfflineIndicator';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import MainApp from '../App';
 import { Loader2 } from 'lucide-react';
+import { useReferralCapture } from './hooks/useReferralCapture';
 
 // Loading screen component
 const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Loading...' }) => (
@@ -61,6 +62,9 @@ const ViewRouter: React.FC = () => {
   const { user, loading } = useAuth();
   const [view, setView] = useState<ViewState>('landing');
   const [hasVisitedBefore, setHasVisitedBefore] = useState<boolean | null>(null);
+
+  // Capture referral codes from QR code URLs
+  useReferralCapture();
 
   // Check if user has visited before (show landing or go straight to login)
   useEffect(() => {

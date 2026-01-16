@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { getReferralCode, clearReferralCode } from '../hooks/useReferralCapture';
 
 interface AuthContextType {
   user: User | null;
@@ -56,10 +57,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
+    // Get referral code before signup (if any)
+    const referralCode = getReferralCode();
+
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
+
+    // If signup successful and we have a referral code, store it
+    if (!error && data.user && referralCode) {
+      try {
+        // Update user_settings with referral code after a short delay
+        // (to allow the auth trigger to create the settings record first)
+        setTimeout(async () => {
+          const { error: settingsError } = await supabase
+            .from('user_settings')
+            .update({
+              referral_code: referralCode,
+              trial_start: new Date().toISOString(),
+            })
+            .eq('user_id', data.user!.id);
+
+          if (settingsError) {
+            console.error('Failed to attach referral code:', settingsError);
+          } else {
+            console.log(`Referral code ${referralCode} attached to user`);
+            clearReferralCode(); // Clear after successful attachment
+          }
+        }, 1000);
+      } catch (err) {
+        console.error('Error attaching referral:', err);
+      }
+    }
+
     return { error };
   };
 
