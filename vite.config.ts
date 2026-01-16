@@ -16,9 +16,9 @@ export default defineConfig(({ mode }) => {
           registerType: 'autoUpdate',
           includeAssets: ['favicon.svg', 'apple-touch-icon.svg', 'pwa-192x192.svg', 'pwa-512x512.svg'],
           manifest: {
-            name: 'TradeMate',
-            short_name: 'TradeMate',
-            description: 'Professional construction quoting and job management app',
+            name: 'TradeSync',
+            short_name: 'TradeSync',
+            description: 'Professional job management & quoting for UK tradespeople',
             theme_color: '#0f172a',
             background_color: '#f8fafc',
             display: 'standalone',

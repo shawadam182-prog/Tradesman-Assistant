@@ -168,7 +168,7 @@ Here's your ${docType} (${prefix}${numStr}) for "${activeQuote.title}":
 
 ${activeQuote.type === 'invoice' ? 'Payment due within 14 days.' : 'Let me know if you have any questions!'}
 
-- ${settings?.companyName || 'TradeMate'}`;
+- ${settings?.companyName || 'TradeSync'}`;
 
     const phoneNumber = customer?.phone?.replace(/\D/g, '') || '';
     const url = phoneNumber

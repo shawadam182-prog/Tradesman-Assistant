@@ -112,8 +112,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-64 bg-slate-900 text-white flex-col h-screen sticky top-0">
         <div className="p-6 flex items-center gap-3 border-b border-slate-800">
-          <Hammer className="text-amber-500 w-8 h-8" />
-          <h1 className="text-xl font-bold tracking-tight text-white">TradeMate<span className="text-amber-500">Pro</span></h1>
+          <img src="/tradesync-logo.jpg" alt="TradeSync" className="h-10 rounded-lg" />
+          <h1 className="text-xl font-bold tracking-tight text-white">Trade<span className="text-teal-500">Sync</span></h1>
         </div>
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {navGroups.map((group) => (
@@ -138,7 +138,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                       onClick={() => setActiveTab(item.id)}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                         activeTab === item.id
-                          ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20'
+                          ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
                           : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                       }`}
                     >
@@ -153,7 +153,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         </nav>
         <div className="p-4 border-t border-slate-800">{onSignOut && (<button onClick={onSignOut} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"><LogOut size={20} /><span className="font-bold text-sm">Sign Out</span></button>)}
           <div className="flex items-center gap-3 px-2">
-            <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center font-black text-slate-900 text-xs">JS</div>
+            <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center font-black text-slate-900 text-xs">JS</div>
             <div className="text-sm">
               <p className="font-bold text-white">Main Contractor</p>
               <p className="text-slate-500 text-[10px] font-black uppercase">Standard Tier</p>
@@ -179,11 +179,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                   }
                 }}
                 className={`flex-1 flex flex-col items-center justify-center gap-1 h-full active:scale-95 transition-all relative ${
-                  isActive ? 'text-amber-500' : 'text-slate-400'
+                  isActive ? 'text-teal-500' : 'text-slate-400'
                 }`}
               >
                 {isActive && (
-                  <div className="absolute top-0 w-8 h-0.5 bg-amber-500 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+                  <div className="absolute top-0 w-8 h-0.5 bg-teal-500 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
                 )}
                 <item.icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
                 <span className={`text-[9px] font-medium tracking-tight leading-none ${isActive ? 'opacity-100 font-bold' : 'opacity-70'}`}>
@@ -222,7 +222,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                           onClick={() => handleMoreMenuItemClick(item.id)}
                           className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl active:scale-95 transition-all ${
                             activeTab === item.id
-                              ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20'
+                              ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
                               : 'bg-slate-100 text-slate-600 active:bg-slate-200'
                           }`}
                         >
@@ -245,8 +245,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       <main className="flex-1 pb-24 md:pb-0 overflow-y-auto">
         <header className="md:hidden bg-slate-900 text-white p-4 flex items-center justify-between sticky top-0 z-[50] shadow-md">
           <div className="flex items-center gap-2">
-            <Hammer className="text-amber-500" size={24} />
-            <span className="font-black text-lg tracking-tight">TradeMate<span className="text-amber-500">Pro</span></span>
+            <img src="/tradesync-logo.jpg" alt="TradeSync" className="h-8 rounded-lg" />
+            <span className="font-black text-lg tracking-tight">Trade<span className="text-teal-500">Sync</span></span>
           </div>
         </header>
         <div className="p-2 md:p-8 max-w-7xl mx-auto">

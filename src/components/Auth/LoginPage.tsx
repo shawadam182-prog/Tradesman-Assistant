@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Mail, Lock, Loader2, AlertCircle, Wrench } from 'lucide-react';
+import { Mail, Lock, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 
-export const LoginPage: React.FC = () => {
+interface LoginPageProps {
+  onBackToLanding?: () => void;
+}
+
+export const LoginPage: React.FC<LoginPageProps> = ({ onBackToLanding }) => {
   const { signIn, signUp, resetPassword } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -70,13 +74,26 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        {/* Back Button */}
+        {onBackToLanding && (
+          <button
+            onClick={onBackToLanding}
+            className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors"
+          >
+            <ArrowLeft size={20} />
+            <span className="font-medium">Back to home</span>
+          </button>
+        )}
+
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-500 rounded-2xl mb-4">
-            <Wrench className="w-8 h-8 text-white" />
-          </div>
+          <img
+            src="/tradesync-logo.jpg"
+            alt="TradeSync"
+            className="h-16 mx-auto mb-4 rounded-xl"
+          />
           <h1 className="text-2xl font-black text-white tracking-tight">
-            Tradesman Assistant
+            TradeSync
           </h1>
           <p className="text-slate-400 text-sm mt-1">
             Professional quoting & job management
@@ -103,7 +120,7 @@ export const LoginPage: React.FC = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors"
+                  className="w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-teal-500 focus:outline-none transition-colors"
                 />
               </div>
             </div>
@@ -121,7 +138,7 @@ export const LoginPage: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors"
+                  className="w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-teal-500 focus:outline-none transition-colors"
                 />
               </div>
             </div>
@@ -140,7 +157,7 @@ export const LoginPage: React.FC = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors"
+                    className="w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-teal-500 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -165,7 +182,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-teal-600 to-teal-500 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wider hover:from-teal-700 hover:to-teal-600 transition-all shadow-lg shadow-teal-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -183,7 +200,7 @@ export const LoginPage: React.FC = () => {
             <button
               onClick={handleForgotPassword}
               disabled={loading}
-              className="w-full text-center text-sm text-slate-500 hover:text-amber-600 mt-4 transition-colors"
+              className="w-full text-center text-sm text-slate-500 hover:text-teal-600 mt-4 transition-colors"
             >
               Forgot your password?
             </button>
@@ -199,7 +216,7 @@ export const LoginPage: React.FC = () => {
                   setError('');
                   setMessage('');
                 }}
-                className="ml-1 text-amber-600 font-bold hover:text-amber-700 transition-colors"
+                className="ml-1 text-teal-600 font-bold hover:text-teal-700 transition-colors"
               >
                 {isLogin ? 'Sign Up' : 'Sign In'}
               </button>
