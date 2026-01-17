@@ -37,58 +37,49 @@ export default defineConfig(({ mode }) => {
                 short_name: 'Quote',
                 description: 'Create a new quote',
                 url: '/?action=new-quote',
-                icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+                icons: [{ src: 'pwa-512x512.png', sizes: '2048x2048' }]
               },
               {
                 name: 'New Job',
                 short_name: 'Job',
                 description: 'Create a new job',
                 url: '/?action=new-job',
-                icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+                icons: [{ src: 'pwa-512x512.png', sizes: '2048x2048' }]
               },
               {
                 name: 'Add Expense',
                 short_name: 'Expense',
                 description: 'Add a new expense',
                 url: '/?action=new-expense',
-                icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
-              }
-            ],
-            screenshots: [
-              {
-                src: 'pwa-512x512.png',
-                sizes: '512x512',
-                type: 'image/png',
-                form_factor: 'narrow',
-                label: 'TradeSync Home'
+                icons: [{ src: 'pwa-512x512.png', sizes: '2048x2048' }]
               }
             ],
             icons: [
               {
                 src: 'pwa-192x192.svg',
-                sizes: '192x192',
+                sizes: 'any',
                 type: 'image/svg+xml'
               },
               {
                 src: 'pwa-512x512.svg',
-                sizes: '512x512',
+                sizes: 'any',
                 type: 'image/svg+xml'
               },
               {
                 src: 'pwa-192x192.png',
-                sizes: '192x192',
+                sizes: '2048x2048',
                 type: 'image/png',
                 purpose: 'any'
               },
               {
                 src: 'pwa-512x512.png',
-                sizes: '512x512',
+                sizes: '2048x2048',
                 type: 'image/png',
                 purpose: 'any'
               },
               {
                 src: 'maskable-icon.png',
-                sizes: '512x512',
+                sizes: '2048x2048',
                 type: 'image/png',
                 purpose: 'maskable'
               }
