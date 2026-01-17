@@ -307,43 +307,18 @@ Please find attached ${docType} as discussed.
 Thanks,
 ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${settings?.email ? `\n${settings.email}` : ''}`;
 
-      // Create PDF blob using arraybuffer for better mobile compatibility
-      const pdfArrayBuffer = pdf.output('arraybuffer');
-      const pdfBlob = new Blob([pdfArrayBuffer], { type: 'application/pdf' });
-      const file = new File([pdfBlob], filename, { type: 'application/pdf', lastModified: Date.now() });
+      // Download PDF using jsPDF's native save (most reliable across all devices)
+      pdf.save(filename);
 
-      // Check if Web Share API supports files (mobile)
-      let shareSucceeded = false;
-      const canShareFiles = navigator.share && navigator.canShare && navigator.canShare({ files: [file] });
-
-      if (canShareFiles) {
-        try {
-          await navigator.share({
-            files: [file]
-          });
-          shareSucceeded = true;
-        } catch (shareErr: any) {
-          // User cancelled or share failed
-          if (shareErr?.name !== 'AbortError') {
-            console.warn('Web Share failed:', shareErr);
-          }
-        }
-      }
-
-      if (!shareSucceeded) {
-        // Fallback: Download PDF and show helper modal
-        pdf.save(filename);
-
-        // Show email helper modal with pre-filled content
-        setEmailHelper({
-          show: true,
-          subject,
-          body,
-          email: customer?.email || '',
-          filename,
-          copied: false
-        });
-      }
+      // Show email helper modal with pre-filled content
+      setEmailHelper({
+        show: true,
+        subject,
+        body,
+        email: customer?.email || '',
+        filename,
+        copied: false
+      });
     } catch (err) {
       console.error('Email share failed:', err);
       alert('Could not prepare email. Please try downloading the PDF instead.');
@@ -778,8 +753,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
               <button
                 onClick={() => {
                   const mailtoLink = `mailto:${emailHelper.email}?subject=${encodeURIComponent(emailHelper.subject)}&body=${encodeURIComponent(emailHelper.body)}`;
-                  window.open(mailtoLink, '_blank');
-                  setEmailHelper(null);
+                  window.location.href = mailtoLink;
                 }}
                 className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/30"
               >
@@ -787,9 +761,11 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                 Open Email App
               </button>
 
-              <p className="text-[10px] text-slate-400 text-center">
-                Attach the downloaded PDF to your email
-              </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-2">
+                <p className="text-xs text-amber-800 text-center">
+                  In your email app, tap the <strong>paperclip icon</strong> to attach the PDF from your Downloads folder
+                </p>
+              </div>
             </div>
           </div>
         </div>
