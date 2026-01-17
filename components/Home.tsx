@@ -39,6 +39,7 @@ interface HomeProps {
   onViewJob?: (jobId: string) => void;
   onAddProject?: (project: Partial<JobPack>) => Promise<JobPack>;
   onRefresh?: () => Promise<void>;
+  onNavigateToFutureJobs?: () => void;
 }
 
 interface Reminder {
@@ -75,7 +76,8 @@ export const Home: React.FC<HomeProps> = ({
   onTakePhoto,
   onViewJob,
   onAddProject,
-  onRefresh
+  onRefresh,
+  onNavigateToFutureJobs
 }) => {
   const toast = useToast();
   const [reminders, setReminders] = useState<Reminder[]>([]);
@@ -88,6 +90,8 @@ export const Home: React.FC<HomeProps> = ({
   const [capturedPhoto, setCapturedPhoto] = useState<File | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [newJobName, setNewJobName] = useState('');
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [pendingNewJobName, setPendingNewJobName] = useState<string | null>(null);
   const [showDashboard, setShowDashboard] = useState<boolean>(() => {
     const saved = localStorage.getItem('bq_show_dashboard');
     return saved !== 'false'; // Default to true
@@ -239,33 +243,87 @@ export const Home: React.FC<HomeProps> = ({
     setNewReminderTime('');
   };
 
-  // Photo capture and upload handlers
-  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  // Photo capture and upload handlers - NEW FLOW: Select job FIRST, then take photo
 
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (file) {
-        // Set state immediately
-        setCapturedPhoto(file);
-        setShowPhotoJobPicker(true);
-        hapticSuccess();
-      } else {
-        toast.error('Photo Error', 'Could not read photo file.');
-      }
-    } else {
-      toast.error('No Photo', 'No photo was captured.');
-    }
+  // Step 1: Open the job picker modal
+  const handleOpenPhotoPicker = () => {
+    setShowPhotoJobPicker(true);
+    setSelectedJobId(null);
+    setPendingNewJobName(null);
+    setNewJobName('');
   };
 
-  const handlePhotoUpload = async (jobPackId: string) => {
-    if (!capturedPhoto) return;
+  // Step 2a: User selected an existing job - trigger camera
+  const handleSelectJobForPhoto = (jobId: string) => {
+    setSelectedJobId(jobId);
+    setPendingNewJobName(null);
+    setShowPhotoJobPicker(false);
+    // Trigger camera after a small delay to let modal close
+    setTimeout(() => {
+      cameraInputRef.current?.click();
+    }, 100);
+  };
+
+  // Step 2b: User wants to create new job - trigger camera
+  const handleCreateJobForPhoto = () => {
+    if (!newJobName.trim()) return;
+    setPendingNewJobName(newJobName.trim());
+    setSelectedJobId(null);
+    setShowPhotoJobPicker(false);
+    // Trigger camera after a small delay to let modal close
+    setTimeout(() => {
+      cameraInputRef.current?.click();
+    }, 100);
+  };
+
+  // Step 3: Camera captured photo - upload to selected/new job
+  const handleCameraCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) {
+      // User cancelled camera - reset state
+      setSelectedJobId(null);
+      setPendingNewJobName(null);
+      return;
+    }
+
+    const file = files[0];
+    if (!file) {
+      toast.error('Photo Error', 'Could not read photo file.');
+      setSelectedJobId(null);
+      setPendingNewJobName(null);
+      return;
+    }
 
     setIsUploadingPhoto(true);
+    toast.success('Uploading...', 'Saving photo to job');
+
     try {
+      let targetJobId = selectedJobId;
+
+      // If creating a new job, do that first
+      if (pendingNewJobName && onAddProject) {
+        const newProject = await onAddProject({
+          title: pendingNewJobName,
+          status: 'active',
+          notepad: '',
+          notes: [],
+          photos: [],
+          drawings: [],
+          documents: [],
+          materials: [],
+        });
+        targetJobId = newProject.id;
+      }
+
+      if (!targetJobId) {
+        toast.error('Error', 'No job selected for photo');
+        return;
+      }
+
+      // Upload photo to the job
       await sitePhotosService.upload(
-        jobPackId,
-        capturedPhoto,
+        targetJobId,
+        file,
         'Site Photo',
         ['site'],
         false
@@ -275,75 +333,27 @@ export const Home: React.FC<HomeProps> = ({
         await onRefresh();
       }
 
-      toast.success('Photo Saved', 'Photo added to job pack');
+      const jobTitle = pendingNewJobName || projects.find(p => p.id === targetJobId)?.title || 'job';
+      toast.success('Photo Saved', `Added to "${jobTitle}"`);
       hapticSuccess();
 
-      // Close modal and reset state
-      setShowPhotoJobPicker(false);
-      setCapturedPhoto(null);
-      setNewJobName('');
-      // Reset input for next capture
-      if (cameraInputRef.current) cameraInputRef.current.value = '';
     } catch (err: any) {
       console.error('Upload failed:', err);
       toast.error('Upload Failed', err.message || 'Could not save photo');
     } finally {
       setIsUploadingPhoto(false);
-    }
-  };
-
-  const handleAddPhotoToNewJob = async () => {
-    if (!capturedPhoto || !newJobName.trim() || !onAddProject) return;
-
-    setIsUploadingPhoto(true);
-    try {
-      // Create new job pack
-      const newProject = await onAddProject({
-        title: newJobName.trim(),
-        status: 'active',
-        notepad: '',
-        notes: [],
-        photos: [],
-        drawings: [],
-        documents: [],
-        materials: [],
-      });
-
-      // Upload photo to the new job pack
-      await sitePhotosService.upload(
-        newProject.id,
-        capturedPhoto,
-        'Site Photo',
-        ['site'],
-        false
-      );
-
-      if (onRefresh) {
-        await onRefresh();
-      }
-
-      toast.success('Job Created', `Photo added to "${newJobName.trim()}"`);
-      hapticSuccess();
-
-      // Close modal and reset state
-      setShowPhotoJobPicker(false);
-      setCapturedPhoto(null);
+      setSelectedJobId(null);
+      setPendingNewJobName(null);
       setNewJobName('');
-      // Reset input for next capture
       if (cameraInputRef.current) cameraInputRef.current.value = '';
-    } catch (err: any) {
-      console.error('Failed to create job:', err);
-      toast.error('Failed', err.message || 'Could not create job pack');
-    } finally {
-      setIsUploadingPhoto(false);
     }
   };
 
   const handleCancelPhoto = () => {
     setShowPhotoJobPicker(false);
-    setCapturedPhoto(null);
+    setSelectedJobId(null);
+    setPendingNewJobName(null);
     setNewJobName('');
-    // Reset input for next capture
     if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
 
@@ -614,7 +624,7 @@ export const Home: React.FC<HomeProps> = ({
             <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Invoice</span>
           </button>
           <button
-            onClick={() => { hapticTap(); cameraInputRef.current?.click(); }}
+            onClick={() => { hapticTap(); handleOpenPhotoPicker(); }}
             className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-rose-500 text-white p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-rose-500/20 hover:shadow-2xl group"
           >
             <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
@@ -657,23 +667,19 @@ export const Home: React.FC<HomeProps> = ({
         }}
       />
 
-      {/* Photo Destination Picker Modal - rendered via portal to ensure it's above everything on mobile */}
-      {showPhotoJobPicker && capturedPhoto && createPortal(
+      {/* Photo Job Picker Modal - Select job FIRST, then take photo */}
+      {showPhotoJobPicker && createPortal(
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl md:rounded-[32px] p-4 md:p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-            {/* Header with photo preview */}
+            {/* Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0">
-                  <img
-                    src={URL.createObjectURL(capturedPhoto)}
-                    alt="Captured"
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-12 h-12 rounded-xl bg-rose-500 flex items-center justify-center shrink-0">
+                  <Camera size={24} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg md:text-xl font-black text-slate-900">Save Photo</h3>
-                  <p className="text-xs text-slate-500">Choose where to save this photo</p>
+                  <h3 className="text-lg md:text-xl font-black text-slate-900">Take Photo</h3>
+                  <p className="text-xs text-slate-500">Select a job first, then take photo</p>
                 </div>
               </div>
               <button
@@ -696,11 +702,11 @@ export const Home: React.FC<HomeProps> = ({
                   className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-xl p-3 font-bold text-sm text-slate-900 outline-none focus:border-amber-400 transition-all placeholder:text-slate-300"
                 />
                 <button
-                  onClick={handleAddPhotoToNewJob}
-                  disabled={!newJobName.trim() || isUploadingPhoto}
+                  onClick={handleCreateJobForPhoto}
+                  disabled={!newJobName.trim()}
                   className="px-4 bg-amber-500 text-white rounded-xl shadow-lg active:scale-95 transition-all disabled:opacity-30 disabled:active:scale-100 flex items-center gap-2"
                 >
-                  {isUploadingPhoto ? <Loader2 size={18} className="animate-spin" /> : <FolderPlus size={18} />}
+                  <Camera size={18} />
                 </button>
               </div>
             </div>
@@ -713,9 +719,8 @@ export const Home: React.FC<HomeProps> = ({
                   {projects.filter(p => p.status === 'active').map(project => (
                     <button
                       key={project.id}
-                      onClick={() => handlePhotoUpload(project.id)}
-                      disabled={isUploadingPhoto}
-                      className="w-full p-3 bg-slate-50 hover:bg-slate-100 rounded-xl text-left transition-colors flex items-center justify-between group disabled:opacity-50"
+                      onClick={() => handleSelectJobForPhoto(project.id)}
+                      className="w-full p-3 bg-slate-50 hover:bg-slate-100 rounded-xl text-left transition-colors flex items-center justify-between group"
                     >
                       <div className="min-w-0">
                         <p className="font-bold text-slate-900 truncate">{project.title}</p>
@@ -723,8 +728,8 @@ export const Home: React.FC<HomeProps> = ({
                           {customers.find(c => c.id === project.customerId)?.name || 'No customer'}
                         </p>
                       </div>
-                      <div className="p-2 bg-slate-200 group-hover:bg-amber-500 group-hover:text-white rounded-lg transition-colors shrink-0 ml-2">
-                        {isUploadingPhoto ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                      <div className="p-2 bg-slate-200 group-hover:bg-rose-500 group-hover:text-white rounded-lg transition-colors shrink-0 ml-2">
+                        <Camera size={16} />
                       </div>
                     </button>
                   ))}
@@ -735,10 +740,9 @@ export const Home: React.FC<HomeProps> = ({
             {/* Cancel Button */}
             <button
               onClick={handleCancelPhoto}
-              disabled={isUploadingPhoto}
-              className="w-full mt-4 p-3 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600 transition-colors disabled:opacity-50"
+              className="w-full mt-4 p-3 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600 transition-colors"
             >
-              Discard Photo
+              Cancel
             </button>
           </div>
         </div>,
