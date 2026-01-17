@@ -6,7 +6,7 @@ import {
   Landmark, Package, HardHat, FileDown, Loader2, Navigation, PoundSterling,
   Settings2, Eye, EyeOff, ChevronDown, ChevronUp, LayoutGrid, List,
   Image as ImageIcon, AlignLeft, ReceiptText, ShieldCheck, ListChecks, FileDigit,
-  Box, Circle, Share2, Copy, MessageCircle, MapPin, Mail, Banknote
+  Box, Circle, Share2, Copy, MessageCircle, MapPin, Mail, Banknote, Check, X
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -32,6 +32,14 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   const [isDownloading, setIsDownloading] = useState(false);
   const [showCustomiser, setShowCustomiser] = useState(false);
   const [showPaymentRecorder, setShowPaymentRecorder] = useState(false);
+  const [emailHelper, setEmailHelper] = useState<{
+    show: boolean;
+    subject: string;
+    body: string;
+    email: string;
+    filename: string;
+    copied: boolean;
+  } | null>(null);
   const documentRef = useRef<HTMLDivElement>(null);
 
   const getProcessedQuote = (): Quote => {
@@ -256,7 +264,8 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
       const numStr = (activeQuote.referenceNumber || 1).toString().padStart(4, '0');
       const cleanTitle = (activeQuote.title || 'estimate').replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const filename = `${prefix}${numStr}_${cleanTitle}.pdf`;
-      const docType = activeQuote.type === 'invoice' ? 'Invoice' : 'Quote';
+      const docType = activeQuote.type === 'invoice' ? 'invoice' : 'quote';
+      const customerName = customer?.name || 'there';
 
       // Generate PDF as blob
       const canvas = await html2canvas(documentRef.current, {
@@ -289,45 +298,51 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
         heightLeft -= pdfHeight;
       }
 
-      // Try to use Web Share API (works great on mobile and some desktop browsers)
-      const pdfBlob = pdf.output('blob');
-      const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+      // Build email content
+      const subject = `${docType.charAt(0).toUpperCase() + docType.slice(1)} - ${activeQuote.title} (${prefix}${numStr})`;
+      const body = `Dear ${customerName},
 
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        // Use Web Share API to share PDF directly
-        await navigator.share({
-          title: `${docType} ${prefix}${numStr}`,
-          text: `${docType} for ${activeQuote.title} - £${totals.grandTotal.toFixed(2)}`,
-          files: [file]
-        });
-      } else {
-        // Fallback: Download PDF and open email client
+Please find attached ${docType} as discussed.
+
+Thanks,
+${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${settings?.email ? `\n${settings.email}` : ''}`;
+
+      // Create PDF blob using arraybuffer for better mobile compatibility
+      const pdfArrayBuffer = pdf.output('arraybuffer');
+      const pdfBlob = new Blob([pdfArrayBuffer], { type: 'application/pdf' });
+      const file = new File([pdfBlob], filename, { type: 'application/pdf', lastModified: Date.now() });
+
+      // Check if Web Share API supports files (mobile)
+      let shareSucceeded = false;
+      const canShareFiles = navigator.share && navigator.canShare && navigator.canShare({ files: [file] });
+
+      if (canShareFiles) {
+        try {
+          await navigator.share({
+            files: [file]
+          });
+          shareSucceeded = true;
+        } catch (shareErr: any) {
+          // User cancelled or share failed
+          if (shareErr?.name !== 'AbortError') {
+            console.warn('Web Share failed:', shareErr);
+          }
+        }
+      }
+
+      if (!shareSucceeded) {
+        // Fallback: Download PDF and show helper modal
         pdf.save(filename);
 
-        // Build email content
-        const subject = `${docType} ${prefix}${numStr} - ${activeQuote.title}`;
-        const body = `Hi ${customer?.name || 'there'},
-
-Please find attached your ${docType.toLowerCase()} for "${activeQuote.title}".
-
-Reference: ${prefix}${numStr}
-Total Amount: £${totals.grandTotal.toFixed(2)}
-Date: ${activeQuote?.date ? new Date(activeQuote.date).toLocaleDateString('en-GB') : 'N/A'}
-
-${activeQuote.type === 'invoice'
-  ? 'Payment is due within 14 days. Please arrange payment at your earliest convenience.'
-  : 'Please review the details and let me know if you have any questions or require any adjustments.'}
-
-${activeQuote.notes ? `\nAdditional Notes:\n${activeQuote.notes}\n` : ''}
-Best regards,
-${settings?.companyName || 'TradeSync'}
-${settings?.phone ? `Phone: ${settings.phone}` : ''}
-
----
-Note: Please attach the downloaded PDF file (${filename}) to this email before sending.`;
-
-        const mailtoLink = `mailto:${customer?.email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        window.open(mailtoLink, '_blank');
+        // Show email helper modal with pre-filled content
+        setEmailHelper({
+          show: true,
+          subject,
+          body,
+          email: customer?.email || '',
+          filename,
+          copied: false
+        });
       }
     } catch (err) {
       console.error('Email share failed:', err);
@@ -689,6 +704,95 @@ Note: Please attach the downloaded PDF file (${filename}) to this email before s
           onRecordPayment={handleRecordPayment}
           onClose={() => setShowPaymentRecorder(false)}
         />
+      )}
+
+      {/* Email Helper Modal */}
+      {emailHelper?.show && (
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-4">
+            {/* Header */}
+            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
+                  <Mail size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold">PDF Downloaded</h3>
+                  <p className="text-xs text-slate-400">{emailHelper.filename}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEmailHelper(null)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-5 space-y-4">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3">
+                <Check size={18} className="text-emerald-600 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-emerald-800">
+                  PDF saved to your downloads. Now send it via email:
+                </p>
+              </div>
+
+              {/* Email preview */}
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">To</label>
+                  <p className="text-sm font-medium text-slate-700">{emailHelper.email || '(add recipient)'}</p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subject</label>
+                  <p className="text-sm font-medium text-slate-700">{emailHelper.subject}</p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Message</label>
+                  <div className="bg-slate-50 rounded-xl p-3 mt-1 border border-slate-100">
+                    <p className="text-sm text-slate-600 whitespace-pre-line">{emailHelper.body}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-5 pt-0 space-y-3">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(emailHelper.body);
+                  setEmailHelper({ ...emailHelper, copied: true });
+                  setTimeout(() => setEmailHelper(prev => prev ? { ...prev, copied: false } : null), 2000);
+                }}
+                className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+                  emailHelper.copied
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {emailHelper.copied ? <Check size={18} /> : <Copy size={18} />}
+                {emailHelper.copied ? 'Copied!' : 'Copy Message'}
+              </button>
+
+              <button
+                onClick={() => {
+                  const mailtoLink = `mailto:${emailHelper.email}?subject=${encodeURIComponent(emailHelper.subject)}&body=${encodeURIComponent(emailHelper.body)}`;
+                  window.open(mailtoLink, '_blank');
+                  setEmailHelper(null);
+                }}
+                className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/30"
+              >
+                <Mail size={18} />
+                Open Email App
+              </button>
+
+              <p className="text-[10px] text-slate-400 text-center">
+                Attach the downloaded PDF to your email
+              </p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
