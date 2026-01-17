@@ -332,39 +332,16 @@ Please find attached ${docType} as discussed.
 Thanks,
 ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${settings?.email ? `\n${settings.email}` : ''}`;
 
-      // Create PDF blob for sharing
-      const pdfBlob = pdf.output('blob');
-      const file = new File([pdfBlob], filename, { type: 'application/pdf' });
-
-      // Try Web Share API on mobile (attaches PDF directly to email)
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: subject,
-            text: body
-          });
-          return; // Success - exit early
-        } catch (shareErr: any) {
-          // User cancelled - just exit
-          if (shareErr?.name === 'AbortError') {
-            return;
-          }
-          // Share failed - fall through to fallback
-          console.warn('Web Share failed, using fallback:', shareErr);
-        }
-      }
-
-      // Fallback: Download PDF and show helper modal
+      // Save PDF to downloads (this works reliably)
       pdf.save(filename);
-      setEmailHelper({
-        show: true,
-        subject,
-        body,
-        email: customer?.email || '',
-        filename,
-        copied: false
-      });
+
+      // Open email with body pre-filled, user attaches PDF from downloads
+      const mailtoLink = `mailto:${customer?.email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+      // Small delay to let PDF download complete
+      setTimeout(() => {
+        window.location.href = mailtoLink;
+      }, 300);
     } catch (err) {
       console.error('Email share failed:', err);
       alert('Could not prepare email. Please try downloading the PDF instead.');
