@@ -716,38 +716,6 @@ export const Home: React.FC<HomeProps> = ({
         </div>
       </div>
 
-      {/* Alerts Section */}
-      {alerts.length > 0 && (
-        <div className="bg-white rounded-[32px] border border-slate-200 p-6 shadow-sm">
-          <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight mb-4 flex items-center gap-2">
-            <AlertTriangle size={18} className="text-amber-500" />
-            Attention Needed
-          </h3>
-          <div className="space-y-3">
-            {alerts.map(alert => (
-              <div
-                key={alert.id}
-                className={`p-4 rounded-xl flex items-center justify-between ${
-                  alert.severity === 'warning' ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50 border border-slate-100'
-                }`}
-              >
-                <div className="min-w-0">
-                  <p className="font-bold text-slate-900 truncate">{alert.title}</p>
-                  <p className="text-xs text-slate-500 truncate">{alert.description}</p>
-                </div>
-                <div className={`ml-3 px-3 py-1 rounded-full text-[10px] font-black uppercase ${
-                  alert.type === 'overdue' ? 'bg-amber-500 text-white' :
-                  alert.type === 'pending_quote' ? 'bg-purple-500 text-white' :
-                  'bg-blue-500 text-white'
-                }`}>
-                  {alert.type === 'overdue' ? 'Overdue' : alert.type === 'pending_quote' ? 'Follow Up' : 'Soon'}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-8">
         {/* Reminders Section */}
         <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 p-3 md:p-8 shadow-sm flex flex-col md:min-h-[500px]">

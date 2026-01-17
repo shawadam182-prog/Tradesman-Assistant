@@ -1,12 +1,13 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { JobPack, Customer, Quote, SiteNote, SitePhoto, SiteDocument } from '../types';
 import {
   ArrowLeft, Camera, Mic, FileText, Plus, Trash2,
   Clock, CheckCircle2, Image as ImageIcon,
   MessageSquare, History, FileDown, Paperclip, Loader2, Send,
   FileCheck, ReceiptText, FolderOpen, Sparkles, PackageSearch, Navigation,
-  StickyNote, Eraser, MicOff, Ruler, X, RotateCw, Pencil, Check
+  StickyNote, Eraser, MicOff, Ruler, X, RotateCw, Pencil, Check,
+  ZoomIn, ZoomOut, Maximize2
 } from 'lucide-react';
 import { MaterialsTracker } from './MaterialsTracker';
 import { hapticTap } from '../src/hooks/useHaptic';
@@ -35,10 +36,17 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   const toast = useToast();
 
   const [notepadContent, setNotepadContent] = useState(project.notepad || '');
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // File input refs to prevent navigation bugs
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const drawingInputRef = useRef<HTMLInputElement>(null);
 
   // Modal states
   const [selectedImage, setSelectedImage] = useState<{item: SitePhoto, type: 'photo' | 'drawing'} | null>(null);
   const [rotation, setRotation] = useState(0);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const [isEditingCaption, setIsEditingCaption] = useState(false);
   const [tempCaption, setTempCaption] = useState('');
 
@@ -72,13 +80,28 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
 
   const customer = customers.find(c => c.id === project.customerId);
 
-  const handleSaveNotepad = (content: string) => {
-    onSaveProject({
-      ...project,
-      notepad: content,
-      updatedAt: new Date().toISOString()
-    });
-  };
+  // Debounced save for notepad to prevent glitchy typing
+  const handleSaveNotepad = useCallback((content: string) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => {
+      onSaveProject({
+        ...project,
+        notepad: content,
+        updatedAt: new Date().toISOString()
+      });
+    }, 500); // Save after 500ms of no typing
+  }, [project, onSaveProject]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSaveTitle = () => {
     if (!tempTitle.trim()) {
@@ -129,129 +152,81 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
     recognition.start();
   };
 
-  const handleAddPhoto = async () => {
-    console.log('[Photo Upload] Button clicked');
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async (e: any) => {
-      console.log('[Photo Upload] File input changed');
-      const file = e.target.files[0];
-      if (!file) {
-        console.log('[Photo Upload] No file selected');
-        return;
-      }
+  // Unified photo upload handler that works with refs
+  const handlePhotoUpload = async (file: File, isDrawing: boolean = false) => {
+    if (!file || isUploadingPhoto) return;
 
-      console.log('[Photo Upload] File selected:', {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
+    setIsUploadingPhoto(true);
+    try {
+      // Upload to Supabase Storage
+      const dbPhoto = await sitePhotosService.upload(
+        project.id,
+        file,
+        isDrawing ? 'Technical Drawing' : 'New Site Photo',
+        isDrawing ? ['drawing'] : ['site'],
+        isDrawing
+      );
 
-      setIsUploadingPhoto(true);
-      try {
-        console.log('[Photo Upload] Starting upload for job pack:', project.id);
+      // Get signed URL for display
+      const signedUrl = await sitePhotosService.getUrl(dbPhoto.storage_path);
 
-        // Upload to Supabase Storage
-        const dbPhoto = await sitePhotosService.upload(
-          project.id,
-          file,
-          'New Site Photo',
-          ['site'],
-          false
-        );
-
-        console.log('[Photo Upload] Upload successful, DB record:', dbPhoto);
-
-        // Get signed URL for display
-        const signedUrl = await sitePhotosService.getUrl(dbPhoto.storage_path);
-        console.log('[Photo Upload] Signed URL generated:', signedUrl ? 'Success' : 'Failed');
-
-        if (signedUrl) {
-          console.log('[Photo Upload] Photo uploaded to storage successfully');
-
-          // Refresh data from database to get the updated photo list
-          if (onRefresh) {
-            console.log('[Photo Upload] Refreshing data from database...');
-            await onRefresh();
-            console.log('[Photo Upload] Data refreshed successfully');
-          }
-
-          toast.success('Photo Added', 'Site photo uploaded successfully');
-        } else {
-          throw new Error('Failed to get photo URL');
+      if (signedUrl) {
+        // Refresh data from database to get the updated photo list
+        if (onRefresh) {
+          await onRefresh();
         }
-      } catch (err: any) {
-        console.error('[Photo Upload] ERROR:', {
-          message: err.message,
-          error: err,
-          stack: err.stack
-        });
-        toast.error('Upload Failed', err.message || 'Could not upload photo');
-      } finally {
-        setIsUploadingPhoto(false);
-        console.log('[Photo Upload] Upload process complete');
+
+        toast.success(isDrawing ? 'Drawing Added' : 'Photo Added',
+          isDrawing ? 'Technical drawing uploaded successfully' : 'Site photo uploaded successfully');
+      } else {
+        throw new Error('Failed to get photo URL');
       }
-    };
-    input.click();
-    console.log('[Photo Upload] File picker opened');
+    } catch (err: any) {
+      console.error('Upload failed:', err);
+      toast.error('Upload Failed', err.message || 'Could not upload file');
+    } finally {
+      setIsUploadingPhoto(false);
+      // Reset all file inputs to prevent duplicate uploads
+      if (photoInputRef.current) photoInputRef.current.value = '';
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+      if (drawingInputRef.current) drawingInputRef.current.value = '';
+    }
   };
 
-  const handleAddDrawing = async () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async (e: any) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      setIsUploadingPhoto(true);
-      try {
-        // Upload to Supabase Storage as drawing
-        const dbPhoto = await sitePhotosService.upload(
-          project.id,
-          file,
-          'Technical Drawing',
-          ['drawing'],
-          true  // isDrawing = true
-        );
-
-        // Get signed URL for display
-        const signedUrl = await sitePhotosService.getUrl(dbPhoto.storage_path);
-
-        if (signedUrl) {
-          // Refresh data from database to get the updated drawings list
-          if (onRefresh) {
-            await onRefresh();
-          }
-
-          toast.success('Drawing Added', 'Technical drawing uploaded successfully');
-        } else {
-          throw new Error('Failed to get drawing URL');
-        }
-      } catch (err: any) {
-        console.error('Drawing upload failed:', err);
-        toast.error('Upload Failed', err.message || 'Could not upload drawing');
-      } finally {
-        setIsUploadingPhoto(false);
-      }
-    };
-    input.click();
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>, isDrawing: boolean = false) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handlePhotoUpload(file, isDrawing);
+    }
   };
 
   const openImageViewer = (item: SitePhoto, type: 'photo' | 'drawing') => {
     setSelectedImage({ item, type });
     setRotation(0);
+    setZoomLevel(1);
     setTempCaption(item.caption || '');
     setIsEditingCaption(false);
   };
 
   const closeImageViewer = () => {
     setSelectedImage(null);
+    setZoomLevel(1);
   };
 
   const handleRotate = () => {
     setRotation(prev => (prev + 90) % 360);
+  };
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.5, 4));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.5, 0.5));
+  };
+
+  const handleResetZoom = () => {
+    setZoomLevel(1);
   };
 
   const saveAnnotation = () => {
@@ -295,31 +270,64 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button 
+            <div className="flex items-center gap-2 md:gap-3">
+              {/* Zoom controls */}
+              <button
+                onClick={handleZoomOut}
+                className="p-3 md:p-4 bg-white/10 hover:bg-white/20 text-white rounded-xl md:rounded-2xl transition-all disabled:opacity-30"
+                title="Zoom Out"
+                disabled={zoomLevel <= 0.5}
+              >
+                <ZoomOut size={20} className="md:w-6 md:h-6" />
+              </button>
+              <button
+                onClick={handleResetZoom}
+                className="px-3 py-2 md:px-4 md:py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl md:rounded-2xl transition-all text-xs md:text-sm font-bold min-w-[50px] md:min-w-[60px]"
+                title="Reset Zoom"
+              >
+                {Math.round(zoomLevel * 100)}%
+              </button>
+              <button
+                onClick={handleZoomIn}
+                className="p-3 md:p-4 bg-white/10 hover:bg-white/20 text-white rounded-xl md:rounded-2xl transition-all disabled:opacity-30"
+                title="Zoom In"
+                disabled={zoomLevel >= 4}
+              >
+                <ZoomIn size={20} className="md:w-6 md:h-6" />
+              </button>
+              <div className="w-px h-8 bg-white/20 mx-1 md:mx-2" />
+              <button
                 onClick={handleRotate}
-                className="p-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl transition-all"
+                className="p-3 md:p-4 bg-white/10 hover:bg-white/20 text-white rounded-xl md:rounded-2xl transition-all"
                 title="Rotate 90°"
               >
-                <RotateCw size={24} />
+                <RotateCw size={20} className="md:w-6 md:h-6" />
               </button>
-              <button 
+              <button
                 onClick={closeImageViewer}
-                className="p-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl transition-all"
+                className="p-3 md:p-4 bg-white/10 hover:bg-white/20 text-white rounded-xl md:rounded-2xl transition-all"
               >
-                <X size={24} />
+                <X size={20} className="md:w-6 md:h-6" />
               </button>
             </div>
           </div>
 
           {/* Main Viewport */}
           <div className="flex-1 flex flex-col md:flex-row items-center justify-center p-4 md:p-8 gap-8 overflow-hidden">
-            <div className="flex-1 w-full h-full flex items-center justify-center relative overflow-hidden bg-slate-950/50 rounded-[40px] border border-white/5">
-              <img 
-                src={selectedImage.item.url} 
-                className="max-w-full max-h-full object-contain transition-transform duration-300" 
-                style={{ transform: `rotate(${rotation}deg)` }}
+            <div
+              className="flex-1 w-full h-full flex items-center justify-center relative overflow-auto bg-slate-950/50 rounded-[40px] border border-white/5 cursor-grab active:cursor-grabbing"
+              onDoubleClick={() => setZoomLevel(prev => prev === 1 ? 2 : 1)}
+            >
+              <img
+                src={selectedImage.item.url}
+                className="object-contain transition-transform duration-300"
+                style={{
+                  transform: `rotate(${rotation}deg) scale(${zoomLevel})`,
+                  maxWidth: zoomLevel > 1 ? 'none' : '100%',
+                  maxHeight: zoomLevel > 1 ? 'none' : '100%'
+                }}
                 alt="Large View"
+                draggable={false}
               />
             </div>
 
@@ -492,53 +500,101 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
       )}
 
       {activeTab === 'photos' && (
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4 animate-in fade-in">
-          <button onClick={handleAddPhoto} disabled={isUploadingPhoto} className="aspect-square border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-amber-300 hover:text-amber-500 transition-all bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
-            {isUploadingPhoto ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />}
-            <span className="text-[9px] font-bold mt-1">{isUploadingPhoto ? 'Uploading...' : 'Add'}</span>
-          </button>
-          {(project.photos || []).map(photo => (
-            <div 
-              key={photo.id} 
-              onClick={() => openImageViewer(photo, 'photo')}
-              className="aspect-square relative group overflow-hidden rounded-xl border border-slate-100 cursor-pointer"
+        <div className="animate-in fade-in space-y-4">
+          {/* Hidden file inputs */}
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handleFileInputChange(e, false)}
+          />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => handleFileInputChange(e, false)}
+          />
+
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4">
+            {/* Camera button */}
+            <button
+              onClick={() => cameraInputRef.current?.click()}
+              disabled={isUploadingPhoto}
+              className="aspect-square border-2 border-dashed border-amber-300 rounded-xl flex flex-col items-center justify-center text-amber-500 hover:border-amber-400 hover:bg-amber-50 transition-all bg-amber-50/50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <img src={photo.url} className="w-full h-full object-cover" alt="Site" />
-              <button
-                onClick={(e) => { e.stopPropagation(); onSaveProject({...project, photos: (project.photos || []).filter(p => p.id !== photo.id)}); }}
-                className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+              {isUploadingPhoto ? <Loader2 size={24} className="animate-spin" /> : <Camera size={24} />}
+              <span className="text-[9px] font-bold mt-1">{isUploadingPhoto ? 'Uploading...' : 'Camera'}</span>
+            </button>
+            {/* Add from files button */}
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              disabled={isUploadingPhoto}
+              className="aspect-square border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-amber-300 hover:text-amber-500 transition-all bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isUploadingPhoto ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />}
+              <span className="text-[9px] font-bold mt-1">{isUploadingPhoto ? 'Uploading...' : 'Add'}</span>
+            </button>
+            {(project.photos || []).map(photo => (
+              <div
+                key={photo.id}
+                onClick={() => openImageViewer(photo, 'photo')}
+                className="aspect-square relative group overflow-hidden rounded-xl border border-slate-100 cursor-pointer"
               >
-                <Trash2 size={12} />
-              </button>
-            </div>
-          ))}
+                <img src={photo.url} className="w-full h-full object-cover" alt="Site" />
+                <button
+                  onClick={(e) => { e.stopPropagation(); onSaveProject({...project, photos: (project.photos || []).filter(p => p.id !== photo.id)}); }}
+                  className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {activeTab === 'drawings' && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in">
-          <button onClick={handleAddDrawing} disabled={isUploadingPhoto} className="aspect-square border-4 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center text-slate-400 hover:border-amber-300 hover:text-amber-500 transition-all bg-white disabled:opacity-50 disabled:cursor-not-allowed">
-            {isUploadingPhoto ? <Loader2 size={40} className="animate-spin" /> : <Plus size={40} />}
-            <span className="text-[10px] font-black uppercase mt-2">{isUploadingPhoto ? 'Uploading...' : 'Add Drawing'}</span>
-          </button>
-          {(project.drawings || []).map(drawing => (
-            <div 
-              key={drawing.id} 
-              onClick={() => openImageViewer(drawing, 'drawing')}
-              className="aspect-square relative group overflow-hidden rounded-3xl border-2 border-slate-100 cursor-pointer"
+        <div className="animate-in fade-in space-y-4">
+          {/* Hidden file input for drawings */}
+          <input
+            ref={drawingInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handleFileInputChange(e, true)}
+          />
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <button
+              onClick={() => drawingInputRef.current?.click()}
+              disabled={isUploadingPhoto}
+              className="aspect-square border-4 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center text-slate-400 hover:border-amber-300 hover:text-amber-500 transition-all bg-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <img src={drawing.url} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500" alt="Drawing" />
-              <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                 <Plus className="text-white" size={32} />
-              </div>
-              <button 
-                onClick={(e) => { e.stopPropagation(); onSaveProject({...project, drawings: (project.drawings || []).filter(p => p.id !== drawing.id)}); }} 
-                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+              {isUploadingPhoto ? <Loader2 size={40} className="animate-spin" /> : <Plus size={40} />}
+              <span className="text-[10px] font-black uppercase mt-2">{isUploadingPhoto ? 'Uploading...' : 'Add Drawing'}</span>
+            </button>
+            {(project.drawings || []).map(drawing => (
+              <div
+                key={drawing.id}
+                onClick={() => openImageViewer(drawing, 'drawing')}
+                className="aspect-square relative group overflow-hidden rounded-3xl border-2 border-slate-100 cursor-pointer"
               >
-                <Trash2 size={12} />
-              </button>
-            </div>
-          ))}
+                <img src={drawing.url} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500" alt="Drawing" />
+                <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Plus className="text-white" size={32} />
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onSaveProject({...project, drawings: (project.drawings || []).filter(p => p.id !== drawing.id)}); }}
+                  className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
