@@ -142,15 +142,29 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       const cleanTitle = (activeQuote.title || 'estimate').replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const filename = `${prefix}${numStr}_${cleanTitle}.pdf`;
 
+      // Use lower scale on mobile to prevent memory issues
+      const isMobile = window.innerWidth < 768;
+      const scale = isMobile ? 1.5 : 2;
+
       // Capture the document as canvas
       const canvas = await html2canvas(documentRef.current, {
-        scale: 2,
+        scale,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
+        windowWidth: documentRef.current.scrollWidth,
+        windowHeight: documentRef.current.scrollHeight,
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      // Use PNG for better compatibility, with fallback to JPEG
+      let imgData: string;
+      try {
+        imgData = canvas.toDataURL('image/png');
+      } catch {
+        // Fallback to JPEG if PNG fails (memory constraints)
+        imgData = canvas.toDataURL('image/jpeg', 0.8);
+      }
+
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -159,32 +173,27 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 0;
+      const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
 
       // Handle multi-page if content is tall
-      const pageHeight = pdfHeight;
-      const scaledHeight = (imgHeight * pdfWidth) / imgWidth;
       let heightLeft = scaledHeight;
       let position = 0;
-
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, scaledHeight);
-      heightLeft -= pageHeight;
+      let pageNum = 0;
 
       while (heightLeft > 0) {
-        position = heightLeft - scaledHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, scaledHeight);
-        heightLeft -= pageHeight;
+        if (pageNum > 0) {
+          pdf.addPage();
+        }
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
+        heightLeft -= pdfHeight;
+        position -= pdfHeight;
+        pageNum++;
       }
 
       pdf.save(filename);
     } catch (err) {
       console.error('PDF generation failed:', err);
-      window.print();
+      alert('PDF generation failed. Please try again or use screenshot instead.');
     } finally {
       setIsDownloading(false);
     }
@@ -267,15 +276,28 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
       const docType = activeQuote.type === 'invoice' ? 'invoice' : 'quote';
       const customerName = customer?.name || 'there';
 
-      // Generate PDF as blob
+      // Use lower scale on mobile to prevent memory issues
+      const isMobile = window.innerWidth < 768;
+      const scale = isMobile ? 1.5 : 2;
+
+      // Generate PDF
       const canvas = await html2canvas(documentRef.current, {
-        scale: 2,
+        scale,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
+        windowWidth: documentRef.current.scrollWidth,
+        windowHeight: documentRef.current.scrollHeight,
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      // Use PNG for better compatibility
+      let imgData: string;
+      try {
+        imgData = canvas.toDataURL('image/png');
+      } catch {
+        imgData = canvas.toDataURL('image/jpeg', 0.8);
+      }
+
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -285,17 +307,20 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      // Handle multi-page
       let heightLeft = scaledHeight;
       let position = 0;
-
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, scaledHeight);
-      heightLeft -= pdfHeight;
+      let pageNum = 0;
 
       while (heightLeft > 0) {
-        position = heightLeft - scaledHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, scaledHeight);
+        if (pageNum > 0) {
+          pdf.addPage();
+        }
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
         heightLeft -= pdfHeight;
+        position -= pdfHeight;
+        pageNum++;
       }
 
       // Build email content
