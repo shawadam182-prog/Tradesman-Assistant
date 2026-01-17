@@ -266,6 +266,21 @@ const App: React.FC = () => {
         onAddCustomer={() => setActiveTab('customers')}
         onTakePhoto={handleTakePhoto}
         onViewJob={(jobId) => { setActiveProjectId(jobId); setActiveTab('jobpack_detail'); }}
+        onAddProject={async (project) => {
+          const created = await addProject({
+            title: project.title || 'New Job',
+            customerId: project.customerId,
+            status: project.status || 'active',
+            notepad: project.notepad || '',
+            notes: [],
+            photos: [],
+            drawings: [],
+            documents: [],
+            materials: [],
+          });
+          return created;
+        }}
+        onRefresh={refresh}
       />}
       {activeTab === 'jobpacks' && <JobPackList projects={[...projects].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())} customers={customers} onOpenProject={openProject} onAddProject={handleAddProject} onAddCustomer={handleAddCustomer} />}
 

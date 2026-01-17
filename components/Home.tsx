@@ -10,10 +10,12 @@ import {
   PoundSterling, FileWarning, AlertTriangle,
   ChevronDown, ChevronUp, BarChart3,
   TrendingUp, Camera, Eye, Phone, Plus,
-  ClipboardList, ArrowRightCircle
+  ClipboardList, ArrowRightCircle, X, FolderPlus
 } from 'lucide-react';
 import { parseReminderVoiceInput } from '../src/services/geminiService';
+import { sitePhotosService } from '../src/services/dataService';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
+import { useToast } from '../src/contexts/ToastContext';
 import { BusinessDashboard } from './BusinessDashboard';
 
 interface HomeProps {
@@ -32,6 +34,8 @@ interface HomeProps {
   onAddCustomer?: () => void;
   onTakePhoto?: (jobPackId?: string) => void;
   onViewJob?: (jobId: string) => void;
+  onAddProject?: (project: Partial<JobPack>) => Promise<JobPack>;
+  onRefresh?: () => Promise<void>;
 }
 
 interface Reminder {
@@ -65,8 +69,11 @@ export const Home: React.FC<HomeProps> = ({
   onLogExpense,
   onAddCustomer,
   onTakePhoto,
-  onViewJob
+  onViewJob,
+  onAddProject,
+  onRefresh
 }) => {
+  const toast = useToast();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [quickNotes, setQuickNotes] = useState<string>('');
   const [futureJobs, setFutureJobs] = useState<FutureJob[]>([]);
@@ -74,6 +81,9 @@ export const Home: React.FC<HomeProps> = ({
   const [isListeningNote, setIsListeningNote] = useState(false);
   const [isProcessingReminder, setIsProcessingReminder] = useState(false);
   const [showPhotoJobPicker, setShowPhotoJobPicker] = useState(false);
+  const [capturedPhoto, setCapturedPhoto] = useState<File | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [newJobName, setNewJobName] = useState('');
   const [showDashboard, setShowDashboard] = useState<boolean>(() => {
     const saved = localStorage.getItem('bq_show_dashboard');
     return saved !== 'false'; // Default to true
@@ -86,6 +96,7 @@ export const Home: React.FC<HomeProps> = ({
 
   const recognitionRef = useRef<any>(null);
   const noteRecognitionRef = useRef<any>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     try {
@@ -224,10 +235,98 @@ export const Home: React.FC<HomeProps> = ({
     setNewReminderTime('');
   };
 
-  // Photo job pack selection
-  const handleJobPackSelect = (jobPackId?: string) => {
+  // Photo capture and upload handlers
+  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCapturedPhoto(file);
+      setShowPhotoJobPicker(true);
+    }
+    // Reset input for next capture
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+  };
+
+  const handlePhotoUpload = async (jobPackId: string) => {
+    if (!capturedPhoto) return;
+
+    setIsUploadingPhoto(true);
+    try {
+      await sitePhotosService.upload(
+        jobPackId,
+        capturedPhoto,
+        'Site Photo',
+        ['site'],
+        false
+      );
+
+      if (onRefresh) {
+        await onRefresh();
+      }
+
+      toast.success('Photo Saved', 'Photo added to job pack');
+      hapticSuccess();
+
+      // Close modal and reset state
+      setShowPhotoJobPicker(false);
+      setCapturedPhoto(null);
+      setNewJobName('');
+    } catch (err: any) {
+      console.error('Upload failed:', err);
+      toast.error('Upload Failed', err.message || 'Could not save photo');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleAddPhotoToNewJob = async () => {
+    if (!capturedPhoto || !newJobName.trim() || !onAddProject) return;
+
+    setIsUploadingPhoto(true);
+    try {
+      // Create new job pack
+      const newProject = await onAddProject({
+        title: newJobName.trim(),
+        status: 'active',
+        notepad: '',
+        notes: [],
+        photos: [],
+        drawings: [],
+        documents: [],
+        materials: [],
+      });
+
+      // Upload photo to the new job pack
+      await sitePhotosService.upload(
+        newProject.id,
+        capturedPhoto,
+        'Site Photo',
+        ['site'],
+        false
+      );
+
+      if (onRefresh) {
+        await onRefresh();
+      }
+
+      toast.success('Job Created', `Photo added to "${newJobName.trim()}"`);
+      hapticSuccess();
+
+      // Close modal and reset state
+      setShowPhotoJobPicker(false);
+      setCapturedPhoto(null);
+      setNewJobName('');
+    } catch (err: any) {
+      console.error('Failed to create job:', err);
+      toast.error('Failed', err.message || 'Could not create job pack');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleCancelPhoto = () => {
     setShowPhotoJobPicker(false);
-    onTakePhoto?.(jobPackId);
+    setCapturedPhoto(null);
+    setNewJobName('');
   };
 
   // Future Jobs helpers
@@ -497,7 +596,7 @@ export const Home: React.FC<HomeProps> = ({
             <span className="font-black text-[10px] md:text-sm uppercase tracking-wider md:tracking-widest leading-none">Invoice</span>
           </button>
           <button
-            onClick={() => { hapticTap(); setShowPhotoJobPicker(true); }}
+            onClick={() => { hapticTap(); cameraInputRef.current?.click(); }}
             className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-rose-500 text-white p-3 md:p-6 min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-rose-500/20 hover:shadow-2xl group"
           >
             <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
@@ -636,38 +735,98 @@ export const Home: React.FC<HomeProps> = ({
         </div>
       </div>
 
-      {/* Photo Job Pack Picker Modal */}
-      {showPhotoJobPicker && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl md:rounded-[32px] p-4 md:p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-lg md:text-xl font-black text-slate-900 mb-2">Add Site Photo</h3>
-            <p className="text-sm text-slate-500 mb-4">Choose a job pack to add photos to</p>
-            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+      {/* Hidden camera input */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleCameraCapture}
+      />
+
+      {/* Photo Destination Picker Modal - shows AFTER photo is taken */}
+      {showPhotoJobPicker && capturedPhoto && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl md:rounded-[32px] p-4 md:p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+            {/* Header with photo preview */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0">
+                  <img
+                    src={URL.createObjectURL(capturedPhoto)}
+                    alt="Captured"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="text-lg md:text-xl font-black text-slate-900">Save Photo</h3>
+                  <p className="text-xs text-slate-500">Choose where to save this photo</p>
+                </div>
+              </div>
               <button
-                onClick={() => handleJobPackSelect(undefined)}
-                className="w-full p-4 bg-amber-50 hover:bg-amber-100 rounded-xl text-left transition-colors border-2 border-amber-200"
+                onClick={handleCancelPhoto}
+                className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
               >
-                <p className="font-bold text-slate-900">Create New Job Pack</p>
-                <p className="text-sm text-slate-500">Start a new project</p>
+                <X size={20} className="text-slate-400" />
               </button>
-              {projects.filter(p => p.status === 'active').map(project => (
-                <button
-                  key={project.id}
-                  onClick={() => handleJobPackSelect(project.id)}
-                  className="w-full p-4 bg-slate-50 hover:bg-slate-100 rounded-xl text-left transition-colors"
-                >
-                  <p className="font-bold text-slate-900">{project.title}</p>
-                  <p className="text-sm text-slate-500">
-                    {customers.find(c => c.id === project.customerId)?.name || 'No customer'}
-                  </p>
-                </button>
-              ))}
             </div>
+
+            {/* Create New Job Section */}
+            <div className="mb-4">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Create New Job</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Job name..."
+                  value={newJobName}
+                  onChange={e => setNewJobName(e.target.value)}
+                  className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-xl p-3 font-bold text-sm text-slate-900 outline-none focus:border-amber-400 transition-all placeholder:text-slate-300"
+                />
+                <button
+                  onClick={handleAddPhotoToNewJob}
+                  disabled={!newJobName.trim() || isUploadingPhoto}
+                  className="px-4 bg-amber-500 text-white rounded-xl shadow-lg active:scale-95 transition-all disabled:opacity-30 disabled:active:scale-100 flex items-center gap-2"
+                >
+                  {isUploadingPhoto ? <Loader2 size={18} className="animate-spin" /> : <FolderPlus size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Existing Jobs List */}
+            {projects.filter(p => p.status === 'active').length > 0 && (
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Add to Existing Job</p>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                  {projects.filter(p => p.status === 'active').map(project => (
+                    <button
+                      key={project.id}
+                      onClick={() => handlePhotoUpload(project.id)}
+                      disabled={isUploadingPhoto}
+                      className="w-full p-3 bg-slate-50 hover:bg-slate-100 rounded-xl text-left transition-colors flex items-center justify-between group disabled:opacity-50"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-900 truncate">{project.title}</p>
+                        <p className="text-xs text-slate-500 truncate">
+                          {customers.find(c => c.id === project.customerId)?.name || 'No customer'}
+                        </p>
+                      </div>
+                      <div className="p-2 bg-slate-200 group-hover:bg-amber-500 group-hover:text-white rounded-lg transition-colors shrink-0 ml-2">
+                        {isUploadingPhoto ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Cancel Button */}
             <button
-              onClick={() => setShowPhotoJobPicker(false)}
-              className="w-full mt-4 p-3 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 transition-colors"
+              onClick={handleCancelPhoto}
+              disabled={isUploadingPhoto}
+              className="w-full mt-4 p-3 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600 transition-colors disabled:opacity-50"
             >
-              Cancel
+              Discard Photo
             </button>
           </div>
         </div>
