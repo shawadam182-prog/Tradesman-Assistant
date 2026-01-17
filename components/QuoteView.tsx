@@ -520,7 +520,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
 
       <div ref={documentRef} className="bg-white rounded-[32px] shadow-2xl border border-slate-200 overflow-hidden print:border-none print:shadow-none">
         {/* Company Header */}
-        <div className="p-6 flex justify-between items-start border-b border-slate-100">
+        <div className="p-6 flex justify-between items-start">
           {/* Logo & Company Info */}
           <div className="flex items-start gap-4">
             {displayOptions.showLogo && settings.companyLogo && (
@@ -580,7 +580,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
         </div>
 
         {/* Client and Job Address Section */}
-        <div className="px-6 py-5 bg-slate-50 border-b border-slate-100">
+        <div className="px-6 py-5 bg-slate-50">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* To: Client Address */}
             <div className="space-y-1">
@@ -621,7 +621,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
             : section.labourHours || 0;
 
           return (
-            <div key={section.id} className={`p-4 md:p-8 ${idx % 2 === 1 ? 'bg-slate-50/30' : 'bg-white'} border-b border-slate-100 last:border-b-0 space-y-8`}>
+            <div key={section.id} className={`p-4 md:p-8 ${idx % 2 === 1 ? 'bg-slate-50/30' : 'bg-white'} space-y-8`}>
               <div className="flex items-center gap-3">
                  <div className="h-8 w-8 bg-slate-900 text-amber-500 rounded-lg flex items-center justify-center font-black text-xs">{idx + 1}</div>
                  <h4 className="text-lg font-black text-slate-900 uppercase tracking-widest">{section.title}</h4>
@@ -779,7 +779,8 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                 </div>
               )}
 
-              <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+              <div className="h-px bg-slate-100 mt-4 mb-4"></div>
+              <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2 opacity-30">
                   <Circle size={8} fill="currentColor" className="text-slate-400" />
                   <span className="text-[8px] font-black uppercase tracking-widest">Work Stream {idx + 1}</span>
@@ -790,7 +791,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           );
         })}
 
-        <div className="bg-slate-50 p-6 md:p-10 border-t border-slate-100">
+        <div className="bg-slate-50 p-6 md:p-10">
           <div className="flex flex-col gap-6">
             <div className="space-y-2">
               {displayOptions.showTotalsBreakdown && (
@@ -816,7 +817,8 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                   )}
                 </>
               )}
-              <div className="flex justify-between items-center pt-4 border-t border-slate-200">
+              <div className="h-px bg-slate-200 my-4"></div>
+              <div className="flex justify-between items-center">
                 <span className="font-bold text-slate-900">Total Due</span>
                 <span className="text-2xl font-bold text-slate-900">£{totals.grandTotal.toFixed(2)}</span>
               </div>

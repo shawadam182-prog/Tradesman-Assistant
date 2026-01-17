@@ -1032,45 +1032,51 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
 
                 {/* Labour Items List */}
                 {(section.labourItems || []).map((labourItem) => (
-                  <div key={labourItem.id} className="flex items-center gap-3 bg-blue-50 p-3 rounded-xl mb-2">
-                    <input
-                      type="text"
-                      placeholder="Labour description..."
-                      value={labourItem.description}
-                      onChange={e => updateLabourItem(section.id, labourItem.id, { description: e.target.value })}
-                      className="flex-1 bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-blue-300"
-                    />
-                    <div className="flex items-center gap-1 bg-white rounded-lg px-2 py-1 border border-blue-200">
-                      <button
-                        onClick={() => decrementLabourHours(section.id, labourItem.id)}
-                        className="p-1 hover:bg-blue-50 rounded transition-colors"
-                      >
-                        <Minus size={12} className="text-blue-400" />
-                      </button>
+                  <div key={labourItem.id} className="bg-blue-50 p-3 rounded-xl mb-2">
+                    {/* Top row: Description and delete button */}
+                    <div className="flex items-center gap-2 mb-2">
                       <input
-                        type="number"
-                        value={labourItem.hours}
-                        onChange={e => updateLabourItem(section.id, labourItem.id, { hours: parseFloat(e.target.value) || 0 })}
-                        className="w-12 text-center font-bold text-sm bg-transparent outline-none"
-                        step="0.5"
+                        type="text"
+                        placeholder="Labour description..."
+                        value={labourItem.description}
+                        onChange={e => updateLabourItem(section.id, labourItem.id, { description: e.target.value })}
+                        className="flex-1 bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-blue-300"
                       />
-                      <span className="text-[10px] text-slate-400 font-bold">hrs</span>
                       <button
-                        onClick={() => incrementLabourHours(section.id, labourItem.id)}
-                        className="p-1 hover:bg-blue-50 rounded transition-colors"
+                        onClick={() => removeLabourItem(section.id, labourItem.id)}
+                        className="p-1.5 text-slate-300 hover:text-red-500 transition-colors"
                       >
-                        <Plus size={12} className="text-blue-400" />
+                        <Trash2 size={14} />
                       </button>
                     </div>
-                    <span className="font-bold text-blue-600 min-w-[60px] text-right">
-                      £{(labourItem.hours * (labourItem.rate || section.labourRate || formData.labourRate || settings.defaultLabourRate)).toFixed(2)}
-                    </span>
-                    <button
-                      onClick={() => removeLabourItem(section.id, labourItem.id)}
-                      className="p-1 text-slate-300 hover:text-red-500 transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    {/* Bottom row: Hours controls and price */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1 bg-white rounded-lg px-2 py-1.5 border border-blue-200">
+                        <button
+                          onClick={() => decrementLabourHours(section.id, labourItem.id)}
+                          className="p-1.5 hover:bg-blue-50 rounded transition-colors"
+                        >
+                          <Minus size={14} className="text-blue-500" />
+                        </button>
+                        <input
+                          type="number"
+                          value={labourItem.hours}
+                          onChange={e => updateLabourItem(section.id, labourItem.id, { hours: parseFloat(e.target.value) || 0 })}
+                          className="w-12 text-center font-bold text-sm bg-transparent outline-none"
+                          step="0.5"
+                        />
+                        <span className="text-[10px] text-slate-400 font-bold">hrs</span>
+                        <button
+                          onClick={() => incrementLabourHours(section.id, labourItem.id)}
+                          className="p-1.5 hover:bg-blue-50 rounded transition-colors"
+                        >
+                          <Plus size={14} className="text-blue-500" />
+                        </button>
+                      </div>
+                      <span className="font-bold text-blue-600 text-base">
+                        £{(labourItem.hours * (labourItem.rate || section.labourRate || formData.labourRate || settings.defaultLabourRate)).toFixed(2)}
+                      </span>
+                    </div>
                   </div>
                 ))}
 
