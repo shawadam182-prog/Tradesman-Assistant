@@ -64,8 +64,6 @@ export const Home: React.FC<HomeProps> = ({
   const [isListeningNote, setIsListeningNote] = useState(false);
   const [isProcessingReminder, setIsProcessingReminder] = useState(false);
   const [showPhotoJobPicker, setShowPhotoJobPicker] = useState(false);
-  const [capturedPhotoData, setCapturedPhotoData] = useState<string | null>(null);
-  const photoInputRef = useRef<HTMLInputElement>(null);
   const [showDashboard, setShowDashboard] = useState<boolean>(() => {
     const saved = localStorage.getItem('bq_show_dashboard');
     return saved !== 'false'; // Default to true
@@ -208,28 +206,10 @@ export const Home: React.FC<HomeProps> = ({
     setNewReminderTime('');
   };
 
-  // Photo capture handling
-  const handlePhotoCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCapturedPhotoData(reader.result as string);
-        setShowPhotoJobPicker(true);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
+  // Photo job pack selection
   const handleJobPackSelect = (jobPackId?: string) => {
-    if (capturedPhotoData) {
-      onTakePhoto?.(jobPackId);
-    }
     setShowPhotoJobPicker(false);
-    setCapturedPhotoData(null);
-    if (photoInputRef.current) {
-      photoInputRef.current.value = '';
-    }
+    onTakePhoto?.(jobPackId);
   };
 
   // Calculate quote total helper
@@ -410,15 +390,6 @@ export const Home: React.FC<HomeProps> = ({
       {/* QUICK ACTIONS Section */}
       <div>
         <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest mb-2 md:mb-3 px-1">Quick Actions</h3>
-        {/* Hidden file input for photo capture */}
-        <input
-          ref={photoInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={handlePhotoCapture}
-        />
         <div className="grid grid-cols-3 gap-2 md:gap-3">
           <button
             onClick={() => { hapticTap(); onCreateJob?.(); }}
@@ -448,7 +419,7 @@ export const Home: React.FC<HomeProps> = ({
             <span className="font-black text-[10px] md:text-sm uppercase tracking-wider md:tracking-widest leading-none">Invoice</span>
           </button>
           <button
-            onClick={() => { hapticTap(); photoInputRef.current?.click(); }}
+            onClick={() => { hapticTap(); setShowPhotoJobPicker(true); }}
             className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-rose-500 text-white p-3 md:p-6 min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-rose-500/20 hover:shadow-2xl group"
           >
             <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
@@ -481,14 +452,15 @@ export const Home: React.FC<HomeProps> = ({
       {showPhotoJobPicker && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl md:rounded-[32px] p-4 md:p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-lg md:text-xl font-black text-slate-900 mb-4">Add Photo To</h3>
+            <h3 className="text-lg md:text-xl font-black text-slate-900 mb-2">Add Site Photo</h3>
+            <p className="text-sm text-slate-500 mb-4">Choose a job pack to add photos to</p>
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
               <button
                 onClick={() => handleJobPackSelect(undefined)}
                 className="w-full p-4 bg-amber-50 hover:bg-amber-100 rounded-xl text-left transition-colors border-2 border-amber-200"
               >
                 <p className="font-bold text-slate-900">Create New Job Pack</p>
-                <p className="text-sm text-slate-500">Start a new project with this photo</p>
+                <p className="text-sm text-slate-500">Start a new project</p>
               </button>
               {projects.filter(p => p.status === 'active').map(project => (
                 <button
@@ -504,7 +476,7 @@ export const Home: React.FC<HomeProps> = ({
               ))}
             </div>
             <button
-              onClick={() => { setShowPhotoJobPicker(false); setCapturedPhotoData(null); }}
+              onClick={() => setShowPhotoJobPicker(false)}
               className="w-full mt-4 p-3 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 transition-colors"
             >
               Cancel

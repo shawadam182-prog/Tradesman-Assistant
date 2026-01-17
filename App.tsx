@@ -97,11 +97,31 @@ const App: React.FC = () => {
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [viewingQuoteId, setViewingQuoteId] = useState<string | null>(null);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+  const [initialQuoteType, setInitialQuoteType] = useState<'estimate' | 'quotation' | 'invoice'>('estimate');
 
   const handleCreateQuote = (projectId?: string) => {
     setEditingQuoteId(null);
     setActiveProjectId(projectId || null);
+    setInitialQuoteType('estimate');
     setActiveTab('quote_edit');
+  };
+
+  const handleCreateInvoice = () => {
+    setEditingQuoteId(null);
+    setActiveProjectId(null);
+    setInitialQuoteType('invoice');
+    setActiveTab('quote_edit');
+  };
+
+  const handleTakePhoto = (jobPackId?: string) => {
+    if (jobPackId) {
+      // Navigate to existing job pack
+      setActiveProjectId(jobPackId);
+      setActiveTab('jobpack_detail');
+    } else {
+      // Navigate to job packs to create new one
+      setActiveTab('jobpacks');
+    }
   };
 
   const handleEditQuote = (quoteId: string) => {
@@ -231,10 +251,14 @@ const App: React.FC = () => {
         onNavigateToSchedule={() => setActiveTab('schedule')}
         onNavigateToInvoices={() => setActiveTab('invoices')}
         onNavigateToQuotes={() => setActiveTab('quotes')}
+        onNavigateToAccounting={() => setActiveTab('expenses')}
         onCreateJob={() => setActiveTab('jobpacks')}
         onCreateQuote={() => handleCreateQuote()}
+        onCreateInvoice={handleCreateInvoice}
         onLogExpense={() => setActiveTab('expenses')}
         onAddCustomer={() => setActiveTab('customers')}
+        onTakePhoto={handleTakePhoto}
+        onViewJob={(jobId) => { setActiveProjectId(jobId); setActiveTab('jobpack_detail'); }}
       />}
       {activeTab === 'jobpacks' && <JobPackList projects={[...projects].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())} customers={customers} onOpenProject={openProject} onAddProject={handleAddProject} onAddCustomer={handleAddCustomer} />}
 
@@ -253,7 +277,7 @@ const App: React.FC = () => {
         {activeTab === 'wholesalers' && <WholesalerAdmin onBack={() => setActiveTab('home')} />}
         {activeTab === 'customers' && <CustomerManager customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer} deleteCustomer={deleteCustomer} />}
         {activeTab === 'settings' && <SettingsPage settings={settings} setSettings={setSettings} onSave={updateSettings} />}
-        {activeTab === 'quote_edit' && <QuoteCreator existingQuote={quotes.find(q => q.id === editingQuoteId)} projectId={activeProjectId || undefined} customers={customers} settings={settings} onSave={handleSaveQuote} onAddCustomer={handleAddCustomer} onCancel={() => activeProjectId ? setActiveTab('jobpack_detail') : setActiveTab('quotes')} />}
+        {activeTab === 'quote_edit' && <QuoteCreator existingQuote={quotes.find(q => q.id === editingQuoteId)} projectId={activeProjectId || undefined} initialType={initialQuoteType} customers={customers} settings={settings} onSave={handleSaveQuote} onAddCustomer={handleAddCustomer} onCancel={() => activeProjectId ? setActiveTab('jobpack_detail') : (initialQuoteType === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes'))} />}
         {activeTab === 'view' && viewingQuoteId && (activeViewQuote ? <QuoteView quote={activeViewQuote} customer={activeViewCustomer || { id: 'unknown', name: 'Unassigned Client', email: '', phone: '', address: 'N/A' }} settings={settings} onEdit={() => handleEditQuote(viewingQuoteId)} onBack={() => activeProjectId ? setActiveTab('jobpack_detail') : (activeViewQuote.type === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes'))} onUpdateStatus={(status) => handleUpdateQuoteStatus(viewingQuoteId, status)} onUpdateQuote={handleUpdateQuote} onConvertToInvoice={handleConvertToInvoice} onDuplicate={handleDuplicateQuote} /> : <div className="flex flex-col items-center justify-center py-20 text-slate-400"><FileWarning size={48} className="text-amber-500 mb-4" /><p>Document Not Found</p><button onClick={() => setActiveTab('quotes')} className="mt-4 bg-slate-900 text-white px-4 py-2 rounded">Back</button></div>)}
       </Suspense>
     </Layout>

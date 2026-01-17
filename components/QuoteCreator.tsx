@@ -21,6 +21,7 @@ import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 interface QuoteCreatorProps {
   existingQuote?: Quote;
   projectId?: string;
+  initialType?: 'estimate' | 'quotation' | 'invoice';
   customers: Customer[];
   settings: AppSettings;
   onSave: (quote: Quote) => void;
@@ -28,8 +29,8 @@ interface QuoteCreatorProps {
   onCancel: () => void;
 }
 
-export const QuoteCreator: React.FC<QuoteCreatorProps> = ({ 
-  existingQuote, projectId, customers, settings, onSave, onAddCustomer, onCancel 
+export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
+  existingQuote, projectId, initialType = 'estimate', customers, settings, onSave, onAddCustomer, onCancel
 }) => {
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -70,7 +71,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       taxPercent: settings.enableVat ? settings.defaultTaxRate : 0,
       cisPercent: settings.enableCis ? settings.defaultCisRate : 0,
       status: 'draft',
-      type: 'estimate',
+      type: initialType,
       notes: settings.defaultQuoteNotes,
       displayOptions: { ...settings.defaultDisplayOptions }
     };
