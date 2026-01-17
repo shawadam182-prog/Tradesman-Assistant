@@ -176,6 +176,10 @@ const App: React.FC = () => {
     if (!quote) return;
 
     try {
+      // Calculate default due date (14 days from now)
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 14);
+
       const invoiceQuote: Quote = {
         ...quote,
         id: '', // Will be generated
@@ -183,6 +187,9 @@ const App: React.FC = () => {
         status: 'draft',
         referenceNumber: undefined, // Will be auto-assigned
         date: new Date().toISOString().split('T')[0],
+        dueDate: dueDate.toISOString().split('T')[0],
+        parentQuoteId: quote.id, // Link back to original quote
+        notes: settings.defaultInvoiceNotes || quote.notes, // Use invoice notes
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -190,7 +197,7 @@ const App: React.FC = () => {
       // Update original quote status to invoiced
       await updateQuoteStatus(viewingQuoteId, 'invoiced');
       setViewingQuoteId(saved.id);
-      toast.success('Invoice Created', 'Quote converted to invoice');
+      toast.success('Invoice Created', 'Quote converted to invoice with 14-day payment terms');
     } catch (error) {
       console.error('Failed to convert to invoice:', error);
       toast.error('Conversion Failed', 'Could not create invoice');

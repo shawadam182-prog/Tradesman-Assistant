@@ -6,10 +6,12 @@ import {
   Landmark, Package, HardHat, FileDown, Loader2, Navigation, PoundSterling,
   Settings2, Eye, EyeOff, ChevronDown, ChevronUp, LayoutGrid, List,
   Image as ImageIcon, AlignLeft, ReceiptText, ShieldCheck, ListChecks, FileDigit,
-  Box, Circle, Share2, Copy, MessageCircle, MapPin, Mail
+  Box, Circle, Share2, Copy, MessageCircle, MapPin, Mail, Banknote
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { PaymentRecorder } from './PaymentRecorder';
+import { hapticSuccess } from '../src/hooks/useHaptic';
 
 interface QuoteViewProps {
   quote: Quote;
@@ -29,6 +31,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [showCustomiser, setShowCustomiser] = useState(false);
+  const [showPaymentRecorder, setShowPaymentRecorder] = useState(false);
   const documentRef = useRef<HTMLDivElement>(null);
 
   const getProcessedQuote = (): Quote => {
@@ -95,6 +98,25 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   };
 
   const totals = calculateTotals();
+
+  const handleRecordPayment = (payment: {
+    amount: number;
+    method: 'cash' | 'card' | 'bank_transfer' | 'cheque';
+    date: string;
+    markAsPaid: boolean;
+  }) => {
+    const newAmountPaid = (activeQuote.amountPaid || 0) + payment.amount;
+    const updatedQuote: Quote = {
+      ...activeQuote,
+      amountPaid: newAmountPaid,
+      paymentMethod: payment.method,
+      paymentDate: payment.date,
+      status: payment.markAsPaid ? 'paid' : activeQuote.status,
+    };
+    onUpdateQuote(updatedQuote);
+    setShowPaymentRecorder(false);
+    hapticSuccess();
+  };
 
   const handleDownloadPDF = async () => {
     if (!documentRef.current) return;
@@ -387,9 +409,17 @@ Note: Please attach the downloaded PDF file (${filename}) to this email before s
                 <Copy size={14} /> Duplicate
               </button>
             )}
-            {activeQuote.type !== 'invoice' && onConvertToInvoice && activeQuote.status === 'accepted' && (
+            {activeQuote.type !== 'invoice' && onConvertToInvoice && ['draft', 'sent', 'accepted'].includes(activeQuote.status) && (
               <button onClick={onConvertToInvoice} className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-bold shadow-sm border border-emerald-100">
                 <ReceiptText size={14} /> To Invoice
+              </button>
+            )}
+            {activeQuote.type === 'invoice' && activeQuote.status !== 'paid' && (
+              <button
+                onClick={() => setShowPaymentRecorder(true)}
+                className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-colors"
+              >
+                <Banknote size={14} /> Record Payment
               </button>
             )}
             {customer?.address && (
@@ -613,6 +643,16 @@ Note: Please attach the downloaded PDF file (${filename}) to this email before s
       <div className="flex justify-center pt-4 print:hidden">
         <div className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm flex items-center gap-2.5 ${statusColors[activeQuote.status || 'draft']}`}>Status: {activeQuote.status || 'draft'}</div>
       </div>
+
+      {/* Payment Recorder Modal */}
+      {showPaymentRecorder && activeQuote.type === 'invoice' && (
+        <PaymentRecorder
+          invoice={activeQuote}
+          invoiceTotal={totals.grandTotal}
+          onRecordPayment={handleRecordPayment}
+          onClose={() => setShowPaymentRecorder(false)}
+        />
+      )}
     </div>
   );
 };

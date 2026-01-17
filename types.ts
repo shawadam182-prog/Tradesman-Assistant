@@ -70,6 +70,12 @@ export interface Quote {
   type: 'estimate' | 'quotation' | 'invoice';
   displayOptions?: QuoteDisplayOptions;
   referenceNumber?: number;
+  // Invoice-specific fields
+  dueDate?: string;
+  paymentDate?: string;
+  paymentMethod?: 'cash' | 'card' | 'bank_transfer' | 'cheque';
+  amountPaid?: number;
+  parentQuoteId?: string;
 }
 
 export interface ScheduleEntry {

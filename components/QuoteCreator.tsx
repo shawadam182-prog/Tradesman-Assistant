@@ -53,28 +53,40 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   
   // Migration logic for old flat quotes
   const getInitialData = (): Partial<Quote> => {
-    if (!existingQuote) return {
-      id: Math.random().toString(36).substr(2, 9),
-      projectId,
-      date: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString(),
-      title: '',
-      customerId: '',
-      sections: [{
+    if (!existingQuote) {
+      // Set default due date for invoices (14 days from now)
+      const defaultDueDate = initialType === 'invoice'
+        ? (() => {
+            const d = new Date();
+            d.setDate(d.getDate() + 14);
+            return d.toISOString().split('T')[0];
+          })()
+        : undefined;
+
+      return {
         id: Math.random().toString(36).substr(2, 9),
-        title: 'Work Section 1',
-        items: [],
-        labourHours: 0
-      }],
-      labourRate: settings.defaultLabourRate,
-      markupPercent: 15,
-      taxPercent: settings.enableVat ? settings.defaultTaxRate : 0,
-      cisPercent: settings.enableCis ? settings.defaultCisRate : 0,
-      status: 'draft',
-      type: initialType,
-      notes: settings.defaultQuoteNotes,
-      displayOptions: { ...settings.defaultDisplayOptions }
-    };
+        projectId,
+        date: new Date().toISOString().split('T')[0],
+        updatedAt: new Date().toISOString(),
+        title: '',
+        customerId: '',
+        sections: [{
+          id: Math.random().toString(36).substr(2, 9),
+          title: 'Work Section 1',
+          items: [],
+          labourHours: 0
+        }],
+        labourRate: settings.defaultLabourRate,
+        markupPercent: 15,
+        taxPercent: settings.enableVat ? settings.defaultTaxRate : 0,
+        cisPercent: settings.enableCis ? settings.defaultCisRate : 0,
+        status: 'draft',
+        type: initialType,
+        notes: initialType === 'invoice' ? settings.defaultInvoiceNotes : settings.defaultQuoteNotes,
+        displayOptions: { ...settings.defaultDisplayOptions },
+        dueDate: defaultDueDate
+      };
+    }
 
     // If it's an old quote with flat items, migrate it
     if ((existingQuote as any).items) {
@@ -108,11 +120,20 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       let updatedNotes = prev.notes;
       const isCurrentlyDefaultQuote = prev.notes === settings.defaultQuoteNotes;
       const isCurrentlyDefaultInvoice = prev.notes === settings.defaultInvoiceNotes;
-      
+
       if (isCurrentlyDefaultQuote || isCurrentlyDefaultInvoice || !prev.notes) {
         updatedNotes = (newType === 'invoice') ? settings.defaultInvoiceNotes : settings.defaultQuoteNotes;
       }
-      return { ...prev, type: newType, notes: updatedNotes };
+
+      // Set default due date when switching to invoice (14 days from now)
+      let dueDate = prev.dueDate;
+      if (newType === 'invoice' && !prev.dueDate) {
+        const defaultDue = new Date();
+        defaultDue.setDate(defaultDue.getDate() + 14);
+        dueDate = defaultDue.toISOString().split('T')[0];
+      }
+
+      return { ...prev, type: newType, notes: updatedNotes, dueDate };
     });
   };
 
@@ -415,7 +436,11 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
           <button onClick={() => { hapticTap(); onCancel(); }} className="p-2 -ml-2 text-slate-400 hover:text-slate-700">
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-lg font-bold text-slate-900">{existingQuote ? 'Edit Document' : 'New Quote'}</h1>
+          <h1 className="text-lg font-bold text-slate-900">
+            {existingQuote
+              ? `Edit ${formData.type === 'invoice' ? 'Invoice' : formData.type === 'quotation' ? 'Quotation' : 'Estimate'}`
+              : `New ${formData.type === 'invoice' ? 'Invoice' : formData.type === 'quotation' ? 'Quotation' : 'Estimate'}`}
+          </h1>
         </div>
         <div className="flex gap-2">
            <button
@@ -434,6 +459,47 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Project Title</label>
                 <input type="text" className="w-full text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-amber-500 transition-colors placeholder:text-slate-300" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Enter title..." />
              </div>
+
+             {/* Document Type Selector */}
+             <div className="col-span-2">
+               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Document Type</label>
+               <div className="flex gap-2">
+                 <button
+                   type="button"
+                   onClick={() => { hapticTap(); handleTypeChange('estimate'); }}
+                   className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
+                     formData.type === 'estimate'
+                       ? 'bg-amber-500 text-white shadow-lg'
+                       : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                   }`}
+                 >
+                   Estimate
+                 </button>
+                 <button
+                   type="button"
+                   onClick={() => { hapticTap(); handleTypeChange('quotation'); }}
+                   className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
+                     formData.type === 'quotation'
+                       ? 'bg-blue-500 text-white shadow-lg'
+                       : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                   }`}
+                 >
+                   Quotation
+                 </button>
+                 <button
+                   type="button"
+                   onClick={() => { hapticTap(); handleTypeChange('invoice'); }}
+                   className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
+                     formData.type === 'invoice'
+                       ? 'bg-emerald-500 text-white shadow-lg'
+                       : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                   }`}
+                 >
+                   Invoice
+                 </button>
+               </div>
+             </div>
+
              <div className="relative" ref={dropdownRef}>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Client</label>
                 <div className="flex items-center gap-2">
@@ -452,9 +518,42 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                 )}
              </div>
              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Date</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  {formData.type === 'invoice' ? 'Invoice Date' : 'Date'}
+                </label>
                 <input type="date" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-amber-500 transition-colors" value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})} />
              </div>
+
+             {/* Invoice-specific fields */}
+             {formData.type === 'invoice' && (
+               <div className="col-span-2 mt-2 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                 <div className="grid grid-cols-2 gap-4">
+                   <div>
+                     <label className="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">
+                       <Calendar size={12} className="inline mr-1" />
+                       Due Date
+                     </label>
+                     <input
+                       type="date"
+                       className="w-full font-medium text-slate-900 bg-white border border-emerald-200 rounded-lg px-3 py-2 outline-none focus:border-emerald-400 transition-colors"
+                       value={formData.dueDate || ''}
+                       onChange={e => setFormData({...formData, dueDate: e.target.value})}
+                     />
+                   </div>
+                   <div className="flex items-end">
+                     <div className="text-xs text-emerald-600 font-bold">
+                       {formData.dueDate && formData.date && (
+                         <>
+                           Payment due in{' '}
+                           {Math.ceil((new Date(formData.dueDate).getTime() - new Date(formData.date).getTime()) / (1000 * 60 * 60 * 24))}{' '}
+                           days
+                         </>
+                       )}
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             )}
           </div>
         </div>
 

@@ -1,9 +1,28 @@
 
 import React from 'react';
 import { Quote, Customer, AppSettings } from '../types';
-import { ReceiptText, Eye, Search, CheckCircle2, AlertCircle, Plus, Hash, User, ChevronRight, Trash2 } from 'lucide-react';
+import { ReceiptText, Eye, Search, CheckCircle2, AlertCircle, Plus, Hash, User, ChevronRight, Trash2, Clock, AlertTriangle } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
+
+// Helper functions for overdue detection
+const isOverdue = (invoice: Quote): boolean => {
+  if (invoice.status === 'paid' || invoice.status === 'draft') return false;
+  if (!invoice.dueDate) return false;
+  return new Date(invoice.dueDate) < new Date();
+};
+
+const getDaysOverdue = (invoice: Quote): number => {
+  if (!invoice.dueDate) return 0;
+  const diff = new Date().getTime() - new Date(invoice.dueDate).getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+};
+
+const getDaysUntilDue = (invoice: Quote): number => {
+  if (!invoice.dueDate) return 0;
+  const diff = new Date(invoice.dueDate).getTime() - new Date().getTime();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+};
 
 interface InvoicesListProps {
   quotes: Quote[];
@@ -99,41 +118,70 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
             const numStr = (invoice.referenceNumber || 1).toString().padStart(4, '0');
             const ref = `${prefix}${numStr}`;
             const isPaid = invoice.status === 'paid';
-            
+            const overdue = isOverdue(invoice);
+            const daysOverdue = getDaysOverdue(invoice);
+            const daysUntilDue = getDaysUntilDue(invoice);
+
             return (
-              <div 
-                key={invoice.id} 
+              <div
+                key={invoice.id}
                 onClick={() => onViewQuote(invoice.id)}
-                className="bg-white p-5 rounded-[28px] border-2 border-slate-100 hover:border-emerald-500 transition-all group cursor-pointer shadow-sm hover:shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className={`bg-white p-5 rounded-[28px] border-2 transition-all group cursor-pointer shadow-sm hover:shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                  overdue
+                    ? 'border-red-200 hover:border-red-400 bg-red-50/30'
+                    : 'border-slate-100 hover:border-emerald-500'
+                }`}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0">
                       <Hash size={10} /> {ref}
                     </span>
-                    <h3 className="font-black text-slate-900 text-lg leading-tight truncate group-hover:text-emerald-600 transition-colors">
+                    {overdue && (
+                      <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0 animate-pulse">
+                        <AlertTriangle size={10} /> {daysOverdue} {daysOverdue === 1 ? 'DAY' : 'DAYS'} OVERDUE
+                      </span>
+                    )}
+                    <h3 className={`font-black text-lg leading-tight truncate transition-colors ${
+                      overdue ? 'text-red-700 group-hover:text-red-600' : 'text-slate-900 group-hover:text-emerald-600'
+                    }`}>
                       {invoice.title}
                     </h3>
                   </div>
-                  
-                  <div className="flex items-center gap-3 text-slate-500 text-xs font-bold italic">
+
+                  <div className="flex items-center gap-3 text-slate-500 text-xs font-bold italic flex-wrap">
                     <div className="flex items-center gap-1.5 truncate">
                       <User size={14} className="text-slate-300" />
                       {customer?.name || 'Unknown'}
                       {customer?.company && <span className="text-amber-600 text-[10px] font-black uppercase not-italic ml-1">({customer.company})</span>}
                     </div>
+                    {invoice.dueDate && !isPaid && (
+                      <div className={`flex items-center gap-1 text-[10px] font-black uppercase not-italic ${
+                        overdue ? 'text-red-500' : daysUntilDue <= 7 ? 'text-amber-500' : 'text-slate-400'
+                      }`}>
+                        <Clock size={12} />
+                        {overdue
+                          ? `Was due ${new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+                          : `Due ${new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} (${daysUntilDue}d)`
+                        }
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between sm:justify-end gap-3 md:gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-50">
                   <div className="flex flex-col items-start sm:items-end">
                     <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest mb-1 ${
-                      isPaid ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                      isPaid
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : overdue
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-amber-100 text-amber-700'
                     }`}>
-                      {isPaid ? <CheckCircle2 size={10}/> : <AlertCircle size={10}/>}
-                      {invoice.status}
+                      {isPaid ? <CheckCircle2 size={10}/> : overdue ? <AlertTriangle size={10}/> : <AlertCircle size={10}/>}
+                      {overdue ? 'OVERDUE' : invoice.status}
                     </div>
-                    <p className="font-black text-slate-900 text-sm md:text-xl tracking-tight">
+                    <p className={`font-black text-sm md:text-xl tracking-tight ${overdue ? 'text-red-700' : 'text-slate-900'}`}>
                       £{calculateQuoteTotal(invoice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>

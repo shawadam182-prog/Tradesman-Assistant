@@ -250,15 +250,39 @@ export const Home: React.FC<HomeProps> = ({
       })
       .reduce((sum, q) => sum + calculateQuoteTotal(q), 0);
 
-    const outstandingInvoices = quotes.filter(
+    // Outstanding invoices (sent or accepted, not paid)
+    const outstandingInvoicesList = quotes.filter(
       q => q.type === 'invoice' && q.status !== 'paid' && q.status !== 'draft'
-    ).length;
+    );
+    const outstandingInvoices = outstandingInvoicesList.length;
+    const outstandingTotal = outstandingInvoicesList.reduce((sum, q) => sum + calculateQuoteTotal(q), 0);
+
+    // Overdue invoices (past due date)
+    const overdueInvoicesList = outstandingInvoicesList.filter(invoice => {
+      if (!invoice.dueDate) {
+        // Fallback: consider overdue if sent > 14 days ago
+        const invoiceDate = new Date(invoice.date);
+        const dueDate = new Date(invoiceDate.getTime() + 14 * 24 * 60 * 60 * 1000);
+        return today > dueDate;
+      }
+      return today > new Date(invoice.dueDate);
+    });
+    const overdueInvoices = overdueInvoicesList.length;
+    const overdueTotal = overdueInvoicesList.reduce((sum, q) => sum + calculateQuoteTotal(q), 0);
 
     const pendingQuotes = quotes.filter(
       q => (q.type === 'estimate' || q.type === 'quotation') && q.status === 'sent'
     ).length;
 
-    return { jobsToday, weeklyRevenue, outstandingInvoices, pendingQuotes };
+    return {
+      jobsToday,
+      weeklyRevenue,
+      outstandingInvoices,
+      outstandingTotal,
+      overdueInvoices,
+      overdueTotal,
+      pendingQuotes
+    };
   }, [schedule, quotes]);
 
   // Week preview
@@ -686,6 +710,61 @@ export const Home: React.FC<HomeProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Invoice Summary Card */}
+        {(todayStats.outstandingInvoices > 0 || todayStats.overdueInvoices > 0) && (
+          <div
+            onClick={() => { hapticTap(); onNavigateToInvoices?.(); }}
+            className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 p-4 md:p-6 shadow-sm mt-3 md:mt-4 cursor-pointer hover:shadow-lg transition-all group"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className={`p-2 md:p-3 rounded-xl md:rounded-2xl ${todayStats.overdueInvoices > 0 ? 'bg-red-500' : 'bg-amber-500'} text-white`}>
+                  {todayStats.overdueInvoices > 0 ? <AlertTriangle size={18} className="md:w-6 md:h-6" /> : <FileText size={18} className="md:w-6 md:h-6" />}
+                </div>
+                <div>
+                  <h4 className="font-black text-slate-900 text-sm md:text-lg">Invoice Summary</h4>
+                  <p className="text-[9px] md:text-xs text-slate-500 font-medium italic">
+                    {todayStats.overdueInvoices > 0 ? 'Action required' : 'Awaiting payment'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-slate-400 group-hover:text-amber-500 transition-colors">
+                <span className="text-xs font-bold hidden sm:inline">View All</span>
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              <div className="bg-amber-50 rounded-xl md:rounded-2xl p-3 md:p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock size={14} className="md:w-4 md:h-4 text-amber-600" />
+                  <span className="text-[9px] md:text-[10px] font-black text-amber-600 uppercase">Outstanding</span>
+                </div>
+                <p className="text-xl md:text-3xl font-black text-slate-900">
+                  {todayStats.outstandingTotal.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}
+                </p>
+                <p className="text-[10px] md:text-xs text-slate-500 font-bold mt-1">
+                  {todayStats.outstandingInvoices} invoice{todayStats.outstandingInvoices !== 1 ? 's' : ''} awaiting payment
+                </p>
+              </div>
+              <div className={`rounded-xl md:rounded-2xl p-3 md:p-4 ${todayStats.overdueInvoices > 0 ? 'bg-red-50' : 'bg-slate-50'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle size={14} className={`md:w-4 md:h-4 ${todayStats.overdueInvoices > 0 ? 'text-red-600' : 'text-slate-400'}`} />
+                  <span className={`text-[9px] md:text-[10px] font-black uppercase ${todayStats.overdueInvoices > 0 ? 'text-red-600' : 'text-slate-400'}`}>Overdue</span>
+                </div>
+                <p className={`text-xl md:text-3xl font-black ${todayStats.overdueInvoices > 0 ? 'text-red-600' : 'text-slate-300'}`}>
+                  {todayStats.overdueTotal.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}
+                </p>
+                <p className={`text-[10px] md:text-xs font-bold mt-1 ${todayStats.overdueInvoices > 0 ? 'text-red-500' : 'text-slate-400'}`}>
+                  {todayStats.overdueInvoices > 0
+                    ? `${todayStats.overdueInvoices} invoice${todayStats.overdueInvoices !== 1 ? 's' : ''} past due`
+                    : 'No overdue invoices'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-8">

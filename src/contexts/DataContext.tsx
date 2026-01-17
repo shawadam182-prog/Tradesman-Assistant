@@ -221,6 +221,12 @@ function dbQuoteToApp(dbQuote: any): Quote {
     type: dbQuote.type,
     displayOptions: dbQuote.display_options || undefined,
     referenceNumber: dbQuote.reference_number || undefined,
+    // Invoice-specific fields
+    dueDate: dbQuote.due_date || undefined,
+    paymentDate: dbQuote.payment_date || undefined,
+    paymentMethod: dbQuote.payment_method || undefined,
+    amountPaid: dbQuote.amount_paid != null ? Number(dbQuote.amount_paid) : undefined,
+    parentQuoteId: dbQuote.parent_quote_id || undefined,
   };
 }
 
@@ -494,6 +500,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         notes: quote.notes || null,
         display_options: quote.displayOptions as any,
         reference_number: refNum,
+        // Invoice-specific fields
+        due_date: quote.dueDate || null,
+        payment_date: quote.paymentDate || null,
+        payment_method: quote.paymentMethod || null,
+        amount_paid: quote.amountPaid ?? 0,
+        parent_quote_id: quote.parentQuoteId || null,
       });
 
       const newQuote = dbQuoteToApp(created);
@@ -513,6 +525,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         cis_percent: quote.cisPercent,
         notes: quote.notes || null,
         display_options: quote.displayOptions as any,
+        // Invoice-specific fields
+        due_date: quote.dueDate || null,
+        payment_date: quote.paymentDate || null,
+        payment_method: quote.paymentMethod || null,
+        amount_paid: quote.amountPaid ?? 0,
+        parent_quote_id: quote.parentQuoteId || null,
       });
 
       const updatedQuote = dbQuoteToApp(updated);
