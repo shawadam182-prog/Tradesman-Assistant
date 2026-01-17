@@ -242,8 +242,8 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
 
       {editingId ? (
         <>
-          <div className="bg-white p-2 md:p-8 rounded-3xl border border-slate-200 shadow-xl animate-in fade-in slide-in-from-bottom-4 pb-28 md:pb-8">
-            <div className="flex justify-between items-center mb-2 md:mb-8">
+          <div className="bg-white p-3 sm:p-4 md:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl border border-slate-200 shadow-xl animate-in fade-in slide-in-from-bottom-4 pb-28 md:pb-8">
+            <div className="flex justify-between items-center mb-3 sm:mb-4 md:mb-8">
               <h3 className="font-black text-sm md:text-xl text-slate-900 uppercase tracking-tight">
                 {editingId === 'new' ? 'Register Client' : `Edit Client`}
               </h3>
@@ -276,18 +276,18 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
             </div>
           )}
 
-          <form id="customer-form" onSubmit={handleSubmit} className="space-y-2 md:space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-6">
+          <form id="customer-form" onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 md:space-y-6">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 md:gap-6">
               {/* Name Field */}
-              <div className="space-y-0.5">
-                <label className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1 px-0.5">
+              <div className="space-y-0.5 sm:space-y-1">
+                <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1 px-0.5">
                   <UserIcon size={10} className="md:w-3 md:h-3" /> Full Name *
                 </label>
                 <div className="relative">
                   <input
                     type="text"
                     autoComplete="name"
-                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-1.5 md:px-4 md:py-4 pr-10 md:pr-12 text-slate-950 font-bold text-sm md:text-base outline-none focus:bg-white focus:border-amber-500 transition-all"
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-lg sm:rounded-xl px-3 py-2 sm:py-2.5 md:px-4 md:py-3 pr-10 md:pr-12 text-slate-950 font-bold text-sm outline-none focus:bg-white focus:border-amber-500 transition-all"
                     value={customerForm.name || ''}
                     placeholder="e.g. John Smith"
                     onChange={e => setCustomerForm({...customerForm, name: e.target.value})}

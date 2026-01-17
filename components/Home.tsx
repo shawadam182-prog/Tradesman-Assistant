@@ -567,60 +567,60 @@ export const Home: React.FC<HomeProps> = ({
       {/* QUICK ACTIONS Section */}
       <div>
         <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest mb-2 md:mb-3 px-1">Quick Actions</h3>
-        <div className="grid grid-cols-3 gap-2 md:gap-3">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 md:gap-3">
           <button
             onClick={() => { hapticTap(); onCreateJob?.(); }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-blue-500 text-white p-3 md:p-6 min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-blue-500/20 hover:shadow-2xl group"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-blue-500 text-white p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-blue-500/20 hover:shadow-2xl group"
           >
             <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
               <Briefcase size={20} className="md:w-7 md:h-7" />
             </div>
-            <span className="font-black text-[10px] md:text-sm uppercase tracking-wider md:tracking-widest leading-none">New Job</span>
+            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">New Job</span>
           </button>
           <button
             onClick={() => { hapticTap(); onCreateQuote?.(); }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-amber-500 text-white p-3 md:p-6 min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-amber-500/20 hover:shadow-2xl group"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-amber-500 text-white p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-amber-500/20 hover:shadow-2xl group"
           >
             <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
               <FileText size={20} className="md:w-7 md:h-7" />
             </div>
-            <span className="font-black text-[10px] md:text-sm uppercase tracking-wider md:tracking-widest leading-none">Quote</span>
+            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Quote</span>
           </button>
           <button
             onClick={() => { hapticTap(); onCreateInvoice?.(); }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-teal-500 text-white p-3 md:p-6 min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-teal-500/20 hover:shadow-2xl group"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-teal-500 text-white p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-teal-500/20 hover:shadow-2xl group"
           >
             <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
               <PoundSterling size={20} className="md:w-7 md:h-7" />
             </div>
-            <span className="font-black text-[10px] md:text-sm uppercase tracking-wider md:tracking-widest leading-none">Invoice</span>
+            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Invoice</span>
           </button>
           <button
             onClick={() => { hapticTap(); cameraInputRef.current?.click(); }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-rose-500 text-white p-3 md:p-6 min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-rose-500/20 hover:shadow-2xl group"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-rose-500 text-white p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-rose-500/20 hover:shadow-2xl group"
           >
             <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
               <Camera size={20} className="md:w-7 md:h-7" />
             </div>
-            <span className="font-black text-[10px] md:text-sm uppercase tracking-wider md:tracking-widest leading-none">Photo</span>
+            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Photo</span>
           </button>
           <button
             onClick={() => { hapticTap(); onLogExpense?.(); }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-emerald-500 text-white p-3 md:p-6 min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-emerald-500/20 hover:shadow-2xl group"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-emerald-500 text-white p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-emerald-500/20 hover:shadow-2xl group"
           >
             <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
               <Receipt size={20} className="md:w-7 md:h-7" />
             </div>
-            <span className="font-black text-[10px] md:text-sm uppercase tracking-wider md:tracking-widest leading-none">Expense</span>
+            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Expense</span>
           </button>
           <button
             onClick={() => { hapticTap(); onAddCustomer?.(); }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-purple-500 text-white p-3 md:p-6 min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-purple-500/20 hover:shadow-2xl group"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-purple-500 text-white p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-purple-500/20 hover:shadow-2xl group"
           >
             <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
               <UserPlus size={20} className="md:w-7 md:h-7" />
             </div>
-            <span className="font-black text-[10px] md:text-sm uppercase tracking-wider md:tracking-widest leading-none">Customer</span>
+            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Customer</span>
           </button>
         </div>
       </div>
@@ -838,34 +838,34 @@ export const Home: React.FC<HomeProps> = ({
 
       {/* Today's Stats Card */}
       <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 p-3 md:p-6 shadow-sm mb-3 md:mb-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-          <div className="flex flex-col items-center justify-center gap-1.5 md:gap-3 p-2 md:p-4 bg-blue-50 rounded-xl md:rounded-2xl text-center">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
+          <div className="flex flex-col items-center justify-center gap-1 sm:gap-1.5 md:gap-3 p-2 sm:p-3 md:p-4 bg-blue-50 rounded-xl md:rounded-2xl text-center min-h-[80px]">
             <div className="p-1.5 md:p-3 bg-blue-500 text-white rounded-lg md:rounded-xl">
               <Calendar size={14} className="md:w-5 md:h-5" />
             </div>
             <p className="text-lg md:text-2xl font-black text-slate-900 leading-none">{todayStats.jobsToday}</p>
-            <p className="text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">Jobs<br/>Today</p>
+            <p className="text-[7px] sm:text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">Jobs Today</p>
           </div>
-          <div className="flex flex-col items-center justify-center gap-1.5 md:gap-3 p-2 md:p-4 bg-emerald-50 rounded-xl md:rounded-2xl text-center">
+          <div className="flex flex-col items-center justify-center gap-1 sm:gap-1.5 md:gap-3 p-2 sm:p-3 md:p-4 bg-emerald-50 rounded-xl md:rounded-2xl text-center min-h-[80px]">
             <div className="p-1.5 md:p-3 bg-emerald-500 text-white rounded-lg md:rounded-xl">
               <PoundSterling size={14} className="md:w-5 md:h-5" />
             </div>
-            <p className="text-sm md:text-2xl font-black text-slate-900 leading-none">{todayStats.weeklyRevenue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}</p>
-            <p className="text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">This<br/>Week</p>
+            <p className="text-sm sm:text-lg md:text-2xl font-black text-slate-900 leading-none truncate max-w-full">{todayStats.weeklyRevenue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}</p>
+            <p className="text-[7px] sm:text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">This Week</p>
           </div>
-          <div className="flex flex-col items-center justify-center gap-1.5 md:gap-3 p-2 md:p-4 bg-amber-50 rounded-xl md:rounded-2xl text-center">
+          <div className="flex flex-col items-center justify-center gap-1 sm:gap-1.5 md:gap-3 p-2 sm:p-3 md:p-4 bg-amber-50 rounded-xl md:rounded-2xl text-center min-h-[80px]">
             <div className="p-1.5 md:p-3 bg-amber-500 text-white rounded-lg md:rounded-xl">
               <FileWarning size={14} className="md:w-5 md:h-5" />
             </div>
             <p className="text-lg md:text-2xl font-black text-slate-900 leading-none">{todayStats.outstandingInvoices}</p>
-            <p className="text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">Outstanding</p>
+            <p className="text-[7px] sm:text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">Owed</p>
           </div>
-          <div className="flex flex-col items-center justify-center gap-1.5 md:gap-3 p-2 md:p-4 bg-purple-50 rounded-xl md:rounded-2xl text-center">
+          <div className="flex flex-col items-center justify-center gap-1 sm:gap-1.5 md:gap-3 p-2 sm:p-3 md:p-4 bg-purple-50 rounded-xl md:rounded-2xl text-center min-h-[80px]">
             <div className="p-1.5 md:p-3 bg-purple-500 text-white rounded-lg md:rounded-xl">
               <Clock size={14} className="md:w-5 md:h-5" />
             </div>
             <p className="text-lg md:text-2xl font-black text-slate-900 leading-none">{todayStats.pendingQuotes}</p>
-            <p className="text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">Pending<br/>Quotes</p>
+            <p className="text-[7px] sm:text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-wide leading-tight">Pending</p>
           </div>
         </div>
       </div>
@@ -965,14 +965,14 @@ export const Home: React.FC<HomeProps> = ({
               <button
                 key={idx}
                 onClick={onNavigateToSchedule}
-                className={`flex-shrink-0 w-12 md:w-14 p-2 md:p-3 rounded-lg md:rounded-xl text-center transition-all ${
+                className={`flex-shrink-0 w-[52px] sm:w-14 md:w-16 p-1.5 sm:p-2 md:p-3 rounded-lg md:rounded-xl text-center transition-all ${
                   idx === 0 ? 'bg-amber-500 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-900'
                 }`}
               >
-                <p className="text-[8px] md:text-[9px] font-black uppercase">{day.dayName}</p>
-                <p className="text-base md:text-lg font-black">{day.date.getDate()}</p>
-                <div className={`text-[9px] md:text-[10px] font-bold ${day.jobCount > 0 ? '' : 'opacity-40'}`}>
-                  {day.jobCount} {day.jobCount === 1 ? 'job' : 'jobs'}
+                <p className="text-[7px] sm:text-[8px] md:text-[9px] font-black uppercase truncate">{day.dayName}</p>
+                <p className="text-base sm:text-lg md:text-xl font-black">{day.date.getDate()}</p>
+                <div className={`text-[8px] sm:text-[9px] md:text-[10px] font-bold truncate ${day.jobCount > 0 ? '' : 'opacity-40'}`}>
+                  {day.jobCount}
                 </div>
               </button>
             ))}
@@ -1004,32 +1004,32 @@ export const Home: React.FC<HomeProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 md:gap-4">
-            <div className="bg-emerald-50 rounded-xl md:rounded-2xl p-3 md:p-4 text-center">
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <TrendingUp size={12} className="md:w-4 md:h-4 text-emerald-600" />
-                <span className="text-[9px] md:text-[10px] font-black text-emerald-600 uppercase">Income</span>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+            <div className="bg-emerald-50 rounded-xl md:rounded-2xl p-2 sm:p-3 md:p-4 text-center">
+              <div className="flex items-center justify-center gap-0.5 sm:gap-1 mb-1">
+                <TrendingUp size={10} className="sm:w-3 sm:h-3 md:w-4 md:h-4 text-emerald-600 shrink-0" />
+                <span className="text-[8px] sm:text-[9px] md:text-[10px] font-black text-emerald-600 uppercase truncate">Income</span>
               </div>
-              <p className="text-lg md:text-2xl font-black text-slate-900">
+              <p className="text-sm sm:text-lg md:text-2xl font-black text-slate-900 truncate">
                 {todayStats.weeklyRevenue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}
               </p>
-              <p className="text-[8px] md:text-[9px] text-slate-500 font-medium">Paid invoices</p>
+              <p className="text-[7px] sm:text-[8px] md:text-[9px] text-slate-500 font-medium truncate">Paid</p>
             </div>
-            <div className="bg-red-50 rounded-xl md:rounded-2xl p-3 md:p-4 text-center">
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <Receipt size={12} className="md:w-4 md:h-4 text-red-600" />
-                <span className="text-[9px] md:text-[10px] font-black text-red-600 uppercase">Expenses</span>
+            <div className="bg-red-50 rounded-xl md:rounded-2xl p-2 sm:p-3 md:p-4 text-center">
+              <div className="flex items-center justify-center gap-0.5 sm:gap-1 mb-1">
+                <Receipt size={10} className="sm:w-3 sm:h-3 md:w-4 md:h-4 text-red-600 shrink-0" />
+                <span className="text-[8px] sm:text-[9px] md:text-[10px] font-black text-red-600 uppercase truncate">Spent</span>
               </div>
-              <p className="text-lg md:text-2xl font-black text-slate-900">£0</p>
-              <p className="text-[8px] md:text-[9px] text-slate-500 font-medium">This month</p>
+              <p className="text-sm sm:text-lg md:text-2xl font-black text-slate-900 truncate">£0</p>
+              <p className="text-[7px] sm:text-[8px] md:text-[9px] text-slate-500 font-medium truncate">Month</p>
             </div>
-            <div className="bg-amber-50 rounded-xl md:rounded-2xl p-3 md:p-4 text-center">
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <FileWarning size={12} className="md:w-4 md:h-4 text-amber-600" />
-                <span className="text-[9px] md:text-[10px] font-black text-amber-600 uppercase">VAT Due</span>
+            <div className="bg-amber-50 rounded-xl md:rounded-2xl p-2 sm:p-3 md:p-4 text-center">
+              <div className="flex items-center justify-center gap-0.5 sm:gap-1 mb-1">
+                <FileWarning size={10} className="sm:w-3 sm:h-3 md:w-4 md:h-4 text-amber-600 shrink-0" />
+                <span className="text-[8px] sm:text-[9px] md:text-[10px] font-black text-amber-600 uppercase truncate">VAT</span>
               </div>
-              <p className="text-lg md:text-2xl font-black text-slate-900">£0</p>
-              <p className="text-[8px] md:text-[9px] text-slate-500 font-medium">Estimated</p>
+              <p className="text-sm sm:text-lg md:text-2xl font-black text-slate-900 truncate">£0</p>
+              <p className="text-[7px] sm:text-[8px] md:text-[9px] text-slate-500 font-medium truncate">Est.</p>
             </div>
           </div>
         </div>
@@ -1058,31 +1058,29 @@ export const Home: React.FC<HomeProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 md:gap-4">
-              <div className="bg-amber-50 rounded-xl md:rounded-2xl p-3 md:p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock size={14} className="md:w-4 md:h-4 text-amber-600" />
-                  <span className="text-[9px] md:text-[10px] font-black text-amber-600 uppercase">Outstanding</span>
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+              <div className="bg-amber-50 rounded-xl md:rounded-2xl p-2 sm:p-3 md:p-4">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                  <Clock size={12} className="sm:w-[14px] sm:h-[14px] md:w-4 md:h-4 text-amber-600 shrink-0" />
+                  <span className="text-[8px] sm:text-[9px] md:text-[10px] font-black text-amber-600 uppercase truncate">Owed</span>
                 </div>
-                <p className="text-xl md:text-3xl font-black text-slate-900">
+                <p className="text-lg sm:text-xl md:text-3xl font-black text-slate-900 truncate">
                   {todayStats.outstandingTotal.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}
                 </p>
-                <p className="text-[10px] md:text-xs text-slate-500 font-bold mt-1">
-                  {todayStats.outstandingInvoices} invoice{todayStats.outstandingInvoices !== 1 ? 's' : ''} awaiting payment
+                <p className="text-[9px] sm:text-[10px] md:text-xs text-slate-500 font-bold mt-1 truncate">
+                  {todayStats.outstandingInvoices} awaiting
                 </p>
               </div>
-              <div className={`rounded-xl md:rounded-2xl p-3 md:p-4 ${todayStats.overdueInvoices > 0 ? 'bg-red-50' : 'bg-slate-50'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle size={14} className={`md:w-4 md:h-4 ${todayStats.overdueInvoices > 0 ? 'text-red-600' : 'text-slate-400'}`} />
-                  <span className={`text-[9px] md:text-[10px] font-black uppercase ${todayStats.overdueInvoices > 0 ? 'text-red-600' : 'text-slate-400'}`}>Overdue</span>
+              <div className={`rounded-xl md:rounded-2xl p-2 sm:p-3 md:p-4 ${todayStats.overdueInvoices > 0 ? 'bg-red-50' : 'bg-slate-50'}`}>
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                  <AlertTriangle size={12} className={`sm:w-[14px] sm:h-[14px] md:w-4 md:h-4 shrink-0 ${todayStats.overdueInvoices > 0 ? 'text-red-600' : 'text-slate-400'}`} />
+                  <span className={`text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase truncate ${todayStats.overdueInvoices > 0 ? 'text-red-600' : 'text-slate-400'}`}>Overdue</span>
                 </div>
-                <p className={`text-xl md:text-3xl font-black ${todayStats.overdueInvoices > 0 ? 'text-red-600' : 'text-slate-300'}`}>
+                <p className={`text-lg sm:text-xl md:text-3xl font-black truncate ${todayStats.overdueInvoices > 0 ? 'text-red-600' : 'text-slate-300'}`}>
                   {todayStats.overdueTotal.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}
                 </p>
-                <p className={`text-[10px] md:text-xs font-bold mt-1 ${todayStats.overdueInvoices > 0 ? 'text-red-500' : 'text-slate-400'}`}>
-                  {todayStats.overdueInvoices > 0
-                    ? `${todayStats.overdueInvoices} invoice${todayStats.overdueInvoices !== 1 ? 's' : ''} past due`
-                    : 'No overdue invoices'}
+                <p className={`text-[9px] sm:text-[10px] md:text-xs font-bold mt-1 truncate ${todayStats.overdueInvoices > 0 ? 'text-red-500' : 'text-slate-400'}`}>
+                  {todayStats.overdueInvoices > 0 ? `${todayStats.overdueInvoices} past due` : 'None'}
                 </p>
               </div>
             </div>
@@ -1118,27 +1116,29 @@ export const Home: React.FC<HomeProps> = ({
             </button>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-1.5 md:gap-3 mb-2 md:mb-8">
-            <input
-              type="text"
-              placeholder="What needs reminding?..."
-              className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-lg md:rounded-[24px] p-2 md:p-4 min-h-[36px] md:min-h-[52px] font-bold text-sm md:text-base text-slate-900 outline-none focus:border-blue-400 transition-all"
-              value={newReminderText}
-              onChange={e => setNewReminderText(e.target.value)}
-            />
+          <div className="flex flex-col gap-1.5 mb-2 md:mb-8">
+            <div className="flex gap-1.5 md:gap-3">
+              <input
+                type="text"
+                placeholder="What needs reminding?..."
+                className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-lg md:rounded-[24px] p-2 md:p-4 min-h-[36px] md:min-h-[52px] font-bold text-sm md:text-base text-slate-900 outline-none focus:border-blue-400 transition-all"
+                value={newReminderText}
+                onChange={e => setNewReminderText(e.target.value)}
+              />
+              <button
+                onClick={() => { hapticTap(); addReminder(); }}
+                disabled={!newReminderText || !newReminderTime}
+                className="bg-slate-900 text-white px-3 md:px-8 min-h-[36px] md:min-h-[52px] min-w-[50px] shrink-0 rounded-lg md:rounded-[24px] shadow-lg active:scale-95 transition-transform disabled:opacity-20 font-black uppercase text-[10px] md:text-xs tracking-widest"
+              >
+                Add
+              </button>
+            </div>
             <input
               type="time"
-              className="w-full sm:w-28 md:sm:w-40 bg-slate-50 border-2 border-slate-100 rounded-lg md:rounded-[24px] p-2 md:p-4 min-h-[36px] md:min-h-[52px] font-bold text-sm md:text-base text-slate-900 outline-none focus:border-blue-400 transition-all cursor-pointer"
+              className="w-full sm:w-auto sm:max-w-[140px] bg-slate-50 border-2 border-slate-100 rounded-lg md:rounded-[24px] p-2 md:p-4 min-h-[36px] md:min-h-[52px] font-bold text-sm md:text-base text-slate-900 outline-none focus:border-blue-400 transition-all cursor-pointer"
               value={newReminderTime}
               onChange={e => setNewReminderTime(e.target.value)}
             />
-            <button
-              onClick={() => { hapticTap(); addReminder(); }}
-              disabled={!newReminderText || !newReminderTime}
-              className="bg-slate-900 text-white px-3 md:px-8 min-h-[36px] md:min-h-[52px] rounded-lg md:rounded-[24px] shadow-lg active:scale-95 transition-transform disabled:opacity-20 font-black uppercase text-[10px] md:text-xs tracking-widest"
-            >
-              Add
-            </button>
           </div>
 
           <div className="overflow-y-auto space-y-2 md:space-y-4 no-scrollbar pr-1">

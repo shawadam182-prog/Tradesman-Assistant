@@ -226,8 +226,8 @@ export const JobPackList: React.FC<JobPackListProps> = ({
       </div>
 
       {isAdding && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 pb-28 md:pb-4 overflow-y-auto">
-          <div className="bg-white rounded-[48px] p-4 md:p-8 md:p-12 max-w-2xl w-full shadow-2xl border border-slate-200 my-auto animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 pb-28 md:pb-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl sm:rounded-[32px] md:rounded-[48px] p-3 sm:p-5 md:p-8 lg:p-12 max-w-2xl w-full mx-2 max-h-[85vh] overflow-y-auto shadow-2xl border border-slate-200 my-auto animate-in zoom-in-95 duration-300">
             {isAddingCustomer ? (
               <div className="space-y-2 md:space-y-6 animate-in slide-in-from-right-4">
                 <div className="flex justify-between items-center mb-2 md:mb-4">
@@ -249,7 +249,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-6">
+                <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 md:gap-6">
                   {/* Name Field */}
                   <div className="space-y-0.5">
                     <label className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1 px-0.5">
@@ -259,7 +259,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                       <input
                         type="text"
                         autoComplete="name"
-                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-1.5 md:px-4 md:py-4 pr-10 md:pr-12 text-slate-950 font-bold text-sm md:text-base outline-none focus:bg-white focus:border-amber-500 transition-all"
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-lg sm:rounded-xl px-3 py-2 sm:py-2.5 md:px-4 md:py-3 pr-10 md:pr-12 text-slate-950 font-bold text-sm outline-none focus:bg-white focus:border-amber-500 transition-all"
                         value={newCustomer.name || ''}
                         placeholder="e.g. John Smith"
                         onChange={e => setNewCustomer({...newCustomer, name: e.target.value})}

@@ -297,22 +297,22 @@ export const ReconciliationPage: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 md:mb-8">
-        <div className="bg-white rounded-2xl p-5 border border-slate-200">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Transactions</p>
-          <p className="text-2xl font-black text-slate-900">{stats.total}</p>
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4 md:gap-4 mb-3 md:mb-8">
+        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-slate-200">
+          <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wide mb-0.5 sm:mb-1 truncate">Total</p>
+          <p className="text-lg sm:text-xl md:text-2xl font-black text-slate-900">{stats.total}</p>
         </div>
-        <div className="bg-white rounded-2xl p-5 border border-slate-200">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Reconciled</p>
-          <p className="text-2xl font-black text-emerald-600">{stats.reconciled}</p>
+        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-slate-200">
+          <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wide mb-0.5 sm:mb-1 truncate">Done</p>
+          <p className="text-lg sm:text-xl md:text-2xl font-black text-emerald-600">{stats.reconciled}</p>
         </div>
-        <div className="bg-white rounded-2xl p-5 border border-slate-200">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pending</p>
-          <p className="text-2xl font-black text-amber-600">{stats.pending}</p>
+        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-slate-200">
+          <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wide mb-0.5 sm:mb-1 truncate">Pending</p>
+          <p className="text-lg sm:text-xl md:text-2xl font-black text-amber-600">{stats.pending}</p>
         </div>
-        <div className="bg-white rounded-2xl p-5 border border-slate-200">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Suggested Matches</p>
-          <p className="text-2xl font-black text-blue-600">{stats.suggestedCount}</p>
+        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-slate-200">
+          <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wide mb-0.5 sm:mb-1 truncate">Matches</p>
+          <p className="text-lg sm:text-xl md:text-2xl font-black text-blue-600">{stats.suggestedCount}</p>
         </div>
       </div>
 

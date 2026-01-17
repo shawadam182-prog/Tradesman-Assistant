@@ -89,24 +89,24 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const CategoryButton = ({ id, label, icon: Icon, color }: { id: SettingsCategory, label: string, icon: any, color: string }) => (
     <button
       onClick={() => setActiveCategory(id)}
-      className={`w-full flex items-center justify-between p-5 rounded-[24px] transition-all border-2 ${
-        activeCategory === id 
-        ? 'bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-200' 
+      className={`w-full flex items-center justify-between p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl md:rounded-[24px] transition-all border-2 ${
+        activeCategory === id
+        ? 'bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-200'
         : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'
       }`}
     >
-      <div className="flex items-center gap-4 text-left">
-        <div className={`p-2.5 rounded-2xl ${activeCategory === id ? color : 'bg-slate-50 text-slate-400'}`}>
-          <Icon size={22} />
+      <div className="flex items-center gap-2 sm:gap-3 md:gap-4 text-left">
+        <div className={`p-2 sm:p-2.5 rounded-xl sm:rounded-2xl ${activeCategory === id ? color : 'bg-slate-50 text-slate-400'}`}>
+          <Icon size={18} className="sm:w-5 sm:h-5 md:w-[22px] md:h-[22px]" />
         </div>
         <div>
-          <span className="font-black text-[11px] uppercase tracking-widest block">{label}</span>
-          <span className={`text-[9px] font-bold ${activeCategory === id ? 'text-white/60' : 'text-slate-400'}`}>
-            {id === 'company' ? 'Profile & Address' : id === 'quotes' ? 'Rates & Design' : 'Payment Terms'}
+          <span className="font-black text-[10px] sm:text-[11px] uppercase tracking-wide sm:tracking-widest block truncate">{label}</span>
+          <span className={`text-[8px] sm:text-[9px] font-bold hidden sm:block ${activeCategory === id ? 'text-white/60' : 'text-slate-400'}`}>
+            {id === 'company' ? 'Profile' : id === 'quotes' ? 'Rates' : 'Payment'}
           </span>
         </div>
       </div>
-      <ChevronRight size={18} className={activeCategory === id ? 'text-amber-500' : 'text-slate-200'} />
+      <ChevronRight size={16} className={`sm:w-[18px] sm:h-[18px] shrink-0 ${activeCategory === id ? 'text-amber-500' : 'text-slate-200'}`} />
     </button>
   );
 

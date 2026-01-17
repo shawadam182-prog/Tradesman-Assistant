@@ -560,22 +560,22 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 md:mb-8">
-        <div className="bg-white rounded-2xl p-5 border border-slate-200">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Expenses</p>
-          <p className="text-2xl font-black text-slate-900">{filteredExpenses.length}</p>
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4 md:gap-4 mb-3 md:mb-8">
+        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-slate-200">
+          <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wide mb-0.5 sm:mb-1 truncate">Expenses</p>
+          <p className="text-lg sm:text-xl md:text-2xl font-black text-slate-900">{filteredExpenses.length}</p>
         </div>
-        <div className="bg-white rounded-2xl p-5 border border-slate-200">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Spent</p>
-          <p className="text-2xl font-black text-slate-900">£{totalAmount.toFixed(2)}</p>
+        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-slate-200">
+          <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wide mb-0.5 sm:mb-1 truncate">Total</p>
+          <p className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 truncate">£{totalAmount.toFixed(0)}</p>
         </div>
-        <div className="bg-white rounded-2xl p-5 border border-slate-200">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">VAT Reclaimable</p>
-          <p className="text-2xl font-black text-emerald-600">£{totalVat.toFixed(2)}</p>
+        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-slate-200">
+          <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wide mb-0.5 sm:mb-1 truncate">VAT</p>
+          <p className="text-lg sm:text-xl md:text-2xl font-black text-emerald-600 truncate">£{totalVat.toFixed(0)}</p>
         </div>
-        <div className="bg-white rounded-2xl p-5 border border-slate-200">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Net Cost</p>
-          <p className="text-2xl font-black text-slate-900">£{(totalAmount - totalVat).toFixed(2)}</p>
+        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-slate-200">
+          <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wide mb-0.5 sm:mb-1 truncate">Net</p>
+          <p className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 truncate">£{(totalAmount - totalVat).toFixed(0)}</p>
         </div>
       </div>
 
@@ -640,8 +640,8 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
       </div>
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl md:rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto mx-2">
             <div className="p-4 md:p-6 border-b border-slate-100 flex items-center justify-between">
               <h2 className="text-xl font-black text-slate-900">Add Expense</h2>
               <button onClick={() => { setShowAddModal(false); resetForm(); }} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"><X size={20} /></button>
@@ -678,7 +678,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                   </label>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3 md:gap-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                 <div className="col-span-2 relative">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Vendor *</label>
                   {/* DEBUG: Show actual state value */}
@@ -690,7 +690,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                     onChange={(e) => setFormData(prev => ({ ...prev, vendor: e.target.value }))}
                     onFocus={() => formData.vendor.length >= 2 && vendorSuggestions.length > 0 && setShowVendorDropdown(true)}
                     placeholder="e.g. Screwfix, Travis Perkins"
-                    className="w-full px-4 py-2 md:py-2 md:py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-2.5 md:py-3 border border-slate-200 rounded-lg sm:rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     autoComplete="off"
                   />
                   {/* Vendor Autocomplete Dropdown */}
@@ -755,14 +755,14 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects }) => {
                 </div>
                 <div className="col-span-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Category</label>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                     {categories.slice(0, 8).map(cat => {
                       const Icon = getIconComponent(cat.icon);
                       return (
                         <button key={cat.id || cat.name} type="button" onClick={() => setFormData(prev => ({ ...prev, category: cat.name }))}
-                          className={`p-2 rounded-xl border-2 transition-all flex flex-col items-center ${formData.category === cat.name ? 'border-amber-500 bg-amber-50' : 'border-slate-100 hover:border-slate-200'}`}>
-                          <Icon size={20} className="mb-1 flex-shrink-0" style={{ color: formData.category === cat.name ? cat.color : '#94a3b8' }} />
-                          <p className="text-[10px] font-bold uppercase text-center leading-tight break-words w-full" style={{ color: formData.category === cat.name ? cat.color : '#94a3b8' }}>{cat.name}</p>
+                          className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl border-2 transition-all flex flex-col items-center ${formData.category === cat.name ? 'border-amber-500 bg-amber-50' : 'border-slate-100 hover:border-slate-200'}`}>
+                          <Icon size={16} className="sm:w-5 sm:h-5 mb-0.5 sm:mb-1 shrink-0" style={{ color: formData.category === cat.name ? cat.color : '#94a3b8' }} />
+                          <p className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase text-center leading-tight line-clamp-1" style={{ color: formData.category === cat.name ? cat.color : '#94a3b8' }}>{cat.name.length > 8 ? cat.name.slice(0, 6) + '.' : cat.name}</p>
                         </button>
                       );
                     })}

@@ -222,7 +222,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                   <div className="absolute top-0 w-8 h-0.5 bg-teal-500 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
                 )}
                 <item.icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
-                <span className={`text-[9px] font-medium tracking-tight leading-none ${isActive ? 'opacity-100 font-bold' : 'opacity-70'}`}>
+                <span className={`text-[8px] xs:text-[9px] font-medium tracking-tight leading-none truncate max-w-[48px] ${isActive ? 'opacity-100 font-bold' : 'opacity-70'}`}>
                   {item.label}
                 </span>
               </button>
@@ -254,7 +254,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                       }`}>{group.badge}</span>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-1.5">
+                  <div className="grid grid-cols-2 gap-2 px-1">
                     {group.items.map((item) => {
                       // Skip items already in primary nav
                       if (primaryNavItems.some(p => p.id === item.id)) return null;
@@ -262,14 +262,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                         <button
                           key={item.id}
                           onClick={() => handleMoreMenuItemClick(item.id)}
-                          className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl active:scale-95 transition-all ${
+                          className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] active:scale-95 transition-all ${
                             activeTab === item.id
                               ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
                               : 'bg-slate-100 text-slate-600 active:bg-slate-200'
                           }`}
                         >
-                          <item.icon size={20} strokeWidth={activeTab === item.id ? 2.5 : 2} />
-                          <span className={`text-[9px] font-black uppercase tracking-tight text-center leading-tight`}>
+                          <item.icon size={18} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+                          <span className={`text-[8px] font-black uppercase tracking-tight text-center leading-tight line-clamp-2 max-w-full`}>
                             {item.label}
                           </span>
                         </button>
@@ -295,7 +295,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             <span className="font-black text-lg tracking-tight">Trade<span className="text-teal-500">Sync</span></span>
           </button>
         </header>
-        <div className="p-2 md:p-8 max-w-7xl mx-auto">
+        <div className="px-3 py-2 md:p-8 max-w-7xl mx-auto">
           {children}
         </div>
       </main>

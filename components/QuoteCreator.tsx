@@ -463,33 +463,35 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
              {/* Document Type Selector */}
              <div className="col-span-2">
                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Document Type</label>
-               <div className="flex gap-2">
+               <div className="flex gap-1.5 sm:gap-2">
                  <button
                    type="button"
                    onClick={() => { hapticTap(); handleTypeChange('estimate'); }}
-                   className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
+                   className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-all ${
                      formData.type === 'estimate'
                        ? 'bg-amber-500 text-white shadow-lg'
                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                    }`}
                  >
-                   Estimate
+                   <span className="sm:hidden">Est.</span>
+                   <span className="hidden sm:inline">Estimate</span>
                  </button>
                  <button
                    type="button"
                    onClick={() => { hapticTap(); handleTypeChange('quotation'); }}
-                   className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
+                   className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-all ${
                      formData.type === 'quotation'
                        ? 'bg-blue-500 text-white shadow-lg'
                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                    }`}
                  >
-                   Quotation
+                   <span className="sm:hidden">Quote</span>
+                   <span className="hidden sm:inline">Quotation</span>
                  </button>
                  <button
                    type="button"
                    onClick={() => { hapticTap(); handleTypeChange('invoice'); }}
-                   className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
+                   className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-all ${
                      formData.type === 'invoice'
                        ? 'bg-emerald-500 text-white shadow-lg'
                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
@@ -559,8 +561,8 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
 
       {/* Register Client Modal */}
       {isAddingCustomer && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[200] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[40px] p-4 md:p-10 max-w-xl w-full shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[200] flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-[32px] md:rounded-[40px] p-3 sm:p-5 md:p-10 max-w-xl w-full mx-2 max-h-[85vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200">
             <div className="space-y-2 md:space-y-6">
               <div className="flex justify-between items-center mb-2 md:mb-4">
                 <h3 className="font-black text-sm md:text-xl text-slate-900 uppercase tracking-tight">Register Client</h3>

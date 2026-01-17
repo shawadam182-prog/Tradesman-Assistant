@@ -364,19 +364,19 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
       <div className="bg-white rounded-[40px] border border-slate-200 shadow-2xl overflow-hidden flex flex-col min-h-[700px] relative">
         
         {/* Navigation Bar */}
-        <div className="p-6 md:p-8 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between bg-slate-50/30 gap-6">
-          <div className="flex items-center gap-6">
-            <div className="flex gap-2">
-              <button onClick={handlePrev} className="h-12 w-12 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-all shadow-sm active:scale-95"><ChevronLeft size={24} className="text-slate-900" /></button>
-              <button onClick={handleNext} className="h-12 w-12 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-all shadow-sm active:scale-95"><ChevronRight size={24} className="text-slate-900" /></button>
+        <div className="p-3 sm:p-4 md:p-8 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between bg-slate-50/30 gap-3 sm:gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <div className="flex gap-1.5 sm:gap-2">
+              <button onClick={handlePrev} className="h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 rounded-lg sm:rounded-xl transition-all shadow-sm active:scale-95"><ChevronLeft size={20} className="sm:w-6 sm:h-6 text-slate-900" /></button>
+              <button onClick={handleNext} className="h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 rounded-lg sm:rounded-xl transition-all shadow-sm active:scale-95"><ChevronRight size={20} className="sm:w-6 sm:h-6 text-slate-900" /></button>
             </div>
             <div>
-              <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">
                 {viewType === 'month' && currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
                 {viewType === 'week' && `Week of ${daysInWeek[0].toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`}
                 {viewType === 'day' && selectedDay.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
               </h3>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">Site Grid Overview</p>
+              <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none hidden sm:block">Site Grid Overview</p>
             </div>
           </div>
           
@@ -397,8 +397,11 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
           {viewType === 'month' && (
             <div className="h-full flex flex-col animate-in fade-in duration-500">
               <div className="grid grid-cols-7 bg-slate-50/50 border-b border-slate-100">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
-                  <div key={d} className="text-center text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] py-4">{d}</div>
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d, i) => (
+                  <div key={d} className="text-center text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wide sm:tracking-[0.3em] py-2 sm:py-3 md:py-4">
+                    <span className="sm:hidden">{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</span>
+                    <span className="hidden sm:inline">{d}</span>
+                  </div>
                 ))}
               </div>
               <div className="grid grid-cols-7 gap-px bg-slate-100">
@@ -408,10 +411,10 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                   const dayEntries = date ? getDayEntries(date) : [];
                   
                   return (
-                    <div 
-                      key={idx} 
+                    <div
+                      key={idx}
                       onClick={() => { if(date) { setSelectedDay(date); setViewType('day'); } }}
-                      className={`min-h-[140px] md:min-h-[160px] p-3 transition-all cursor-pointer relative group flex flex-col bg-white ${
+                      className={`min-h-[100px] sm:min-h-[120px] md:min-h-[160px] p-2 sm:p-3 transition-all cursor-pointer relative group flex flex-col bg-white ${
                         !date ? 'opacity-20 pointer-events-none' : isSelected ? 'bg-amber-50/30' : 'hover:bg-slate-50/80'
                       }`}
                     >
@@ -423,14 +426,14 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                             {date.getDate()}
                           </div>
                           
-                          <div className="space-y-1.5 overflow-hidden">
+                          <div className="space-y-1 sm:space-y-1.5 overflow-hidden">
                             {dayEntries.slice(0, 4).map(e => (
-                              <div 
-                                key={e.id} 
+                              <div
+                                key={e.id}
                                 onClick={(ev) => { ev.stopPropagation(); handleEdit(e); }}
-                                className="bg-slate-900 text-amber-500 text-[9px] font-black px-2.5 py-1.5 rounded-lg truncate border-l-4 border-amber-500 shadow-sm hover:bg-black hover:translate-x-1 transition-all flex items-center justify-between group/item"
+                                className="bg-slate-900 text-amber-500 text-[8px] sm:text-[9px] font-black px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-md sm:rounded-lg border-l-2 sm:border-l-4 border-amber-500 shadow-sm hover:bg-black hover:translate-x-1 transition-all overflow-hidden"
                               >
-                                <span className="truncate">{e.title}</span>
+                                <span className="block truncate max-w-full">{e.title}</span>
                               </div>
                             ))}
                             {dayEntries.length > 4 && (

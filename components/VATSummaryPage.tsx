@@ -411,60 +411,60 @@ export const VATSummaryPage: React.FC = () => {
       )}
 
       {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mb-4 md:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-6 mb-3 md:mb-8">
         {vatScheme === 'standard' ? (
           <>
             {/* Input VAT (Reclaimable) */}
-            <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-3xl border border-emerald-200 p-3 md:p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-emerald-100 rounded-2xl">
-                  <ArrowDownRight className="w-6 h-6 text-emerald-600" />
+            <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl sm:rounded-2xl md:rounded-3xl border border-emerald-200 p-3 sm:p-4 md:p-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
+                <div className="p-2 sm:p-3 bg-emerald-100 rounded-xl sm:rounded-2xl">
+                  <ArrowDownRight className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-emerald-600 uppercase tracking-widest">Input VAT</p>
-                  <p className="text-[10px] text-emerald-500">Reclaimable from purchases</p>
+                  <p className="text-[10px] sm:text-xs font-black text-emerald-600 uppercase tracking-wide sm:tracking-widest">Input VAT</p>
+                  <p className="text-[9px] sm:text-[10px] text-emerald-500 hidden sm:block">Reclaimable</p>
                 </div>
               </div>
-              <p className="text-4xl font-black text-emerald-700">£{filteredData.summary.inputVat.toFixed(2)}</p>
-              <p className="text-sm text-emerald-600 mt-2">{filteredData.summary.expenseCount} expenses</p>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-black text-emerald-700 truncate">£{filteredData.summary.inputVat.toFixed(0)}</p>
+              <p className="text-xs sm:text-sm text-emerald-600 mt-1 sm:mt-2">{filteredData.summary.expenseCount} expenses</p>
             </div>
 
             {/* Output VAT (Owed) */}
-            <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-3xl border border-red-200 p-3 md:p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-red-100 rounded-2xl">
-                  <ArrowUpRight className="w-6 h-6 text-red-600" />
+            <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl sm:rounded-2xl md:rounded-3xl border border-red-200 p-3 sm:p-4 md:p-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
+                <div className="p-2 sm:p-3 bg-red-100 rounded-xl sm:rounded-2xl">
+                  <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-red-600 uppercase tracking-widest">Output VAT</p>
-                  <p className="text-[10px] text-red-500">Charged on invoices</p>
+                  <p className="text-[10px] sm:text-xs font-black text-red-600 uppercase tracking-wide sm:tracking-widest">Output VAT</p>
+                  <p className="text-[9px] sm:text-[10px] text-red-500 hidden sm:block">Charged</p>
                 </div>
               </div>
-              <p className="text-4xl font-black text-red-700">£{filteredData.summary.outputVat.toFixed(2)}</p>
-              <p className="text-sm text-red-600 mt-2">{filteredData.summary.invoiceCount} paid invoices</p>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-black text-red-700 truncate">£{filteredData.summary.outputVat.toFixed(0)}</p>
+              <p className="text-xs sm:text-sm text-red-600 mt-1 sm:mt-2">{filteredData.summary.invoiceCount} invoices</p>
             </div>
 
             {/* Net VAT Position */}
-            <div className={`rounded-3xl border p-3 md:p-6 ${
+            <div className={`rounded-xl sm:rounded-2xl md:rounded-3xl border p-3 sm:p-4 md:p-6 ${
               filteredData.summary.netVat >= 0
                 ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200'
                 : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
             }`}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className={`p-3 rounded-2xl ${filteredData.summary.netVat >= 0 ? 'bg-amber-100' : 'bg-blue-100'}`}>
-                  <Calculator className={`w-6 h-6 ${filteredData.summary.netVat >= 0 ? 'text-amber-600' : 'text-blue-600'}`} />
+              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
+                <div className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl ${filteredData.summary.netVat >= 0 ? 'bg-amber-100' : 'bg-blue-100'}`}>
+                  <Calculator className={`w-5 h-5 sm:w-6 sm:h-6 ${filteredData.summary.netVat >= 0 ? 'text-amber-600' : 'text-blue-600'}`} />
                 </div>
                 <div>
-                  <p className={`text-xs font-black uppercase tracking-widest ${filteredData.summary.netVat >= 0 ? 'text-amber-600' : 'text-blue-600'}`}>
-                    {filteredData.summary.netVat >= 0 ? 'VAT to Pay' : 'VAT Refund Due'}
+                  <p className={`text-[10px] sm:text-xs font-black uppercase tracking-wide sm:tracking-widest ${filteredData.summary.netVat >= 0 ? 'text-amber-600' : 'text-blue-600'}`}>
+                    {filteredData.summary.netVat >= 0 ? 'VAT to Pay' : 'Refund Due'}
                   </p>
-                  <p className={`text-[10px] ${filteredData.summary.netVat >= 0 ? 'text-amber-500' : 'text-blue-500'}`}>
-                    Net position for HMRC
+                  <p className={`text-[9px] sm:text-[10px] hidden sm:block ${filteredData.summary.netVat >= 0 ? 'text-amber-500' : 'text-blue-500'}`}>
+                    Net position
                   </p>
                 </div>
               </div>
-              <p className={`text-4xl font-black ${filteredData.summary.netVat >= 0 ? 'text-amber-700' : 'text-blue-700'}`}>
-                £{Math.abs(filteredData.summary.netVat).toFixed(2)}
+              <p className={`text-2xl sm:text-3xl md:text-4xl font-black truncate ${filteredData.summary.netVat >= 0 ? 'text-amber-700' : 'text-blue-700'}`}>
+                £{Math.abs(filteredData.summary.netVat).toFixed(0)}
               </p>
               <p className={`text-sm mt-2 ${filteredData.summary.netVat >= 0 ? 'text-amber-600' : 'text-blue-600'}`}>
                 {filteredData.summary.netVat >= 0 ? 'You owe HMRC' : 'HMRC owes you'}
