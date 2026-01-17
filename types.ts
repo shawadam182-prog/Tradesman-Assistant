@@ -160,6 +160,9 @@ export interface AppSettings {
   costBoxColor: 'slate' | 'amber' | 'blue';
   showBreakdown: boolean;
   defaultDisplayOptions: QuoteDisplayOptions;
+  // Tax year setting (month 1-12, day 1-31) - UK default is April 6
+  taxYearStartMonth?: number;
+  taxYearStartDay?: number;
   // Subscription fields
   subscriptionTier?: SubscriptionTier;
   subscriptionStatus?: SubscriptionStatus;

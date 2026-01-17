@@ -6,7 +6,8 @@ import {
   PoundSterling, CheckCircle, FileText,
   Settings2, Info, Palette, ReceiptText,
   ChevronRight, Building, Upload, X, Image as ImageIcon,
-  Plus, Eye, EyeOff, HardHat, Package, Landmark, ShieldCheck, Hash, Loader2
+  Plus, Eye, EyeOff, HardHat, Package, Landmark, ShieldCheck, Hash, Loader2,
+  Calendar
 } from 'lucide-react';
 import { useToast } from '../src/contexts/ToastContext';
 import { handleApiError } from '../src/utils/errorHandler';
@@ -433,15 +434,50 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Invoice Reference Prefix</label>
                     <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
                       <Hash size={18} className="text-slate-400 mr-3 shrink-0" />
-                      <input 
-                        type="text" 
-                        className="w-full bg-transparent border-none py-5 outline-none text-slate-900 font-bold text-sm" 
+                      <input
+                        type="text"
+                        className="w-full bg-transparent border-none py-5 outline-none text-slate-900 font-bold text-sm"
                         value={settings.invoicePrefix}
                         onChange={e => setSettings({...settings, invoicePrefix: e.target.value.toUpperCase()})}
                         placeholder="INV-"
                       />
                     </div>
                   </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 px-1">
+                      <Calendar size={16} className="text-emerald-500" />
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Tax Year Start Date</label>
+                    </div>
+                    <p className="text-[10px] text-slate-500 italic px-1">Used for financial reports. UK default is 6th April.</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Day</label>
+                        <select
+                          className="w-full bg-slate-50 border-2 border-slate-100 rounded-[16px] p-4 outline-none text-slate-900 font-bold text-sm focus:border-emerald-400 focus:bg-white transition-all"
+                          value={settings.taxYearStartDay || 6}
+                          onChange={e => setSettings({ ...settings, taxYearStartDay: parseInt(e.target.value) })}
+                        >
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                            <option key={day} value={day}>{day}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Month</label>
+                        <select
+                          className="w-full bg-slate-50 border-2 border-slate-100 rounded-[16px] p-4 outline-none text-slate-900 font-bold text-sm focus:border-emerald-400 focus:bg-white transition-all"
+                          value={settings.taxYearStartMonth || 4}
+                          onChange={e => setSettings({ ...settings, taxYearStartMonth: parseInt(e.target.value) })}
+                        >
+                          {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, i) => (
+                            <option key={i + 1} value={i + 1}>{month}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 px-1">
                       <Settings2 size={16} className="text-emerald-500" />

@@ -255,6 +255,7 @@ const App: React.FC = () => {
         customers={customers}
         projects={projects}
         quotes={quotes}
+        settings={settings}
         onNavigateToSchedule={() => setActiveTab('schedule')}
         onNavigateToInvoices={() => setActiveTab('invoices')}
         onNavigateToQuotes={() => setActiveTab('quotes')}
