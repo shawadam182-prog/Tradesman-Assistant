@@ -142,7 +142,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
           className="w-full p-6 flex items-center gap-3 border-b border-slate-800 hover:bg-slate-800/50 transition-colors text-left"
           title="Go to landing page"
         >
-          <img src="/tradesync-logo.jpg" alt="TradeSync" className="h-10 rounded-lg" />
+          <img src="/tradesync-logo.png" alt="TradeSync" className="h-10 rounded-lg" />
           <h1 className="text-xl font-bold tracking-tight text-white">Trade<span className="text-teal-500">Sync</span></h1>
         </button>
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
@@ -291,7 +291,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             className="flex items-center gap-2 active:opacity-70 transition-opacity"
             title="Go to landing page"
           >
-            <img src="/tradesync-logo.jpg" alt="TradeSync" className="h-8 rounded-lg" />
+            <img src="/tradesync-logo.png" alt="TradeSync" className="h-8 rounded-lg" />
             <span className="font-black text-lg tracking-tight">Trade<span className="text-teal-500">Sync</span></span>
           </button>
         </header>

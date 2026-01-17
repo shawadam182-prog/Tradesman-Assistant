@@ -14,17 +14,18 @@ export default defineConfig(({ mode }) => {
         react(),
         VitePWA({
           registerType: 'autoUpdate',
-          includeAssets: ['favicon.svg', 'apple-touch-icon.svg', 'pwa-192x192.svg', 'pwa-512x512.svg'],
+          includeAssets: ['favicon.svg', 'apple-touch-icon.svg', 'pwa-192x192.svg', 'pwa-512x512.svg', 'pwa-192x192.png', 'pwa-512x512.png', 'maskable-icon.png'],
           manifest: {
             name: 'TradeSync',
             short_name: 'TradeSync',
-            description: 'Professional job management & quoting for UK tradespeople',
-            theme_color: '#0f172a',
-            background_color: '#f8fafc',
+            description: 'Job management and accounting for UK tradespeople',
+            theme_color: '#14b8a6',
+            background_color: '#0f172a',
             display: 'standalone',
-            orientation: 'portrait-primary',
+            orientation: 'portrait',
             scope: '/',
             start_url: '/',
+            categories: ['business', 'finance', 'productivity'],
             icons: [
               {
                 src: 'pwa-192x192.svg',
@@ -37,10 +38,20 @@ export default defineConfig(({ mode }) => {
                 type: 'image/svg+xml'
               },
               {
-                src: 'pwa-512x512.svg',
+                src: 'pwa-192x192.png',
+                sizes: '192x192',
+                type: 'image/png'
+              },
+              {
+                src: 'pwa-512x512.png',
                 sizes: '512x512',
-                type: 'image/svg+xml',
-                purpose: 'any maskable'
+                type: 'image/png'
+              },
+              {
+                src: 'maskable-icon.png',
+                sizes: '512x512',
+                type: 'image/png',
+                purpose: 'maskable'
               }
             ]
           },

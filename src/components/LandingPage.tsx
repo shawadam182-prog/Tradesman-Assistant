@@ -167,7 +167,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onSignUp }) =
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <img src="/tradesync-logo.jpg" alt="TradeSync" className="h-10 md:h-12 rounded-lg" />
+              <img src="/tradesync-logo.png" alt="TradeSync" className="h-10 md:h-12 rounded-lg" />
             </div>
 
             {/* Desktop Nav */}
@@ -514,7 +514,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onSignUp }) =
             <div className="grid grid-cols-3 bg-slate-100 p-4 font-semibold text-slate-700">
               <div>Feature</div>
               <div className="text-center">
-                <img src="/tradesync-logo.jpg" alt="TradeSync" className="h-8 mx-auto rounded" />
+                <img src="/tradesync-logo.png" alt="TradeSync" className="h-8 mx-auto rounded" />
               </div>
               <div className="text-center text-slate-500">Others</div>
             </div>
@@ -715,7 +715,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onSignUp }) =
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <img src="/tradesync-logo.jpg" alt="TradeSync" className="h-10 rounded-lg" />
+              <img src="/tradesync-logo.png" alt="TradeSync" className="h-10 rounded-lg" />
               <span className="text-slate-400 text-sm">© 2026 TradeSync. All rights reserved.</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-slate-400">

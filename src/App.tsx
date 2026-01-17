@@ -5,6 +5,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import { LoginPage } from './components/Auth/LoginPage';
 import { LandingPage } from './components/LandingPage';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { PWAPrompt, OfflineIndicator as PWAOfflineIndicator } from './components/PWAPrompt';
 import { OfflineIndicator } from '../components/OfflineIndicator';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -16,7 +17,7 @@ import { useReferralCapture } from './hooks/useReferralCapture';
 const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Loading...' }) => (
   <div className="min-h-screen bg-slate-900 flex items-center justify-center">
     <div className="text-center">
-      <img src="/tradesync-logo.jpg" alt="TradeSync" className="h-16 mx-auto mb-6 rounded-xl animate-pulse" />
+      <img src="/tradesync-logo.png" alt="TradeSync" className="h-16 mx-auto mb-6 rounded-xl animate-pulse" />
       <Loader2 className="w-8 h-8 text-teal-500 animate-spin mx-auto mb-4" />
       <p className="text-slate-400 text-sm font-medium">{message}</p>
     </div>
@@ -35,7 +36,7 @@ const DataAwareApp: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <div className="text-center">
-          <img src="/tradesync-logo.jpg" alt="TradeSync" className="h-16 mx-auto mb-6 rounded-xl" />
+          <img src="/tradesync-logo.png" alt="TradeSync" className="h-16 mx-auto mb-6 rounded-xl" />
           <p className="text-red-400 mb-4">Failed to load data: {error}</p>
           <button
             onClick={() => window.location.reload()}
@@ -56,12 +57,20 @@ const DataAwareApp: React.FC = () => {
 };
 
 // Main view router - handles landing, login, and app views
-type ViewState = 'landing' | 'login' | 'signup' | 'app';
+type ViewState = 'landing' | 'login' | 'signup' | 'app' | 'privacy';
 
 const ViewRouter: React.FC = () => {
   const { user, loading } = useAuth();
   const [view, setView] = useState<ViewState>('landing');
   const [hasVisitedBefore, setHasVisitedBefore] = useState<boolean | null>(null);
+
+  // Check URL path for direct navigation (e.g., /privacy)
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/privacy') {
+      setView('privacy');
+    }
+  }, []);
 
   // Capture referral codes from QR code URLs
   useReferralCapture();
@@ -105,6 +114,18 @@ const ViewRouter: React.FC = () => {
           <OfflineIndicator />
         </DataProvider>
       </OfflineProvider>
+    );
+  }
+
+  // If on privacy view, show privacy policy
+  if (view === 'privacy') {
+    return (
+      <PrivacyPolicy
+        onBack={() => {
+          window.history.pushState({}, '', '/');
+          setView('landing');
+        }}
+      />
     );
   }
 

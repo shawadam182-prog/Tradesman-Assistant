@@ -88,7 +88,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBackToLanding }) => {
         {/* Logo */}
         <div className="text-center mb-8">
           <img
-            src="/tradesync-logo.jpg"
+            src="/tradesync-logo.png"
             alt="TradeSync"
             className="h-16 mx-auto mb-4 rounded-xl"
           />
