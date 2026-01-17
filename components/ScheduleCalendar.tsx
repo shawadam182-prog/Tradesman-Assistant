@@ -308,8 +308,8 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
       {/* Streamlined Pro Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-slate-200 pb-8">
         <div>
-          <h2 className="text-5xl font-black text-slate-900 tracking-tighter leading-none">Site Diary</h2>
-          <p className="text-slate-500 font-medium italic mt-3">Professional resource and project site allocation.</p>
+          <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Site Diary</h2>
+          <p className="text-slate-500 text-sm font-medium">Professional resource and project site allocation.</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
@@ -361,7 +361,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
       </div>
 
       {/* Main Container - Space Savvy UI */}
-      <div className="bg-white rounded-[40px] border border-slate-200 shadow-2xl overflow-hidden flex flex-col min-h-[700px] relative">
+      <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-2xl overflow-hidden flex flex-col min-h-[400px] md:min-h-[600px] relative">
         
         {/* Navigation Bar */}
         <div className="p-3 sm:p-4 md:p-8 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between bg-slate-50/30 gap-3 sm:gap-6">
@@ -414,31 +414,31 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                     <div
                       key={idx}
                       onClick={() => { if(date) { setSelectedDay(date); setViewType('day'); } }}
-                      className={`min-h-[100px] sm:min-h-[120px] md:min-h-[160px] p-2 sm:p-3 transition-all cursor-pointer relative group flex flex-col bg-white ${
+                      className={`aspect-square p-1 sm:p-2 md:p-3 transition-all cursor-pointer relative group flex flex-col bg-white ${
                         !date ? 'opacity-20 pointer-events-none' : isSelected ? 'bg-amber-50/30' : 'hover:bg-slate-50/80'
                       }`}
                     >
                       {date && (
                         <>
-                          <div className={`flex items-center justify-center h-8 w-8 rounded-xl font-black text-xs mb-3 transition-all ${
+                          <div className={`flex items-center justify-center h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 rounded-md sm:rounded-lg md:rounded-xl font-black text-[10px] sm:text-xs mb-1 sm:mb-2 md:mb-3 transition-all ${
                             isToday ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-300 group-hover:text-slate-900 group-hover:bg-slate-100'
                           }`}>
                             {date.getDate()}
                           </div>
                           
-                          <div className="space-y-1 sm:space-y-1.5 overflow-hidden">
-                            {dayEntries.slice(0, 4).map(e => (
+                          <div className="space-y-0.5 sm:space-y-1 overflow-hidden flex-1">
+                            {dayEntries.slice(0, 2).map(e => (
                               <div
                                 key={e.id}
                                 onClick={(ev) => { ev.stopPropagation(); handleEdit(e); }}
-                                className="bg-slate-900 text-amber-500 text-[8px] sm:text-[9px] font-black px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-md sm:rounded-lg border-l-2 sm:border-l-4 border-amber-500 shadow-sm hover:bg-black hover:translate-x-1 transition-all overflow-hidden"
+                                className="bg-slate-900 text-amber-500 text-[7px] sm:text-[8px] md:text-[9px] font-black px-1 sm:px-1.5 md:px-2.5 py-0.5 sm:py-1 md:py-1.5 rounded sm:rounded-md md:rounded-lg border-l-2 border-amber-500 shadow-sm hover:bg-black transition-all overflow-hidden"
                               >
                                 <span className="block truncate max-w-full">{e.title}</span>
                               </div>
                             ))}
-                            {dayEntries.length > 4 && (
-                              <p className="text-[8px] font-black text-slate-400 text-center uppercase tracking-widest mt-1">
-                                +{dayEntries.length - 4} Tasks
+                            {dayEntries.length > 2 && (
+                              <p className="text-[7px] sm:text-[8px] font-black text-slate-400 text-center uppercase tracking-wide">
+                                +{dayEntries.length - 2}
                               </p>
                             )}
                           </div>
