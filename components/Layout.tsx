@@ -298,6 +298,21 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                   </div>
                 </div>
               ))}
+              {/* Sign Out Button */}
+              {onSignOut && (
+                <div className="mt-4 pt-4 border-t border-slate-200">
+                  <button
+                    onClick={() => {
+                      setShowMoreMenu(false);
+                      onSignOut();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 active:bg-red-100 active:scale-95 transition-all"
+                  >
+                    <LogOut size={18} />
+                    <span className="font-black text-sm">Sign Out</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
