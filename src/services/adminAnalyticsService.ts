@@ -27,6 +27,11 @@ export interface TrialUserAnalytics {
   // Recent activity
   activity_last_24h: number;
   activity_last_7d: number;
+  // Usage counts
+  job_packs_count: number;
+  customers_count: number;
+  quotes_count: number;
+  invoices_count: number;
   // Calculated
   days_remaining: number | null;
   trial_status: 'active' | 'expired' | 'converted' | 'unknown';

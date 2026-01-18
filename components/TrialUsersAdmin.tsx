@@ -342,7 +342,7 @@ export const TrialUsersAdmin: React.FC<TrialUsersAdminProps> = ({ onBack }) => {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Last Active</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">Days Left</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">Logins</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">Usage</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -395,8 +395,21 @@ export const TrialUsersAdmin: React.FC<TrialUsersAdminProps> = ({ onBack }) => {
                       <td className="px-4 py-3 text-center">
                         {getStatusBadge(user.trial_status)}
                       </td>
-                      <td className="px-4 py-3 text-center text-sm font-medium text-slate-700">
-                        {user.total_logins}
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1 justify-center">
+                          <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-medium" title="Jobs">
+                            {user.job_packs_count} jobs
+                          </span>
+                          <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-[10px] font-medium" title="Quotes">
+                            {user.quotes_count} quotes
+                          </span>
+                          <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-medium" title="Invoices">
+                            {user.invoices_count} inv
+                          </span>
+                          <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[10px] font-medium" title="Customers">
+                            {user.customers_count} cust
+                          </span>
+                        </div>
                       </td>
                     </tr>
 
