@@ -4,7 +4,7 @@ import { Customer } from '../types';
 import {
   Search, UserPlus, Phone, Mail, MapPin, Trash2, Edit2, X,
   AlertCircle, CheckCircle2, Mic, MicOff, Sparkles, Loader2,
-  Building, User as UserIcon, Pencil, Navigation
+  Building, User as UserIcon, Pencil, Navigation, Briefcase
 } from 'lucide-react';
 import { parseCustomerVoiceInput } from '../src/services/geminiService';
 import { useToast } from '../src/contexts/ToastContext';
@@ -306,7 +306,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
               {/* Company Field */}
               <div className="space-y-0.5">
                 <label className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1 px-0.5">
-                  <Hammer size={12} className="md:w-3 md:h-3" /> Company Name
+                  <Briefcase size={12} className="md:w-3 md:h-3" /> Company Name
                 </label>
                 <div className="relative">
                   <input
