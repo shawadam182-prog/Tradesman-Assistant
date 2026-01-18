@@ -83,6 +83,7 @@ export const TrialUsersAdmin: React.FC<TrialUsersAdminProps> = ({ onBack }) => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(u =>
+        (u.user_email?.toLowerCase().includes(term)) ||
         (u.company_name?.toLowerCase().includes(term)) ||
         (u.referral_code?.toLowerCase().includes(term))
       );
@@ -99,9 +100,9 @@ export const TrialUsersAdmin: React.FC<TrialUsersAdminProps> = ({ onBack }) => {
         case 'engagement':
           return b.engagement_score - a.engagement_score;
         case 'last_active':
-          if (!a.last_login) return 1;
-          if (!b.last_login) return -1;
-          return new Date(b.last_login).getTime() - new Date(a.last_login).getTime();
+          if (!a.last_activity) return 1;
+          if (!b.last_activity) return -1;
+          return new Date(b.last_activity).getTime() - new Date(a.last_activity).getTime();
         case 'days_remaining':
           if (a.days_remaining === null) return 1;
           if (b.days_remaining === null) return -1;
@@ -299,7 +300,7 @@ export const TrialUsersAdmin: React.FC<TrialUsersAdminProps> = ({ onBack }) => {
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by company name..."
+              placeholder="Search by email or company..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -336,7 +337,7 @@ export const TrialUsersAdmin: React.FC<TrialUsersAdminProps> = ({ onBack }) => {
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="w-8 px-4 py-3"></th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Company</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">User</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">Engagement</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Last Active</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">Days Left</th>
@@ -367,11 +368,12 @@ export const TrialUsersAdmin: React.FC<TrialUsersAdminProps> = ({ onBack }) => {
                       </td>
                       <td className="px-4 py-3">
                         <div className="font-medium text-slate-900">
-                          {user.company_name || 'No company name'}
+                          {user.user_email || 'No email'}
                         </div>
-                        {user.referral_code && (
-                          <div className="text-xs text-slate-500">Ref: {user.referral_code}</div>
-                        )}
+                        <div className="text-xs text-slate-500">
+                          {user.company_name || 'No company'}
+                          {user.referral_code && ` • Ref: ${user.referral_code}`}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold ${getEngagementColor(user.engagement_score)}`}>
@@ -379,7 +381,7 @@ export const TrialUsersAdmin: React.FC<TrialUsersAdminProps> = ({ onBack }) => {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-600">
-                        {formatRelativeTime(user.last_login)}
+                        {formatRelativeTime(user.last_activity)}
                       </td>
                       <td className="px-4 py-3 text-center">
                         {user.days_remaining !== null ? (

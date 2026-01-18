@@ -3,6 +3,7 @@ import { isAdminUser } from '../lib/constants';
 
 export interface TrialUserAnalytics {
   user_id: string;
+  user_email: string | null;
   company_name: string | null;
   trial_start: string | null;
   trial_end: string | null;
