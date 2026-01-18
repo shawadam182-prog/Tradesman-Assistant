@@ -747,89 +747,89 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="space-y-12">
+              <div className="space-y-4 md:space-y-12">
                 <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-8">
-                    <div className={`h-20 w-20 rounded-[36px] flex items-center justify-center shadow-2xl ${isReviewingAI ? 'bg-teal-500 text-white' : 'bg-slate-900 text-teal-500'}`}>
-                      {isReviewingAI ? <Sparkles size={40} /> : <CalendarIcon size={40} />}
+                  <div className="flex items-center gap-4 md:gap-8">
+                    <div className={`h-12 w-12 md:h-20 md:w-20 rounded-[20px] md:rounded-[36px] flex items-center justify-center shadow-2xl ${isReviewingAI ? 'bg-teal-500 text-white' : 'bg-slate-900 text-teal-500'}`}>
+                      {isReviewingAI ? <Sparkles className="w-6 h-6 md:w-10 md:h-10" /> : <CalendarIcon className="w-6 h-6 md:w-10 md:h-10" />}
                     </div>
                     <div>
-                      <h3 className="text-4xl font-black text-slate-900 uppercase tracking-tighter leading-none">
+                      <h3 className="text-2xl md:text-4xl font-black text-slate-900 uppercase tracking-tighter leading-none">
                         {isReviewingAI ? 'Review Entry' : editingId ? 'Edit Visit' : 'Manual Entry'}
                       </h3>
-                      <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] italic mt-2.5 leading-none">
+                      <p className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.4em] italic mt-1.5 md:mt-2.5 leading-none">
                         {isReviewingAI ? 'AI Analysis Ready' : 'Project Site Logistics'}
                       </p>
                     </div>
                   </div>
-                  <button onClick={() => { setIsAddingManual(false); setIsReviewingAI(false); setEditingId(null); setDraft({}); }} className="p-4 hover:bg-slate-100 rounded-full text-slate-300 transition-all hover:text-slate-900"><X size={40}/></button>
+                  <button onClick={() => { setIsAddingManual(false); setIsReviewingAI(false); setEditingId(null); setDraft({}); }} className="p-2 md:p-4 hover:bg-slate-100 rounded-full text-slate-300 transition-all hover:text-slate-900"><X className="w-6 h-6 md:w-10 md:h-10"/></button>
                 </div>
 
-                <div className="space-y-10">
-                  <div className="space-y-3">
-                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic">Booking Reference *</label>
+                <div className="space-y-4 md:space-y-10">
+                  <div className="space-y-2 md:space-y-3">
+                    <label className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic">Booking Reference *</label>
                     <div className="flex gap-2">
-                      <input className="flex-1 min-w-0 bg-slate-50 border-2 border-slate-100 rounded-[36px] px-6 py-5 font-black text-2xl text-slate-950 outline-none focus:border-teal-400 focus:bg-white transition-all shadow-inner" value={draft.title || ''} onChange={e => setDraft({...draft, title: e.target.value})} placeholder="e.g. Groundworks" />
+                      <input className="flex-1 min-w-0 bg-slate-50 border-2 border-slate-100 rounded-[24px] md:rounded-[36px] px-4 py-3 md:px-6 md:py-5 font-black text-lg md:text-2xl text-slate-950 outline-none focus:border-teal-400 focus:bg-white transition-all shadow-inner" value={draft.title || ''} onChange={e => setDraft({...draft, title: e.target.value})} placeholder="e.g. Groundworks" />
                       <button
                         type="button"
                         onClick={() => isListeningTitle ? titleRecognitionRef.current?.stop() : titleRecognitionRef.current?.start()}
-                        className={`shrink-0 w-[70px] h-[70px] rounded-[36px] shadow-lg transition-all active:scale-95 flex items-center justify-center ${
+                        className={`shrink-0 w-[50px] h-[50px] md:w-[70px] md:h-[70px] rounded-[24px] md:rounded-[36px] shadow-lg transition-all active:scale-95 flex items-center justify-center ${
                           isListeningTitle ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-900 text-teal-500 hover:bg-black'
                         }`}
                       >
-                        <Mic size={28} />
+                        <Mic className="w-5 h-5 md:w-7 md:h-7" />
                       </button>
                     </div>
                   </div>
 
                   {/* Link to Job or Customer */}
-                  <div className="space-y-3">
-                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic flex items-center gap-2">
-                      <Link2 size={14} /> Link To
+                  <div className="space-y-2 md:space-y-3">
+                    <label className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic flex items-center gap-2">
+                      <Link2 className="w-3 h-3 md:w-3.5 md:h-3.5" /> Link To
                     </label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-2 md:gap-3">
                       <button
                         type="button"
                         onClick={() => { hapticTap(); setLinkType('none'); setDraft(prev => ({ ...prev, projectId: undefined })); }}
-                        className={`p-4 rounded-2xl font-black text-sm uppercase tracking-wide flex flex-col items-center gap-2 min-h-[80px] justify-center transition-all ${
+                        className={`p-2 md:p-4 rounded-xl md:rounded-2xl font-black text-sm uppercase tracking-wide flex flex-col items-center gap-1 md:gap-2 min-h-[55px] md:min-h-[80px] justify-center transition-all ${
                           linkType === 'none' ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
                         }`}
                       >
-                        <CalendarIcon size={20} />
-                        <span className="text-[10px]">Standalone</span>
+                        <CalendarIcon className="w-4 h-4 md:w-5 md:h-5" />
+                        <span className="text-[9px] md:text-[10px]">Standalone</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => { hapticTap(); setLinkType('job'); }}
-                        className={`p-4 rounded-2xl font-black text-sm uppercase tracking-wide flex flex-col items-center gap-2 min-h-[80px] justify-center transition-all ${
+                        className={`p-2 md:p-4 rounded-xl md:rounded-2xl font-black text-sm uppercase tracking-wide flex flex-col items-center gap-1 md:gap-2 min-h-[55px] md:min-h-[80px] justify-center transition-all ${
                           linkType === 'job' ? 'bg-blue-500 text-white' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
                         }`}
                       >
-                        <Briefcase size={20} />
-                        <span className="text-[10px]">Job Pack</span>
+                        <Briefcase className="w-4 h-4 md:w-5 md:h-5" />
+                        <span className="text-[9px] md:text-[10px]">Job Pack</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => { hapticTap(); setLinkType('customer'); }}
-                        className={`p-4 rounded-2xl font-black text-sm uppercase tracking-wide flex flex-col items-center gap-2 min-h-[80px] justify-center transition-all ${
+                        className={`p-2 md:p-4 rounded-xl md:rounded-2xl font-black text-sm uppercase tracking-wide flex flex-col items-center gap-1 md:gap-2 min-h-[55px] md:min-h-[80px] justify-center transition-all ${
                           linkType === 'customer' ? 'bg-purple-500 text-white' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
                         }`}
                       >
-                        <User size={20} />
-                        <span className="text-[10px]">Customer</span>
+                        <User className="w-4 h-4 md:w-5 md:h-5" />
+                        <span className="text-[9px] md:text-[10px]">Customer</span>
                       </button>
                     </div>
                   </div>
 
                   {/* Job Pack Selection */}
                   {linkType === 'job' && (
-                    <div className="space-y-3 animate-in slide-in-from-top-2">
-                      <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic flex items-center gap-2">
-                        <Briefcase size={14} /> Select Job Pack
+                    <div className="space-y-2 md:space-y-3 animate-in slide-in-from-top-2">
+                      <label className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic flex items-center gap-2">
+                        <Briefcase className="w-3 h-3 md:w-3.5 md:h-3.5" /> Select Job Pack
                       </label>
                       <div className="relative">
                         <select
-                          className="w-full bg-blue-50 border-2 border-blue-200 rounded-[36px] p-7 font-bold text-xl text-slate-950 outline-none focus:border-blue-400 focus:bg-white transition-all appearance-none cursor-pointer"
+                          className="w-full bg-blue-50 border-2 border-blue-200 rounded-[24px] md:rounded-[36px] p-4 md:p-7 font-bold text-base md:text-xl text-slate-950 outline-none focus:border-blue-400 focus:bg-white transition-all appearance-none cursor-pointer"
                           value={(draft as any).projectId || ''}
                           onChange={e => handleLinkToJob(e.target.value)}
                         >
@@ -843,19 +843,19 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                             );
                           })}
                         </select>
-                        <ChevronDown className="absolute right-10 top-1/2 -translate-y-1/2 text-blue-300 pointer-events-none" size={32} />
+                        <ChevronDown className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 text-blue-300 pointer-events-none w-6 h-6 md:w-8 md:h-8" />
                       </div>
                     </div>
                   )}
 
                   {/* Customer Selection */}
                   {linkType === 'customer' && (
-                    <div className="space-y-3 animate-in slide-in-from-top-2">
-                      <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic">Assign Client</label>
+                    <div className="space-y-2 md:space-y-3 animate-in slide-in-from-top-2">
+                      <label className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic">Assign Client</label>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
                           <select
-                            className="w-full bg-purple-50 border-2 border-purple-200 rounded-[36px] p-7 font-bold text-xl text-slate-950 outline-none focus:border-purple-400 focus:bg-white transition-all appearance-none cursor-pointer"
+                            className="w-full bg-purple-50 border-2 border-purple-200 rounded-[24px] md:rounded-[36px] p-4 md:p-7 font-bold text-base md:text-xl text-slate-950 outline-none focus:border-purple-400 focus:bg-white transition-all appearance-none cursor-pointer"
                             value={draft.customerId || ''}
                             onChange={e => {
                               const cust = customers.find(c => c.id === e.target.value);
@@ -869,29 +869,29 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                             <option value="">Select Client...</option>
                             {customers.map(c => <option key={c.id} value={c.id}>{c.name} {c.company ? `(${c.company})` : ''}</option>)}
                           </select>
-                          <ChevronDown className="absolute right-10 top-1/2 -translate-y-1/2 text-purple-300 pointer-events-none" size={32} />
+                          <ChevronDown className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 text-purple-300 pointer-events-none w-6 h-6 md:w-8 md:h-8" />
                         </div>
                         <button
                           onClick={() => { hapticTap(); setIsAddingCustomer(true); }}
-                          className="p-7 bg-slate-900 text-teal-500 rounded-[36px] hover:bg-black transition-all shadow-lg active:scale-95"
+                          className="p-4 md:p-7 bg-slate-900 text-teal-500 rounded-[24px] md:rounded-[36px] hover:bg-black transition-all shadow-lg active:scale-95"
                         >
-                          <UserPlus size={32} />
+                          <UserPlus className="w-6 h-6 md:w-8 md:h-8" />
                         </button>
                       </div>
                     </div>
                   )}
 
                   {/* Location Input with Address Autocomplete */}
-                  <div className="space-y-3">
+                  <div className="space-y-2 md:space-y-3">
                     <div className="flex flex-wrap justify-between items-center px-1 gap-2">
-                      <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest italic">Project Site Address</label>
+                      <label className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-widest italic">Project Site Address</label>
                       {selectedCustomer?.address && (
                         <button
                           type="button"
                           onClick={() => { hapticTap(); setDraft({ ...draft, location: selectedCustomer.address }); }}
-                          className="min-h-[44px] px-4 text-[10px] font-black uppercase text-teal-600 hover:text-teal-700 flex items-center gap-2 bg-teal-50 rounded-xl active:scale-95"
+                          className="min-h-[36px] md:min-h-[44px] px-3 md:px-4 text-[9px] md:text-[10px] font-black uppercase text-teal-600 hover:text-teal-700 flex items-center gap-1.5 md:gap-2 bg-teal-50 rounded-xl active:scale-95"
                         >
-                          <MapPinned size={16} />
+                          <MapPinned className="w-3.5 h-3.5 md:w-4 md:h-4" />
                           <span className="hidden sm:inline">Use Client Address</span>
                           <span className="sm:hidden">Client</span>
                         </button>
@@ -904,23 +904,23 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-10 rounded-[52px] bg-slate-50 border-2 border-slate-100">
-                    <div className="space-y-3">
-                      <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic">Arrival At</label>
-                      <input 
-                        type="datetime-local" 
-                        className="w-full bg-white border-2 border-slate-100 rounded-3xl p-6 font-black text-lg text-slate-950 outline-none focus:border-teal-400 transition-all"
-                        value={draft.start ? new Date(draft.start).toISOString().slice(0, 16) : ''} 
-                        onChange={e => setDraft({...draft, start: new Date(e.target.value).toISOString()})} 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 p-4 md:p-10 rounded-[32px] md:rounded-[52px] bg-slate-50 border-2 border-slate-100">
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic">Arrival At</label>
+                      <input
+                        type="datetime-local"
+                        className="w-full bg-white border-2 border-slate-100 rounded-2xl md:rounded-3xl p-3 md:p-6 font-black text-sm md:text-lg text-slate-950 outline-none focus:border-teal-400 transition-all"
+                        value={draft.start ? new Date(draft.start).toISOString().slice(0, 16) : ''}
+                        onChange={e => setDraft({...draft, start: new Date(e.target.value).toISOString()})}
                       />
                     </div>
-                    <div className="space-y-3">
-                      <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic">Departure At</label>
-                      <input 
-                        type="datetime-local" 
-                        className="w-full bg-white border-2 border-slate-100 rounded-3xl p-6 font-black text-lg text-slate-950 outline-none focus:border-teal-400 transition-all"
-                        value={draft.end ? new Date(draft.end).toISOString().slice(0, 16) : ''} 
-                        onChange={e => setDraft({...draft, end: new Date(e.target.value).toISOString()})} 
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic">Departure At</label>
+                      <input
+                        type="datetime-local"
+                        className="w-full bg-white border-2 border-slate-100 rounded-2xl md:rounded-3xl p-3 md:p-6 font-black text-sm md:text-lg text-slate-950 outline-none focus:border-teal-400 transition-all"
+                        value={draft.end ? new Date(draft.end).toISOString().slice(0, 16) : ''}
+                        onChange={e => setDraft({...draft, end: new Date(e.target.value).toISOString()})}
                       />
                     </div>
                   </div>
