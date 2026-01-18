@@ -347,28 +347,37 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
 
       // MOBILE: Use Web Share API to attach PDF directly to email
       if (isMobile && navigator.share && navigator.canShare) {
-        // Create PDF blob using arraybuffer for better mobile compatibility
-        const pdfArrayBuffer = pdf.output('arraybuffer');
-        const pdfBlob = new Blob([pdfArrayBuffer], { type: 'application/pdf' });
-        const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf', lastModified: Date.now() });
+        try {
+          // Use blob output directly - more reliable than arraybuffer on mobile
+          const pdfBlob = pdf.output('blob');
 
-        const shareData = {
-          files: [pdfFile],
-          title: subject,
-          text: `To: ${customerEmail}\n\n${body}`,
-        };
+          // Validate the blob has content
+          if (!pdfBlob || pdfBlob.size < 1000) {
+            console.warn('PDF blob too small, falling back to download');
+            throw new Error('PDF generation produced invalid output');
+          }
 
-        if (navigator.canShare(shareData)) {
-          try {
+          const pdfFile = new File([pdfBlob], filename, {
+            type: 'application/pdf',
+            lastModified: Date.now()
+          });
+
+          const shareData = {
+            files: [pdfFile],
+            title: subject,
+            text: `To: ${customerEmail}\n\n${body}`,
+          };
+
+          if (navigator.canShare(shareData)) {
             await navigator.share(shareData);
             return; // Success - email app opened with PDF attached
-          } catch (shareErr) {
-            if ((shareErr as Error).name === 'AbortError') {
-              return; // User cancelled
-            }
-            console.log('Web Share failed:', shareErr);
-            // Fall through to download approach
           }
+        } catch (shareErr) {
+          if ((shareErr as Error).name === 'AbortError') {
+            return; // User cancelled
+          }
+          console.log('Web Share failed:', shareErr);
+          // Fall through to download approach
         }
       }
 
