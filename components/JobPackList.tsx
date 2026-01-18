@@ -17,10 +17,11 @@ interface JobPackListProps {
   onOpenProject: (id: string) => void;
   onAddProject: (project: JobPack) => void;
   onAddCustomer: (customer: Customer) => Promise<Customer>;
+  onBack?: () => void;
 }
 
 export const JobPackList: React.FC<JobPackListProps> = ({
-  projects, customers, onOpenProject, onAddProject, onAddCustomer
+  projects, customers, onOpenProject, onAddProject, onAddCustomer, onBack
 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -231,6 +232,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
       <PageHeader
         title="Job Packs"
         subtitle="Organize site documentation by project."
+        onBack={onBack}
         actions={
           <button
             onClick={() => {

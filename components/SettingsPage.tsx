@@ -156,14 +156,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
         {/* Sidebar Navigation */}
         <aside className="md:w-80 shrink-0 space-y-4">
           <div className="mb-10 px-2">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               {onBack && (
                 <button
                   onClick={onBack}
-                  className="p-2 -ml-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                  className="p-2.5 md:p-2 -ml-1 md:-ml-2 text-slate-500 hover:text-slate-700 bg-slate-100 md:bg-transparent hover:bg-slate-200 md:hover:bg-slate-100 rounded-xl transition-colors active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
                   aria-label="Go back"
                 >
-                  <ArrowLeft size={20} />
+                  <ArrowLeft size={22} className="md:w-5 md:h-5" />
                 </button>
               )}
               <div>
