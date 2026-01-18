@@ -23,6 +23,7 @@ const ExpensesPage = lazy(() => import('./components/ExpensesPage').then(m => ({
 const BankImportPage = lazy(() => import('./components/BankImportPage').then(m => ({ default: m.BankImportPage })));
 const ReconciliationPage = lazy(() => import('./components/ReconciliationPage').then(m => ({ default: m.ReconciliationPage })));
 const VATSummaryPage = lazy(() => import('./components/VATSummaryPage').then(m => ({ default: m.VATSummaryPage })));
+const ProfitLossPage = lazy(() => import('./components/ProfitLossPage').then(m => ({ default: m.ProfitLossPage })));
 const PayablesPage = lazy(() => import('./components/PayablesPage').then(m => ({ default: m.PayablesPage })));
 const FilingCabinetPage = lazy(() => import('./components/FilingCabinetPage').then(m => ({ default: m.FilingCabinetPage })));
 const MaterialsLibrary = lazy(() => import('./components/MaterialsLibrary').then(m => ({ default: m.MaterialsLibrary })));
@@ -51,6 +52,7 @@ type TabType =
   | 'bank'
   | 'reconcile'
   | 'vat'
+  | 'profitloss'
   | 'payables'
   | 'settings'
   | 'wholesalers'
@@ -310,6 +312,7 @@ const App: React.FC = () => {
         {activeTab === 'bank' && <BankImportPage onBack={() => setActiveTab('home')} />}
         {activeTab === 'reconcile' && <ReconciliationPage onBack={() => setActiveTab('home')} />}
         {activeTab === 'vat' && <VATSummaryPage onBack={() => setActiveTab('home')} />}
+        {activeTab === 'profitloss' && <ProfitLossPage onBack={() => setActiveTab('home')} />}
         {activeTab === 'payables' && <PayablesPage onBack={() => setActiveTab('home')} />}
         {activeTab === 'files' && <FilingCabinetPage onBack={() => setActiveTab('home')} />}
         {activeTab === 'materials' && <MaterialsLibrary onBack={() => setActiveTab('home')} />}
