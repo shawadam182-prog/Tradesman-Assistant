@@ -1063,10 +1063,11 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                     </div>
                     {/* Bottom row: Hours controls and price */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-0.5 bg-white rounded px-1 py-0.5 border border-blue-200">
+                      <div className="flex items-center gap-0.5 bg-white rounded px-1 py-0.5 border border-blue-200 h-6">
                         <button
+                          type="button"
                           onClick={() => decrementLabourHours(section.id, labourItem.id)}
-                          className="p-0.5 hover:bg-blue-50 rounded transition-colors"
+                          className="px-1 h-full hover:bg-blue-50 rounded transition-colors touch-manipulation active:bg-blue-100"
                         >
                           <Minus size={10} className="text-blue-500" />
                         </button>
@@ -1074,13 +1075,14 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                           type="number"
                           value={labourItem.hours}
                           onChange={e => updateLabourItem(section.id, labourItem.id, { hours: parseFloat(e.target.value) || 0 })}
-                          className="w-8 text-center font-bold text-[10px] bg-transparent outline-none py-0.5"
+                          className="w-10 h-full text-center font-black text-sm bg-transparent outline-none text-slate-900"
                           step="0.5"
                         />
                         <span className="text-[8px] text-slate-400 font-bold">hrs</span>
                         <button
+                          type="button"
                           onClick={() => incrementLabourHours(section.id, labourItem.id)}
-                          className="p-0.5 hover:bg-blue-50 rounded transition-colors"
+                          className="px-1 h-full hover:bg-blue-50 rounded transition-colors touch-manipulation active:bg-blue-100"
                         >
                           <Plus size={10} className="text-blue-500" />
                         </button>
@@ -1167,10 +1169,10 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                       <PoundSterling size={10} className="text-emerald-500" /> Section
                     </label>
                     <div className="flex items-center bg-emerald-50 border-2 border-emerald-200 rounded-lg px-2 py-1.5 focus-within:border-emerald-400 transition-all">
-                      <span className="text-emerald-600 text-[10px] font-bold mr-0.5">£</span>
+                      <span className="text-emerald-600 text-xs font-bold mr-0.5">£</span>
                       <input
                         type="number"
-                        className="bg-transparent border-none text-emerald-700 font-black text-[10px] outline-none w-full"
+                        className="bg-transparent border-none text-emerald-700 font-black text-xs outline-none w-full"
                         value={section.subsectionPrice !== undefined ? section.subsectionPrice : (section.items.filter(i => !i.isHeading).reduce((s, i) => s + i.totalPrice, 0) + calculateSectionLabour(section)).toFixed(2)}
                         onChange={e => {
                           const subsectionPrice = e.target.value === '' ? undefined : parseFloat(e.target.value) || 0;
