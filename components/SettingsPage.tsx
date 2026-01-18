@@ -214,22 +214,22 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
       onClick={() => setActiveCategory(id)}
       className={`w-full flex items-center justify-between p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl md:rounded-[24px] transition-all border-2 ${
         activeCategory === id
-        ? 'bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-200'
-        : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'
+        ? 'bg-gradient-to-r from-teal-600 to-teal-500 text-white border-teal-500 shadow-xl shadow-teal-500/25'
+        : 'bg-white text-slate-500 border-slate-100 hover:border-teal-200 hover:bg-teal-50/30'
       }`}
     >
       <div className="flex items-center gap-2 sm:gap-3 md:gap-4 text-left">
-        <div className={`p-2 sm:p-2.5 rounded-xl sm:rounded-2xl ${activeCategory === id ? color : 'bg-slate-50 text-slate-400'}`}>
+        <div className={`p-2 sm:p-2.5 rounded-xl sm:rounded-2xl ${activeCategory === id ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-400'}`}>
           <Icon size={18} className="sm:w-5 sm:h-5 md:w-[22px] md:h-[22px]" />
         </div>
         <div>
           <span className="font-black text-[10px] sm:text-[11px] uppercase tracking-wide sm:tracking-widest block truncate">{label}</span>
-          <span className={`text-[8px] sm:text-[9px] font-bold hidden sm:block ${activeCategory === id ? 'text-white/60' : 'text-slate-400'}`}>
+          <span className={`text-[8px] sm:text-[9px] font-bold hidden sm:block ${activeCategory === id ? 'text-white/70' : 'text-slate-400'}`}>
             {id === 'company' ? 'Profile' : id === 'quotes' ? 'Rates' : id === 'help' ? 'Support' : 'Payment'}
           </span>
         </div>
       </div>
-      <ChevronRight size={16} className={`sm:w-[18px] sm:h-[18px] shrink-0 ${activeCategory === id ? 'text-amber-500' : 'text-slate-200'}`} />
+      <ChevronRight size={16} className={`sm:w-[18px] sm:h-[18px] shrink-0 ${activeCategory === id ? 'text-white' : 'text-slate-200'}`} />
     </button>
   );
 
@@ -269,7 +269,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full flex items-center justify-center gap-3 bg-slate-900 text-amber-500 p-5 rounded-[24px] font-black hover:bg-black transition-all shadow-xl shadow-slate-200 uppercase text-xs tracking-widest border-b-4 border-slate-950 active:translate-y-1 active:border-b-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-teal-600 to-teal-500 text-white p-5 rounded-[24px] font-black hover:from-teal-700 hover:to-teal-600 transition-all shadow-xl shadow-teal-500/25 uppercase text-xs tracking-widest border-b-4 border-teal-700 active:translate-y-1 active:border-b-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
               {saving ? 'Saving...' : 'Save Configuration'}
@@ -497,7 +497,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       <p className="text-sm font-black text-slate-900 mb-1">Upload your brand mark</p>
                       <p className="text-[10px] text-slate-500 italic mb-4">Recommended: PNG or JPG, square or wide format.</p>
                       <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                        <label className={`bg-slate-900 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 ${uploadingLogo ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-black'}`}>
+                        <label className={`bg-gradient-to-r from-teal-600 to-teal-500 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-teal-500/25 ${uploadingLogo ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:from-teal-700 hover:to-teal-600'}`}>
                           {uploadingLogo ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                           {uploadingLogo ? 'Uploading...' : 'Browse Files'}
                           <input type="file" className="hidden" accept="image/*" onChange={(e) => handleLogoUpload(e)} disabled={uploadingLogo} />
@@ -519,7 +519,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Trading Name</label>
                   <input 
                     type="text" 
-                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] p-5 focus:border-amber-400 focus:bg-white outline-none text-slate-900 font-bold text-sm transition-all" 
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] p-5 focus:border-teal-400 focus:bg-white outline-none text-slate-900 font-bold text-sm transition-all" 
                     value={settings.companyName}
                     onChange={e => setSettings({...settings, companyName: e.target.value})}
                     placeholder="e.g. Acme Construction Ltd"
@@ -527,7 +527,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Business Address & Contact</label>
-                  <div className="flex items-start bg-slate-50 border-2 border-slate-100 rounded-[20px] px-4 focus-within:border-amber-400 focus-within:bg-white transition-all">
+                  <div className="flex items-start bg-slate-50 border-2 border-slate-100 rounded-[20px] px-4 focus-within:border-teal-400 focus-within:bg-white transition-all">
                     <MapPin size={18} className="text-slate-400 mt-5 mr-2 shrink-0" />
                     <textarea 
                       className="w-full bg-transparent border-none py-5 outline-none text-slate-900 font-bold text-sm min-h-[140px] leading-relaxed" 
@@ -550,7 +550,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     </div>
                     <button
                       onClick={() => setSettings({ ...settings, isVatRegistered: !settings.isVatRegistered })}
-                      className={`relative w-14 h-8 rounded-full transition-colors ${settings.isVatRegistered ? "bg-amber-500" : "bg-slate-300"}`}>
+                      className={`relative w-14 h-8 rounded-full transition-colors ${settings.isVatRegistered ? "bg-teal-500" : "bg-slate-300"}`}>
                       <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-all ${settings.isVatRegistered ? "left-7" : "left-1"}`} />
                     </button>
                   </div>
@@ -558,7 +558,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                   {settings.isVatRegistered && (
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">VAT Registration Number</label>
-                      <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-amber-400 focus-within:bg-white transition-all">
+                      <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-teal-400 focus-within:bg-white transition-all">
                         <Hash size={18} className="text-slate-400 mr-3 shrink-0" />
                         <input
                           type="text"
@@ -588,7 +588,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Labour Rate (£/hr)</label>
-                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-amber-400 focus-within:bg-white transition-all">
+                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-teal-400 focus-within:bg-white transition-all">
                       <PoundSterling size={18} className="text-slate-400 mr-3 shrink-0" />
                       <input 
                         type="number" 
@@ -601,7 +601,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Standard VAT Rate (%)</label>
-                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-amber-400 focus-within:bg-white transition-all">
+                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-teal-400 focus-within:bg-white transition-all">
                       <Landmark size={18} className="text-slate-400 mr-3 shrink-0" />
                       <input 
                         type="number" 
@@ -614,7 +614,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Reference Prefix</label>
-                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-amber-400 focus-within:bg-white transition-all">
+                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[20px] px-5 focus-within:border-teal-400 focus-within:bg-white transition-all">
                       <Hash size={18} className="text-slate-400 mr-3 shrink-0" />
                       <input 
                         type="text" 
@@ -639,7 +639,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 px-2 pb-2 border-b border-slate-100">
-                      <Package size={16} className="text-amber-500" />
+                      <Package size={16} className="text-teal-500" />
                       <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-900">Materials Defaults</h4>
                     </div>
                     {[
@@ -703,9 +703,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         <p className="text-[10px] font-medium text-slate-500 italic mt-0.5">Include standard UK tax calculations.</p>
                       </div>
                     </div>
-                    <button 
+                    <button
                       onClick={() => setSettings({ ...settings, enableVat: !settings.enableVat })}
-                      className={`w-14 h-8 rounded-full relative transition-all duration-300 ${settings.enableVat ? 'bg-amber-500 shadow-lg shadow-amber-200' : 'bg-slate-300'}`}
+                      className={`w-14 h-8 rounded-full relative transition-all duration-300 ${settings.enableVat ? 'bg-teal-500 shadow-lg shadow-teal-200' : 'bg-slate-300'}`}
                     >
                       <div className={`absolute top-1 left-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${settings.enableVat ? 'translate-x-6' : 'translate-x-0'}`} />
                     </button>
@@ -730,7 +730,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
 
                 <div className="space-y-5">
                   <div className="flex items-center gap-2 px-1">
-                    <Palette size={16} className="text-amber-500" />
+                    <Palette size={16} className="text-teal-500" />
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Visual Design Theme</label>
                   </div>
                   <div className="grid grid-cols-3 gap-3 md:gap-6">
@@ -738,7 +738,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       <button
                         key={color}
                         onClick={() => setSettings({ ...settings, costBoxColor: color as any })}
-                        className={`flex flex-col items-center gap-4 p-3 md:p-6 rounded-[32px] border-2 transition-all ${settings.costBoxColor === color ? 'border-amber-500 bg-amber-50/20 shadow-lg' : 'border-slate-100 bg-white hover:border-slate-200'}`}
+                        className={`flex flex-col items-center gap-4 p-3 md:p-6 rounded-[32px] border-2 transition-all ${settings.costBoxColor === color ? 'border-teal-500 bg-teal-50/30 shadow-lg' : 'border-slate-100 bg-white hover:border-teal-200'}`}
                       >
                         <div className={`w-12 h-12 rounded-[14px] shadow-lg ${color === 'slate' ? 'bg-slate-900' : color === 'amber' ? 'bg-amber-500' : 'bg-blue-600'}`}></div>
                         <span className="text-[10px] font-black uppercase tracking-widest">{color}</span>
@@ -750,7 +750,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 {/* Document Template Selection */}
                 <div className="space-y-5 pt-6 border-t border-slate-100">
                   <div className="flex items-center gap-2 px-1">
-                    <Layout size={16} className="text-purple-500" />
+                    <Layout size={16} className="text-teal-500" />
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Document Template</label>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -763,9 +763,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       <button
                         key={template.id}
                         onClick={() => setSettings({ ...settings, documentTemplate: template.id as DocumentTemplate })}
-                        className={`flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all ${(settings.documentTemplate || 'classic') === template.id ? 'border-purple-500 bg-purple-50/50 shadow-lg' : 'border-slate-100 bg-white hover:border-slate-200'}`}
+                        className={`flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all ${(settings.documentTemplate || 'classic') === template.id ? 'border-teal-500 bg-teal-50/50 shadow-lg' : 'border-slate-100 bg-white hover:border-teal-200'}`}
                       >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${(settings.documentTemplate || 'classic') === template.id ? 'bg-purple-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${(settings.documentTemplate || 'classic') === template.id ? 'bg-teal-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
                           <template.icon size={20} />
                         </div>
                         <div className="text-center">
