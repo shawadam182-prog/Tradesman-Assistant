@@ -349,45 +349,45 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                   </div>
                   <div className="p-10 grid md:grid-cols-2 gap-6">
                     {/* Professional Plan */}
-                    <div className="border-2 border-purple-200 rounded-3xl p-6 relative bg-purple-50/30">
-                      <div className="absolute -top-3 left-6">
-                        <span className="bg-purple-500 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Recommended</span>
-                      </div>
-                      <h5 className="text-xl font-black text-slate-900 mt-2">Professional</h5>
-                      <p className="text-3xl font-black text-purple-600 mt-2">£9.99<span className="text-sm text-slate-400 font-bold">/month</span></p>
+                    <div className="border-2 border-slate-200 rounded-3xl p-6">
+                      <h5 className="text-xl font-black text-slate-900">Professional</h5>
+                      <p className="text-sm text-slate-500 mt-1">For solo tradespeople</p>
+                      <p className="text-3xl font-black text-slate-900 mt-2">£19<span className="text-sm text-slate-400 font-bold">/month</span></p>
                       <ul className="mt-6 space-y-3 text-sm">
-                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> Unlimited customers</li>
-                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> Unlimited job packs</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> Unlimited jobs</li>
                         <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> Unlimited quotes & invoices</li>
-                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> Expense tracking</li>
                         <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> Materials library</li>
-                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> 100 photos/month</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> Full job pack management</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> Priority support</li>
                       </ul>
                       <button
                         onClick={() => handleUpgrade('professional')}
                         disabled={upgradingTier !== null}
-                        className="w-full mt-6 bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all disabled:opacity-50"
+                        className="w-full mt-6 bg-slate-200 hover:bg-slate-300 text-slate-900 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all disabled:opacity-50"
                       >
                         {upgradingTier === 'professional' ? <Loader2 size={16} className="animate-spin inline" /> : 'Get Professional'}
                       </button>
                     </div>
 
-                    {/* Business Plan */}
-                    <div className="border-2 border-slate-200 rounded-3xl p-6">
-                      <h5 className="text-xl font-black text-slate-900">Business</h5>
-                      <p className="text-3xl font-black text-slate-900 mt-2">£19.99<span className="text-sm text-slate-400 font-bold">/month</span></p>
+                    {/* Business Plan - Recommended */}
+                    <div className="border-2 border-teal-400 rounded-3xl p-6 relative bg-teal-50/30">
+                      <div className="absolute -top-3 left-6">
+                        <span className="bg-teal-500 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Recommended</span>
+                      </div>
+                      <h5 className="text-xl font-black text-slate-900 mt-2">Business</h5>
+                      <p className="text-sm text-slate-500 mt-1">Full power features</p>
+                      <p className="text-3xl font-black text-teal-600 mt-2">£29<span className="text-sm text-slate-400 font-bold">/month</span></p>
                       <ul className="mt-6 space-y-3 text-sm">
-                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" /> Everything in Professional</li>
-                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" /> Bank import & reconciliation</li>
-                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" /> VAT reports</li>
-                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" /> Payables management</li>
-                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" /> Filing cabinet</li>
-                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" /> Unlimited photos & docs</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-teal-500" /> Everything in Professional</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-teal-500" /> AI receipt scanning</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-teal-500" /> Bank statement import</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-teal-500" /> Auto reconciliation</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-teal-500" /> VAT tracking & reports</li>
                       </ul>
                       <button
                         onClick={() => handleUpgrade('business')}
                         disabled={upgradingTier !== null}
-                        className="w-full mt-6 bg-slate-900 hover:bg-black text-white py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all disabled:opacity-50"
+                        className="w-full mt-6 bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all disabled:opacity-50"
                       >
                         {upgradingTier === 'business' ? <Loader2 size={16} className="animate-spin inline" /> : 'Get Business'}
                       </button>
