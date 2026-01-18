@@ -282,6 +282,7 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
       const filename = `${prefix}${numStr}_${cleanTitle}.pdf`;
       const docType = activeQuote.type === 'invoice' ? 'invoice' : 'quote';
       const customerName = customer?.name || 'there';
+      const customerEmail = customer?.email || '';
 
       // Use lower scale on mobile to prevent memory issues
       const isMobile = window.innerWidth < 768;
@@ -347,16 +348,40 @@ Please find attached ${docType} as discussed.${partPaymentLine}
 Thanks,
 ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${settings?.email ? `\n${settings.email}` : ''}`;
 
-      // Save PDF to downloads (this works reliably)
+      // Get PDF as blob for Web Share API
+      const pdfBlob = pdf.output('blob');
+      const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+      // Try Web Share API first (works on mobile and can share files)
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        try {
+          await navigator.share({
+            files: [pdfFile],
+            title: subject,
+            text: body,
+          });
+          // Share was successful
+          return;
+        } catch (shareErr) {
+          // User cancelled or share failed, fall through to email helper
+          if ((shareErr as Error).name === 'AbortError') {
+            return; // User cancelled, don't show email helper
+          }
+        }
+      }
+
+      // Fall back to downloading PDF and showing email helper modal
       pdf.save(filename);
 
-      // Open email with body pre-filled, user attaches PDF from downloads
-      const mailtoLink = `mailto:${customer?.email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-      // Small delay to let PDF download complete
-      setTimeout(() => {
-        window.location.href = mailtoLink;
-      }, 300);
+      // Show the email helper modal with all the details
+      setEmailHelper({
+        show: true,
+        subject,
+        body,
+        email: customerEmail,
+        filename,
+        copied: false,
+      });
     } catch (err) {
       console.error('Email share failed:', err);
       alert('Could not prepare email. Please try downloading the PDF instead.');
