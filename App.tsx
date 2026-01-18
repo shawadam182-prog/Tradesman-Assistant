@@ -32,6 +32,7 @@ const WholesalerAdmin = lazy(() => import('./components/WholesalerAdmin').then(m
 const SupportRequestsAdmin = lazy(() => import('./components/SupportRequestsAdmin').then(m => ({ default: m.SupportRequestsAdmin })));
 const TrialUsersAdmin = lazy(() => import('./components/TrialUsersAdmin').then(m => ({ default: m.TrialUsersAdmin })));
 const FutureJobsPage = lazy(() => import('./components/FutureJobsPage').then(m => ({ default: m.FutureJobsPage })));
+const AccountantExportPage = lazy(() => import('./components/AccountantExportPage').then(m => ({ default: m.AccountantExportPage })));
 
 // Loading fallback component
 const PageLoader: React.FC = () => (
@@ -56,6 +57,7 @@ type TabType =
   | 'vat'
   | 'profitloss'
   | 'payables'
+  | 'accountant_export'
   | 'settings'
   | 'wholesalers'
   | 'support'
@@ -66,7 +68,7 @@ type TabType =
   | 'quote_edit';
 
 // Valid main tabs that can be restored after page reload (e.g., returning from camera)
-const RESTORABLE_TABS: readonly TabType[] = ['home', 'jobpacks', 'quotes', 'invoices', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'files', 'materials', 'wholesalers', 'support', 'trial_analytics', 'future_jobs'];
+const RESTORABLE_TABS: readonly TabType[] = ['home', 'jobpacks', 'quotes', 'invoices', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'accountant_export', 'files', 'materials', 'wholesalers', 'support', 'trial_analytics', 'future_jobs'];
 type RestorableTab = typeof RESTORABLE_TABS[number];
 
 const App: React.FC = () => {
@@ -320,6 +322,7 @@ const App: React.FC = () => {
         {activeTab === 'vat' && <VATSummaryPage onBack={() => setActiveTab('home')} />}
         {activeTab === 'profitloss' && <ProfitLossPage onBack={() => setActiveTab('home')} />}
         {activeTab === 'payables' && <PayablesPage onBack={() => setActiveTab('home')} />}
+        {activeTab === 'accountant_export' && <AccountantExportPage onBack={() => setActiveTab('home')} />}
         {activeTab === 'files' && <FilingCabinetPage onBack={() => setActiveTab('home')} />}
         {activeTab === 'materials' && <MaterialsLibrary onBack={() => setActiveTab('home')} />}
         {activeTab === 'wholesalers' && <WholesalerAdmin onBack={() => setActiveTab('home')} />}
