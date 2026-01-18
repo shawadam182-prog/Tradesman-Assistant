@@ -893,7 +893,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       <div className="space-y-3 md:space-y-4">
         {(formData.sections || []).map((section, sectionIdx) => (
           <div key={section.id} className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden transition-all group/section hover:shadow-xl">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-900 transition-all group-hover/section:bg-amber-500"></div>
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-900 transition-all group-hover/section:bg-teal-500"></div>
 
             <div className="p-1.5 md:p-2 space-y-1.5 md:space-y-2">
               <div className="flex justify-between items-center gap-2">
@@ -902,7 +902,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                     <div className="h-6 w-6 bg-slate-100 rounded-lg flex items-center justify-center font-black text-[10px] text-slate-500">{sectionIdx + 1}</div>
                     <input
                       type="text"
-                      className="bg-transparent text-xs md:text-base font-black text-slate-900 outline-none focus:text-amber-600 transition-colors w-full leading-tight py-0.5"
+                      className="bg-transparent text-xs md:text-base font-black text-slate-900 outline-none focus:text-teal-600 transition-colors w-full leading-tight py-0.5"
                       value={section.title}
                       onChange={e => updateSectionTitle(section.id, e.target.value)}
                       placeholder="Job Section Title (e.g. Rewire Kitchen)"
@@ -945,15 +945,15 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                     <div key={item.id} className="bg-white p-0.5 rounded-md shadow-sm border border-slate-100 relative group overflow-hidden">
                       <div className="flex justify-between items-center gap-1 mb-0.5">
                          <div className="flex-1 min-w-0">
-                            <input type="text" className="w-full font-bold text-[10px] text-slate-900 outline-none placeholder:text-slate-300 bg-transparent leading-none p-0 m-0" value={item.name} onChange={e => updateItem(section.id, item.id, { name: e.target.value })} placeholder="Item Name" />
-                            <input type="text" className="w-full text-[8px] text-slate-500 outline-none placeholder:text-slate-300 bg-transparent leading-none p-0 m-0 mt-0.5" value={item.description} onChange={e => updateItem(section.id, item.id, { description: e.target.value })} placeholder="Description (optional)" />
+                            <input type="text" className="w-full h-4 font-bold text-[10px] text-slate-900 outline-none placeholder:text-slate-300 bg-transparent leading-none p-0 m-0" value={item.name} onChange={e => updateItem(section.id, item.id, { name: e.target.value })} placeholder="Item Name" />
+                            <input type="text" className="w-full h-3 text-[8px] text-slate-500 outline-none placeholder:text-slate-300 bg-transparent leading-none p-0 m-0 mt-0.5" value={item.description} onChange={e => updateItem(section.id, item.id, { description: e.target.value })} placeholder="Description (optional)" />
                          </div>
                          <div className="flex gap-0.5 shrink-0">
                            {/* Save to Price List */}
                            {item.name && (
                              <button
                                onClick={() => saveItemToLibrary(item)}
-                               className="p-1 bg-slate-50 text-slate-300 rounded hover:bg-amber-50 hover:text-amber-500 transition-colors touch-manipulation"
+                               className="p-1 bg-slate-50 text-slate-300 rounded hover:bg-teal-50 hover:text-teal-500 transition-colors touch-manipulation"
                                title="Save to price list"
                              >
                                <BookmarkPlus size={10}/>
@@ -969,17 +969,17 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                          {/* Quantity with +/- buttons */}
                          <div className="flex-1">
                             <label className="text-[6px] font-bold text-slate-400 uppercase tracking-wider block leading-none mb-0.5">Qty</label>
-                            <div className="flex items-center bg-white rounded shadow-sm border border-slate-100">
+                            <div className="flex items-center bg-white rounded shadow-sm border border-slate-100 h-6">
                               <button
                                 type="button"
                                 onClick={() => decrementQuantity(section.id, item.id)}
-                                className="px-1.5 py-1 hover:bg-slate-50 rounded-l transition-colors touch-manipulation active:bg-slate-100"
+                                className="px-1.5 h-full hover:bg-slate-50 rounded-l transition-colors touch-manipulation active:bg-slate-100"
                               >
                                 <Minus size={10} className="text-slate-400" />
                               </button>
                               <input
                                 type="number"
-                                className="w-7 bg-transparent text-[10px] font-bold text-center outline-none"
+                                className="w-10 h-full bg-transparent text-sm font-black text-center outline-none text-slate-900"
                                 value={item.quantity || ''}
                                 onChange={e => updateItem(section.id, item.id, { quantity: parseFloat(e.target.value) || 0 })}
                                 placeholder="0"
@@ -987,7 +987,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                               <button
                                 type="button"
                                 onClick={() => incrementQuantity(section.id, item.id)}
-                                className="px-1.5 py-1 hover:bg-slate-50 rounded-r transition-colors touch-manipulation active:bg-slate-100"
+                                className="px-1.5 h-full hover:bg-slate-50 rounded-r transition-colors touch-manipulation active:bg-slate-100"
                               >
                                 <Plus size={10} className="text-slate-400" />
                               </button>
@@ -995,10 +995,10 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                          </div>
                          <div className="flex-1">
                             <label className="text-[6px] font-bold text-slate-400 uppercase tracking-wider block leading-none mb-0.5">Price (£)</label>
-                            <input type="number" className="w-full bg-white rounded text-[10px] font-bold py-1 px-0.5 text-center shadow-sm outline-none focus:ring-1 focus:ring-amber-100 border border-slate-100" value={item.unitPrice || ''} onChange={e => updateItem(section.id, item.id, { unitPrice: parseFloat(e.target.value) || 0 })} placeholder="0.00" />
+                            <input type="number" className="w-full h-6 bg-white rounded text-[10px] font-bold px-0.5 text-center shadow-sm outline-none focus:ring-1 focus:ring-teal-100 border border-slate-100" value={item.unitPrice || ''} onChange={e => updateItem(section.id, item.id, { unitPrice: parseFloat(e.target.value) || 0 })} placeholder="0.00" />
                          </div>
                          <div className="flex-1 flex flex-col justify-end">
-                            <div className="w-full bg-slate-900 rounded py-1 px-0.5 text-center">
+                            <div className="w-full h-6 bg-slate-900 rounded px-0.5 text-center flex items-center justify-center">
                                <span className="text-white text-[10px] font-bold leading-none">£{item.totalPrice.toFixed(2)}</span>
                             </div>
                          </div>
@@ -1010,14 +1010,14 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                 {/* Action buttons for materials */}
                 <div className="flex gap-1 pt-1">
                    <button onClick={() => addMaterialToSection(section.id)} className="flex-1 flex items-center justify-center gap-1 py-1 bg-white border border-slate-200 rounded text-slate-600 font-bold text-[9px] uppercase tracking-wider shadow-sm hover:bg-slate-50 active:scale-95 transition-all">
-                      <Plus size={12} className="text-amber-500"/> Add Item
+                      <Plus size={12} className="text-teal-500"/> Add Item
                    </button>
                    <button
                      onClick={() => {
                        setTargetSectionForMaterial(section.id);
                        setShowMaterialsLibrary(true);
                      }}
-                     className="flex-1 flex items-center justify-center gap-1 py-1 bg-amber-50 border border-amber-200 rounded text-amber-600 font-bold text-[9px] uppercase tracking-wider shadow-sm hover:bg-amber-100 active:scale-95 transition-all"
+                     className="flex-1 flex items-center justify-center gap-1 py-1 bg-teal-50 border border-teal-200 rounded text-teal-600 font-bold text-[9px] uppercase tracking-wider shadow-sm hover:bg-teal-100 active:scale-95 transition-all"
                    >
                      <Package size={12}/> Price List
                    </button>
