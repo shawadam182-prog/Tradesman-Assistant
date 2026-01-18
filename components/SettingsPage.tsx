@@ -1,17 +1,21 @@
 
 import React, { useState } from 'react';
-import { AppSettings, QuoteDisplayOptions, DocumentTemplate } from '../types';
+import { AppSettings, QuoteDisplayOptions, DocumentTemplate, TIER_LIMITS } from '../types';
 import {
   Save, Building2, Calculator, MapPin,
   PoundSterling, CheckCircle, FileText,
   Settings2, Info, Palette, ReceiptText,
   ChevronRight, Building, Upload, X, Image as ImageIcon,
   Plus, Eye, EyeOff, HardHat, Package, Landmark, ShieldCheck, Hash, Loader2,
-  Calendar, Layout, FileSpreadsheet, FileEdit, List, ArrowLeft
+  Calendar, Layout, FileSpreadsheet, FileEdit, List, ArrowLeft,
+  Crown, Zap, Clock, Users, Briefcase, Camera, FileBox
 } from 'lucide-react';
 import { useToast } from '../src/contexts/ToastContext';
 import { handleApiError } from '../src/utils/errorHandler';
 import { userSettingsService } from '../src/services/dataService';
+import { useSubscription } from '../src/hooks/useFeatureAccess';
+import { redirectToCheckout } from '../src/lib/stripe';
+import { useData } from '../src/contexts/DataContext';
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -20,13 +24,35 @@ interface SettingsPageProps {
   onBack?: () => void;
 }
 
-type SettingsCategory = 'company' | 'quotes' | 'invoices';
+type SettingsCategory = 'company' | 'quotes' | 'invoices' | 'subscription';
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSettings, onSave, onBack }) => {
   const toast = useToast();
+  const subscription = useSubscription();
+  const { quotes, projects, customers } = useData();
   const [activeCategory, setActiveCategory] = useState<SettingsCategory>('company');
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [upgradingTier, setUpgradingTier] = useState<string | null>(null);
+
+  // Calculate current usage for limits display
+  const currentInvoiceCount = quotes.filter(q => q.type === 'invoice').length;
+  const currentQuoteCount = quotes.filter(q => q.type === 'estimate' || q.type === 'quotation').length;
+  const currentJobPackCount = projects.length;
+  const currentCustomerCount = customers.length;
+  const limits = subscription.usageLimits || TIER_LIMITS[subscription.tier];
+
+  const handleUpgrade = async (tier: 'professional' | 'business') => {
+    setUpgradingTier(tier);
+    try {
+      await redirectToCheckout(tier);
+    } catch (error) {
+      console.error('Checkout error:', error);
+      const { message } = handleApiError(error);
+      toast.error('Upgrade Failed', message);
+      setUpgradingTier(null);
+    }
+  };
 
   const handleNumericChange = (field: keyof AppSettings, val: string) => {
     if (val === '') {
@@ -174,6 +200,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
           </div>
           
           <div className="space-y-3">
+            <CategoryButton id="subscription" label="Subscription" icon={Crown} color="bg-purple-500 text-white" />
             <CategoryButton id="company" label="My Company" icon={Building} color="bg-amber-500 text-slate-900" />
             <CategoryButton id="quotes" label="Quote Preferences" icon={FileText} color="bg-blue-500 text-white" />
             <CategoryButton id="invoices" label="Invoice Preferences" icon={ReceiptText} color="bg-emerald-500 text-white" />
@@ -193,6 +220,162 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
 
         {/* Dynamic Content Area */}
         <main className="flex-1 min-h-[600px]">
+          {activeCategory === 'subscription' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              {/* Current Plan Card */}
+              <div className="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
+                <div className="p-10 border-b border-slate-100 bg-gradient-to-r from-purple-50 to-slate-50">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-3 bg-purple-100 text-purple-600 rounded-2xl"><Crown size={24} /></div>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Your Plan</h3>
+                  </div>
+                  <p className="text-slate-500 text-sm font-medium italic">Manage your subscription and view usage limits.</p>
+                </div>
+                <div className="p-10">
+                  {/* Current Status */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${
+                          subscription.tier === 'free' ? 'bg-slate-100 text-slate-600' :
+                          subscription.tier === 'professional' ? 'bg-purple-100 text-purple-600' :
+                          'bg-amber-100 text-amber-600'
+                        }`}>
+                          {subscription.tier}
+                        </span>
+                        {subscription.status === 'trialing' && (
+                          <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-blue-100 text-blue-600">
+                            Trial
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-2xl font-black text-slate-900 capitalize">{subscription.tier} Plan</p>
+                      {subscription.status === 'trialing' && subscription.trialDaysRemaining !== null && (
+                        <p className="text-sm text-slate-500 mt-1">
+                          <Clock size={14} className="inline mr-1" />
+                          {subscription.trialDaysRemaining} day{subscription.trialDaysRemaining !== 1 ? 's' : ''} left in trial
+                        </p>
+                      )}
+                    </div>
+                    {subscription.tier === 'free' && (
+                      <button
+                        onClick={() => handleUpgrade('professional')}
+                        disabled={upgradingTier !== null}
+                        className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-purple-200 disabled:opacity-50"
+                      >
+                        {upgradingTier === 'professional' ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
+                        Upgrade to Pro
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Usage Limits */}
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Current Usage</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-slate-50 rounded-2xl p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Users size={16} className="text-purple-500" />
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Customers</span>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900">
+                          {currentCustomerCount}
+                          <span className="text-sm text-slate-400 font-bold">/{limits.customers ?? '∞'}</span>
+                        </p>
+                      </div>
+                      <div className="bg-slate-50 rounded-2xl p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Briefcase size={16} className="text-blue-500" />
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Job Packs</span>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900">
+                          {currentJobPackCount}
+                          <span className="text-sm text-slate-400 font-bold">/{limits.jobPacks ?? '∞'}</span>
+                        </p>
+                      </div>
+                      <div className="bg-slate-50 rounded-2xl p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <FileText size={16} className="text-amber-500" />
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quotes</span>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900">
+                          {currentQuoteCount}
+                          <span className="text-sm text-slate-400 font-bold">/{limits.quotes ?? '∞'}</span>
+                        </p>
+                      </div>
+                      <div className="bg-slate-50 rounded-2xl p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <ReceiptText size={16} className="text-emerald-500" />
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Invoices</span>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900">
+                          {currentInvoiceCount}
+                          <span className="text-sm text-slate-400 font-bold">/{limits.invoices ?? '∞'}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Plans Comparison */}
+              {subscription.tier === 'free' && (
+                <div className="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="p-10 border-b border-slate-100">
+                    <h4 className="text-lg font-black text-slate-900 uppercase tracking-tight">Upgrade Your Plan</h4>
+                    <p className="text-slate-500 text-sm font-medium italic mt-1">Unlock more features and remove limits.</p>
+                  </div>
+                  <div className="p-10 grid md:grid-cols-2 gap-6">
+                    {/* Professional Plan */}
+                    <div className="border-2 border-purple-200 rounded-3xl p-6 relative bg-purple-50/30">
+                      <div className="absolute -top-3 left-6">
+                        <span className="bg-purple-500 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Recommended</span>
+                      </div>
+                      <h5 className="text-xl font-black text-slate-900 mt-2">Professional</h5>
+                      <p className="text-3xl font-black text-purple-600 mt-2">£9.99<span className="text-sm text-slate-400 font-bold">/month</span></p>
+                      <ul className="mt-6 space-y-3 text-sm">
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> Unlimited customers</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> Unlimited job packs</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> Unlimited quotes & invoices</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> Expense tracking</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> Materials library</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-purple-500" /> 100 photos/month</li>
+                      </ul>
+                      <button
+                        onClick={() => handleUpgrade('professional')}
+                        disabled={upgradingTier !== null}
+                        className="w-full mt-6 bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all disabled:opacity-50"
+                      >
+                        {upgradingTier === 'professional' ? <Loader2 size={16} className="animate-spin inline" /> : 'Get Professional'}
+                      </button>
+                    </div>
+
+                    {/* Business Plan */}
+                    <div className="border-2 border-slate-200 rounded-3xl p-6">
+                      <h5 className="text-xl font-black text-slate-900">Business</h5>
+                      <p className="text-3xl font-black text-slate-900 mt-2">£19.99<span className="text-sm text-slate-400 font-bold">/month</span></p>
+                      <ul className="mt-6 space-y-3 text-sm">
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" /> Everything in Professional</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" /> Bank import & reconciliation</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" /> VAT reports</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" /> Payables management</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" /> Filing cabinet</li>
+                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" /> Unlimited photos & docs</li>
+                      </ul>
+                      <button
+                        onClick={() => handleUpgrade('business')}
+                        disabled={upgradingTier !== null}
+                        className="w-full mt-6 bg-slate-900 hover:bg-black text-white py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all disabled:opacity-50"
+                      >
+                        {upgradingTier === 'business' ? <Loader2 size={16} className="animate-spin inline" /> : 'Get Business'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {activeCategory === 'company' && (
             <div className="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="p-10 border-b border-slate-100 bg-slate-50/50">

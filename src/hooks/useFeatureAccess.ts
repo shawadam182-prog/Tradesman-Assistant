@@ -164,8 +164,11 @@ export function useSubscription(): SubscriptionInfo {
       (status === 'trialing' && trialEnd !== null && trialEnd > now) ||
       (status === 'cancelled' && subscriptionPeriodEnd !== null && subscriptionPeriodEnd > now);
 
-    // Get usage limits from settings or fall back to tier defaults
-    const usageLimits: UsageLimits = settings.usageLimits || TIER_LIMITS[tier];
+    // Get usage limits - merge with tier defaults to ensure all fields exist
+    const tierDefaults = TIER_LIMITS[tier];
+    const usageLimits: UsageLimits = settings.usageLimits
+      ? { ...tierDefaults, ...settings.usageLimits }
+      : tierDefaults;
 
     return {
       tier,
@@ -194,7 +197,11 @@ export function useUsageLimit(
 
   return useMemo(() => {
     const tier: SubscriptionTier = settings.subscriptionTier || 'free';
-    const limits = settings.usageLimits || TIER_LIMITS[tier];
+    const tierDefaults = TIER_LIMITS[tier];
+    // Merge with tier defaults to ensure all fields exist
+    const limits = settings.usageLimits
+      ? { ...tierDefaults, ...settings.usageLimits }
+      : tierDefaults;
     const limit = limits[resource];
 
     // null means unlimited

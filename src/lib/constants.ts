@@ -12,7 +12,7 @@ export const isAdminUser = (userId: string | undefined): boolean => {
 // App configuration
 export const APP_CONFIG = {
   BASE_URL: import.meta.env.VITE_APP_URL || 'https://tradesync.app',
-  TRIAL_DAYS: 14,
+  TRIAL_DAYS: 7,
   REFERRAL_VALIDITY_DAYS: 30,
   DEFAULT_COMMISSION: 10.00,
 } as const;

@@ -61,6 +61,18 @@ const DEFAULT_SETTINGS: AppSettings = {
     showLogo: true,
     showTotalsBreakdown: true,
   },
+  // Subscription defaults - trialing users get free tier limits
+  subscriptionTier: 'free',
+  subscriptionStatus: 'trialing',
+  trialStart: undefined,
+  trialEnd: undefined,
+  subscriptionStart: undefined,
+  subscriptionEnd: undefined,
+  subscriptionPeriodEnd: undefined,
+  stripeCustomerId: undefined,
+  stripeSubscriptionId: undefined,
+  referralCode: undefined,
+  usageLimits: undefined, // Will fall back to TIER_LIMITS[tier]
 };
 
 interface DataContextType {
