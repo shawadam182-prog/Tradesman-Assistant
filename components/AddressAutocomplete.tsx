@@ -23,6 +23,7 @@ interface AddressAutocompleteProps {
   onVoiceEnd?: () => void;
   isListening?: boolean;
   disabled?: boolean;
+  showLabel?: boolean;
 }
 
 // Track if Google Places script is loaded
@@ -74,6 +75,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   onVoiceEnd,
   isListening = false,
   disabled = false,
+  showLabel = true,
 }) => {
   const [isLocating, setIsLocating] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -247,16 +249,18 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   }, []);
 
   return (
-    <div ref={containerRef} className="space-y-0.5 relative">
-      <label className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5 italic px-1">
-        <MapPin size={10} className="md:w-3 md:h-3" /> Address
-      </label>
+    <div ref={containerRef} className={`${showLabel ? 'space-y-0.5' : ''} relative`}>
+      {showLabel && (
+        <label className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5 italic px-1">
+          <MapPin size={10} className="md:w-3 md:h-3" /> Address
+        </label>
+      )}
 
       <div className="relative">
         <input
           ref={inputRef}
           type="text"
-          className={`w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2.5 md:px-4 md:py-4 pr-36 md:pr-44 text-slate-950 font-bold text-sm md:text-base placeholder:text-xs md:placeholder:text-sm outline-none focus:bg-white focus:border-amber-500 transition-all ${className}`}
+          className={`w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2.5 md:px-4 md:py-4 pr-24 md:pr-44 text-slate-950 font-bold text-sm md:text-base placeholder:text-xs md:placeholder:text-sm outline-none focus:bg-white focus:border-amber-500 transition-all ${className}`}
           placeholder={placeholder}
           value={value}
           onChange={handleInputChange}
@@ -266,7 +270,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         />
 
         {/* Action buttons */}
-        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-0.5">
+        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-0.5 z-10">
           {/* Voice input button */}
           {onVoiceStart && (
             <button
@@ -279,7 +283,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
                   onVoiceStart();
                 }
               }}
-              className={`p-1.5 md:p-2 rounded-lg transition-all ${
+              className={`p-1 md:p-2 rounded-lg transition-all ${
                 isListening
                   ? 'bg-red-500 text-white'
                   : 'text-slate-300 hover:text-amber-500 bg-transparent'
@@ -295,7 +299,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             type="button"
             onClick={handleUseCurrentLocation}
             disabled={isLocating}
-            className="p-1.5 md:p-2 rounded-lg transition-all text-blue-500 hover:text-blue-700 disabled:opacity-30 bg-transparent"
+            className="p-1 md:p-2 rounded-lg transition-all text-blue-500 hover:text-blue-700 disabled:opacity-30 bg-transparent"
             title="Use current location"
           >
             {isLocating ? (
@@ -310,7 +314,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             type="button"
             onClick={handleVerifyAddress}
             disabled={!value.trim() || isVerifying}
-            className="p-1.5 md:p-2 rounded-lg transition-all text-amber-500 hover:text-amber-700 disabled:opacity-30 bg-transparent"
+            className="p-1 md:p-2 rounded-lg transition-all text-amber-500 hover:text-amber-700 disabled:opacity-30 bg-transparent"
             title="AI verify & format address"
           >
             {isVerifying ? (
@@ -325,7 +329,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             type="button"
             onClick={openInMaps}
             disabled={!value.trim()}
-            className="p-1.5 md:p-2 rounded-lg transition-all text-green-600 hover:text-green-700 disabled:opacity-30 bg-transparent"
+            className="p-1 md:p-2 rounded-lg transition-all text-green-600 hover:text-green-700 disabled:opacity-30 bg-transparent"
             title="Open in Google Maps"
           >
             <Navigation size={14} className="md:w-[18px] md:h-[18px]" />

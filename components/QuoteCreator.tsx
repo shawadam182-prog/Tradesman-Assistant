@@ -705,6 +705,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                    value={formData.jobAddress || ''}
                    onChange={(address) => setFormData(prev => ({ ...prev, jobAddress: address }))}
                    placeholder="Enter job site address if different from client..."
+                   showLabel={false}
                  />
                </div>
              </div>
