@@ -289,6 +289,7 @@ function dbSettingsToApp(dbSettings: any): AppSettings {
     trialEnd: dbSettings.trial_end || undefined,
     subscriptionStart: dbSettings.subscription_start || undefined,
     subscriptionEnd: dbSettings.subscription_end || undefined,
+    subscriptionPeriodEnd: dbSettings.subscription_period_end || undefined,
     stripeCustomerId: dbSettings.stripe_customer_id || undefined,
     stripeSubscriptionId: dbSettings.stripe_subscription_id || undefined,
     referralCode: dbSettings.referral_code || undefined,
