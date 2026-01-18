@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { getReferralCode, clearReferralCode } from '../hooks/useReferralCapture';
 import { APP_CONFIG } from '../lib/constants';
+import { activityService } from '../services/activityService';
 
 interface AuthContextType {
   user: User | null;
@@ -28,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const hasRecordedLogin = useRef(false);
 
   useEffect(() => {
     // Get initial session
@@ -35,14 +37,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // Record login for existing session on page load
+      if (session?.user && !hasRecordedLogin.current) {
+        hasRecordedLogin.current = true;
+        activityService.recordLogin().catch(console.error);
+      }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Track login/logout events
+        if (event === 'SIGNED_IN' && session?.user && !hasRecordedLogin.current) {
+          hasRecordedLogin.current = true;
+          activityService.recordLogin().catch(console.error);
+        } else if (event === 'SIGNED_OUT') {
+          hasRecordedLogin.current = false;
+          activityService.recordLogout().catch(console.error);
+        }
       }
     );
 
@@ -109,6 +126,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    // Record logout before signing out
+    await activityService.recordLogout().catch(console.error);
+    hasRecordedLogin.current = false;
     // Clear local state first (handles mock login scenario)
     setUser(null);
     setSession(null);

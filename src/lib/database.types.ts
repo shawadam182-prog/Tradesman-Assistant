@@ -281,29 +281,7 @@ export type Database = {
           user_id?: string
           vendor_name?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "filed_documents_expense_id_fkey"
-            columns: ["expense_id"]
-            isOneToOne: false
-            referencedRelation: "expenses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "filed_documents_job_pack_id_fkey"
-            columns: ["job_pack_id"]
-            isOneToOne: false
-            referencedRelation: "job_packs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "filed_documents_payable_id_fkey"
-            columns: ["payable_id"]
-            isOneToOne: false
-            referencedRelation: "payables"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       job_packs: {
         Row: {
@@ -497,36 +475,7 @@ export type Database = {
           vendor_id?: string | null
           vendor_name?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "payables_job_pack_id_fkey"
-            columns: ["job_pack_id"]
-            isOneToOne: false
-            referencedRelation: "job_packs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payables_reconciled_transaction_id_fkey"
-            columns: ["reconciled_transaction_id"]
-            isOneToOne: false
-            referencedRelation: "bank_transactions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payables_reconciled_transaction_id_fkey"
-            columns: ["reconciled_transaction_id"]
-            isOneToOne: false
-            referencedRelation: "reconciliation_summary"
-            referencedColumns: ["transaction_id"]
-          },
-          {
-            foreignKeyName: "payables_vendor_id_fkey"
-            columns: ["vendor_id"]
-            isOneToOne: false
-            referencedRelation: "vendors"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       project_materials: {
         Row: {
@@ -678,29 +627,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "quotes_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quotes_job_pack_id_fkey"
-            columns: ["job_pack_id"]
-            isOneToOne: false
-            referencedRelation: "job_packs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quotes_parent_quote_id_fkey"
-            columns: ["parent_quote_id"]
-            isOneToOne: false
-            referencedRelation: "quotes"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       reconciliation_links: {
         Row: {
@@ -730,36 +657,7 @@ export type Database = {
           invoice_id?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "reconciliation_links_bank_transaction_id_fkey"
-            columns: ["bank_transaction_id"]
-            isOneToOne: false
-            referencedRelation: "bank_transactions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reconciliation_links_bank_transaction_id_fkey"
-            columns: ["bank_transaction_id"]
-            isOneToOne: false
-            referencedRelation: "reconciliation_summary"
-            referencedColumns: ["transaction_id"]
-          },
-          {
-            foreignKeyName: "reconciliation_links_expense_id_fkey"
-            columns: ["expense_id"]
-            isOneToOne: false
-            referencedRelation: "expenses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reconciliation_links_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "quotes"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       schedule_entries: {
         Row: {
@@ -801,22 +699,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "schedule_entries_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "schedule_entries_job_pack_id_fkey"
-            columns: ["job_pack_id"]
-            isOneToOne: false
-            referencedRelation: "job_packs"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       site_documents: {
         Row: {
@@ -846,15 +729,7 @@ export type Database = {
           storage_path?: string
           summary?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "site_documents_job_pack_id_fkey"
-            columns: ["job_pack_id"]
-            isOneToOne: false
-            referencedRelation: "job_packs"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       site_notes: {
         Row: {
@@ -878,15 +753,7 @@ export type Database = {
           job_pack_id?: string
           text?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "site_notes_job_pack_id_fkey"
-            columns: ["job_pack_id"]
-            isOneToOne: false
-            referencedRelation: "job_packs"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       site_photos: {
         Row: {
@@ -916,15 +783,7 @@ export type Database = {
           storage_path?: string
           tags?: string[] | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "site_photos_job_pack_id_fkey"
-            columns: ["job_pack_id"]
-            isOneToOne: false
-            referencedRelation: "job_packs"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       support_requests: {
         Row: {
@@ -965,6 +824,87 @@ export type Database = {
           user_email?: string | null
           user_id?: string
           user_name?: string | null
+        }
+        Relationships: []
+      }
+      user_activity_logs: {
+        Row: {
+          action_details: Json | null
+          action_name: string
+          action_type: string
+          created_at: string | null
+          id: string
+          page_name: string | null
+          page_path: string | null
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action_details?: Json | null
+          action_name: string
+          action_type: string
+          created_at?: string | null
+          id?: string
+          page_name?: string | null
+          page_path?: string | null
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action_details?: Json | null
+          action_name?: string
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          page_name?: string | null
+          page_path?: string | null
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          browser: string | null
+          created_at: string | null
+          device_type: string | null
+          id: string
+          is_pwa: boolean | null
+          login_at: string
+          logout_at: string | null
+          os: string | null
+          session_duration_seconds: number | null
+          session_id: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          is_pwa?: boolean | null
+          login_at?: string
+          logout_at?: string | null
+          os?: string | null
+          session_duration_seconds?: number | null
+          session_id: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          is_pwa?: boolean | null
+          login_at?: string
+          logout_at?: string | null
+          os?: string | null
+          session_duration_seconds?: number | null
+          session_id?: string
+          user_agent?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1131,15 +1071,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "vendor_keywords_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "expense_categories"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       vendors: {
         Row: {
@@ -1230,212 +1162,36 @@ export type Database = {
       }
     }
     Views: {
-      expiring_documents: {
+      trial_users_analytics: {
         Row: {
-          category: string | null
-          created_at: string | null
-          description: string | null
-          document_date: string | null
-          expense_id: string | null
-          expiry_date: string | null
-          extracted_text: string | null
-          file_size: number | null
-          file_type: string | null
-          id: string | null
-          job_pack_id: string | null
-          name: string | null
-          payable_id: string | null
-          storage_path: string | null
-          tags: string[] | null
-          tax_year: string | null
-          updated_at: string | null
-          user_id: string | null
-          vendor_name: string | null
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          document_date?: string | null
-          expense_id?: string | null
-          expiry_date?: string | null
-          extracted_text?: string | null
-          file_size?: number | null
-          file_type?: string | null
-          id?: string | null
-          job_pack_id?: string | null
-          name?: string | null
-          payable_id?: string | null
-          storage_path?: string | null
-          tags?: string[] | null
-          tax_year?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          vendor_name?: string | null
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          document_date?: string | null
-          expense_id?: string | null
-          expiry_date?: string | null
-          extracted_text?: string | null
-          file_size?: number | null
-          file_type?: string | null
-          id?: string | null
-          job_pack_id?: string | null
-          name?: string | null
-          payable_id?: string | null
-          storage_path?: string | null
-          tags?: string[] | null
-          tax_year?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          vendor_name?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "filed_documents_expense_id_fkey"
-            columns: ["expense_id"]
-            isOneToOne: false
-            referencedRelation: "expenses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "filed_documents_job_pack_id_fkey"
-            columns: ["job_pack_id"]
-            isOneToOne: false
-            referencedRelation: "job_packs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "filed_documents_payable_id_fkey"
-            columns: ["payable_id"]
-            isOneToOne: false
-            referencedRelation: "payables"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      filing_summary: {
-        Row: {
-          category: string | null
-          document_count: number | null
-          last_upload: string | null
-          total_size: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
-      payables_summary: {
-        Row: {
-          due_this_week: number | null
-          overdue_count: number | null
-          paid_count: number | null
-          partial_count: number | null
-          total_outstanding: number | null
-          total_overdue: number | null
-          unpaid_count: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
-      reconciliation_summary: {
-        Row: {
-          description: string | null
-          is_reconciled: boolean | null
-          link_count: number | null
-          linked_items: string[] | null
-          total_matched: number | null
-          transaction_amount: number | null
-          transaction_date: string | null
-          transaction_id: string | null
-          unmatched_amount: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
-      user_subscription_status: {
-        Row: {
-          is_active: boolean | null
+          activity_last_24h: number | null
+          activity_last_7d: number | null
+          avg_session_minutes: number | null
+          company_name: string | null
+          converted: boolean | null
+          converted_at: string | null
+          days_remaining: number | null
+          engagement_score: number | null
+          features_used: number | null
+          first_login: string | null
+          last_activity: string | null
+          last_login: string | null
+          most_used_feature: string | null
+          page_views: number | null
           referral_code: string | null
-          subscription_end: string | null
-          subscription_start: string | null
           subscription_status:
             | Database["public"]["Enums"]["subscription_status"]
             | null
           subscription_tier:
             | Database["public"]["Enums"]["subscription_tier"]
             | null
-          trial_days_remaining: number | null
+          total_logins: number | null
+          total_session_minutes: number | null
           trial_end: string | null
           trial_start: string | null
-          usage_limits: Json | null
+          trial_status: string | null
+          unique_features_used: number | null
           user_id: string | null
-        }
-        Insert: {
-          is_active?: never
-          referral_code?: string | null
-          subscription_end?: string | null
-          subscription_start?: string | null
-          subscription_status?:
-            | Database["public"]["Enums"]["subscription_status"]
-            | null
-          subscription_tier?:
-            | Database["public"]["Enums"]["subscription_tier"]
-            | null
-          trial_days_remaining?: never
-          trial_end?: string | null
-          trial_start?: string | null
-          usage_limits?: Json | null
-          user_id?: string | null
-        }
-        Update: {
-          is_active?: never
-          referral_code?: string | null
-          subscription_end?: string | null
-          subscription_start?: string | null
-          subscription_status?:
-            | Database["public"]["Enums"]["subscription_status"]
-            | null
-          subscription_tier?:
-            | Database["public"]["Enums"]["subscription_tier"]
-            | null
-          trial_days_remaining?: never
-          trial_end?: string | null
-          trial_start?: string | null
-          usage_limits?: Json | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      vat_summary: {
-        Row: {
-          input_vat: number | null
-          output_vat: number | null
-          quarter: string | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
-      wholesaler_stats: {
-        Row: {
-          active: boolean | null
-          commission_owed: number | null
-          commission_paid: number | null
-          commission_per_conversion: number | null
-          contact_email: string | null
-          contact_name: string | null
-          contact_phone: string | null
-          created_at: string | null
-          id: string | null
-          last_payment_date: string | null
-          name: string | null
-          notes: string | null
-          referral_code: string | null
-          total_conversions: number | null
-          total_signups: number | null
         }
         Relationships: []
       }
@@ -1506,25 +1262,23 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
+    | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof Database
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof Database
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -1542,16 +1296,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof Database
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof Database
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -1567,16 +1321,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof Database
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof Database
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -1592,48 +1346,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+    | { schema: keyof Database },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof Database
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof Database
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
-
-export const Constants = {
-  public: {
-    Enums: {
-      subscription_status: [
-        "trialing",
-        "active",
-        "cancelled",
-        "past_due",
-        "expired",
-      ],
-      subscription_tier: ["free", "professional", "business"],
-    },
-  },
-} as const

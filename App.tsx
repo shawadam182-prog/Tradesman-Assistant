@@ -7,6 +7,7 @@ import { useData } from './src/contexts/DataContext';
 import { useAuth } from './src/contexts/AuthContext';
 import { useToast } from './src/contexts/ToastContext';
 import { useHistoryNavigation } from './src/hooks/useHistoryNavigation';
+import { usePageTracking } from './src/hooks/usePageTracking';
 import { Quote, JobPack, Customer } from './types';
 import { AlertCircle, FileWarning, Loader2 } from 'lucide-react';
 
@@ -29,6 +30,7 @@ const FilingCabinetPage = lazy(() => import('./components/FilingCabinetPage').th
 const MaterialsLibrary = lazy(() => import('./components/MaterialsLibrary').then(m => ({ default: m.MaterialsLibrary })));
 const WholesalerAdmin = lazy(() => import('./components/WholesalerAdmin').then(m => ({ default: m.WholesalerAdmin })));
 const SupportRequestsAdmin = lazy(() => import('./components/SupportRequestsAdmin').then(m => ({ default: m.SupportRequestsAdmin })));
+const TrialUsersAdmin = lazy(() => import('./components/TrialUsersAdmin').then(m => ({ default: m.TrialUsersAdmin })));
 const FutureJobsPage = lazy(() => import('./components/FutureJobsPage').then(m => ({ default: m.FutureJobsPage })));
 
 // Loading fallback component
@@ -57,13 +59,14 @@ type TabType =
   | 'settings'
   | 'wholesalers'
   | 'support'
+  | 'trial_analytics'
   | 'future_jobs'
   | 'view'
   | 'jobpack_detail'
   | 'quote_edit';
 
 // Valid main tabs that can be restored after page reload (e.g., returning from camera)
-const RESTORABLE_TABS: readonly TabType[] = ['home', 'jobpacks', 'quotes', 'invoices', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'files', 'materials', 'wholesalers', 'support', 'future_jobs'];
+const RESTORABLE_TABS: readonly TabType[] = ['home', 'jobpacks', 'quotes', 'invoices', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'files', 'materials', 'wholesalers', 'support', 'trial_analytics', 'future_jobs'];
 type RestorableTab = typeof RESTORABLE_TABS[number];
 
 const App: React.FC = () => {
@@ -115,6 +118,9 @@ const App: React.FC = () => {
     setActiveProjectId,
     setViewingQuoteId,
   });
+
+  // Track page views for analytics
+  usePageTracking(activeTab);
 
   const handleCreateQuote = (projectId?: string) => {
     setEditingQuoteId(null);
@@ -318,6 +324,7 @@ const App: React.FC = () => {
         {activeTab === 'materials' && <MaterialsLibrary onBack={() => setActiveTab('home')} />}
         {activeTab === 'wholesalers' && <WholesalerAdmin onBack={() => setActiveTab('home')} />}
         {activeTab === 'support' && <SupportRequestsAdmin onBack={() => setActiveTab('home')} />}
+        {activeTab === 'trial_analytics' && <TrialUsersAdmin onBack={() => setActiveTab('home')} />}
         {activeTab === 'future_jobs' && <FutureJobsPage onBack={() => setActiveTab('home')} onCreateJob={() => setActiveTab('jobpacks')} />}
         {activeTab === 'customers' && <CustomerManager customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer} deleteCustomer={deleteCustomer} onBack={() => setActiveTab('home')} />}
         {activeTab === 'settings' && <SettingsPage settings={settings} setSettings={setSettings} onSave={updateSettings} onBack={() => setActiveTab('home')} />}
