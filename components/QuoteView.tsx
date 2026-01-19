@@ -18,6 +18,7 @@ import {
   calculateQuoteTotals,
   calculatePartPayment,
 } from '../src/utils/quoteCalculations';
+import { getTemplateConfig } from '../src/lib/invoiceTemplates';
 
 interface QuoteViewProps {
   quote: Quote;
@@ -524,64 +525,24 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
 
   const currentThemeClass = costBoxThemes[settings.costBoxColor || 'slate'];
 
-  // Template configuration for different PDF layouts
-  const templateStyles = {
-    classic: {
-      container: 'rounded-xl',
-      header: 'p-4',
-      titleBar: 'border-y border-slate-200 bg-slate-50 px-4 py-2.5',
-      clientSection: 'px-4 py-3 bg-slate-50',
-      sectionPadding: 'px-4 py-3',
-      sectionSpacing: 'space-y-3',
-      sectionTitle: 'text-sm font-bold text-slate-900 uppercase tracking-wide',
-      materialHeader: 'flex items-center gap-1.5 border-b border-slate-100 pb-1',
-      tableText: 'text-[11px]',
-      footerRounding: 'rounded-b-xl',
-      borderStyle: 'border-slate-200'
-    },
-    modern: {
-      container: 'rounded-2xl',
-      header: 'p-6',
-      titleBar: 'border-y-2 border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4',
-      clientSection: 'px-6 py-5 bg-gradient-to-br from-slate-50 to-white',
-      sectionPadding: 'px-6 py-5',
-      sectionSpacing: 'space-y-4',
-      sectionTitle: 'text-base font-black text-slate-900 tracking-tight',
-      materialHeader: 'flex items-center gap-2 border-b-2 border-slate-100 pb-2 mb-1',
-      tableText: 'text-[12px]',
-      footerRounding: 'rounded-b-2xl',
-      borderStyle: 'border-slate-100'
-    },
-    minimal: {
-      container: 'rounded-none',
-      header: 'p-4 border-b border-slate-200',
-      titleBar: 'border-b border-slate-200 px-4 py-3 bg-white',
-      clientSection: 'px-4 py-3 bg-white',
-      sectionPadding: 'px-4 py-3',
-      sectionSpacing: 'space-y-3',
-      sectionTitle: 'text-sm font-bold text-slate-900',
-      materialHeader: 'flex items-center gap-1.5 pb-2 mb-2',
-      tableText: 'text-[11px]',
-      footerRounding: 'rounded-none',
-      borderStyle: 'border-slate-300'
-    },
-    detailed: {
-      container: 'rounded-xl',
-      header: 'p-4 bg-slate-50 border-b-2 border-slate-200',
-      titleBar: 'border-y-2 border-slate-300 bg-slate-100 px-4 py-3',
-      clientSection: 'px-4 py-3 bg-slate-50 border-b border-slate-200',
-      sectionPadding: 'px-4 py-3 border-b border-slate-100',
-      sectionSpacing: 'space-y-3',
-      sectionTitle: 'text-sm font-black text-slate-900 uppercase tracking-wider',
-      materialHeader: 'flex items-center gap-2 border-b-2 border-slate-200 pb-1.5 bg-slate-50 px-2 py-1',
-      tableText: 'text-[11px]',
-      footerRounding: 'rounded-b-xl',
-      borderStyle: 'border-slate-300'
-    }
-  };
+  // Get template configuration from the template system
+  const templateConfig = getTemplateConfig(settings.documentTemplate);
 
-  const activeTemplate = settings.documentTemplate || 'classic';
-  const templateStyle = templateStyles[activeTemplate];
+  // Create templateStyle for backwards compatibility with existing rendering
+  const activeTemplate = settings.documentTemplate || 'trade-pro';
+  const templateStyle = {
+    container: templateConfig.borderRadius,
+    header: templateConfig.headerPadding,
+    titleBar: `border-y border-slate-200 ${templateConfig.showBackgrounds ? 'bg-slate-50' : 'bg-white'} px-4 py-2`,
+    clientSection: `px-4 py-2 ${templateConfig.showBackgrounds ? 'bg-slate-50' : ''}`,
+    sectionPadding: templateConfig.containerPadding,
+    sectionSpacing: templateConfig.sectionGap,
+    sectionTitle: `${templateConfig.fontSize} font-bold text-slate-900 uppercase tracking-wide`,
+    materialHeader: templateConfig.sectionHeaderStyle || 'flex items-center gap-1.5 border-b border-slate-100 pb-1',
+    tableText: templateConfig.fontSize,
+    footerRounding: templateConfig.borderRadius === 'rounded-none' ? '' : 'rounded-b-xl',
+    borderStyle: 'border-slate-200'
+  };
 
   const CustomiseToggle = ({ label, optionKey, activeColor }: { label, optionKey: keyof QuoteDisplayOptions, activeColor: string }) => (
     <button

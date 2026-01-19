@@ -161,8 +161,19 @@ export interface JobPack {
   materials?: ProjectMaterial[];
 }
 
-// Document template options
-export type DocumentTemplate = 'classic' | 'modern' | 'minimal' | 'detailed';
+// Document template options - 8 distinct invoice/quote templates
+export type DocumentTemplate =
+  | 'classic'      // Traditional single-table, most compact
+  | 'trade-pro'    // Materials/Labour split (recommended)
+  | 'minimal'      // Clean, typography-focused
+  | 'detailed'     // Full breakdown with columns
+  | 'compact'      // Ultra-compact, one-page guarantee
+  | 'branded'      // Large logo focus
+  | 'statement'    // Zoho/QuickBooks style
+  | 'modern-card'; // Card-based app style
+
+// Alias for backwards compatibility
+export type InvoiceTemplate = DocumentTemplate;
 
 export interface AppSettings {
   defaultLabourRate: number;
