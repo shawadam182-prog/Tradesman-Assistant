@@ -553,17 +553,17 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
       borderStyle: 'border-slate-100'
     },
     minimal: {
-      container: 'rounded-lg',
-      header: 'p-3',
-      titleBar: 'border-b border-slate-100 px-3 py-2',
-      clientSection: 'px-3 py-2',
-      sectionPadding: 'px-3 py-2',
-      sectionSpacing: 'space-y-2',
-      sectionTitle: 'text-xs font-bold text-slate-800',
-      materialHeader: 'flex items-center gap-1 pb-1',
-      tableText: 'text-[10px]',
-      footerRounding: 'rounded-b-lg',
-      borderStyle: 'border-slate-100'
+      container: 'rounded-none',
+      header: 'p-4 border-b border-slate-200',
+      titleBar: 'border-b border-slate-200 px-4 py-3 bg-white',
+      clientSection: 'px-4 py-3 bg-white',
+      sectionPadding: 'px-4 py-3',
+      sectionSpacing: 'space-y-3',
+      sectionTitle: 'text-sm font-bold text-slate-900',
+      materialHeader: 'flex items-center gap-1.5 pb-2 mb-2',
+      tableText: 'text-[11px]',
+      footerRounding: 'rounded-none',
+      borderStyle: 'border-slate-300'
     },
     detailed: {
       container: 'rounded-xl',
@@ -856,21 +856,21 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                   {displayOptions.showMaterialItems && (section.items || []).length > 0 && (
                     <div className="w-full">
                       {/* Desktop Table */}
-                      <table className="hidden md:table w-full text-left border-collapse">
+                      <table className={`hidden md:table w-full text-left ${activeTemplate === 'minimal' ? 'border border-slate-300' : ''}`} style={{ borderCollapse: 'collapse' }}>
                         <thead>
-                          <tr className="border-b border-slate-100">
-                            <th className="py-1 text-[8px] font-bold text-slate-400 uppercase tracking-wider">Item</th>
-                            {displayOptions.showMaterialQty && <th className="py-1 text-[8px] font-bold text-slate-400 uppercase tracking-wider text-center w-16">Qty</th>}
-                            {displayOptions.showMaterialUnitPrice && <th className="py-1 text-[8px] font-bold text-slate-400 uppercase tracking-wider text-right w-20">Unit</th>}
-                            {displayOptions.showMaterialLineTotals && <th className="py-1 text-[8px] font-bold text-slate-400 uppercase tracking-wider text-right w-20">Total</th>}
+                          <tr className={activeTemplate === 'minimal' ? 'border-b-2 border-slate-300 bg-slate-50' : 'border-b border-slate-100'}>
+                            <th className={`py-2 px-2 text-[9px] font-bold ${activeTemplate === 'minimal' ? 'text-slate-700' : 'text-slate-400'} uppercase tracking-wider ${activeTemplate === 'minimal' ? 'border-r border-slate-300' : ''}`}>Item & Description</th>
+                            {displayOptions.showMaterialQty && <th className={`py-2 px-2 text-[9px] font-bold ${activeTemplate === 'minimal' ? 'text-slate-700' : 'text-slate-400'} uppercase tracking-wider text-center w-20 ${activeTemplate === 'minimal' ? 'border-r border-slate-300' : ''}`}>Qty</th>}
+                            {displayOptions.showMaterialUnitPrice && <th className={`py-2 px-2 text-[9px] font-bold ${activeTemplate === 'minimal' ? 'text-slate-700' : 'text-slate-400'} uppercase tracking-wider text-right w-24 ${activeTemplate === 'minimal' ? 'border-r border-slate-300' : ''}`}>Rate</th>}
+                            {displayOptions.showMaterialLineTotals && <th className={`py-2 px-2 text-[9px] font-bold ${activeTemplate === 'minimal' ? 'text-slate-700' : 'text-slate-400'} uppercase tracking-wider text-right w-24`}>Amount</th>}
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
+                        <tbody className={activeTemplate === 'minimal' ? '' : 'divide-y divide-slate-50'}>
                           {(section.items || []).map(item => (
                             item.isHeading ? (
                               // Heading row
-                              <tr key={item.id} className="bg-slate-50">
-                                <td colSpan={4} className="py-1 px-2">
+                              <tr key={item.id} className={`bg-slate-50 ${activeTemplate === 'minimal' ? 'border-b border-slate-300' : ''}`}>
+                                <td colSpan={4} className={`py-2 px-2 ${activeTemplate === 'minimal' ? 'border-r border-slate-300' : ''}`}>
                                   <div className="flex items-center gap-1">
                                     <Type size={10} className="text-slate-400" />
                                     <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{item.name || 'Section'}</span>
@@ -878,11 +878,11 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                                 </td>
                               </tr>
                             ) : (
-                              <tr key={item.id}>
-                                <td className="py-1.5 pr-2"><p className="text-[11px] font-medium text-slate-900">{item.name}</p>{item.description && <p className="text-[9px] text-slate-400 italic leading-tight">{item.description}</p>}</td>
-                                {displayOptions.showMaterialQty && <td className="py-1.5 text-center"><span className="text-[10px] font-medium text-slate-600">{item.quantity} {item.unit}</span></td>}
-                                {displayOptions.showMaterialUnitPrice && <td className="py-1.5 text-right text-[10px] font-medium text-slate-600">£{(item.unitPrice * markupMultiplier).toFixed(2)}</td>}
-                                {displayOptions.showMaterialLineTotals && <td className="py-1.5 text-right text-[11px] font-bold text-slate-900">£{(item.totalPrice * markupMultiplier).toFixed(2)}</td>}
+                              <tr key={item.id} className={activeTemplate === 'minimal' ? 'border-b border-slate-300' : ''}>
+                                <td className={`py-2 px-2 ${activeTemplate === 'minimal' ? 'border-r border-slate-300' : ''}`}><p className="text-[11px] font-medium text-slate-900">{item.name}</p>{item.description && <p className="text-[9px] text-slate-500 leading-tight mt-0.5">{item.description}</p>}</td>
+                                {displayOptions.showMaterialQty && <td className={`py-2 px-2 text-center ${activeTemplate === 'minimal' ? 'border-r border-slate-300' : ''}`}><span className="text-[10px] font-medium text-slate-700">{item.quantity} {item.unit}</span></td>}
+                                {displayOptions.showMaterialUnitPrice && <td className={`py-2 px-2 text-right text-[10px] font-medium ${activeTemplate === 'minimal' ? 'text-slate-700 border-r border-slate-300' : 'text-slate-600'}`}>£{(item.unitPrice * markupMultiplier).toFixed(2)}</td>}
+                                {displayOptions.showMaterialLineTotals && <td className={`py-2 px-2 text-right text-[11px] font-bold ${activeTemplate === 'minimal' ? 'text-slate-900' : 'text-slate-900'}`}>£{(item.totalPrice * markupMultiplier).toFixed(2)}</td>}
                               </tr>
                             )
                           ))}
@@ -1001,39 +1001,39 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           );
         })}
 
-        <div className={`${currentThemeClass} px-4 py-3 ${templateStyle.footerRounding} shadow-sm`}>
+        <div className={`${activeTemplate === 'minimal' ? 'bg-white border-t-2 border-slate-300 text-slate-900' : currentThemeClass} px-4 py-3 ${templateStyle.footerRounding} ${activeTemplate === 'minimal' ? '' : 'shadow-sm'}`}>
           <div className="flex flex-col gap-2">
             <div className="space-y-1">
               {displayOptions.showTotalsBreakdown && (
                 <>
-                  <div className="flex justify-between text-[10px] opacity-70"><span>Subtotal</span><span className="opacity-90">£{totals.clientSubtotal.toFixed(2)}</span></div>
+                  <div className={`flex justify-between text-[11px] ${activeTemplate === 'minimal' ? 'text-slate-700 font-medium' : 'opacity-70'}`}><span>Sub Total</span><span className={activeTemplate === 'minimal' ? '' : 'opacity-90'}>£{totals.clientSubtotal.toFixed(2)}</span></div>
                   {/* Discount */}
                   {totals.discountAmount > 0 && (
-                    <div className="flex justify-between text-[10px]">
-                      <span className="flex items-center gap-1 opacity-70">
+                    <div className={`flex justify-between text-[11px] ${activeTemplate === 'minimal' ? 'text-slate-700 font-medium' : ''}`}>
+                      <span className={`flex items-center gap-1 ${activeTemplate === 'minimal' ? '' : 'opacity-70'}`}>
                         <Tag size={9} />
                         Discount
-                        {activeQuote.discountDescription && <span className="opacity-50 ml-1">({activeQuote.discountDescription})</span>}
-                        {activeQuote.discountType === 'percentage' && <span className="opacity-50 ml-1">({activeQuote.discountValue}%)</span>}
+                        {activeQuote.discountDescription && <span className={activeTemplate === 'minimal' ? 'text-slate-500 ml-1' : 'opacity-50 ml-1'}>({activeQuote.discountDescription})</span>}
+                        {activeQuote.discountType === 'percentage' && <span className={activeTemplate === 'minimal' ? 'text-slate-500 ml-1' : 'opacity-50 ml-1'}>({activeQuote.discountValue}%)</span>}
                       </span>
                       <span className="font-semibold">-£{totals.discountAmount.toFixed(2)}</span>
                     </div>
                   )}
                   {settings.enableVat && displayOptions.showVat && (
-                    <div className="flex justify-between text-[10px] opacity-70"><span>VAT ({activeQuote.taxPercent}%)</span><span className="opacity-90">£{totals.taxAmount.toFixed(2)}</span></div>
+                    <div className={`flex justify-between text-[11px] ${activeTemplate === 'minimal' ? 'text-slate-700 font-medium' : 'opacity-70'}`}><span>VAT ({activeQuote.taxPercent}%)</span><span className={activeTemplate === 'minimal' ? '' : 'opacity-90'}>£{totals.taxAmount.toFixed(2)}</span></div>
                   )}
                   {settings.enableCis && displayOptions.showCis && totals.cisAmount > 0 && (
-                    <div className="flex justify-between text-[10px] opacity-70"><span>CIS Deduction ({activeQuote.cisPercent}%)</span><span className="opacity-90">-£{totals.cisAmount.toFixed(2)}</span></div>
+                    <div className={`flex justify-between text-[11px] ${activeTemplate === 'minimal' ? 'text-slate-700 font-medium' : 'opacity-70'}`}><span>CIS Deduction ({activeQuote.cisPercent}%)</span><span className={activeTemplate === 'minimal' ? '' : 'opacity-90'}>-£{totals.cisAmount.toFixed(2)}</span></div>
                   )}
                 </>
               )}
-              <div className="h-px bg-current opacity-20 my-2"></div>
+              <div className={`h-px ${activeTemplate === 'minimal' ? 'bg-slate-300' : 'bg-current opacity-20'} my-2`}></div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-current opacity-60"></div>
-                  <span className="font-bold text-xs opacity-80 uppercase tracking-wider">Total Due</span>
+                  {activeTemplate !== 'minimal' && <div className="w-1.5 h-1.5 rounded-full bg-current opacity-60"></div>}
+                  <span className={`font-bold ${activeTemplate === 'minimal' ? 'text-sm' : 'text-xs opacity-80'} uppercase tracking-wider`}>{activeQuote.type === 'invoice' ? 'Balance Due' : 'Total Due'}</span>
                 </div>
-                <span className="text-2xl font-black">£{totals.grandTotal.toFixed(2)}</span>
+                <span className={`${activeTemplate === 'minimal' ? 'text-3xl' : 'text-2xl'} font-black`}>£{totals.grandTotal.toFixed(2)}</span>
               </div>
 
               {/* Part Payment Highlight Box */}
