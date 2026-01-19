@@ -1001,8 +1001,8 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           );
         })}
 
-        <div className={`${currentThemeClass} px-4 py-4 ${templateStyle.footerRounding} shadow-sm`}>
-          <div className="flex flex-col gap-3">
+        <div className={`${currentThemeClass} px-4 py-3 ${templateStyle.footerRounding} shadow-sm`}>
+          <div className="flex flex-col gap-2">
             <div className="space-y-1">
               {displayOptions.showTotalsBreakdown && (
                 <>
@@ -1065,8 +1065,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
             </div>
 
             {displayOptions.showNotes && activeQuote?.notes && (
-                <div className="text-[10px] text-slate-500 leading-relaxed bg-white p-3 rounded-lg border border-slate-100">
-                  <p className="font-bold text-slate-600 mb-0.5">Notes</p>
+                <div className="text-[8px] leading-snug opacity-60 mt-1">
                   {activeQuote.notes}
                 </div>
             )}
