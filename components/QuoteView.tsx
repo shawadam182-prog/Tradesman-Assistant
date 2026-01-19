@@ -942,39 +942,39 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           );
         })}
 
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white px-4 py-4 rounded-b-xl">
+        <div className={`${currentThemeClass} px-4 py-4 rounded-b-xl shadow-sm`}>
           <div className="flex flex-col gap-3">
             <div className="space-y-1">
               {displayOptions.showTotalsBreakdown && (
                 <>
-                  <div className="flex justify-between text-[10px] text-slate-400"><span>Subtotal</span><span className="text-slate-200">£{totals.clientSubtotal.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-[10px] opacity-70"><span>Subtotal</span><span className="opacity-90">£{totals.clientSubtotal.toFixed(2)}</span></div>
                   {/* Discount */}
                   {totals.discountAmount > 0 && (
-                    <div className="flex justify-between text-[10px] text-emerald-400">
-                      <span className="flex items-center gap-1">
+                    <div className="flex justify-between text-[10px]">
+                      <span className="flex items-center gap-1 opacity-70">
                         <Tag size={9} />
                         Discount
-                        {activeQuote.discountDescription && <span className="text-slate-500 ml-1">({activeQuote.discountDescription})</span>}
-                        {activeQuote.discountType === 'percentage' && <span className="text-slate-500 ml-1">({activeQuote.discountValue}%)</span>}
+                        {activeQuote.discountDescription && <span className="opacity-50 ml-1">({activeQuote.discountDescription})</span>}
+                        {activeQuote.discountType === 'percentage' && <span className="opacity-50 ml-1">({activeQuote.discountValue}%)</span>}
                       </span>
-                      <span className="text-emerald-300">-£{totals.discountAmount.toFixed(2)}</span>
+                      <span className="font-semibold">-£{totals.discountAmount.toFixed(2)}</span>
                     </div>
                   )}
                   {settings.enableVat && displayOptions.showVat && (
-                    <div className="flex justify-between text-[10px] text-slate-400"><span>VAT ({activeQuote.taxPercent}%)</span><span className="text-blue-300">£{totals.taxAmount.toFixed(2)}</span></div>
+                    <div className="flex justify-between text-[10px] opacity-70"><span>VAT ({activeQuote.taxPercent}%)</span><span className="opacity-90">£{totals.taxAmount.toFixed(2)}</span></div>
                   )}
                   {settings.enableCis && displayOptions.showCis && totals.cisAmount > 0 && (
-                    <div className="flex justify-between text-[10px] text-slate-400"><span>CIS Deduction ({activeQuote.cisPercent}%)</span><span className="text-red-300">-£{totals.cisAmount.toFixed(2)}</span></div>
+                    <div className="flex justify-between text-[10px] opacity-70"><span>CIS Deduction ({activeQuote.cisPercent}%)</span><span className="opacity-90">-£{totals.cisAmount.toFixed(2)}</span></div>
                   )}
                 </>
               )}
-              <div className="h-px bg-slate-700/50 my-2"></div>
+              <div className="h-px bg-current opacity-20 my-2"></div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-teal-400"></div>
-                  <span className="font-bold text-xs text-slate-300 uppercase tracking-wider">Total Due</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-current opacity-60"></div>
+                  <span className="font-bold text-xs opacity-80 uppercase tracking-wider">Total Due</span>
                 </div>
-                <span className="text-2xl font-black text-white">£{totals.grandTotal.toFixed(2)}</span>
+                <span className="text-2xl font-black">£{totals.grandTotal.toFixed(2)}</span>
               </div>
 
               {/* Part Payment Highlight Box */}
