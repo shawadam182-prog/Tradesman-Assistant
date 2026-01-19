@@ -9,7 +9,7 @@ import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { PWAPrompt, OfflineIndicator as PWAOfflineIndicator } from './components/PWAPrompt';
 import { OfflineIndicator } from '../components/OfflineIndicator';
 import { ErrorBoundary } from '../components/ErrorBoundary';
-import MainApp from '../App';
+import MainApp from './components/MainApp';
 import { Loader2 } from 'lucide-react';
 import { useReferralCapture } from './hooks/useReferralCapture';
 
