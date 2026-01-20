@@ -198,6 +198,7 @@ export interface AppSettings {
   showBreakdown: boolean;
   defaultDisplayOptions: QuoteDisplayOptions;
   documentTemplate?: DocumentTemplate;
+  invoiceColorScheme?: 'slate' | 'blue' | 'teal' | 'emerald' | 'purple' | 'rose';
   // Bank details for payment instructions
   bankAccountName?: string;
   bankAccountNumber?: string;

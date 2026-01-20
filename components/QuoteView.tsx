@@ -18,7 +18,7 @@ import {
   calculateQuoteTotals,
   calculatePartPayment,
 } from '../src/utils/quoteCalculations';
-import { getTemplateConfig } from '../src/lib/invoiceTemplates';
+import { getTemplateConfig, getTableHeaderStyle, getColorScheme } from '../src/lib/invoiceTemplates';
 
 interface QuoteViewProps {
   quote: Quote;
@@ -599,6 +599,10 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
   // Get template configuration from the template system
   const templateConfig = getTemplateConfig(settings.documentTemplate);
 
+  // Get the table header style with color scheme support
+  const tableHeaderStyle = getTableHeaderStyle(templateConfig, settings.invoiceColorScheme);
+  const colorScheme = getColorScheme(settings.invoiceColorScheme || templateConfig.defaultColorScheme);
+
   // Create templateStyle for backwards compatibility with existing rendering
   const activeTemplate = settings.documentTemplate || 'professional';
   const templateStyle = {
@@ -925,16 +929,16 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
             <table className="w-full text-[10px]" style={{ borderCollapse: 'collapse' }}>
               {templateConfig.showColumnHeaders && (
                 <thead>
-                  <tr className={activeTemplate === 'professional' ? 'bg-slate-800 text-white' : (templateConfig.tableHeaderStyle || 'border-b border-slate-200')}>
+                  <tr className={activeTemplate === 'professional' ? 'bg-slate-800 text-white' : tableHeaderStyle}>
                     {templateConfig.showLineNumbers && (
-                      <th className={`py-2 px-2 text-left w-10 ${activeTemplate === 'professional' ? 'text-[10px] font-semibold' : 'text-[9px] font-bold text-slate-500'}`}>#</th>
+                      <th className={`py-2 px-2 text-left w-10 ${activeTemplate === 'professional' ? 'text-[10px] font-semibold' : 'text-[10px] font-semibold'}`}>#</th>
                     )}
-                    <th className={`py-2 px-2 text-left ${activeTemplate === 'professional' ? 'text-[10px] font-semibold' : 'text-[9px] font-bold text-slate-500'}`}>Item & Description</th>
-                    <th className={`py-2 px-2 text-center w-16 ${activeTemplate === 'professional' ? 'text-[10px] font-semibold' : 'text-[9px] font-bold text-slate-500'}`}>Qty</th>
+                    <th className={`py-2 px-2 text-left ${activeTemplate === 'professional' ? 'text-[10px] font-semibold' : 'text-[10px] font-semibold'}`}>Item & Description</th>
+                    <th className={`py-2 px-2 text-center w-16 ${activeTemplate === 'professional' ? 'text-[10px] font-semibold' : 'text-[10px] font-semibold'}`}>Qty</th>
                     {activeTemplate === 'professional' && (
                       <th className="py-2 px-2 text-right w-24 text-[10px] font-semibold">Rate</th>
                     )}
-                    <th className={`py-2 px-2 text-right w-24 ${activeTemplate === 'professional' ? 'text-[10px] font-semibold' : 'text-[9px] font-bold text-slate-500'}`}>Amount</th>
+                    <th className={`py-2 px-2 text-right w-24 ${activeTemplate === 'professional' ? 'text-[10px] font-semibold' : 'text-[10px] font-semibold'}`}>Amount</th>
                   </tr>
                 </thead>
               )}

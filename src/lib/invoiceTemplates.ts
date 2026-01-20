@@ -5,6 +5,68 @@ export type InvoiceTemplate =
   | 'professional'  // Zoho-style professional invoice (default)
   | 'compact';      // Ultra-minimal, guaranteed one-page
 
+export type ColorScheme = 'slate' | 'blue' | 'teal' | 'emerald' | 'purple' | 'rose';
+
+export interface ColorSchemeConfig {
+  id: ColorScheme;
+  name: string;
+  headerBg: string;        // Light background for headers
+  headerText: string;      // Text color for headers
+  accentBg: string;        // Light accent background
+  accentText: string;      // Accent text color
+}
+
+export const COLOR_SCHEMES: Record<ColorScheme, ColorSchemeConfig> = {
+  slate: {
+    id: 'slate',
+    name: 'Classic Slate',
+    headerBg: 'bg-slate-100',
+    headerText: 'text-slate-700',
+    accentBg: 'bg-slate-50',
+    accentText: 'text-slate-600',
+  },
+  blue: {
+    id: 'blue',
+    name: 'Ocean Blue',
+    headerBg: 'bg-blue-100',
+    headerText: 'text-blue-700',
+    accentBg: 'bg-blue-50',
+    accentText: 'text-blue-600',
+  },
+  teal: {
+    id: 'teal',
+    name: 'Fresh Teal',
+    headerBg: 'bg-teal-100',
+    headerText: 'text-teal-700',
+    accentBg: 'bg-teal-50',
+    accentText: 'text-teal-600',
+  },
+  emerald: {
+    id: 'emerald',
+    name: 'Spring Emerald',
+    headerBg: 'bg-emerald-100',
+    headerText: 'text-emerald-700',
+    accentBg: 'bg-emerald-50',
+    accentText: 'text-emerald-600',
+  },
+  purple: {
+    id: 'purple',
+    name: 'Royal Purple',
+    headerBg: 'bg-purple-100',
+    headerText: 'text-purple-700',
+    accentBg: 'bg-purple-50',
+    accentText: 'text-purple-600',
+  },
+  rose: {
+    id: 'rose',
+    name: 'Soft Rose',
+    headerBg: 'bg-rose-100',
+    headerText: 'text-rose-700',
+    accentBg: 'bg-rose-50',
+    accentText: 'text-rose-600',
+  },
+};
+
 export interface TemplateConfig {
   id: InvoiceTemplate;
   name: string;
@@ -46,11 +108,16 @@ export interface TemplateConfig {
   totalBoxStyle?: string;
   cardStyle?: string;
   dividerStyle?: string;
+
+  // Color scheme support
+  supportsColorScheme?: boolean;  // Whether this template uses color schemes
+  defaultColorScheme?: ColorScheme;
 }
 
 // Template definitions - Optimized for one-page PDF output
 export const INVOICE_TEMPLATES: Record<InvoiceTemplate, TemplateConfig> = {
   // Template 1: Professional - Zoho-style invoice (matches real-world example)
+  // LOCKED TEMPLATE - Do not modify this professional template
   professional: {
     id: 'professional',
     name: 'Professional',
@@ -76,9 +143,10 @@ export const INVOICE_TEMPLATES: Record<InvoiceTemplate, TemplateConfig> = {
     headerFontSize: 'text-sm',
     borderRadius: 'rounded-none',
     tableHeaderStyle: 'bg-slate-800 text-white py-1.5 px-2 text-[10px] font-semibold',
+    supportsColorScheme: false,  // Professional template uses fixed dark header
   },
 
-  // Template 2: Compact - Ultra-minimal, guaranteed one-page
+  // Template 2: Compact - Ultra-minimal with customizable light color schemes
   compact: {
     id: 'compact',
     name: 'Compact',
@@ -87,8 +155,8 @@ export const INVOICE_TEMPLATES: Record<InvoiceTemplate, TemplateConfig> = {
     showSectionHeaders: false,
     showIcons: false,
     showBackgrounds: false,
-    showTableBorders: false,
-    showColumnHeaders: false,
+    showTableBorders: true,
+    showColumnHeaders: true,
     showLineNumbers: false,
     showPerLineVat: false,
     centeredLayout: false,
@@ -103,6 +171,8 @@ export const INVOICE_TEMPLATES: Record<InvoiceTemplate, TemplateConfig> = {
     fontSize: 'text-[8px]',
     headerFontSize: 'text-[10px]',
     borderRadius: 'rounded-none',
+    supportsColorScheme: true,  // Compact template supports color schemes
+    defaultColorScheme: 'slate',
   },
 };
 
@@ -112,6 +182,29 @@ export const getTemplateConfig = (templateId?: InvoiceTemplate | string): Templa
     return INVOICE_TEMPLATES['professional']; // Default to professional
   }
   return INVOICE_TEMPLATES[templateId as InvoiceTemplate];
+};
+
+// Helper to get color scheme config
+export const getColorScheme = (colorSchemeId?: ColorScheme | string): ColorSchemeConfig => {
+  if (!colorSchemeId || !(colorSchemeId in COLOR_SCHEMES)) {
+    return COLOR_SCHEMES['slate']; // Default to slate
+  }
+  return COLOR_SCHEMES[colorSchemeId as ColorScheme];
+};
+
+// Helper to build table header style with color scheme
+export const getTableHeaderStyle = (
+  template: TemplateConfig,
+  colorScheme?: ColorScheme | string
+): string => {
+  // Professional template always uses its fixed dark header
+  if (!template.supportsColorScheme) {
+    return template.tableHeaderStyle || '';
+  }
+
+  // For templates that support color schemes, apply the selected scheme
+  const scheme = getColorScheme(colorScheme || template.defaultColorScheme);
+  return `${scheme.headerBg} ${scheme.headerText} py-1.5 px-2 text-[10px] font-semibold`;
 };
 
 // Template metadata for settings UI

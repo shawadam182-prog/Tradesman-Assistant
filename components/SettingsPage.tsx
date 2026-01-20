@@ -11,7 +11,7 @@ import {
   Crown, Zap, Clock, Users, Briefcase, Camera, FileBox, ExternalLink,
   HelpCircle, MessageSquare, Send, Hammer, Minus, Minimize2, LayoutGrid
 } from 'lucide-react';
-import { TEMPLATE_METADATA, TEMPLATE_DESCRIPTIONS } from '../src/lib/invoiceTemplates';
+import { TEMPLATE_METADATA, TEMPLATE_DESCRIPTIONS, COLOR_SCHEMES, getTemplateConfig } from '../src/lib/invoiceTemplates';
 import { useToast } from '../src/contexts/ToastContext';
 import { handleApiError } from '../src/utils/errorHandler';
 import { userSettingsService } from '../src/services/dataService';
@@ -886,6 +886,48 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       </p>
                     </div>
                   </div>
+
+                  {/* Color Scheme Selection - Only for templates that support it */}
+                  {(() => {
+                    const currentTemplate = getTemplateConfig(settings.documentTemplate);
+                    return currentTemplate.supportsColorScheme ? (
+                      <div className="space-y-5 pt-6 border-t border-slate-100">
+                        <div className="flex items-center gap-2 px-1">
+                          <Palette size={16} className="text-emerald-500" />
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Color Scheme</label>
+                        </div>
+                        <p className="text-[10px] text-slate-500 italic px-1">
+                          Choose a light, subtle color scheme for your invoice headers and accents.
+                        </p>
+
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {Object.values(COLOR_SCHEMES).map(scheme => (
+                            <button
+                              key={scheme.id}
+                              onClick={() => setSettings({ ...settings, invoiceColorScheme: scheme.id })}
+                              className={`flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all ${
+                                (settings.invoiceColorScheme || 'slate') === scheme.id
+                                  ? 'border-emerald-500 bg-emerald-50/30 shadow-lg'
+                                  : 'border-slate-100 bg-white hover:border-emerald-200'
+                              }`}
+                            >
+                              <div className={`w-full h-12 rounded-xl ${scheme.headerBg} flex items-center justify-center border border-slate-200`}>
+                                <span className={`text-[9px] font-bold ${scheme.headerText}`}>Invoice Header</span>
+                              </div>
+                              <div className="text-center">
+                                <span className="text-[10px] font-black uppercase tracking-widest block">{scheme.name}</span>
+                                <div className="flex items-center gap-1 justify-center mt-1">
+                                  {(settings.invoiceColorScheme || 'slate') === scheme.id && (
+                                    <Check size={12} className="text-emerald-500" />
+                                  )}
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
 
                   {/* Bank Details Section */}
                   <div className="space-y-5 pt-6 border-t border-slate-100">
