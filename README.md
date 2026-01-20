@@ -18,3 +18,4 @@ View your app in AI Studio: https://ai.studio/apps/drive/1675-51WN4TR-yAnd77PmOR
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+// Deployment trigger: 2026-01-20T21:06:55Z
