@@ -1,17 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Share2, Check, X, Settings2, Copy, ReceiptText,
   Banknote, MapPin, ArrowLeft, Edit3, Mail, MessageCircle,
-  FileDown, Loader2, CreditCard, Link
+  FileDown, Loader2
 } from 'lucide-react';
-import { Quote, Customer, AppSettings } from '../../types';
+import { Quote, Customer } from '../../types';
 import { hapticSuccess } from '../../src/hooks/useHaptic';
-import { useToast } from '../../src/contexts/ToastContext';
 
 interface QuoteActionsProps {
   quote: Quote;
   customer: Customer;
-  settings: AppSettings;
   isDownloading: boolean;
   showCustomiser: boolean;
   onBack: () => void;
@@ -25,15 +23,11 @@ interface QuoteActionsProps {
   onWhatsAppShare: () => void;
   onDownloadPDF: () => void;
   onOpenMaps: () => void;
-  onRefreshQuote?: () => void;
-  getReference: () => string;
-  totals: { grandTotal: number };
 }
 
 export const QuoteActions: React.FC<QuoteActionsProps> = ({
   quote,
   customer,
-  settings,
   isDownloading,
   showCustomiser,
   onBack,
@@ -47,53 +41,7 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
   onWhatsAppShare,
   onDownloadPDF,
   onOpenMaps,
-  onRefreshQuote,
-  getReference,
-  totals,
 }) => {
-  const toast = useToast();
-  const [isCreatingPaymentLink, setIsCreatingPaymentLink] = useState(false);
-
-  const handleGetPaymentLink = async () => {
-    const { isConnectSetupComplete, createInvoicePaymentLink } = await import('../../src/lib/stripe');
-
-    if (!isConnectSetupComplete(settings)) {
-      toast.info('Setup Required', 'Please set up card payments in Settings first');
-      return;
-    }
-
-    setIsCreatingPaymentLink(true);
-    try {
-      const result = await createInvoicePaymentLink({
-        invoiceId: quote.id,
-        amount: totals.grandTotal,
-        customerEmail: customer?.email,
-        customerName: customer?.name,
-        description: quote.title,
-        invoiceReference: getReference(),
-      });
-
-      // Copy to clipboard
-      await navigator.clipboard.writeText(result.url);
-      toast.success('Payment Link Copied!', 'Send this link to your customer');
-
-      // Refresh to show the new payment link
-      onRefreshQuote?.();
-    } catch (error) {
-      console.error('Payment link error:', error);
-      toast.error('Failed', error instanceof Error ? error.message : 'Could not create payment link');
-    } finally {
-      setIsCreatingPaymentLink(false);
-    }
-  };
-
-  const handleCopyPaymentLink = async () => {
-    if (quote.paymentLinkUrl) {
-      await navigator.clipboard.writeText(quote.paymentLinkUrl);
-      toast.success('Copied!', 'Payment link copied to clipboard');
-    }
-  };
-
   return (
     <>
       {/* Unified Header */}
@@ -211,33 +159,12 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
             </button>
           )}
           {quote.type === 'invoice' && quote.status !== 'paid' && (
-            <>
-              <button
-                onClick={quote.paymentLinkUrl ? handleCopyPaymentLink : handleGetPaymentLink}
-                disabled={isCreatingPaymentLink}
-                className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold shadow-lg shadow-emerald-600/30 hover:bg-emerald-700 transition-colors disabled:opacity-50"
-              >
-                {isCreatingPaymentLink ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" /> Creating...
-                  </>
-                ) : quote.paymentLinkUrl ? (
-                  <>
-                    <Link size={14} /> Copy Pay Link
-                  </>
-                ) : (
-                  <>
-                    <CreditCard size={14} /> Get Pay Link
-                  </>
-                )}
-              </button>
-              <button
-                onClick={onRecordPayment}
-                className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-colors"
-              >
-                <Banknote size={14} /> Record Payment
-              </button>
-            </>
+            <button
+              onClick={onRecordPayment}
+              className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-colors"
+            >
+              <Banknote size={14} /> Record Payment
+            </button>
           )}
           {customer?.address && (
             <button

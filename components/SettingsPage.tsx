@@ -1,5 +1,5 @@
 
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState } from 'react';
 import { AppSettings, QuoteDisplayOptions, DocumentTemplate, TIER_LIMITS } from '../types';
 import {
   Save, Building2, Calculator, MapPin,
@@ -9,18 +9,17 @@ import {
   Plus, Eye, EyeOff, HardHat, Package, Landmark, ShieldCheck, Hash, Loader2,
   Calendar, Layout, FileSpreadsheet, FileEdit, List, ArrowLeft,
   Crown, Zap, Clock, Users, Briefcase, Camera, FileBox, ExternalLink,
-  HelpCircle, MessageSquare, Send, Hammer, Minus, Minimize2, LayoutGrid, Check, Type, CreditCard
+  HelpCircle, MessageSquare, Send, Hammer, Minus, Minimize2, LayoutGrid, Check, Type
 } from 'lucide-react';
 import { TEMPLATE_METADATA, TEMPLATE_DESCRIPTIONS, COLOR_SCHEMES, getTemplateConfig } from '../src/lib/invoiceTemplates';
 import { useToast } from '../src/contexts/ToastContext';
 import { handleApiError } from '../src/utils/errorHandler';
 import { userSettingsService } from '../src/services/dataService';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
+import { redirectToCheckout, redirectToPortal } from '../src/lib/stripe';
 import { useData } from '../src/contexts/DataContext';
 import { useAuth } from '../src/contexts/AuthContext';
 import { supabase } from '../src/lib/supabase';
-
-const PaymentSettings = lazy(() => import('./settings/PaymentSettings').then(m => ({ default: m.PaymentSettings })));
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -29,7 +28,7 @@ interface SettingsPageProps {
   onBack?: () => void;
 }
 
-type SettingsCategory = 'company' | 'quotes' | 'invoices' | 'subscription' | 'payments' | 'help';
+type SettingsCategory = 'company' | 'quotes' | 'invoices' | 'subscription' | 'help';
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSettings, onSave, onBack }) => {
   const toast = useToast();
@@ -57,7 +56,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const handleUpgrade = async (tier: 'professional' | 'business') => {
     setUpgradingTier(tier);
     try {
-      const { redirectToCheckout } = await import('../src/lib/stripe');
       await redirectToCheckout(tier);
     } catch (error) {
       console.error('Checkout error:', error);
@@ -70,7 +68,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const handleManageSubscription = async () => {
     setManagingSubscription(true);
     try {
-      const { redirectToPortal } = await import('../src/lib/stripe');
       await redirectToPortal();
     } catch (error) {
       console.error('Portal error:', error);
@@ -229,7 +226,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
         <div>
           <span className="font-black text-[10px] sm:text-[11px] uppercase tracking-wide sm:tracking-widest block truncate">{label}</span>
           <span className={`text-[8px] sm:text-[9px] font-bold hidden sm:block ${activeCategory === id ? 'text-white/70' : 'text-slate-400'}`}>
-            {id === 'company' ? 'Profile' : id === 'quotes' ? 'Rates' : id === 'help' ? 'Support' : id === 'payments' ? 'Get Paid' : 'Payment'}
+            {id === 'company' ? 'Profile' : id === 'quotes' ? 'Rates' : id === 'help' ? 'Support' : 'Payment'}
           </span>
         </div>
       </div>
@@ -263,7 +260,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
           
           <div className="space-y-2 md:space-y-3">
             <CategoryButton id="subscription" label="Subscription" icon={Crown} color="bg-purple-500 text-white" />
-            <CategoryButton id="payments" label="Card Payments" icon={CreditCard} color="bg-emerald-500 text-white" />
             <CategoryButton id="company" label="My Company" icon={Building} color="bg-amber-500 text-slate-900" />
             <CategoryButton id="quotes" label="Quote Preferences" icon={FileText} color="bg-blue-500 text-white" />
             <CategoryButton id="invoices" label="Invoice Preferences" icon={ReceiptText} color="bg-emerald-500 text-white" />
@@ -473,16 +469,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {activeCategory === 'payments' && (
-            <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="p-4 md:p-10">
-                <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 text-teal-500 animate-spin" /></div>}>
-                  <PaymentSettings settings={settings} />
-                </Suspense>
-              </div>
             </div>
           )}
 
