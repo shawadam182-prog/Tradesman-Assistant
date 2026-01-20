@@ -9,7 +9,7 @@ import {
   Plus, Eye, EyeOff, HardHat, Package, Landmark, ShieldCheck, Hash, Loader2,
   Calendar, Layout, FileSpreadsheet, FileEdit, List, ArrowLeft,
   Crown, Zap, Clock, Users, Briefcase, Camera, FileBox, ExternalLink,
-  HelpCircle, MessageSquare, Send, Hammer, Minus, Minimize2, LayoutGrid
+  HelpCircle, MessageSquare, Send, Hammer, Minus, Minimize2, LayoutGrid, Check
 } from 'lucide-react';
 import { TEMPLATE_METADATA, TEMPLATE_DESCRIPTIONS, COLOR_SCHEMES, getTemplateConfig } from '../src/lib/invoiceTemplates';
 import { useToast } from '../src/contexts/ToastContext';
@@ -821,17 +821,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       Choose how your invoices and quotes will look when exported as PDF
                     </p>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {TEMPLATE_METADATA.map(template => {
                         const iconMap: Record<string, React.ElementType> = {
-                          'classic': FileText,
-                          'trade-pro': Hammer,
-                          'minimal': Minus,
-                          'detailed': List,
+                          'professional': FileText,
                           'compact': Minimize2,
-                          'branded': ImageIcon,
-                          'statement': FileSpreadsheet,
-                          'modern-card': LayoutGrid,
+                          'classic': List,
                         };
                         const Icon = iconMap[template.id] || FileText;
 
@@ -839,8 +834,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                           <button
                             key={template.id}
                             onClick={() => setSettings({ ...settings, documentTemplate: template.id as DocumentTemplate })}
-                            className={`relative flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all ${
-                              (settings.documentTemplate || 'trade-pro') === template.id
+                            className={`relative flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${
+                              (settings.documentTemplate || 'professional') === template.id
                                 ? 'border-emerald-500 bg-emerald-50/50 shadow-lg'
                                 : 'border-slate-100 bg-white hover:border-emerald-200'
                             }`}
@@ -857,8 +852,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                               </pre>
                             </div>
 
-                            <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                              (settings.documentTemplate || 'trade-pro') === template.id
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                              (settings.documentTemplate || 'professional') === template.id
                                 ? 'bg-emerald-500 text-white'
                                 : 'bg-slate-100 text-slate-400'
                             }`}>
@@ -878,11 +873,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       <div className="flex items-center gap-2 mb-2">
                         <Eye size={12} className="text-slate-400" />
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                          {TEMPLATE_METADATA.find(t => t.id === (settings.documentTemplate || 'trade-pro'))?.name} Template
+                          {TEMPLATE_METADATA.find(t => t.id === (settings.documentTemplate || 'professional'))?.name} Template
                         </span>
                       </div>
                       <p className="text-[10px] text-slate-600 leading-relaxed">
-                        {TEMPLATE_DESCRIPTIONS[(settings.documentTemplate || 'trade-pro') as DocumentTemplate]}
+                        {TEMPLATE_DESCRIPTIONS[(settings.documentTemplate || 'professional') as DocumentTemplate]}
                       </p>
                     </div>
                   </div>

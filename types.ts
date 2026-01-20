@@ -161,16 +161,18 @@ export interface JobPack {
   materials?: ProjectMaterial[];
 }
 
-// Document template options - 8 distinct invoice/quote templates
+// Document template options - Simplified to 3 professional templates
 export type DocumentTemplate =
-  | 'classic'      // Traditional single-table, most compact
-  | 'trade-pro'    // Materials/Labour split (recommended)
-  | 'minimal'      // Clean, typography-focused
-  | 'detailed'     // Full breakdown with columns
-  | 'compact'      // Ultra-compact, one-page guarantee
-  | 'branded'      // Large logo focus
-  | 'statement'    // Zoho/QuickBooks style
-  | 'modern-card'; // Card-based app style
+  | 'professional'  // Zoho-style professional invoice (default)
+  | 'compact'       // Ultra-minimal with color schemes
+  | 'classic'       // Traditional compact layout
+  // Legacy templates for backwards compatibility:
+  | 'trade-pro'     // Maps to professional
+  | 'statement'     // Maps to professional
+  | 'minimal'       // Maps to compact
+  | 'detailed'      // Maps to professional
+  | 'branded'       // Maps to professional
+  | 'modern-card';  // Maps to compact
 
 // Alias for backwards compatibility
 export type InvoiceTemplate = DocumentTemplate;
@@ -198,7 +200,7 @@ export interface AppSettings {
   showBreakdown: boolean;
   defaultDisplayOptions: QuoteDisplayOptions;
   documentTemplate?: DocumentTemplate;
-  invoiceColorScheme?: 'slate' | 'blue' | 'teal' | 'emerald' | 'purple' | 'rose';
+  invoiceColorScheme?: 'default' | 'slate' | 'blue' | 'teal' | 'emerald' | 'purple' | 'rose';
   // Bank details for payment instructions
   bankAccountName?: string;
   bankAccountNumber?: string;
