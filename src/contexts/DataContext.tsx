@@ -316,6 +316,12 @@ function dbSettingsToApp(dbSettings: any): AppSettings {
     stripeSubscriptionId: dbSettings.stripe_subscription_id || undefined,
     referralCode: dbSettings.referral_code || undefined,
     usageLimits: dbSettings.usage_limits || undefined,
+    // Stripe Connect fields (for invoice payments)
+    stripeConnectAccountId: dbSettings.stripe_connect_account_id || undefined,
+    stripeConnectOnboardingComplete: dbSettings.stripe_connect_onboarding_complete ?? false,
+    stripeConnectChargesEnabled: dbSettings.stripe_connect_charges_enabled ?? false,
+    stripeConnectPayoutsEnabled: dbSettings.stripe_connect_payouts_enabled ?? false,
+    stripeConnectOnboardedAt: dbSettings.stripe_connect_onboarded_at || undefined,
   };
 }
 
