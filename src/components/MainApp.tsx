@@ -7,7 +7,7 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useHistoryNavigation } from '../hooks/useHistoryNavigation';
-import { usePageTracking } from '../hooks/usePageTracking';
+// import { usePageTracking } from '../hooks/usePageTracking'; // Temporarily disabled to fix circular dependency
 import { Quote, JobPack, Customer } from '../../types';
 import { AlertCircle, FileWarning, Loader2 } from 'lucide-react';
 
@@ -147,7 +147,7 @@ const App: React.FC = () => {
   });
 
   // Track page views for analytics
-  usePageTracking(activeTab);
+  // usePageTracking(activeTab); // Temporarily disabled to fix circular dependency
 
   const handleCreateQuote = (projectId?: string) => {
     setEditingQuoteId(null);
