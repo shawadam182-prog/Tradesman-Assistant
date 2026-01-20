@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { AppSettings, QuoteDisplayOptions, DocumentTemplate, TIER_LIMITS } from '../types';
 import {
   Save, Building2, Calculator, MapPin,
@@ -20,7 +20,8 @@ import { redirectToCheckout, redirectToPortal } from '../src/lib/stripe';
 import { useData } from '../src/contexts/DataContext';
 import { useAuth } from '../src/contexts/AuthContext';
 import { supabase } from '../src/lib/supabase';
-import { PaymentSettings } from './settings/PaymentSettings';
+
+const PaymentSettings = lazy(() => import('./settings/PaymentSettings').then(m => ({ default: m.PaymentSettings })));
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -477,7 +478,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
           {activeCategory === 'payments' && (
             <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="p-4 md:p-10">
-                <PaymentSettings settings={settings} />
+                <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 text-teal-500 animate-spin" /></div>}>
+                  <PaymentSettings settings={settings} />
+                </Suspense>
               </div>
             </div>
           )}
