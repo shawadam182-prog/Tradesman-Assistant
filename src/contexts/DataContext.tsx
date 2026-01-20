@@ -17,10 +17,12 @@ import {
   materialsLibraryService,
   materialsImportHistoryService,
   sitePhotosService,
+  siteNotesService,
+  projectMaterialsService,
 } from '../services/dataService';
 import { offlineService } from '../services/offlineStorage';
 import { syncManager } from '../services/syncManager';
-import type { Customer, Quote, JobPack, ScheduleEntry, AppSettings, DocumentTemplate } from '../../types';
+import type { Customer, Quote, JobPack, ScheduleEntry, AppSettings, DocumentTemplate, ProjectMaterial, SiteNote, SitePhoto } from '../../types';
 
 // Default settings
 const DEFAULT_SETTINGS: AppSettings = {
@@ -686,6 +688,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const saveProject = async (project: JobPack) => {
+    // Update job pack basic fields
     await jobPacksService.update(project.id, {
       customer_id: project.customerId || null,
       title: project.title,
@@ -693,7 +696,173 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       notepad: project.notepad || null,
     });
 
-    setProjects(prev => prev.map(p => p.id === project.id ? { ...project, updatedAt: new Date().toISOString() } : p));
+    // Get current project from state to compare for changes
+    const currentProject = projects.find(p => p.id === project.id);
+    const currentMaterials = currentProject?.materials || [];
+    const newMaterials = project.materials || [];
+
+    // Helper to check if an ID is a temporary client-generated ID (not a UUID)
+    const isTemporaryId = (id: string) => !id.includes('-') || id.length < 20;
+
+    // Sync materials to database
+    const materialIdMap: Record<string, string> = {}; // temp ID -> real ID
+
+    // 1. Create new materials (those with temporary IDs)
+    for (const material of newMaterials) {
+      if (isTemporaryId(material.id)) {
+        try {
+          const created = await projectMaterialsService.create({
+            job_pack_id: project.id,
+            name: material.name,
+            unit: material.unit || 'pc',
+            quoted_qty: material.quotedQty,
+            ordered_qty: material.orderedQty,
+            delivered_qty: material.deliveredQty,
+            used_qty: material.usedQty,
+            status: material.status,
+          });
+          materialIdMap[material.id] = created.id;
+        } catch (err) {
+          console.error('Failed to create material:', material.name, err);
+        }
+      }
+    }
+
+    // 2. Update existing materials (those that exist in both current and new)
+    for (const material of newMaterials) {
+      if (!isTemporaryId(material.id)) {
+        const existing = currentMaterials.find(m => m.id === material.id);
+        if (existing && (
+          existing.name !== material.name ||
+          existing.unit !== material.unit ||
+          existing.quotedQty !== material.quotedQty ||
+          existing.orderedQty !== material.orderedQty ||
+          existing.deliveredQty !== material.deliveredQty ||
+          existing.usedQty !== material.usedQty ||
+          existing.status !== material.status
+        )) {
+          try {
+            await projectMaterialsService.update(material.id, {
+              name: material.name,
+              unit: material.unit || 'pc',
+              quoted_qty: material.quotedQty,
+              ordered_qty: material.orderedQty,
+              delivered_qty: material.deliveredQty,
+              used_qty: material.usedQty,
+              status: material.status,
+            });
+          } catch (err) {
+            console.error('Failed to update material:', material.name, err);
+          }
+        }
+      }
+    }
+
+    // 3. Delete removed materials
+    const newMaterialIds = new Set(newMaterials.map(m => m.id));
+    for (const material of currentMaterials) {
+      if (!newMaterialIds.has(material.id) && !isTemporaryId(material.id)) {
+        try {
+          await projectMaterialsService.delete(material.id);
+        } catch (err) {
+          console.error('Failed to delete material:', material.name, err);
+        }
+      }
+    }
+
+    // Sync notes to database
+    const currentNotes = currentProject?.notes || [];
+    const newNotes = project.notes || [];
+
+    // Create new notes
+    const noteIdMap: Record<string, string> = {};
+    for (const note of newNotes) {
+      if (isTemporaryId(note.id)) {
+        try {
+          const created = await siteNotesService.create({
+            job_pack_id: project.id,
+            text: note.text,
+            is_voice: note.isVoice || false,
+          });
+          noteIdMap[note.id] = created.id;
+        } catch (err) {
+          console.error('Failed to create note:', err);
+        }
+      }
+    }
+
+    // Update existing notes
+    for (const note of newNotes) {
+      if (!isTemporaryId(note.id)) {
+        const existing = currentNotes.find(n => n.id === note.id);
+        if (existing && existing.text !== note.text) {
+          try {
+            await siteNotesService.update(note.id, { text: note.text });
+          } catch (err) {
+            console.error('Failed to update note:', err);
+          }
+        }
+      }
+    }
+
+    // Delete removed notes
+    const newNoteIds = new Set(newNotes.map(n => n.id));
+    for (const note of currentNotes) {
+      if (!newNoteIds.has(note.id) && !isTemporaryId(note.id)) {
+        try {
+          await siteNotesService.delete(note.id);
+        } catch (err) {
+          console.error('Failed to delete note:', err);
+        }
+      }
+    }
+
+    // Sync photo captions (photos are uploaded separately, we only update captions here)
+    const currentPhotos = currentProject?.photos || [];
+    const newPhotos = project.photos || [];
+    for (const photo of newPhotos) {
+      if (!isTemporaryId(photo.id)) {
+        const existing = currentPhotos.find(p => p.id === photo.id);
+        if (existing && existing.caption !== photo.caption) {
+          try {
+            await sitePhotosService.update(photo.id, { caption: photo.caption });
+          } catch (err) {
+            console.error('Failed to update photo caption:', err);
+          }
+        }
+      }
+    }
+
+    // Sync drawing captions
+    const currentDrawings = currentProject?.drawings || [];
+    const newDrawings = project.drawings || [];
+    for (const drawing of newDrawings) {
+      if (!isTemporaryId(drawing.id)) {
+        const existing = currentDrawings.find(d => d.id === drawing.id);
+        if (existing && existing.caption !== drawing.caption) {
+          try {
+            await sitePhotosService.update(drawing.id, { caption: drawing.caption });
+          } catch (err) {
+            console.error('Failed to update drawing caption:', err);
+          }
+        }
+      }
+    }
+
+    // Update local state with proper IDs for newly created items
+    const updatedMaterials = newMaterials.map(m =>
+      materialIdMap[m.id] ? { ...m, id: materialIdMap[m.id] } : m
+    );
+    const updatedNotes = newNotes.map(n =>
+      noteIdMap[n.id] ? { ...n, id: noteIdMap[n.id] } : n
+    );
+
+    setProjects(prev => prev.map(p => p.id === project.id ? {
+      ...project,
+      materials: updatedMaterials,
+      notes: updatedNotes,
+      updatedAt: new Date().toISOString()
+    } : p));
   };
 
   const deleteProject = async (id: string) => {
