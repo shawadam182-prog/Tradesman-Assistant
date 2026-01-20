@@ -19,6 +19,7 @@ import {
   calculatePartPayment,
 } from '../src/utils/quoteCalculations';
 import { getTemplateConfig, getTableHeaderStyle, getColorScheme } from '../src/lib/invoiceTemplates';
+import { ClassicTemplate } from './invoice-templates';
 
 interface QuoteViewProps {
   quote: Quote;
@@ -787,6 +788,17 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
       </div>
 
       <div ref={documentRef} className={`bg-white ${templateStyle.container} shadow-xl border ${templateStyle.borderStyle} overflow-hidden print:border-none print:shadow-none print:rounded-none max-w-[750px] mx-auto`} style={{ width: '750px' }}>
+        {/* Use ClassicTemplate component for classic template */}
+        {activeTemplate === 'classic' ? (
+          <ClassicTemplate
+            quote={activeQuote}
+            customer={customer}
+            settings={settings}
+            totals={totals}
+            reference={reference}
+          />
+        ) : (
+          <>
         {/* Company Header - Statement template has special Zoho-style layout */}
         {activeTemplate === 'professional' ? (
           /* PROFESSIONAL TEMPLATE HEADER - Matches Zoho screenshot */
@@ -1339,6 +1351,8 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
               </div>
             )}
           </div>
+        )}
+          </>
         )}
       </div>
       <div className="flex justify-center pt-4 print:hidden">

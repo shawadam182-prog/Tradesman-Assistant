@@ -3,20 +3,31 @@
 
 export type InvoiceTemplate =
   | 'professional'  // Zoho-style professional invoice (default)
-  | 'compact';      // Ultra-minimal, guaranteed one-page
+  | 'compact'       // Ultra-minimal with color schemes
+  | 'classic';      // Ultra-compact, guaranteed one-page
 
-export type ColorScheme = 'slate' | 'blue' | 'teal' | 'emerald' | 'purple' | 'rose';
+export type ColorScheme = 'default' | 'slate' | 'blue' | 'teal' | 'emerald' | 'purple' | 'rose';
 
 export interface ColorSchemeConfig {
   id: ColorScheme;
   name: string;
-  headerBg: string;        // Light background for headers
+  headerBg: string;        // Background for headers
   headerText: string;      // Text color for headers
-  accentBg: string;        // Light accent background
+  accentBg: string;        // Accent background
   accentText: string;      // Accent text color
+  isDark?: boolean;        // Whether this is a dark color scheme
 }
 
 export const COLOR_SCHEMES: Record<ColorScheme, ColorSchemeConfig> = {
+  default: {
+    id: 'default',
+    name: 'No Color (Dark)',
+    headerBg: 'bg-slate-800',
+    headerText: 'text-white',
+    accentBg: 'bg-slate-100',
+    accentText: 'text-slate-600',
+    isDark: true,
+  },
   slate: {
     id: 'slate',
     name: 'Classic Slate',
@@ -117,7 +128,6 @@ export interface TemplateConfig {
 // Template definitions - Optimized for one-page PDF output
 export const INVOICE_TEMPLATES: Record<InvoiceTemplate, TemplateConfig> = {
   // Template 1: Professional - Zoho-style invoice (matches real-world example)
-  // LOCKED TEMPLATE - Do not modify this professional template
   professional: {
     id: 'professional',
     name: 'Professional',
@@ -142,15 +152,15 @@ export const INVOICE_TEMPLATES: Record<InvoiceTemplate, TemplateConfig> = {
     fontSize: 'text-[10px]',
     headerFontSize: 'text-sm',
     borderRadius: 'rounded-none',
-    tableHeaderStyle: 'bg-slate-800 text-white py-1.5 px-2 text-[10px] font-semibold',
-    supportsColorScheme: false,  // Professional template uses fixed dark header
+    supportsColorScheme: true,     // Now supports color schemes
+    defaultColorScheme: 'default',  // Defaults to dark (no color)
   },
 
   // Template 2: Compact - Ultra-minimal with customizable light color schemes
   compact: {
     id: 'compact',
     name: 'Compact',
-    description: 'Ultra-compact, one-page guarantee',
+    description: 'Ultra-compact with subtle colors',
     combineLineItems: true,
     showSectionHeaders: false,
     showIcons: false,
@@ -171,8 +181,37 @@ export const INVOICE_TEMPLATES: Record<InvoiceTemplate, TemplateConfig> = {
     fontSize: 'text-[8px]',
     headerFontSize: 'text-[10px]',
     borderRadius: 'rounded-none',
-    supportsColorScheme: true,  // Compact template supports color schemes
+    supportsColorScheme: true,
     defaultColorScheme: 'slate',
+  },
+
+  // Template 3: Classic - Ultra-compact, most minimal
+  classic: {
+    id: 'classic',
+    name: 'Classic',
+    description: 'Traditional compact layout',
+    combineLineItems: true,
+    showSectionHeaders: false,
+    showIcons: false,
+    showBackgrounds: false,
+    showTableBorders: true,
+    showColumnHeaders: true,
+    showLineNumbers: false,
+    showPerLineVat: false,
+    centeredLayout: false,
+    inlineLayout: false,
+    logoPosition: 'left',
+    logoSize: 'small',
+    containerPadding: 'p-2.5',
+    containerBg: 'bg-white',
+    headerPadding: 'p-0',
+    rowPadding: 'py-1 px-1.5',
+    sectionGap: 'space-y-1.5',
+    fontSize: 'text-[9px]',
+    headerFontSize: 'text-[11px]',
+    borderRadius: 'rounded-none',
+    supportsColorScheme: true,
+    defaultColorScheme: 'default',
   },
 };
 
@@ -187,7 +226,7 @@ export const getTemplateConfig = (templateId?: InvoiceTemplate | string): Templa
 // Helper to get color scheme config
 export const getColorScheme = (colorSchemeId?: ColorScheme | string): ColorSchemeConfig => {
   if (!colorSchemeId || !(colorSchemeId in COLOR_SCHEMES)) {
-    return COLOR_SCHEMES['slate']; // Default to slate
+    return COLOR_SCHEMES['default']; // Default to dark (no color)
   }
   return COLOR_SCHEMES[colorSchemeId as ColorScheme];
 };
@@ -197,12 +236,7 @@ export const getTableHeaderStyle = (
   template: TemplateConfig,
   colorScheme?: ColorScheme | string
 ): string => {
-  // Professional template always uses its fixed dark header
-  if (!template.supportsColorScheme) {
-    return template.tableHeaderStyle || '';
-  }
-
-  // For templates that support color schemes, apply the selected scheme
+  // All templates now support color schemes
   const scheme = getColorScheme(colorScheme || template.defaultColorScheme);
   return `${scheme.headerBg} ${scheme.headerText} py-1.5 px-2 text-[10px] font-semibold`;
 };
@@ -220,20 +254,27 @@ export const TEMPLATE_METADATA: TemplateMetadata[] = [
   {
     id: 'professional',
     name: 'Professional',
-    desc: 'Clean professional invoice',
+    desc: 'Zoho-style invoice',
     preview: '┌──────┐\n│░░ INV│\n│  £280│\n│══════│\n│#│Desc│\n│1│Item│\n│2│Item│\n│══════│\n└──────┘',
     recommended: true
   },
   {
     id: 'compact',
     name: 'Compact',
-    desc: 'Ultra-minimal layout',
+    desc: 'Minimal with colors',
     preview: '┌──────────┐\n│Co│IN│Date│\n│Item×3 £X │\n│S+V-C=TOT │\n└──────────┘'
+  },
+  {
+    id: 'classic',
+    name: 'Classic',
+    desc: 'Traditional layout',
+    preview: '┌─────────┐\n│ INVOICE │\n│─────────│\n│Desc│Amt│\n│Item│£10│\n│─────────│\n│Total £X │\n└─────────┘'
   },
 ];
 
 // Template descriptions for preview panel
 export const TEMPLATE_DESCRIPTIONS: Record<InvoiceTemplate, string> = {
   'professional': 'Clean, professional invoice format based on industry standards like Zoho and QuickBooks. Features a clear table layout with line numbers, proper spacing, and all essential details. Optimized to fit on one page for most jobs.',
-  'compact': 'Ultra-compact receipt-style layout with minimal spacing. Guaranteed to fit on one page even for jobs with many line items. Perfect for quick jobs, call-outs, and when you need maximum information density.',
+  'compact': 'Ultra-compact receipt-style layout with minimal spacing and customizable color schemes. Guaranteed to fit on one page even for jobs with many line items. Perfect for quick jobs, call-outs, and when you need maximum information density.',
+  'classic': 'Traditional compact invoice format with straightforward layout. Clean and simple design that works well for standard jobs. Features all essential information in a traditional business format.',
 };
