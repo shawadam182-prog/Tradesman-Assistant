@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Quote, Customer, AppSettings, QuoteDisplayOptions, QuoteSection } from '../types';
 import {
-  User, FileText,
+  User, FileText, ArrowLeft, Landmark, Tag,
   Package, HardHat, MapPin, Type
 } from 'lucide-react';
 import { PaymentRecorder } from './PaymentRecorder';
@@ -267,6 +267,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       <QuoteActions
         quote={activeQuote}
         customer={customer}
+        settings={settings}
         isDownloading={isDownloading}
         showCustomiser={showCustomiser}
         onBack={onBack}
@@ -280,6 +281,9 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
         onWhatsAppShare={handleWhatsAppShare}
         onDownloadPDF={handleDownloadPDF}
         onOpenMaps={handleOpenMaps}
+        onRefreshQuote={() => onUpdateQuote({ ...activeQuote })}
+        getReference={getReference}
+        totals={totals}
       />
 
       {showCustomiser && (

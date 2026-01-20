@@ -98,6 +98,15 @@ export interface Quote {
   partPaymentType?: 'percentage' | 'fixed';
   partPaymentValue?: number;
   partPaymentLabel?: string;
+  // Online payment fields (Stripe Connect)
+  stripePaymentIntentId?: string;
+  stripeCheckoutSessionId?: string;
+  paymentLinkUrl?: string;
+  paymentLinkCreatedAt?: string;
+  paymentLinkExpiresAt?: string;
+  onlinePaymentAmount?: number;
+  onlinePaymentFee?: number;
+  onlinePaymentNet?: number;
 }
 
 export interface ScheduleEntry {
@@ -223,6 +232,12 @@ export interface AppSettings {
   stripeSubscriptionId?: string;
   referralCode?: string;
   usageLimits?: UsageLimits;
+  // Stripe Connect fields (separate from subscription)
+  stripeConnectAccountId?: string;
+  stripeConnectOnboardingComplete?: boolean;
+  stripeConnectChargesEnabled?: boolean;
+  stripeConnectPayoutsEnabled?: boolean;
+  stripeConnectOnboardedAt?: string;
 }
 
 export interface Expense {
