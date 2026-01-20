@@ -9,6 +9,7 @@ import {
 } from '../hooks/useFeatureAccess';
 import { redirectToCheckout, type StripeTier } from '../lib/stripe';
 import type { GatedFeature, SubscriptionTier } from '../../types';
+import { FEATURE_TIER_MAP } from '../../types';
 
 interface FeatureGateProps {
   feature: GatedFeature;
@@ -333,7 +334,6 @@ export function useFeatureCheck() {
   const subscription = useSubscription();
 
   return (feature: GatedFeature): boolean => {
-    const { FEATURE_TIER_MAP } = require('../../types');
     const TIER_ORDER: Record<SubscriptionTier, number> = {
       free: 1,
       professional: 2,
