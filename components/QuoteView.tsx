@@ -589,7 +589,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
   const templateConfig = getTemplateConfig(settings.documentTemplate);
 
   // Create templateStyle for backwards compatibility with existing rendering
-  const activeTemplate = settings.documentTemplate || 'trade-pro';
+  const activeTemplate = settings.documentTemplate || 'professional';
   const templateStyle = {
     container: templateConfig.borderRadius,
     header: templateConfig.headerPadding,
@@ -771,10 +771,10 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
         )}
       </div>
 
-      <div ref={documentRef} className={`bg-white ${templateStyle.container} shadow-xl border ${templateStyle.borderStyle} overflow-hidden print:border-none print:shadow-none print:rounded-none`}>
+      <div ref={documentRef} className={`bg-white ${templateStyle.container} shadow-xl border ${templateStyle.borderStyle} overflow-hidden print:border-none print:shadow-none print:rounded-none max-w-[750px] mx-auto`} style={{ width: '750px' }}>
         {/* Company Header - Statement template has special Zoho-style layout */}
-        {activeTemplate === 'statement' ? (
-          /* STATEMENT TEMPLATE HEADER - Zoho/QuickBooks Style */
+        {activeTemplate === 'professional' ? (
+          /* PROFESSIONAL TEMPLATE HEADER - Zoho/QuickBooks Style */
           <div className="p-2">
             <div className="flex justify-between items-start">
               {/* Left: Logo + Company */}
@@ -916,13 +916,13 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
             <table className="w-full text-[10px]" style={{ borderCollapse: 'collapse' }}>
               {templateConfig.showColumnHeaders && (
                 <thead>
-                  <tr className={activeTemplate === 'statement' ? 'bg-slate-800 text-white' : (templateConfig.tableHeaderStyle || 'border-b border-slate-200')}>
+                  <tr className={activeTemplate === 'professional' ? 'bg-slate-800 text-white' : (templateConfig.tableHeaderStyle || 'border-b border-slate-200')}>
                     {templateConfig.showLineNumbers && (
-                      <th className={`py-1 px-2 text-left w-8 ${activeTemplate === 'statement' ? 'text-[9px] font-bold' : 'text-[9px] font-bold text-slate-500'}`}>#</th>
+                      <th className={`py-1 px-2 text-left w-8 ${activeTemplate === 'professional' ? 'text-[9px] font-bold' : 'text-[9px] font-bold text-slate-500'}`}>#</th>
                     )}
-                    <th className={`py-1 px-2 text-left ${activeTemplate === 'statement' ? 'text-[9px] font-bold' : 'text-[9px] font-bold text-slate-500'}`}>Item & Description</th>
-                    <th className={`py-1 px-2 text-center w-12 ${activeTemplate === 'statement' ? 'text-[9px] font-bold' : 'text-[9px] font-bold text-slate-500'}`}>Qty</th>
-                    <th className={`py-1 px-2 text-right w-20 ${activeTemplate === 'statement' ? 'text-[9px] font-bold' : 'text-[9px] font-bold text-slate-500'}`}>Amount</th>
+                    <th className={`py-1 px-2 text-left ${activeTemplate === 'professional' ? 'text-[9px] font-bold' : 'text-[9px] font-bold text-slate-500'}`}>Item & Description</th>
+                    <th className={`py-1 px-2 text-center w-12 ${activeTemplate === 'professional' ? 'text-[9px] font-bold' : 'text-[9px] font-bold text-slate-500'}`}>Qty</th>
+                    <th className={`py-1 px-2 text-right w-20 ${activeTemplate === 'professional' ? 'text-[9px] font-bold' : 'text-[9px] font-bold text-slate-500'}`}>Amount</th>
                   </tr>
                 </thead>
               )}
@@ -1135,8 +1135,8 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
         )}
 
         {/* TOTALS SECTION - Statement template has special compact right-aligned layout */}
-        {activeTemplate === 'statement' ? (
-          /* STATEMENT TEMPLATE TOTALS - Zoho-style right-aligned */
+        {activeTemplate === 'professional' ? (
+          /* PROFESSIONAL TEMPLATE TOTALS - Zoho-style right-aligned */
           <div className="px-2 py-1">
             <div className="flex justify-end">
               <div className="w-48">
@@ -1299,7 +1299,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
         )}
 
         {/* Bank Details for Statement Template - Compact one-line style */}
-        {activeTemplate === 'statement' && activeQuote.type === 'invoice' && (
+        {activeTemplate === 'professional' && activeQuote.type === 'invoice' && (
           settings.bankAccountName || settings.bankAccountNumber || settings.bankSortCode || settings.bankName
         ) && (
           <div className="px-2 py-1 border-t border-slate-100">
@@ -1313,7 +1313,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
         )}
 
         {/* Notes for Statement Template */}
-        {activeTemplate === 'statement' && displayOptions.showNotes && activeQuote?.notes && (
+        {activeTemplate === 'professional' && displayOptions.showNotes && activeQuote?.notes && (
           <div className="px-2 pb-3 text-[9px] text-slate-500 leading-snug">
             {activeQuote.notes}
           </div>
