@@ -1,4 +1,3 @@
-import { supabase } from './supabase';
 import type { AppSettings } from '../../types';
 
 // Stripe Price IDs (Live Mode)
@@ -16,6 +15,7 @@ export type StripeTier = keyof typeof STRIPE_PRICES;
  * @returns Promise that resolves when redirect starts, or rejects on error
  */
 export async function redirectToCheckout(tier: StripeTier): Promise<void> {
+  const { supabase } = await import('./supabase');
   // Get the current session
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
@@ -60,6 +60,7 @@ export async function redirectToCheckout(tier: StripeTier): Promise<void> {
  * @returns Promise that resolves when redirect starts, or rejects on error
  */
 export async function redirectToPortal(): Promise<void> {
+  const { supabase } = await import('./supabase');
   // Get the current session
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
@@ -106,6 +107,7 @@ export async function redirectToPortal(): Promise<void> {
  * Redirects to Stripe's hosted onboarding flow.
  */
 export async function startConnectOnboarding(): Promise<void> {
+  const { supabase } = await import('./supabase');
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
   if (sessionError || !session) {
@@ -153,6 +155,7 @@ export async function createInvoicePaymentLink(params: {
   description?: string;
   invoiceReference: string;
 }): Promise<{ url: string; sessionId: string; expiresAt: number }> {
+  const { supabase } = await import('./supabase');
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
   if (sessionError || !session) {
