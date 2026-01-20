@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CreditCard, ExternalLink, CheckCircle2, AlertCircle,
   Loader2, Zap, PoundSterling, Shield, Clock
 } from 'lucide-react';
 import { AppSettings } from '../../types';
-import { startConnectOnboarding, getConnectStatus } from '../../src/lib/stripe';
 import { useToast } from '../../src/contexts/ToastContext';
 
 interface PaymentSettingsProps {
@@ -14,12 +13,22 @@ interface PaymentSettingsProps {
 export const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings }) => {
   const toast = useToast();
   const [isConnecting, setIsConnecting] = useState(false);
+  const [connectStatus, setConnectStatus] = useState<{ status: 'not_started' | 'incomplete' | 'complete'; message: string }>({
+    status: 'not_started',
+    message: 'Loading...'
+  });
 
-  const connectStatus = getConnectStatus(settings);
+  useEffect(() => {
+    (async () => {
+      const { getConnectStatus } = await import('../../src/lib/stripe');
+      setConnectStatus(getConnectStatus(settings));
+    })();
+  }, [settings]);
 
   const handleSetupPayments = async () => {
     setIsConnecting(true);
     try {
+      const { startConnectOnboarding } = await import('../../src/lib/stripe');
       await startConnectOnboarding();
       // User will be redirected to Stripe
     } catch (error) {
