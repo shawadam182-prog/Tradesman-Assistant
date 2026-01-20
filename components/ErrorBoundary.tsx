@@ -63,9 +63,9 @@ export class ErrorBoundary extends Component<Props, State> {
                 Reload App
               </button>
             </div>
-            {import.meta.env.DEV && this.state.error && (
+            {this.state.error && (
               <details className="mt-6 text-left bg-slate-100 rounded-xl p-4">
-                <summary className="text-xs font-bold text-slate-500 cursor-pointer">Error Details</summary>
+                <summary className="text-xs font-bold text-slate-500 cursor-pointer">Error Details (Tap to expand)</summary>
                 <pre className="mt-2 text-xs text-red-600 overflow-auto whitespace-pre-wrap">
                   {this.state.error.message}
                   {'\n\n'}
