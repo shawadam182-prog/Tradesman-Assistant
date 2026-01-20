@@ -1,18 +1,12 @@
 
-import React, { useState, useRef } from 'react';
-import { Quote, Customer, AppSettings, QuoteDisplayOptions, QuoteSection, LabourItem } from '../types';
+import React, { useState } from 'react';
+import { Quote, Customer, AppSettings, QuoteDisplayOptions, QuoteSection } from '../types';
 import {
-  ArrowLeft, Edit3, Hammer, User, FileText, Info,
-  Landmark, Package, HardHat, FileDown, Loader2, Navigation, PoundSterling,
-  Settings2, Eye, EyeOff, ChevronDown, ChevronUp, LayoutGrid, List,
-  Image as ImageIcon, AlignLeft, ReceiptText, ShieldCheck, ListChecks, FileDigit,
-  Box, Circle, Share2, Copy, MessageCircle, MapPin, Mail, Banknote, Check, X, Clock, Tag, Type
+  User, FileText,
+  Package, HardHat, MapPin, Type
 } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import { PaymentRecorder } from './PaymentRecorder';
 import { hapticSuccess } from '../src/hooks/useHaptic';
-import { filingService } from '../src/services/dataService';
 import {
   calculateSectionLabour,
   calculateQuoteTotals,
@@ -20,6 +14,8 @@ import {
 } from '../src/utils/quoteCalculations';
 import { getTemplateConfig, getTableHeaderStyle, getColorScheme } from '../src/lib/invoiceTemplates';
 import { ClassicTemplate } from './invoice-templates';
+import { useQuotePDF } from '../src/hooks/useQuotePDF';
+import { QuoteActions, QuoteDisplayCustomizer, QuoteEmailHelper } from './quote-view';
 
 interface QuoteViewProps {
   quote: Quote;
@@ -37,18 +33,8 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   quote, customer, settings, onEdit, onBack, onUpdateStatus, onUpdateQuote,
   onConvertToInvoice, onDuplicate
 }) => {
-  const [isDownloading, setIsDownloading] = useState(false);
   const [showCustomiser, setShowCustomiser] = useState(false);
   const [showPaymentRecorder, setShowPaymentRecorder] = useState(false);
-  const [emailHelper, setEmailHelper] = useState<{
-    show: boolean;
-    subject: string;
-    body: string;
-    email: string;
-    filename: string;
-    copied: boolean;
-  } | null>(null);
-  const documentRef = useRef<HTMLDivElement>(null);
 
   const getProcessedQuote = (): Quote => {
     if (!quote) return quote;
@@ -108,6 +94,25 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
     activeQuote.partPaymentType,
     activeQuote.partPaymentValue
   );
+
+  // PDF generation and sharing hook
+  const {
+    documentRef,
+    isDownloading,
+    emailHelper,
+    setEmailHelper,
+    handleDownloadPDF,
+    handleEmailShare,
+    handleWhatsAppShare,
+    filePaidInvoice,
+    getReference,
+  } = useQuotePDF({
+    quote: activeQuote,
+    customer,
+    settings,
+    totals,
+    displayOptions,
+  });
 
   // Helper to flatten all items (materials + labour) into a single table
   const getAllLineItems = () => {
@@ -180,103 +185,6 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
     return items;
   };
 
-  // Generate PDF as a Blob for filing
-  const generatePDFBlob = async (): Promise<{ blob: Blob; filename: string } | null> => {
-    if (!documentRef.current) return null;
-
-    try {
-      const prefix = activeQuote.type === 'invoice' ? (settings.invoicePrefix || 'INV-') : (settings.quotePrefix || 'EST-');
-      const numStr = (activeQuote.referenceNumber || 1).toString().padStart(4, '0');
-      const cleanTitle = (activeQuote.title || 'invoice').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const filename = `${prefix}${numStr}_${cleanTitle}.pdf`;
-
-      const isMobile = window.innerWidth < 768;
-      const scale = isMobile ? 1.5 : 2;
-
-      const canvas = await html2canvas(documentRef.current, {
-        scale,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: documentRef.current.scrollWidth,
-        windowHeight: documentRef.current.scrollHeight,
-      });
-
-      let imgData: string;
-      try {
-        imgData = canvas.toDataURL('image/png');
-      } catch {
-        imgData = canvas.toDataURL('image/jpeg', 0.8);
-      }
-
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      let heightLeft = scaledHeight;
-      let position = 0;
-      let pageNum = 0;
-
-      while (heightLeft > 0) {
-        if (pageNum > 0) {
-          pdf.addPage();
-        }
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
-        heightLeft -= pdfHeight;
-        position -= pdfHeight;
-        pageNum++;
-      }
-
-      const blob = pdf.output('blob');
-      return { blob, filename };
-    } catch (err) {
-      console.error('PDF generation for filing failed:', err);
-      return null;
-    }
-  };
-
-  // File paid invoice to Filing Cabinet
-  const filePaidInvoice = async () => {
-    const pdfResult = await generatePDFBlob();
-    if (!pdfResult) return;
-
-    const { blob, filename } = pdfResult;
-    const file = new File([blob], filename, { type: 'application/pdf' });
-
-    // Get tax year from payment date
-    const paymentDate = activeQuote.paymentDate || new Date().toISOString().split('T')[0];
-    const paymentYear = new Date(paymentDate).getFullYear();
-    const paymentMonth = new Date(paymentDate).getMonth();
-    // UK tax year runs April to April
-    const taxYear = paymentMonth < 3 ? `${paymentYear - 1}/${paymentYear}` : `${paymentYear}/${paymentYear + 1}`;
-
-    const prefix = settings.invoicePrefix || 'INV-';
-    const numStr = (activeQuote.referenceNumber || 1).toString().padStart(4, '0');
-    const reference = `${prefix}${numStr}`;
-
-    try {
-      await filingService.upload(file, {
-        name: `${reference} - ${activeQuote.title} (PAID)`,
-        description: `Paid invoice for ${customer?.name || 'Customer'}. Amount: £${totals.grandTotal.toFixed(2)}`,
-        category: 'invoice',
-        document_date: paymentDate,
-        vendor_name: customer?.name,
-        tax_year: taxYear,
-        tags: ['paid', 'invoice', reference],
-      });
-      console.log('Invoice filed to Filing Cabinet successfully');
-    } catch (err) {
-      console.error('Failed to file invoice:', err);
-      // Don't throw - filing is a nice-to-have, don't block the payment recording
-    }
-  };
-
   const handleRecordPayment = async (payment: {
     amount: number;
     method: 'cash' | 'card' | 'bank_transfer' | 'cheque';
@@ -297,279 +205,9 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
 
     // Auto-file to Filing Cabinet when marked as paid
     if (payment.markAsPaid) {
-      // Small delay to ensure the UI updates with the new status first
       setTimeout(() => {
         filePaidInvoice();
       }, 500);
-    }
-  };
-
-  const handleDownloadPDF = async () => {
-    if (!documentRef.current) return;
-
-    setIsDownloading(true);
-    try {
-      const prefix = activeQuote.type === 'invoice' ? (settings.invoicePrefix || 'INV-') : (settings.quotePrefix || 'EST-');
-      const numStr = (activeQuote.referenceNumber || 1).toString().padStart(4, '0');
-      const cleanTitle = (activeQuote.title || 'estimate').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const filename = `${prefix}${numStr}_${cleanTitle}.pdf`;
-
-      // Use lower scale on mobile to prevent memory issues
-      const isMobile = window.innerWidth < 768;
-      const scale = isMobile ? 1.5 : 2;
-
-      // Capture the document as canvas
-      const canvas = await html2canvas(documentRef.current, {
-        scale,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: documentRef.current.scrollWidth,
-        windowHeight: documentRef.current.scrollHeight,
-      });
-
-      // Use PNG for better compatibility, with fallback to JPEG
-      let imgData: string;
-      try {
-        imgData = canvas.toDataURL('image/png');
-      } catch {
-        // Fallback to JPEG if PNG fails (memory constraints)
-        imgData = canvas.toDataURL('image/jpeg', 0.8);
-      }
-
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      // Handle multi-page if content is tall
-      let heightLeft = scaledHeight;
-      let position = 0;
-      let pageNum = 0;
-
-      while (heightLeft > 0) {
-        if (pageNum > 0) {
-          pdf.addPage();
-        }
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
-        heightLeft -= pdfHeight;
-        position -= pdfHeight;
-        pageNum++;
-      }
-
-      pdf.save(filename);
-    } catch (err) {
-      console.error('PDF generation failed:', err);
-      alert('PDF generation failed. Please try again or use screenshot instead.');
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
-  const handleWhatsAppShare = () => {
-    const prefix = activeQuote.type === 'invoice' ? (settings.invoicePrefix || 'INV-') : (settings.quotePrefix || 'EST-');
-    const numStr = (activeQuote.referenceNumber || 1).toString().padStart(4, '0');
-    const docType = activeQuote.type === 'invoice' ? 'Invoice' : 'Quote';
-
-    // Build detailed breakdown
-    let breakdown = '';
-    if (activeQuote.sections && activeQuote.sections.length > 0) {
-      breakdown += '\n📋 *Work Breakdown:*\n';
-      activeQuote.sections.forEach((section, idx) => {
-        const markupMultiplier = 1 + ((activeQuote.markupPercent || 0) / 100);
-        const rawMaterialsTotal = (section.items || []).reduce((s, i) => s + (i.totalPrice || 0), 0);
-        const rawLabourTotal = (section.labourHours || 0) * (activeQuote.labourRate || settings.defaultLabourRate || 0);
-        const sectionTotal = (rawMaterialsTotal + rawLabourTotal) * markupMultiplier;
-
-        breakdown += `\n${idx + 1}. ${section.title}`;
-        if (section.items && section.items.length > 0) {
-          breakdown += `\n   • Materials: £${(rawMaterialsTotal * markupMultiplier).toFixed(2)}`;
-        }
-        if (section.labourHours && section.labourHours > 0) {
-          breakdown += `\n   • Labour (${section.labourHours}hrs): £${(rawLabourTotal * markupMultiplier).toFixed(2)}`;
-        }
-        breakdown += `\n   *Section Total: £${sectionTotal.toFixed(2)}*`;
-      });
-    }
-
-    // Build totals section
-    let totalsBreakdown = '\n\n💰 *Financial Summary:*';
-    totalsBreakdown += `\nSubtotal: £${totals.clientSubtotal.toFixed(2)}`;
-    if (settings.enableVat && displayOptions.showVat && totals.taxAmount > 0) {
-      totalsBreakdown += `\nVAT (${activeQuote.taxPercent}%): £${totals.taxAmount.toFixed(2)}`;
-    }
-    if (settings.enableCis && displayOptions.showCis && totals.cisAmount > 0) {
-      totalsBreakdown += `\nCIS Deduction: -£${totals.cisAmount.toFixed(2)}`;
-    }
-    totalsBreakdown += `\n\n*TOTAL DUE: £${totals.grandTotal.toFixed(2)}*`;
-
-    // Add part payment info if enabled
-    let partPaymentInfo = '';
-    if (activeQuote.type === 'invoice' && activeQuote.partPaymentEnabled && activeQuote.partPaymentValue) {
-      const partAmount = activeQuote.partPaymentType === 'percentage'
-        ? totals.grandTotal * (activeQuote.partPaymentValue / 100)
-        : activeQuote.partPaymentValue;
-
-      partPaymentInfo = `\n\n💳 *${activeQuote.partPaymentLabel || 'Amount Due Now'}:* £${partAmount.toFixed(2)}`;
-      if (activeQuote.partPaymentType === 'percentage') {
-        partPaymentInfo += ` (${activeQuote.partPaymentValue}%)`;
-      }
-      partPaymentInfo += `\n*Balance Remaining:* £${(totals.grandTotal - partAmount).toFixed(2)}`;
-    }
-
-    const message = `Hi ${customer?.name || 'there'},
-
-${activeQuote.type === 'invoice' ? '📄' : '📝'} Your ${docType} is ready!
-
-*Reference:* ${prefix}${numStr}
-*Project:* ${activeQuote.title}
-*Date:* ${activeQuote?.date ? new Date(activeQuote.date).toLocaleDateString('en-GB') : 'N/A'}
-${breakdown}
-${totalsBreakdown}${partPaymentInfo}
-
-${activeQuote.type === 'invoice'
-  ? '⏰ *Payment Terms:* Due within 14 days\n\nPlease arrange payment at your earliest convenience.'
-  : '✅ Please review and let me know if you have any questions or need any adjustments.\n\nI\'m happy to discuss the details.'}
-
-${activeQuote.notes ? `\n📌 *Additional Notes:*\n${activeQuote.notes}\n` : ''}
----
-${settings?.companyName || 'TradeSync'}
-${settings?.phone ? `📞 ${settings.phone}` : ''}
-${settings?.email ? `📧 ${settings.email}` : ''}`;
-
-    const phoneNumber = customer?.phone?.replace(/\D/g, '') || '';
-    const url = phoneNumber
-      ? `https://wa.me/${phoneNumber.startsWith('44') ? phoneNumber : '44' + phoneNumber.replace(/^0/, '')}?text=${encodeURIComponent(message)}`
-      : `https://wa.me/?text=${encodeURIComponent(message)}`;
-
-    window.open(url, '_blank');
-  };
-
-  const handleEmailShare = async () => {
-    if (!documentRef.current) return;
-
-    setIsDownloading(true);
-    try {
-      const prefix = activeQuote.type === 'invoice' ? (settings.invoicePrefix || 'INV-') : (settings.quotePrefix || 'EST-');
-      const numStr = (activeQuote.referenceNumber || 1).toString().padStart(4, '0');
-      const cleanTitle = (activeQuote.title || 'estimate').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const filename = `${prefix}${numStr}_${cleanTitle}.pdf`;
-      const docType = activeQuote.type === 'invoice' ? 'invoice' : 'quote';
-      const customerName = customer?.name || 'there';
-      const customerEmail = customer?.email || '';
-
-      // MOBILE: Use very low scale to prevent memory corruption
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const scale = isMobile ? 1 : 2;
-
-      // Generate canvas from the document
-      const canvas = await html2canvas(documentRef.current, {
-        scale,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: documentRef.current.scrollWidth,
-        windowHeight: documentRef.current.scrollHeight,
-      });
-
-      // Use JPEG on mobile for smaller file size and better compatibility
-      const imgData = isMobile
-        ? canvas.toDataURL('image/jpeg', 0.85)
-        : canvas.toDataURL('image/png');
-
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      // Handle multi-page
-      let heightLeft = scaledHeight;
-      let position = 0;
-      let pageNum = 0;
-
-      while (heightLeft > 0) {
-        if (pageNum > 0) {
-          pdf.addPage();
-        }
-        pdf.addImage(imgData, isMobile ? 'JPEG' : 'PNG', 0, position, pdfWidth, scaledHeight);
-        heightLeft -= pdfHeight;
-        position -= pdfHeight;
-        pageNum++;
-      }
-
-      // Build email content
-      let partPaymentLine = '';
-      if (activeQuote.type === 'invoice' && activeQuote.partPaymentEnabled && activeQuote.partPaymentValue) {
-        const partAmount = activeQuote.partPaymentType === 'percentage'
-          ? totals.grandTotal * (activeQuote.partPaymentValue / 100)
-          : activeQuote.partPaymentValue;
-        partPaymentLine = `\n\n${activeQuote.partPaymentLabel || 'Amount Due Now'}: £${partAmount.toFixed(2)}`;
-      }
-
-      const subject = `${docType.charAt(0).toUpperCase() + docType.slice(1)} - ${activeQuote.title} (${prefix}${numStr})`;
-      const body = `Dear ${customerName},
-
-Please find attached ${docType} as discussed.${partPaymentLine}
-
-Thanks,
-${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${settings?.email ? `\n${settings.email}` : ''}`;
-
-      // MOBILE: Use Web Share API to attach PDF directly to email
-      if (isMobile && navigator.share && navigator.canShare) {
-        try {
-          // Use blob output directly - more reliable than arraybuffer on mobile
-          const pdfBlob = pdf.output('blob');
-
-          // Validate the blob has content
-          if (!pdfBlob || pdfBlob.size < 1000) {
-            console.warn('PDF blob too small, falling back to download');
-            throw new Error('PDF generation produced invalid output');
-          }
-
-          const pdfFile = new File([pdfBlob], filename, {
-            type: 'application/pdf',
-            lastModified: Date.now()
-          });
-
-          const shareData = {
-            files: [pdfFile],
-            title: subject,
-            text: `To: ${customerEmail}\n\n${body}`,
-          };
-
-          if (navigator.canShare(shareData)) {
-            await navigator.share(shareData);
-            return; // Success - email app opened with PDF attached
-          }
-        } catch (shareErr) {
-          if ((shareErr as Error).name === 'AbortError') {
-            return; // User cancelled
-          }
-          console.log('Web Share failed:', shareErr);
-          // Fall through to download approach
-        }
-      }
-
-      // DESKTOP/FALLBACK: Download PDF and open mailto
-      pdf.save(filename);
-      const mailtoLink = `mailto:${customerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      await new Promise(resolve => setTimeout(resolve, 300));
-      window.location.href = mailtoLink;
-    } catch (err) {
-      console.error('Email share failed:', err);
-      alert('Could not prepare email. Please try downloading the PDF instead.');
-    } finally {
-      setIsDownloading(false);
     }
   };
 
@@ -579,6 +217,8 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
       window.open(url, '_blank');
     }
   };
+
+  const reference = getReference();
 
   const statusColors = {
     draft: 'bg-slate-100 text-slate-600',
@@ -621,172 +261,33 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
     borderStyle: 'border-slate-200'
   };
 
-  const CustomiseToggle = ({ label, optionKey, activeColor }: { label: string, optionKey: keyof QuoteDisplayOptions, activeColor: string }) => (
-    <button
-      onClick={() => toggleOption(optionKey)}
-      className={`flex items-center justify-between w-full px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${
-        displayOptions[optionKey]
-        ? `${activeColor} border-transparent shadow-sm`
-        : 'bg-white text-slate-300 border-slate-100 italic opacity-60'
-      }`}
-    >
-      <span className="truncate mr-2">{label}</span>
-      {displayOptions[optionKey] ? <Eye size={10} /> : <EyeOff size={10} />}
-    </button>
-  );
-
-  const prefix = activeQuote.type === 'invoice' ? (settings.invoicePrefix || 'INV-') : (settings.quotePrefix || 'EST-');
-  const numStr = (activeQuote.referenceNumber || 1).toString().padStart(4, '0');
-  const reference = `${prefix}${numStr}`;
 
   return (
     <div className="max-w-4xl mx-auto space-y-4 pb-24">
-      {/* Unified Header */}
-      <div className="sticky top-0 z-40 bg-white border-b border-slate-100 p-2 flex items-center justify-between shadow-sm -mx-4 md:mx-0 print:hidden mb-4">
-        <div className="flex items-center gap-2">
-          <button onClick={onBack} className="p-2 -ml-2 text-slate-400 hover:text-slate-700">
-            <ArrowLeft size={20} />
-          </button>
-          <h1 className="text-lg font-bold text-slate-900">{activeQuote.type === 'invoice' ? 'Invoice' : 'Quote'} Details</h1>
-        </div>
-        <div className="flex gap-2">
-           <button onClick={onEdit} className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100"><Edit3 size={18} /></button>
-           <button onClick={handleEmailShare} disabled={isDownloading} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="Email with PDF">
-             {isDownloading ? <Loader2 size={18} className="animate-spin"/> : <Mail size={18} />}
-           </button>
-           <button onClick={handleWhatsAppShare} className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100" title="Share via WhatsApp"><MessageCircle size={18} /></button>
-           <button onClick={handleDownloadPDF} disabled={isDownloading} className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100" title="Download PDF">
-             {isDownloading ? <Loader2 size={18} className="animate-spin"/> : <FileDown size={18} />}
-           </button>
-        </div>
-      </div>
+      <QuoteActions
+        quote={activeQuote}
+        customer={customer}
+        isDownloading={isDownloading}
+        showCustomiser={showCustomiser}
+        onBack={onBack}
+        onEdit={onEdit}
+        onUpdateStatus={onUpdateStatus}
+        onToggleCustomiser={() => setShowCustomiser(!showCustomiser)}
+        onDuplicate={onDuplicate}
+        onConvertToInvoice={onConvertToInvoice}
+        onRecordPayment={() => setShowPaymentRecorder(true)}
+        onEmailShare={handleEmailShare}
+        onWhatsAppShare={handleWhatsAppShare}
+        onDownloadPDF={handleDownloadPDF}
+        onOpenMaps={handleOpenMaps}
+      />
 
-      <div className="flex flex-col gap-2 print:hidden">
-        {/* Status Action Buttons for Quotes */}
-        {activeQuote.type !== 'invoice' && (
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-            {activeQuote.status === 'draft' && (
-              <button
-                onClick={() => {
-                  onUpdateStatus('sent');
-                  hapticSuccess();
-                }}
-                className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-xl bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-colors"
-              >
-                <Share2 size={14} /> Mark as Sent
-              </button>
-            )}
-            {activeQuote.status === 'sent' && (
-              <>
-                <button
-                  onClick={() => {
-                    onUpdateStatus('accepted');
-                    hapticSuccess();
-                  }}
-                  className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-xl bg-green-500 text-white text-xs font-bold shadow-lg shadow-green-500/30 hover:bg-green-600 transition-colors"
-                >
-                  <Check size={14} /> Customer Accepted
-                </button>
-                <button
-                  onClick={() => {
-                    onUpdateStatus('declined');
-                    hapticSuccess();
-                  }}
-                  className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-xl bg-red-500 text-white text-xs font-bold shadow-lg shadow-red-500/30 hover:bg-red-600 transition-colors"
-                >
-                  <X size={14} /> Customer Declined
-                </button>
-              </>
-            )}
-            {activeQuote.status === 'accepted' && !activeQuote.status.includes('invoiced') && (
-              <div className="flex items-center gap-2 px-2 py-1 rounded-xl bg-green-100 text-green-700 text-xs font-bold">
-                <Check size={14} /> Accepted - Ready to Invoice
-              </div>
-            )}
-            {activeQuote.status === 'declined' && (
-              <div className="flex items-center gap-2 px-2 py-1 rounded-xl bg-red-100 text-red-700 text-xs font-bold">
-                <X size={14} /> Quote Declined
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Secondary Actions Row */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-            <button
-              onClick={() => setShowCustomiser(!showCustomiser)}
-              className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-white border border-slate-100 text-slate-600 text-xs font-bold shadow-sm"
-            >
-              <Settings2 size={14} /> Layout
-            </button>
-            {onDuplicate && (
-              <button onClick={onDuplicate} className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-white border border-slate-100 text-slate-600 text-xs font-bold shadow-sm">
-                <Copy size={14} /> Duplicate
-              </button>
-            )}
-            {activeQuote.type !== 'invoice' && onConvertToInvoice && ['draft', 'sent', 'accepted'].includes(activeQuote.status) && (
-              <button onClick={onConvertToInvoice} className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-bold shadow-sm border border-emerald-100">
-                <ReceiptText size={14} /> To Invoice
-              </button>
-            )}
-            {activeQuote.type === 'invoice' && activeQuote.status !== 'paid' && (
-              <button
-                onClick={() => setShowPaymentRecorder(true)}
-                className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-colors"
-              >
-                <Banknote size={14} /> Record Payment
-              </button>
-            )}
-            {customer?.address && (
-              <button onClick={handleOpenMaps} className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-blue-50 text-blue-600 text-xs font-bold shadow-sm border border-blue-100">
-                <MapPin size={14} /> Map
-              </button>
-            )}
-        </div>
-
-        {showCustomiser && (
-          <div className="bg-white p-5 rounded-[28px] border border-slate-200 shadow-2xl animate-in slide-in-from-top-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="space-y-1 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100"><Package size={12} className="text-amber-500" /><span className="text-[9px] font-black uppercase tracking-widest text-slate-700">Materials</span></div>
-                <CustomiseToggle label="Show Section" optionKey="showMaterials" activeColor="bg-amber-500 text-white" />
-                <div className={`space-y-1 pl-2 border-l border-slate-100 transition-all ${displayOptions.showMaterials ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-                  <CustomiseToggle label="Detailed List" optionKey="showMaterialItems" activeColor="bg-slate-900 text-amber-500" />
-                  <div className={`space-y-1 transition-all ${displayOptions.showMaterialItems ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-                    <CustomiseToggle label="Show Quantities" optionKey="showMaterialQty" activeColor="bg-slate-800 text-white" />
-                    <CustomiseToggle label="Show Unit Prices" optionKey="showMaterialUnitPrice" activeColor="bg-slate-800 text-white" />
-                    <CustomiseToggle label="Show Line Totals" optionKey="showMaterialLineTotals" activeColor="bg-slate-800 text-white" />
-                  </div>
-                  <CustomiseToggle label="Section Total" optionKey="showMaterialSectionTotal" activeColor="bg-slate-800 text-white" />
-                </div>
-              </div>
-
-              <div className="space-y-1 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100"><HardHat size={12} className="text-blue-500" /><span className="text-[9px] font-black uppercase tracking-widest text-slate-700">Labour</span></div>
-                <CustomiseToggle label="Show Section" optionKey="showLabour" activeColor="bg-blue-600 text-white" />
-                <div className={`space-y-1 pl-2 border-l border-slate-100 transition-all ${displayOptions.showLabour ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-                  <CustomiseToggle label="Detailed Info" optionKey="showLabourItems" activeColor="bg-slate-900 text-blue-500" />
-                  <div className={`space-y-1 transition-all ${displayOptions.showLabourItems ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-                    <CustomiseToggle label="Show Hours" optionKey="showLabourQty" activeColor="bg-slate-800 text-white" />
-                    <CustomiseToggle label="Show Hourly Rate" optionKey="showLabourUnitPrice" activeColor="bg-slate-800 text-white" />
-                    <CustomiseToggle label="Show Subtotals" optionKey="showLabourLineTotals" activeColor="bg-slate-800 text-white" />
-                  </div>
-                  <CustomiseToggle label="Section Total" optionKey="showLabourSectionTotal" activeColor="bg-slate-800 text-white" />
-                </div>
-              </div>
-
-              <div className="space-y-1 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100"><Landmark size={12} className="text-emerald-500" /><span className="text-[9px] font-black uppercase tracking-widest text-slate-700">Tax & Branding</span></div>
-                <CustomiseToggle label="VAT Breakdown" optionKey="showVat" activeColor="bg-emerald-600 text-white" />
-                <CustomiseToggle label="CIS Deductions" optionKey="showCis" activeColor="bg-emerald-600 text-white" />
-                <CustomiseToggle label="Totals Summary" optionKey="showTotalsBreakdown" activeColor="bg-slate-900 text-white" />
-                <CustomiseToggle label="Business Logo" optionKey="showLogo" activeColor="bg-slate-900 text-white" />
-                <CustomiseToggle label="Terms/Notes" optionKey="showNotes" activeColor="bg-slate-900 text-white" />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      {showCustomiser && (
+        <QuoteDisplayCustomizer
+          displayOptions={displayOptions}
+          onToggleOption={toggleOption}
+        />
+      )}
 
       <div ref={documentRef} className={`bg-white ${templateStyle.container} shadow-xl border ${templateStyle.borderStyle} overflow-hidden print:border-none print:shadow-none print:rounded-none max-w-[750px] mx-auto`} style={{ width: '750px' }}>
         {/* Use ClassicTemplate component for classic template */}
@@ -1517,92 +1018,11 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
 
       {/* Email Helper Modal */}
       {emailHelper?.show && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-2">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-4">
-            {/* Header */}
-            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
-                  <Mail size={20} />
-                </div>
-                <div>
-                  <h3 className="font-bold">PDF Downloaded</h3>
-                  <p className="text-xs text-slate-400">{emailHelper.filename}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setEmailHelper(null)}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-5 space-y-4">
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2 flex items-start gap-2">
-                <Check size={18} className="text-emerald-600 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-emerald-800">
-                  PDF saved to your downloads. Now send it via email:
-                </p>
-              </div>
-
-              {/* Email preview */}
-              <div className="space-y-1.5">
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">To</label>
-                  <p className="text-sm font-medium text-slate-700">{emailHelper.email || '(add recipient)'}</p>
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subject</label>
-                  <p className="text-sm font-medium text-slate-700">{emailHelper.subject}</p>
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Message</label>
-                  <div className="bg-slate-50 rounded-xl p-2 mt-1 border border-slate-100">
-                    <p className="text-sm text-slate-600 whitespace-pre-line">{emailHelper.body}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="p-5 pt-0 space-y-1.5">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(emailHelper.body);
-                  setEmailHelper({ ...emailHelper, copied: true });
-                  setTimeout(() => setEmailHelper(prev => prev ? { ...prev, copied: false } : null), 2000);
-                }}
-                className={`w-full py-1 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
-                  emailHelper.copied
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-              >
-                {emailHelper.copied ? <Check size={18} /> : <Copy size={18} />}
-                {emailHelper.copied ? 'Copied!' : 'Copy Message'}
-              </button>
-
-              <button
-                onClick={() => {
-                  const mailtoLink = `mailto:${emailHelper.email}?subject=${encodeURIComponent(emailHelper.subject)}&body=${encodeURIComponent(emailHelper.body)}`;
-                  window.location.href = mailtoLink;
-                }}
-                className="w-full py-1.5 bg-blue-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/30"
-              >
-                <Mail size={18} />
-                Open Email App
-              </button>
-
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-2 mt-2">
-                <p className="text-xs text-amber-800 text-center">
-                  In your email app, tap the <strong>paperclip icon</strong> to attach the PDF from your Downloads folder
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <QuoteEmailHelper
+          emailHelper={emailHelper}
+          onClose={() => setEmailHelper(null)}
+          onUpdate={setEmailHelper}
+        />
       )}
     </div>
   );
