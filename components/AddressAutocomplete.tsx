@@ -123,10 +123,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   // Handle search with debounce
   const searchPlaces = useCallback((query: string) => {
-    // Require at least 1 non-space character to search
-    // This supports UK addresses starting with single digit house numbers (e.g., "3 High Street")
-    const trimmedQuery = query.trim();
-    if (!autocompleteServiceRef.current || trimmedQuery.length < 1) {
+    if (!autocompleteServiceRef.current || query.length < 3) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
@@ -138,9 +135,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       {
         input: query,
         componentRestrictions: { country: 'gb' },
-        // Use 'geocode' instead of 'address' - it's more flexible and works better
-        // with partial inputs like house numbers followed by street names
-        types: ['geocode'],
+        types: ['address'],
       },
       (predictions: google.maps.places.AutocompletePrediction[] | null, status: google.maps.places.PlacesServiceStatus) => {
         setIsSearching(false);
@@ -275,7 +270,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           placeholder={placeholder}
           value={value}
           onChange={handleInputChange}
-          onFocus={() => value.trim().length >= 1 && suggestions.length > 0 && setShowSuggestions(true)}
+          onFocus={() => value.length >= 3 && suggestions.length > 0 && setShowSuggestions(true)}
           disabled={disabled}
           // Multiple techniques to aggressively suppress browser autocomplete:
           // 1. "new-password" is a hack that Chrome/Safari actually respect
