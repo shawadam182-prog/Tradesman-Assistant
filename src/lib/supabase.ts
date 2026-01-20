@@ -1,12 +1,11 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
-// Lazy initialization to prevent circular dependency issues
-let supabaseInstance: SupabaseClient<Database> | null = null;
+let _supabaseInstance: SupabaseClient<Database> | undefined;
 
-function getSupabaseClient(): SupabaseClient<Database> {
-  if (supabaseInstance) {
-    return supabaseInstance;
+function initializeSupabase(): SupabaseClient<Database> {
+  if (_supabaseInstance) {
+    return _supabaseInstance;
   }
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -16,7 +15,7 @@ function getSupabaseClient(): SupabaseClient<Database> {
     throw new Error('Missing Supabase environment variables');
   }
 
-  supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  _supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
@@ -24,14 +23,22 @@ function getSupabaseClient(): SupabaseClient<Database> {
     },
   });
 
-  return supabaseInstance;
+  return _supabaseInstance;
 }
 
-// Export a proxy object that lazily initializes the client
-export const supabase = new Proxy({} as SupabaseClient<Database>, {
-  get(target, prop) {
-    const client = getSupabaseClient();
-    const value = (client as any)[prop];
+// Export using a getter to delay initialization
+export const supabase: SupabaseClient<Database> = new Proxy({} as SupabaseClient<Database>, {
+  get: (_target, prop, receiver) => {
+    const client = initializeSupabase();
+    const value = Reflect.get(client, prop, client);
     return typeof value === 'function' ? value.bind(client) : value;
+  },
+  set: (_target, prop, value) => {
+    const client = initializeSupabase();
+    return Reflect.set(client, prop, value, client);
+  },
+  has: (_target, prop) => {
+    const client = initializeSupabase();
+    return Reflect.has(client, prop);
   },
 });
