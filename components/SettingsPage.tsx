@@ -16,7 +16,6 @@ import { useToast } from '../src/contexts/ToastContext';
 import { handleApiError } from '../src/utils/errorHandler';
 import { userSettingsService } from '../src/services/dataService';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
-import { redirectToCheckout, redirectToPortal } from '../src/lib/stripe';
 import { useData } from '../src/contexts/DataContext';
 import { useAuth } from '../src/contexts/AuthContext';
 import { supabase } from '../src/lib/supabase';
@@ -58,6 +57,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const handleUpgrade = async (tier: 'professional' | 'business') => {
     setUpgradingTier(tier);
     try {
+      const { redirectToCheckout } = await import('../src/lib/stripe');
       await redirectToCheckout(tier);
     } catch (error) {
       console.error('Checkout error:', error);
@@ -70,6 +70,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const handleManageSubscription = async () => {
     setManagingSubscription(true);
     try {
+      const { redirectToPortal } = await import('../src/lib/stripe');
       await redirectToPortal();
     } catch (error) {
       console.error('Portal error:', error);
