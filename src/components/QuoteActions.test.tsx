@@ -1,33 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { QuoteActions } from '../../components/quote-view/QuoteActions';
-import { createMockQuote, createMockCustomer, createMockInvoice, createMockSettings } from '../test/factories';
+import { createMockQuote, createMockCustomer, createMockInvoice } from '../test/factories';
 
 // Mock the haptic hooks
 vi.mock('../../src/hooks/useHaptic', () => ({
   hapticSuccess: vi.fn(),
 }));
 
-// Mock Stripe functions
-vi.mock('../../src/lib/stripe', () => ({
-  createInvoicePaymentLink: vi.fn(),
-  isConnectSetupComplete: vi.fn(() => false),
-}));
-
-// Mock Toast context
-vi.mock('../../src/contexts/ToastContext', () => ({
-  useToast: () => ({
-    success: vi.fn(),
-    error: vi.fn(),
-    info: vi.fn(),
-  }),
-}));
-
 describe('QuoteActions', () => {
   const defaultProps = {
     quote: createMockQuote(),
     customer: createMockCustomer(),
-    settings: createMockSettings(),
     isDownloading: false,
     showCustomiser: false,
     onBack: vi.fn(),
@@ -41,9 +25,6 @@ describe('QuoteActions', () => {
     onWhatsAppShare: vi.fn(),
     onDownloadPDF: vi.fn(),
     onOpenMaps: vi.fn(),
-    onRefreshQuote: vi.fn(),
-    getReference: vi.fn(() => 'INV-001'),
-    totals: { grandTotal: 1000 },
   };
 
   beforeEach(() => {
