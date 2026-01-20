@@ -28,17 +28,7 @@ supabase db push
 
 ## Latest Migration
 
-**File:** `20260121_add_user_activity_tracking.sql`
-
-**Purpose:** **CRITICAL - Fixes login authentication failure**
-
-**Issue:** Login is completely broken with "something went wrong" error. The app tries to record login activity to `user_sessions` and `user_activity_logs` tables that don't exist in the database. This causes the authentication flow to fail.
-
-**Required:** **YES - URGENT** - This migration MUST be run immediately to restore login functionality.
-
----
-
-**Previous Migration:** `20260120_fix_document_template_constraint.sql`
+**File:** `20260120_fix_document_template_constraint.sql`
 
 **Purpose:** Fixes the "Save Failed" error when saving invoice preferences
 
