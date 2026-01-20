@@ -7,8 +7,8 @@ import {
   getFeatureDisplayName,
   AccessDeniedReason,
 } from '../hooks/useFeatureAccess';
+import { redirectToCheckout, type StripeTier } from '../lib/stripe';
 import type { GatedFeature, SubscriptionTier } from '../../types';
-import type { StripeTier } from '../lib/stripe';
 
 interface FeatureGateProps {
   feature: GatedFeature;
@@ -88,7 +88,6 @@ function UpgradePrompt({
     setIsLoading(true);
     setError(null);
     try {
-      const { redirectToCheckout } = await import('../lib/stripe');
       // Map subscription tier to Stripe tier
       const tier: StripeTier = (requiredTier === 'business' || requiredTier === 'enterprise')
         ? requiredTier as StripeTier
@@ -255,7 +254,6 @@ export function TrialBanner() {
   const handleUpgradeClick = async () => {
     setIsLoading(true);
     try {
-      const { redirectToCheckout } = await import('../lib/stripe');
       await redirectToCheckout('professional');
     } catch (err) {
       console.error('Checkout error:', err);
@@ -301,7 +299,6 @@ export function TrialExpiredBanner() {
   const handleUpgradeClick = async () => {
     setIsLoading(true);
     try {
-      const { redirectToCheckout } = await import('../lib/stripe');
       await redirectToCheckout('professional');
     } catch (err) {
       console.error('Checkout error:', err);

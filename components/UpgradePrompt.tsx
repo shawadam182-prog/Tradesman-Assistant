@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Lock, Sparkles, X, Loader2 } from 'lucide-react';
+import { redirectToCheckout } from '../src/lib/stripe';
 
 interface UpgradePromptProps {
   resourceName: string;
@@ -21,7 +22,6 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
     setIsLoading(true);
     setError(null);
     try {
-      const { redirectToCheckout } = await import('../src/lib/stripe');
       await redirectToCheckout('professional');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start checkout');
