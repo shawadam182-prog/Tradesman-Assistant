@@ -120,9 +120,10 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   // Handle search with debounce
   const searchPlaces = useCallback((query: string) => {
-    // Use trimmed length to avoid counting trailing spaces as meaningful input
-    // Lower threshold to 2 to support UK addresses starting with house numbers (e.g., "12 High Street")
-    if (!autocompleteServiceRef.current || query.trim().length < 2) {
+    // Require at least 1 non-space character to search
+    // This supports UK addresses starting with single digit house numbers (e.g., "3 High Street")
+    const trimmedQuery = query.trim();
+    if (!autocompleteServiceRef.current || trimmedQuery.length < 1) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
@@ -134,7 +135,9 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       {
         input: query,
         componentRestrictions: { country: 'gb' },
-        types: ['address'],
+        // Use 'geocode' instead of 'address' - it's more flexible and works better
+        // with partial inputs like house numbers followed by street names
+        types: ['geocode'],
       },
       (predictions: google.maps.places.AutocompletePrediction[] | null, status: google.maps.places.PlacesServiceStatus) => {
         setIsSearching(false);
@@ -266,9 +269,14 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           placeholder={placeholder}
           value={value}
           onChange={handleInputChange}
-          onFocus={() => value.trim().length >= 2 && suggestions.length > 0 && setShowSuggestions(true)}
+          onFocus={() => value.trim().length >= 1 && suggestions.length > 0 && setShowSuggestions(true)}
           disabled={disabled}
           autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          data-lpignore="true"
+          data-form-type="other"
         />
 
         {/* Action buttons - hidden on mobile, shown inside input on desktop */}
