@@ -75,6 +75,12 @@ const DEFAULT_SETTINGS: AppSettings = {
   stripeSubscriptionId: undefined,
   referralCode: undefined,
   usageLimits: undefined, // Will fall back to TIER_LIMITS[tier]
+  // Stripe Connect defaults (separate from subscription)
+  stripeConnectAccountId: undefined,
+  stripeConnectOnboardingComplete: false,
+  stripeConnectChargesEnabled: false,
+  stripeConnectPayoutsEnabled: false,
+  stripeConnectOnboardedAt: undefined,
 };
 
 interface DataContextType {
