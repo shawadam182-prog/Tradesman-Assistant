@@ -3,7 +3,7 @@ import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { getReferralCode, clearReferralCode } from '../hooks/useReferralCapture';
 import { APP_CONFIG } from '../lib/constants';
-import { activityService } from '../services/activityService';
+// import { activityService } from '../services/activityService'; // Temporarily disabled to fix circular dependency
 
 interface AuthContextType {
   user: User | null;
@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Record login for existing session on page load
       if (session?.user && !hasRecordedLogin.current) {
         hasRecordedLogin.current = true;
-        activityService.recordLogin().catch(console.error);
+        // activityService.recordLogin().catch(console.error); // Temporarily disabled
       }
     });
 
@@ -55,10 +55,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Track login/logout events
         if (event === 'SIGNED_IN' && session?.user && !hasRecordedLogin.current) {
           hasRecordedLogin.current = true;
-          activityService.recordLogin().catch(console.error);
+          // activityService.recordLogin().catch(console.error); // Temporarily disabled
         } else if (event === 'SIGNED_OUT') {
           hasRecordedLogin.current = false;
-          activityService.recordLogout().catch(console.error);
+          // activityService.recordLogout().catch(console.error); // Temporarily disabled
         }
       }
     );
@@ -127,7 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     // Record logout before signing out
-    await activityService.recordLogout().catch(console.error);
+    // await activityService.recordLogout().catch(console.error); // Temporarily disabled
     hasRecordedLogin.current = false;
     // Clear local state first (handles mock login scenario)
     setUser(null);
