@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { Quote, Customer, AppSettings } from '../../types';
 import { hapticSuccess } from '../../src/hooks/useHaptic';
-import { createInvoicePaymentLink, isConnectSetupComplete } from '../../src/lib/stripe';
 import { useToast } from '../../src/contexts/ToastContext';
 
 interface QuoteActionsProps {
@@ -56,6 +55,8 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
   const [isCreatingPaymentLink, setIsCreatingPaymentLink] = useState(false);
 
   const handleGetPaymentLink = async () => {
+    const { isConnectSetupComplete, createInvoicePaymentLink } = await import('../../src/lib/stripe');
+
     if (!isConnectSetupComplete(settings)) {
       toast.info('Setup Required', 'Please set up card payments in Settings first');
       return;
