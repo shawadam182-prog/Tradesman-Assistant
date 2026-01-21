@@ -1,5 +1,3 @@
-import { supabase } from './supabase';
-
 // Stripe Price IDs (Live Mode)
 export const STRIPE_PRICES = {
   professional: 'price_1SqyvEK6gNizuAaGquTjgPXM',
@@ -15,6 +13,9 @@ export type StripeTier = keyof typeof STRIPE_PRICES;
  * @returns Promise that resolves when redirect starts, or rejects on error
  */
 export async function redirectToCheckout(tier: StripeTier): Promise<void> {
+  // Lazy-load supabase to avoid circular dependency during app initialization
+  const { supabase } = await import('./supabase');
+
   // Get the current session
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
@@ -59,6 +60,9 @@ export async function redirectToCheckout(tier: StripeTier): Promise<void> {
  * @returns Promise that resolves when redirect starts, or rejects on error
  */
 export async function redirectToPortal(): Promise<void> {
+  // Lazy-load supabase to avoid circular dependency during app initialization
+  const { supabase } = await import('./supabase');
+
   // Get the current session
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
