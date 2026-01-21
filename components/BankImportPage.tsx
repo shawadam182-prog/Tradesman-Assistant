@@ -269,16 +269,15 @@ export const BankImportPage: React.FC<BankImportPageProps> = ({ onBack }) => {
         {['Upload', 'Preview', 'Import'].map((label, idx) => {
           const stepNum = idx + 1;
           const isActive = (step === 'upload' && stepNum === 1) ||
-                          (step === 'preview' && stepNum === 2) ||
-                          ((step === 'importing' || step === 'complete') && stepNum === 3);
+            (step === 'preview' && stepNum === 2) ||
+            ((step === 'importing' || step === 'complete') && stepNum === 3);
           const isComplete = (step === 'preview' && stepNum === 1) ||
-                            ((step === 'importing' || step === 'complete') && stepNum <= 2);
+            ((step === 'importing' || step === 'complete') && stepNum <= 2);
           return (
             <React.Fragment key={label}>
-              <div className={`flex items-center gap-2 ${isActive ? 'text-amber-600' : isComplete ? 'text-emerald-600' : 'text-slate-400'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm ${
-                  isActive ? 'bg-amber-100' : isComplete ? 'bg-emerald-100' : 'bg-slate-100'
-                }`}>
+              <div className={`flex items-center gap-2 ${isActive ? 'text-teal-600' : isComplete ? 'text-emerald-600' : 'text-slate-400'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm ${isActive ? 'bg-teal-100' : isComplete ? 'bg-emerald-100' : 'bg-slate-100'
+                  }`}>
                   {isComplete ? <Check size={16} /> : stepNum}
                 </div>
                 <span className="font-bold text-sm hidden sm:inline">{label}</span>
@@ -348,11 +347,10 @@ export const BankImportPage: React.FC<BankImportPageProps> = ({ onBack }) => {
                 <button
                   key={id}
                   onClick={() => handleBankSelect(id)}
-                  className={`p-4 rounded-2xl border-2 transition-all text-left ${
-                    selectedBank === id
+                  className={`p-4 rounded-2xl border-2 transition-all text-left ${selectedBank === id
                       ? 'border-teal-500 bg-teal-50'
                       : 'border-slate-100 hover:border-slate-200'
-                  }`}
+                    }`}
                 >
                   <p className={`font-bold text-sm ${selectedBank === id ? 'text-teal-700' : 'text-slate-700'}`}>
                     {preset.name}
@@ -417,7 +415,8 @@ export const BankImportPage: React.FC<BankImportPageProps> = ({ onBack }) => {
               </button>
             </div>
 
-            <div className="max-h-[400px] overflow-auto">
+            {/* Desktop Table View */}
+            <div className="hidden md:block max-h-[400px] overflow-auto">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 sticky top-0">
                   <tr>
@@ -441,6 +440,28 @@ export const BankImportPage: React.FC<BankImportPageProps> = ({ onBack }) => {
               {parsedTransactions.length > 50 && (
                 <p className="p-4 text-center text-slate-400 text-sm">
                   Showing 50 of {parsedTransactions.length} transactions
+                </p>
+              )}
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden max-h-[400px] overflow-auto p-2 space-y-2 bg-slate-50">
+              {parsedTransactions.slice(0, 50).map((tx, idx) => (
+                <div key={idx} className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm active:bg-slate-50 transition-colors">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-[11px] font-bold text-slate-500">{tx.date}</span>
+                    <span className={`text-sm font-black ${tx.amount < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                      {tx.amount < 0 ? '-' : '+'}£{Math.abs(tx.amount).toFixed(2)}
+                    </span>
+                  </div>
+                  <p className="text-xs font-medium text-slate-900 line-clamp-2 leading-relaxed">
+                    {tx.description}
+                  </p>
+                </div>
+              ))}
+              {parsedTransactions.length > 50 && (
+                <p className="p-4 text-center text-slate-400 text-xs font-medium">
+                  And {parsedTransactions.length - 50} more...
                 </p>
               )}
             </div>

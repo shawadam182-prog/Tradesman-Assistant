@@ -178,20 +178,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             <div key={group.id} className="mb-1">
               <button
                 onClick={() => toggleGroup(group.id)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors border-l-2 ${
-                  isActiveInGroup(group)
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors border-l-2 ${isActiveInGroup(group)
                     ? 'bg-slate-800 text-white border-teal-500'
                     : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-300 border-transparent hover:border-slate-600'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <group.icon size={18} className="opacity-80" />
                   <span className="font-black text-[11px] uppercase tracking-widest">{group.label}</span>
                   {group.badge && (
-                    <span className={`text-[9px] text-white px-1.5 py-0.5 rounded-full font-bold ${
-                      group.tier === 'professional' ? 'bg-teal-600' :
-                      group.tier === 'business' ? 'bg-purple-500' : 'bg-slate-500'
-                    }`}>{group.badge}</span>
+                    <span className={`text-[9px] text-white px-1.5 py-0.5 rounded-full font-bold ${group.tier === 'professional' ? 'bg-teal-600' :
+                        group.tier === 'business' ? 'bg-purple-500' : 'bg-slate-500'
+                      }`}>{group.badge}</span>
                   )}
                 </div>
                 {expandedGroups.has(group.id) ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronRight size={14} className="text-slate-600" />}
@@ -202,11 +200,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                     <button
                       key={item.id}
                       onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors ${
-                        activeTab === item.id
+                      className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors ${activeTab === item.id
                           ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
                           : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-200'
-                      }`}
+                        }`}
                     >
                       <item.icon size={16} strokeWidth={activeTab === item.id ? 2.5 : 1.5} />
                       <span className="font-medium text-[13px]">{item.label}</span>
@@ -244,9 +241,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                     setActiveTab(item.id);
                   }
                 }}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 h-full active:scale-95 transition-all relative ${
-                  isActive ? 'text-teal-500' : 'text-slate-400'
-                }`}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 h-full active:scale-95 transition-all relative ${isActive ? 'text-teal-500' : 'text-slate-400'
+                  }`}
               >
                 {isActive && (
                   <div className="absolute top-0 w-8 h-0.5 bg-teal-500 rounded-full shadow-[0_0_8px_rgba(20,184,166,0.6)]" />
@@ -278,10 +274,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                     <group.icon size={14} className="text-slate-600" />
                     <span className="font-black text-[10px] uppercase tracking-wider text-slate-700">{group.label}</span>
                     {group.badge && (
-                      <span className={`text-[9px] text-white px-1.5 py-0.5 rounded-full font-bold ${
-                        group.tier === 'professional' ? 'bg-teal-600' :
-                        group.tier === 'business' ? 'bg-purple-500' : 'bg-slate-500'
-                      }`}>{group.badge}</span>
+                      <span className={`text-[9px] text-white px-1.5 py-0.5 rounded-full font-bold ${group.tier === 'professional' ? 'bg-teal-600' :
+                          group.tier === 'business' ? 'bg-purple-500' : 'bg-slate-500'
+                        }`}>{group.badge}</span>
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-2 px-1">
@@ -292,11 +287,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                         <button
                           key={item.id}
                           onClick={() => handleMoreMenuItemClick(item.id)}
-                          className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] active:scale-95 transition-all ${
-                            activeTab === item.id
+                          className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] active:scale-95 transition-all ${activeTab === item.id
                               ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
                               : 'bg-slate-100 text-slate-600 active:bg-slate-200'
-                          }`}
+                            }`}
                         >
                           <item.icon size={18} strokeWidth={activeTab === item.id ? 2.5 : 2} />
                           <span className={`text-[8px] font-black uppercase tracking-tight text-center leading-tight line-clamp-2 max-w-full`}>
@@ -340,7 +334,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             <span className="font-black text-lg tracking-tight">Trade<span className="text-teal-500">Sync</span></span>
           </button>
         </header>
-        <div className="px-3 py-2 md:p-8 max-w-7xl mx-auto">
+        <div className="px-4 py-4 md:p-8 max-w-7xl mx-auto">
           {children}
         </div>
       </main>

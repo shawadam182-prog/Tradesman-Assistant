@@ -127,12 +127,12 @@ export const Home: React.FC<HomeProps> = ({
 
   useEffect(() => {
     try {
-    const savedReminders = localStorage.getItem('bq_home_reminders');
-    const savedNotes = localStorage.getItem('bq_home_quick_notes');
-    const savedFutureJobs = localStorage.getItem('bq_future_jobs');
-    if (savedReminders) setReminders(JSON.parse(savedReminders));
-    if (savedNotes) setQuickNotes(savedNotes);
-    if (savedFutureJobs) setFutureJobs(JSON.parse(savedFutureJobs));
+      const savedReminders = localStorage.getItem('bq_home_reminders');
+      const savedNotes = localStorage.getItem('bq_home_quick_notes');
+      const savedFutureJobs = localStorage.getItem('bq_future_jobs');
+      if (savedReminders) setReminders(JSON.parse(savedReminders));
+      if (savedNotes) setQuickNotes(savedNotes);
+      if (savedFutureJobs) setFutureJobs(JSON.parse(savedFutureJobs));
     } catch (e) { console.error("Failed to parse localStorage data:", e); }
   }, []);
 
@@ -155,8 +155,8 @@ export const Home: React.FC<HomeProps> = ({
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      const currentTimeStr = now.toTimeString().slice(0, 5); 
-      
+      const currentTimeStr = now.toTimeString().slice(0, 5);
+
       setReminders(prev => prev.map(r => {
         if (!r.isCompleted && r.time === currentTimeStr && !r.isAlarming) {
           return { ...r, isAlarming: true };
@@ -579,9 +579,9 @@ export const Home: React.FC<HomeProps> = ({
       .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())[0];
   }, [schedule]);
 
-  const nextJobCustomer = useMemo(() => 
+  const nextJobCustomer = useMemo(() =>
     nextJob ? customers.find(c => c.id === nextJob.customerId) : null
-  , [nextJob, customers]);
+    , [nextJob, customers]);
 
   const getTimeUntil = (dateStr: string) => {
     const diff = new Date(dateStr).getTime() - new Date().getTime();
@@ -624,14 +624,14 @@ export const Home: React.FC<HomeProps> = ({
                 setUpgradePromptType('jobs');
               }
             }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-gradient-to-br from-teal-400 to-teal-600 text-white p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-teal-500/30 hover:shadow-2xl hover:shadow-teal-500/40 group relative"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-teal-50 border border-teal-200 text-teal-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-teal-500/10 hover:shadow-md hover:shadow-teal-500/20 group relative"
           >
-            <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
-              <Briefcase size={20} className="md:w-7 md:h-7" />
+            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
+              <Briefcase size={20} className="md:w-7 md:h-7 text-teal-600" />
             </div>
             <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">New Job</span>
             {limits.jobPacks !== null && (
-              <span className="absolute top-1 right-1 text-[8px] bg-white/30 px-1.5 py-0.5 rounded-full font-bold">
+              <span className="absolute top-1 right-1 text-[8px] bg-white text-teal-700 px-1.5 py-0.5 rounded-full font-bold border border-teal-100">
                 {currentJobCount}/{limits.jobPacks}
               </span>
             )}
@@ -645,14 +645,14 @@ export const Home: React.FC<HomeProps> = ({
                 setUpgradePromptType('quotes');
               }
             }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-gradient-to-br from-blue-400 to-blue-600 text-white p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/40 group relative"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-blue-50 border border-blue-200 text-blue-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-blue-500/10 hover:shadow-md hover:shadow-blue-500/20 group relative"
           >
-            <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
-              <FileText size={20} className="md:w-7 md:h-7" />
+            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
+              <FileText size={20} className="md:w-7 md:h-7 text-blue-600" />
             </div>
             <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Quote</span>
             {limits.quotes !== null && (
-              <span className="absolute top-1 right-1 text-[8px] bg-white/30 px-1.5 py-0.5 rounded-full font-bold">
+              <span className="absolute top-1 right-1 text-[8px] bg-white text-blue-700 px-1.5 py-0.5 rounded-full font-bold border border-blue-100">
                 {currentQuoteCount}/{limits.quotes}
               </span>
             )}
@@ -666,42 +666,42 @@ export const Home: React.FC<HomeProps> = ({
                 setUpgradePromptType('invoices');
               }
             }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/40 group relative"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-emerald-50 border border-emerald-200 text-emerald-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-emerald-500/10 hover:shadow-md hover:shadow-emerald-500/20 group relative"
           >
-            <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
-              <PoundSterling size={20} className="md:w-7 md:h-7" />
+            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
+              <PoundSterling size={20} className="md:w-7 md:h-7 text-emerald-600" />
             </div>
             <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Invoice</span>
             {limits.invoices !== null && (
-              <span className="absolute top-1 right-1 text-[8px] bg-white/30 px-1.5 py-0.5 rounded-full font-bold">
+              <span className="absolute top-1 right-1 text-[8px] bg-white text-emerald-700 px-1.5 py-0.5 rounded-full font-bold border border-emerald-100">
                 {currentInvoiceCount}/{limits.invoices}
               </span>
             )}
           </button>
           <button
             onClick={() => { hapticTap(); handleOpenPhotoPicker(); }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-gradient-to-br from-violet-400 to-violet-600 text-white p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-violet-500/30 hover:shadow-2xl hover:shadow-violet-500/40 group"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-violet-50 border border-violet-200 text-violet-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-violet-500/10 hover:shadow-md hover:shadow-violet-500/20 group"
           >
-            <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
-              <Camera size={20} className="md:w-7 md:h-7" />
+            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
+              <Camera size={20} className="md:w-7 md:h-7 text-violet-600" />
             </div>
             <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Photo</span>
           </button>
           <button
             onClick={() => { hapticTap(); onLogExpense?.(); }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-gradient-to-br from-amber-400 to-amber-600 text-white p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-amber-500/30 hover:shadow-2xl hover:shadow-amber-500/40 group"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-amber-50 border border-amber-200 text-amber-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-amber-500/10 hover:shadow-md hover:shadow-amber-500/20 group"
           >
-            <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
-              <Receipt size={20} className="md:w-7 md:h-7" />
+            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
+              <Receipt size={20} className="md:w-7 md:h-7 text-amber-600" />
             </div>
             <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Expense</span>
           </button>
           <button
             onClick={() => { hapticTap(); onAddCustomer?.(); }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-gradient-to-br from-rose-400 to-rose-600 text-white p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-lg md:shadow-xl shadow-rose-500/30 hover:shadow-2xl hover:shadow-rose-500/40 group"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-rose-50 border border-rose-200 text-rose-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-rose-500/10 hover:shadow-md hover:shadow-rose-500/20 group"
           >
-            <div className="p-2 md:p-3 bg-white/20 rounded-xl md:rounded-2xl group-active:scale-90 transition-transform">
-              <UserPlus size={20} className="md:w-7 md:h-7" />
+            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
+              <UserPlus size={20} className="md:w-7 md:h-7 text-rose-600" />
             </div>
             <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Customer</span>
           </button>
@@ -869,124 +869,124 @@ export const Home: React.FC<HomeProps> = ({
       <div>
         <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest mb-2 md:mb-3 px-1">Today's Schedule</h3>
 
-      {/* Today's Stats Card */}
-      <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 p-3 md:p-6 shadow-sm mb-3 md:mb-4">
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
-          <div className="flex flex-col items-center justify-center gap-1 sm:gap-1.5 md:gap-3 p-2 sm:p-3 md:p-4 bg-slate-50 rounded-xl md:rounded-2xl text-center min-h-[80px]">
-            <div className="p-1.5 md:p-3 bg-slate-900 text-white rounded-lg md:rounded-xl">
-              <Calendar size={14} className="md:w-5 md:h-5" />
+        {/* Today's Stats Card */}
+        <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 p-3 md:p-6 shadow-sm mb-3 md:mb-4">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
+            <div className="flex flex-col items-center justify-center gap-1 sm:gap-1.5 md:gap-3 p-2 sm:p-3 md:p-4 bg-slate-50 rounded-xl md:rounded-2xl text-center min-h-[80px]">
+              <div className="p-1.5 md:p-3 bg-slate-900 text-white rounded-lg md:rounded-xl">
+                <Calendar size={14} className="md:w-5 md:h-5" />
+              </div>
+              <p className="text-lg md:text-2xl font-black text-slate-900 leading-none">{todayStats.jobsToday}</p>
+              <p className="text-[10px] sm:text-[11px] md:text-xs font-black text-slate-500 uppercase tracking-wide leading-tight">Jobs Today</p>
             </div>
-            <p className="text-lg md:text-2xl font-black text-slate-900 leading-none">{todayStats.jobsToday}</p>
-            <p className="text-[10px] sm:text-[11px] md:text-xs font-black text-slate-500 uppercase tracking-wide leading-tight">Jobs Today</p>
-          </div>
-          <div className="flex flex-col items-center justify-center gap-1 sm:gap-1.5 md:gap-3 p-2 sm:p-3 md:p-4 bg-teal-50 rounded-xl md:rounded-2xl text-center min-h-[80px]">
-            <div className="p-1.5 md:p-3 bg-teal-500 text-white rounded-lg md:rounded-xl">
-              <PoundSterling size={14} className="md:w-5 md:h-5" />
+            <div className="flex flex-col items-center justify-center gap-1 sm:gap-1.5 md:gap-3 p-2 sm:p-3 md:p-4 bg-teal-50 rounded-xl md:rounded-2xl text-center min-h-[80px]">
+              <div className="p-1.5 md:p-3 bg-teal-500 text-white rounded-lg md:rounded-xl">
+                <PoundSterling size={14} className="md:w-5 md:h-5" />
+              </div>
+              <p className="text-sm sm:text-lg md:text-2xl font-black text-slate-900 leading-none truncate max-w-full">{todayStats.weeklyRevenue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}</p>
+              <p className="text-[10px] sm:text-[11px] md:text-xs font-black text-slate-500 uppercase tracking-wide leading-tight">This Week</p>
             </div>
-            <p className="text-sm sm:text-lg md:text-2xl font-black text-slate-900 leading-none truncate max-w-full">{todayStats.weeklyRevenue.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}</p>
-            <p className="text-[10px] sm:text-[11px] md:text-xs font-black text-slate-500 uppercase tracking-wide leading-tight">This Week</p>
-          </div>
-          <div className="flex flex-col items-center justify-center gap-1 sm:gap-1.5 md:gap-3 p-2 sm:p-3 md:p-4 bg-slate-100 rounded-xl md:rounded-2xl text-center min-h-[80px]">
-            <div className="p-1.5 md:p-3 bg-slate-500 text-white rounded-lg md:rounded-xl">
-              <FileWarning size={14} className="md:w-5 md:h-5" />
+            <div className="flex flex-col items-center justify-center gap-1 sm:gap-1.5 md:gap-3 p-2 sm:p-3 md:p-4 bg-slate-100 rounded-xl md:rounded-2xl text-center min-h-[80px]">
+              <div className="p-1.5 md:p-3 bg-slate-500 text-white rounded-lg md:rounded-xl">
+                <FileWarning size={14} className="md:w-5 md:h-5" />
+              </div>
+              <p className="text-lg md:text-2xl font-black text-slate-900 leading-none">{todayStats.outstandingInvoices}</p>
+              <p className="text-[10px] sm:text-[11px] md:text-xs font-black text-slate-500 uppercase tracking-wide leading-tight">Owed</p>
             </div>
-            <p className="text-lg md:text-2xl font-black text-slate-900 leading-none">{todayStats.outstandingInvoices}</p>
-            <p className="text-[10px] sm:text-[11px] md:text-xs font-black text-slate-500 uppercase tracking-wide leading-tight">Owed</p>
-          </div>
-          <div className="flex flex-col items-center justify-center gap-1 sm:gap-1.5 md:gap-3 p-2 sm:p-3 md:p-4 bg-teal-100 rounded-xl md:rounded-2xl text-center min-h-[80px]">
-            <div className="p-1.5 md:p-3 bg-teal-600 text-white rounded-lg md:rounded-xl">
-              <Clock size={14} className="md:w-5 md:h-5" />
+            <div className="flex flex-col items-center justify-center gap-1 sm:gap-1.5 md:gap-3 p-2 sm:p-3 md:p-4 bg-teal-100 rounded-xl md:rounded-2xl text-center min-h-[80px]">
+              <div className="p-1.5 md:p-3 bg-teal-600 text-white rounded-lg md:rounded-xl">
+                <Clock size={14} className="md:w-5 md:h-5" />
+              </div>
+              <p className="text-lg md:text-2xl font-black text-slate-900 leading-none">{todayStats.pendingQuotes}</p>
+              <p className="text-[10px] sm:text-[11px] md:text-xs font-black text-slate-500 uppercase tracking-wide leading-tight">Pending</p>
             </div>
-            <p className="text-lg md:text-2xl font-black text-slate-900 leading-none">{todayStats.pendingQuotes}</p>
-            <p className="text-[10px] sm:text-[11px] md:text-xs font-black text-slate-500 uppercase tracking-wide leading-tight">Pending</p>
           </div>
         </div>
-      </div>
 
-      <div className="relative group">
-        {!nextJob ? (
-          <div onClick={onNavigateToSchedule} className="bg-white border-4 border-dashed border-slate-100 rounded-2xl md:rounded-[48px] p-8 md:p-16 text-center cursor-pointer hover:border-teal-200 transition-all flex flex-col items-center">
-            <Calendar size={40} className="md:w-[60px] md:h-[60px] text-slate-200 mb-2 md:mb-4" />
-            <p className="text-slate-400 font-black uppercase tracking-widest text-xs md:text-base">No upcoming jobs found</p>
-          </div>
-        ) : (
-          <div className="bg-slate-900 rounded-2xl md:rounded-[48px] p-4 md:p-10 lg:p-12 text-white shadow-2xl overflow-hidden relative border-b-4 md:border-b-8 border-teal-500">
-            <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 pointer-events-none">
-              <Navigation size={200} />
+        <div className="relative group">
+          {!nextJob ? (
+            <div onClick={onNavigateToSchedule} className="bg-white border-4 border-dashed border-slate-100 rounded-2xl md:rounded-[48px] p-8 md:p-16 text-center cursor-pointer hover:border-teal-200 transition-all flex flex-col items-center">
+              <Calendar size={40} className="md:w-[60px] md:h-[60px] text-slate-200 mb-2 md:mb-4" />
+              <p className="text-slate-400 font-black uppercase tracking-widest text-xs md:text-base">No upcoming jobs found</p>
             </div>
-            
-            <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-10 relative z-10">
-              <div className="space-y-3 md:space-y-6 flex-1">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <div className="px-3 py-1 md:px-4 md:py-2 bg-teal-500 rounded-full text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest animate-pulse">
-                    Next Job
-                  </div>
-                  <div className="text-teal-400 font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1 md:gap-2">
-                    <Timer size={12} className="md:w-[14px] md:h-[14px]" /> {getTimeUntil(nextJob.start)}
-                  </div>
-                </div>
-
-                <div className="space-y-1 md:space-y-2">
-                  <h3 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight leading-none">{nextJob.title}</h3>
-                  <div className="flex items-center gap-3 md:gap-6">
-                    <div className="flex items-center gap-1.5 md:gap-2 text-slate-400 font-bold text-sm md:text-lg italic">
-                      <Clock size={16} className="md:w-5 md:h-5 text-teal-500" />
-                      {new Date(nextJob.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — {new Date(nextJob.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-4">
-                  {nextJobCustomer && (
-                    <div className="flex items-center gap-3 bg-white/5 p-4 rounded-3xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
-                      <div className="w-10 h-10 bg-teal-500 rounded-2xl flex items-center justify-center text-white font-black">
-                        {nextJobCustomer.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none">Client</p>
-                        <p className="font-bold text-sm text-white mt-1">{nextJobCustomer.name}</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {nextJob.location && (
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nextJob.location)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 min-w-[200px] flex flex-col gap-2 bg-teal-500 p-5 rounded-3xl hover:bg-teal-400 transition-all text-white shadow-xl shadow-teal-500/20 group/nav"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest opacity-75">Navigate to Site</span>
-                        <div className="h-8 w-8 bg-slate-900 rounded-xl flex items-center justify-center text-teal-500 shrink-0 group-hover/nav:scale-110 transition-transform">
-                          <Navigation size={16} />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <MapPin size={20} className="shrink-0" />
-                        <span className="font-black text-sm truncate">{nextJob.location}</span>
-                      </div>
-                    </a>
-                  )}
-                </div>
+          ) : (
+            <div className="bg-slate-900 rounded-2xl md:rounded-[48px] p-4 md:p-10 lg:p-12 text-white shadow-2xl overflow-hidden relative border-b-4 md:border-b-8 border-teal-500">
+              <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 pointer-events-none">
+                <Navigation size={200} />
               </div>
 
-              <button
-                onClick={() => { hapticTap(); onViewJob?.(nextJob.id); }}
-                className="w-full md:w-auto h-auto md:h-64 bg-white/5 border border-white/10 rounded-[32px] p-8 flex flex-col justify-between hover:bg-white/10 transition-all group"
-              >
-                <div className="h-12 w-12 bg-teal-500 rounded-2xl flex items-center justify-center text-white group-hover:scale-110 transition-transform">
-                  <Eye size={24} />
+              <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-10 relative z-10">
+                <div className="space-y-3 md:space-y-6 flex-1">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="px-3 py-1 md:px-4 md:py-2 bg-teal-500 rounded-full text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest animate-pulse">
+                      Next Job
+                    </div>
+                    <div className="text-teal-400 font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1 md:gap-2">
+                      <Timer size={12} className="md:w-[14px] md:h-[14px]" /> {getTimeUntil(nextJob.start)}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 md:space-y-2">
+                    <h3 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight leading-none">{nextJob.title}</h3>
+                    <div className="flex items-center gap-3 md:gap-6">
+                      <div className="flex items-center gap-1.5 md:gap-2 text-slate-400 font-bold text-sm md:text-lg italic">
+                        <Clock size={16} className="md:w-5 md:h-5 text-teal-500" />
+                        {new Date(nextJob.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — {new Date(nextJob.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-4">
+                    {nextJobCustomer && (
+                      <div className="flex items-center gap-3 bg-white/5 p-4 rounded-3xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
+                        <div className="w-10 h-10 bg-teal-500 rounded-2xl flex items-center justify-center text-white font-black">
+                          {nextJobCustomer.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none">Client</p>
+                          <p className="font-bold text-sm text-white mt-1">{nextJobCustomer.name}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {nextJob.location && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nextJob.location)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 min-w-[200px] flex flex-col gap-2 bg-teal-500 p-5 rounded-3xl hover:bg-teal-400 transition-all text-white shadow-xl shadow-teal-500/20 group/nav"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[10px] font-black uppercase tracking-widest opacity-75">Navigate to Site</span>
+                          <div className="h-8 w-8 bg-slate-900 rounded-xl flex items-center justify-center text-teal-500 shrink-0 group-hover/nav:scale-110 transition-transform">
+                            <Navigation size={16} />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <MapPin size={20} className="shrink-0" />
+                          <span className="font-black text-sm truncate">{nextJob.location}</span>
+                        </div>
+                      </a>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Job Details</p>
-                  <p className="text-xl font-black text-white mt-1">View Job</p>
-                </div>
-              </button>
+
+                <button
+                  onClick={() => { hapticTap(); onViewJob?.(nextJob.id); }}
+                  className="w-full md:w-auto h-auto md:h-64 bg-white/5 border border-white/10 rounded-[32px] p-8 flex flex-col justify-between hover:bg-white/10 transition-all group"
+                >
+                  <div className="h-12 w-12 bg-teal-500 rounded-2xl flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                    <Eye size={24} />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Job Details</p>
+                    <p className="text-xl font-black text-white mt-1">View Job</p>
+                  </div>
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
       </div>
 
       {/* FUTURE JOBS Section - Compact View */}
@@ -1072,9 +1072,8 @@ export const Home: React.FC<HomeProps> = ({
               <button
                 key={idx}
                 onClick={onNavigateToSchedule}
-                className={`flex-shrink-0 w-[52px] sm:w-14 md:w-16 p-1.5 sm:p-2 md:p-3 rounded-lg md:rounded-xl text-center transition-all ${
-                  idx === 0 ? 'bg-teal-500 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-900'
-                }`}
+                className={`flex-shrink-0 w-[52px] sm:w-14 md:w-16 p-1.5 sm:p-2 md:p-3 rounded-lg md:rounded-xl text-center transition-all ${idx === 0 ? 'bg-teal-500 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-900'
+                  }`}
               >
                 <p className="text-[10px] sm:text-[11px] md:text-xs font-black uppercase truncate">{day.dayName}</p>
                 <p className="text-base sm:text-lg md:text-xl font-black">{day.date.getDate()}</p>
@@ -1103,13 +1102,12 @@ export const Home: React.FC<HomeProps> = ({
             <button
               onClick={startVoiceReminder}
               disabled={isProcessingReminder}
-              className={`h-10 w-10 md:h-16 md:w-16 rounded-lg md:rounded-[24px] flex items-center justify-center shadow-md md:shadow-2xl transition-all ${
-                isListeningReminder
+              className={`h-10 w-10 md:h-16 md:w-16 rounded-lg md:rounded-[24px] flex items-center justify-center shadow-md md:shadow-2xl transition-all ${isListeningReminder
                   ? 'bg-red-500 text-white animate-pulse'
                   : isProcessingReminder
                     ? 'bg-teal-500 text-white'
                     : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
+                }`}
             >
               {isProcessingReminder ? <Loader2 size={16} className="md:w-6 md:h-6 animate-spin" /> : isListeningReminder ? <MicOff size={16} className="md:w-6 md:h-6" /> : <Mic size={16} className="md:w-6 md:h-6" />}
             </button>
@@ -1150,39 +1148,37 @@ export const Home: React.FC<HomeProps> = ({
               reminders.map(reminder => (
                 <div
                   key={reminder.id}
-                  className={`p-3 md:p-6 rounded-xl md:rounded-[32px] border-2 transition-all flex items-center justify-between group ${
-                    reminder.isAlarming
+                  className={`p-3 md:p-6 rounded-xl md:rounded-[32px] border-2 transition-all flex items-center justify-between group ${reminder.isAlarming
                       ? 'bg-red-500 border-red-600 text-white animate-pulse'
                       : reminder.isCompleted
                         ? 'bg-slate-50 border-transparent opacity-40'
                         : 'bg-white border-slate-100 hover:border-blue-200'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3 md:gap-6 min-w-0">
                     <button
                       onClick={() => {
                         setReminders(prev => prev.map(r => r.id === reminder.id ? { ...r, isCompleted: !r.isCompleted, isAlarming: false } : r));
                       }}
-                      className={`h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-[20px] flex items-center justify-center shrink-0 transition-all ${
-                        reminder.isAlarming
+                      className={`h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-[20px] flex items-center justify-center shrink-0 transition-all ${reminder.isAlarming
                           ? 'bg-slate-900 text-white shadow-2xl'
                           : reminder.isCompleted ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400 hover:bg-blue-100 hover:text-blue-600'
-                      }`}
+                        }`}
                     >
                       {reminder.isCompleted ? <CheckCircle2 size={18} className="md:w-6 md:h-6" /> : reminder.isAlarming ? <BellRing size={18} className="md:w-6 md:h-6 animate-bounce" /> : <Play size={16} className="md:w-[22px] md:h-[22px]" />}
                     </button>
                     <div className="truncate">
-                        <p className={`font-black text-sm md:text-lg truncate ${reminder.isCompleted ? 'line-through text-slate-400' : reminder.isAlarming ? 'text-white' : 'text-slate-900'}`}>
+                      <p className={`font-black text-sm md:text-lg truncate ${reminder.isCompleted ? 'line-through text-slate-400' : reminder.isAlarming ? 'text-white' : 'text-slate-900'}`}>
                         {reminder.text}
                       </p>
-                        <p className={`text-[10px] md:text-[12px] font-black uppercase tracking-widest italic ${reminder.isAlarming ? 'text-white/80' : 'text-slate-400'}`}>
+                      <p className={`text-[10px] md:text-[12px] font-black uppercase tracking-widest italic ${reminder.isAlarming ? 'text-white/80' : 'text-slate-400'}`}>
                         {reminder.time}
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => setReminders(prev => prev.filter(r => r.id !== reminder.id))}
-                      className={`p-2 md:p-3 transition-colors ${reminder.isAlarming ? 'text-white' : 'text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100'}`}
+                    className={`p-2 md:p-3 transition-colors ${reminder.isAlarming ? 'text-white' : 'text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100'}`}
                   >
                     <Trash2 size={18} className="md:w-6 md:h-6" />
                   </button>
@@ -1214,11 +1210,10 @@ export const Home: React.FC<HomeProps> = ({
               </button>
               <button
                 onClick={startVoiceNote}
-                className={`h-9 w-9 md:h-16 md:w-16 rounded-lg md:rounded-[24px] flex items-center justify-center shadow-md md:shadow-2xl transition-all ${
-                  isListeningNote
+                className={`h-9 w-9 md:h-16 md:w-16 rounded-lg md:rounded-[24px] flex items-center justify-center shadow-md md:shadow-2xl transition-all ${isListeningNote
                     ? 'bg-red-500 text-white animate-pulse'
                     : 'bg-teal-500 text-white hover:bg-teal-600'
-                }`}
+                  }`}
               >
                 {isListeningNote ? <MicOff size={16} className="md:w-6 md:h-6" /> : <Mic size={16} className="md:w-6 md:h-6" />}
               </button>

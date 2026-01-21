@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(if [ -d \"C:/Users/shawa/Tradesman-Assistant\" ])",
+      "Bash(then echo \"EXISTS\")",
+      "Bash(else echo \"DOES NOT EXIST\")",
+      "Bash(fi:*)"
+    ]
+  }
+}
