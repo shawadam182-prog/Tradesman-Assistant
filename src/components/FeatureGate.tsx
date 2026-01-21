@@ -9,7 +9,6 @@ import {
 } from '../hooks/useFeatureAccess';
 import { redirectToCheckout, type StripeTier } from '../lib/stripe';
 import type { GatedFeature, SubscriptionTier } from '../../types';
-import { FEATURE_TIER_MAP } from '../../types';
 
 interface FeatureGateProps {
   feature: GatedFeature;
@@ -334,6 +333,22 @@ export function useFeatureCheck() {
   const subscription = useSubscription();
 
   return (feature: GatedFeature): boolean => {
+    // Inline feature-to-tier mapping to avoid import issues
+    const FEATURE_TIER_MAP: Record<GatedFeature, SubscriptionTier> = {
+      invoices: 'free',
+      schedule: 'free',
+      expenses: 'professional',
+      siteDocuments: 'professional',
+      materialsLibrary: 'professional',
+      unlimitedCustomers: 'professional',
+      unlimitedJobPacks: 'professional',
+      unlimitedPhotos: 'professional',
+      bankImport: 'business',
+      vatReports: 'business',
+      payables: 'business',
+      filingCabinet: 'business',
+    };
+
     const TIER_ORDER: Record<SubscriptionTier, number> = {
       free: 1,
       professional: 2,
