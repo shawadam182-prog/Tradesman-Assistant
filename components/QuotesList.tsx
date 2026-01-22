@@ -184,6 +184,25 @@ export const QuotesList: React.FC<QuotesListProps> = ({
         />
       </div>
 
+      {/* Summary Tally */}
+      <div className="flex items-center justify-between bg-slate-50 rounded-2xl px-5 py-4 border border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 bg-slate-900 rounded-xl flex items-center justify-center">
+            <FileText size={18} className="text-teal-500" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Quotes</p>
+            <p className="text-xl font-black text-slate-900">{filtered.length}</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Combined Value</p>
+          <p className="text-xl font-black text-teal-600">
+            £{filtered.reduce((sum, q) => sum + calculateQuoteTotal(q), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+        </div>
+      </div>
+
       <div className="space-y-3">
         {filtered.length === 0 ? (
           <div className="py-20 text-center bg-white rounded-[32px] border-2 border-dashed border-slate-100 opacity-60">
