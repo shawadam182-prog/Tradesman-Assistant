@@ -536,13 +536,13 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
           )}
 
           {viewType === 'day' && (
-            <div className="max-w-4xl mx-auto space-y-6 p-6 md:p-12 animate-in slide-in-from-bottom-8 duration-500">
+            <div className="max-w-2xl mx-auto space-y-3 p-3 md:p-6 animate-in slide-in-from-bottom-8 duration-500">
               {getDayEntries(selectedDay).length === 0 ? (
-                <div className="py-40 text-center bg-slate-50 rounded-[64px] border-4 border-dashed border-slate-100 flex flex-col items-center justify-center">
-                  <div className="h-24 w-24 bg-white rounded-3xl flex items-center justify-center text-slate-100 shadow-inner mb-6">
-                    <CalendarIcon size={56} />
+                <div className="py-16 text-center bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center">
+                  <div className="h-12 w-12 bg-white rounded-xl flex items-center justify-center text-slate-100 shadow-inner mb-3">
+                    <CalendarIcon size={28} />
                   </div>
-                  <p className="text-slate-400 font-black uppercase tracking-[0.3em] text-sm italic">Nothing on the agenda for today</p>
+                  <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-xs italic">Nothing on the agenda for today</p>
                   <button
                     onClick={() => {
                       const defaultDate = new Date(selectedDay);
@@ -550,40 +550,40 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                       setDraft({ start: defaultDate.toISOString() });
                       setIsAddingManual(true);
                     }}
-                    className="mt-10 bg-slate-900 text-teal-500 px-12 py-5 rounded-[28px] font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-2xl active:scale-95"
+                    className="mt-5 bg-slate-900 text-teal-500 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95"
                   >
                     + Log New Site Booking
                   </button>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-3">
                   {getDayEntries(selectedDay).map(entry => {
                     const customer = customers.find(c => c.id === entry.customerId);
                     return (
-                      <div key={entry.id} className="bg-white rounded-[40px] border-2 border-slate-50 p-10 hover:border-teal-400 transition-all shadow-md hover:shadow-2xl group relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-3 h-full bg-slate-900 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        
-                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-10">
-                          <div className="space-y-6 flex-1">
-                            <div className="flex flex-wrap items-center gap-5">
-                              <div className="flex items-center gap-2 bg-teal-500 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-xl">
-                                <Clock size={16} />
+                      <div key={entry.id} className="bg-white rounded-2xl border border-slate-100 p-4 hover:border-teal-400 transition-all shadow-sm hover:shadow-lg group relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-1.5 h-full bg-slate-900 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                          <div className="space-y-3 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <div className="flex items-center gap-1.5 bg-teal-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-black shadow-md">
+                                <Clock size={12} />
                                 {new Date(entry.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </div>
-                              <div className="h-px w-8 bg-slate-100"></div>
-                              <div className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl text-xs font-black">
+                              <div className="h-px w-4 bg-slate-200"></div>
+                              <div className="flex items-center gap-1.5 bg-slate-900 text-white px-2.5 py-1 rounded-lg text-[10px] font-black">
                                 {new Date(entry.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </div>
                             </div>
 
                             <div>
-                              <h4 className="text-4xl font-black text-slate-900 tracking-tighter leading-none mb-4 group-hover:text-teal-600 transition-colors">
+                              <h4 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-2 group-hover:text-teal-600 transition-colors">
                                 {entry.title}
                               </h4>
-                              <div className="flex flex-wrap gap-4">
+                              <div className="flex flex-wrap gap-2">
                                 {customer && (
-                                  <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl text-slate-500 font-bold text-base">
-                                    <div className="h-10 w-10 bg-slate-100 rounded-2xl flex items-center justify-center text-teal-500 font-black not-italic text-sm shadow-sm">
+                                  <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-lg text-slate-500 font-bold text-xs">
+                                    <div className="h-6 w-6 bg-slate-100 rounded-lg flex items-center justify-center text-teal-500 font-black not-italic text-[10px] shadow-sm">
                                       {customer.name.charAt(0)}
                                     </div>
                                     {customer.name}
@@ -595,37 +595,37 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => e.stopPropagation()}
-                                    className="flex items-center gap-3 bg-teal-500 text-white px-6 py-3 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-teal-600 transition-all shadow-lg group/map"
+                                    className="flex items-center gap-1.5 bg-teal-500 text-white px-3 py-1.5 rounded-lg font-black text-[10px] uppercase tracking-wide hover:bg-teal-600 transition-all shadow-md group/map"
                                   >
-                                    <MapPin size={20} />
-                                    <span className="max-w-[200px] truncate">Navigate</span>
-                                    <div className="h-8 w-8 bg-slate-900 rounded-xl flex items-center justify-center text-teal-500 ml-2">
-                                      <ArrowRight size={16} className="group-hover/map:translate-x-0.5 transition-transform" />
+                                    <MapPin size={12} />
+                                    <span className="max-w-[150px] truncate">Navigate</span>
+                                    <div className="h-5 w-5 bg-slate-900 rounded-md flex items-center justify-center text-teal-500 ml-1">
+                                      <ArrowRight size={10} className="group-hover/map:translate-x-0.5 transition-transform" />
                                     </div>
                                   </a>
                                 )}
                               </div>
                             </div>
-                            
+
                             {entry.description && (
-                              <p className="text-lg text-slate-500 italic font-medium bg-slate-50/50 p-8 rounded-[36px] border border-slate-100/50 leading-relaxed">
+                              <p className="text-sm text-slate-500 italic font-medium bg-slate-50/50 p-3 rounded-xl border border-slate-100/50 leading-relaxed">
                                 {entry.description}
                               </p>
                             )}
                           </div>
-                          
-                          <div className="flex flex-row md:flex-col gap-3 shrink-0">
-                            <button 
+
+                          <div className="flex flex-row md:flex-col gap-2 shrink-0">
+                            <button
                               onClick={() => handleEdit(entry)}
-                              className="p-6 bg-slate-50 text-slate-400 rounded-[28px] hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                              className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm"
                             >
-                              <Pencil size={24}/>
+                              <Pencil size={16}/>
                             </button>
                             <button
                               onClick={() => confirm('Cancel site booking?') && onDeleteEntry(entry.id)}
-                              className="p-6 bg-red-50 text-red-300 rounded-[28px] hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                              className="p-3 bg-red-50 text-red-300 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"
                             >
-                              <Trash2 size={24}/>
+                              <Trash2 size={16}/>
                             </button>
                           </div>
                         </div>
