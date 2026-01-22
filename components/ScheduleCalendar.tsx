@@ -38,7 +38,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date>(new Date());
-  const [viewType, setViewType] = useState<'month' | 'week' | 'day'>('month');
+  const [viewType, setViewType] = useState<'month' | 'week' | 'day'>('week');
   
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
