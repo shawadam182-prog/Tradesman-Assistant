@@ -1,4 +1,14 @@
-import type { Quote, QuoteSection, QuoteDisplayOptions, AppSettings } from '../../types';
+import type { Quote, QuoteSection, QuoteDisplayOptions } from '../../types';
+
+/**
+ * Simplified settings interface for getQuoteGrandTotal helper.
+ * Only includes the settings needed for calculation.
+ */
+export interface QuoteTotalSettings {
+  enableVat: boolean;
+  enableCis: boolean;
+  defaultLabourRate: number;
+}
 
 export interface QuoteTotals {
   materialsTotal: number;
@@ -206,4 +216,44 @@ export function calculateQuoteTotals(
     cisAmount,
     grandTotal,
   };
+}
+
+/**
+ * Simple helper to get just the grand total for a quote.
+ * Use this in list views where only the final total is needed.
+ * For full breakdown, use calculateQuoteTotals() instead.
+ */
+export function getQuoteGrandTotal(
+  quote: Quote,
+  settings: QuoteTotalSettings
+): number {
+  const displayOptions: QuoteDisplayOptions = {
+    showVat: settings.enableVat,
+    showCis: settings.enableCis,
+    showMaterials: true,
+    showMaterialItems: true,
+    showMaterialQty: true,
+    showMaterialUnitPrice: true,
+    showMaterialLineTotals: true,
+    showMaterialSectionTotal: true,
+    showLabour: true,
+    showLabourItems: true,
+    showLabourQty: true,
+    showLabourUnitPrice: true,
+    showLabourLineTotals: true,
+    showLabourSectionTotal: true,
+    showNotes: true,
+    showLogo: true,
+    showTotalsBreakdown: true,
+  };
+
+  const totals = calculateQuoteTotals(quote, {
+    enableVat: settings.enableVat,
+    enableCis: settings.enableCis,
+    showVat: settings.enableVat,
+    showCis: settings.enableCis,
+    defaultLabourRate: settings.defaultLabourRate,
+  }, displayOptions);
+
+  return totals.grandTotal;
 }

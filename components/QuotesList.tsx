@@ -8,6 +8,7 @@ import { useSubscription } from '../src/hooks/useFeatureAccess';
 import { UpgradePrompt } from './UpgradePrompt';
 import { useData } from '../src/contexts/DataContext';
 import { PageHeader } from './common/PageHeader';
+import { getQuoteGrandTotal } from '../src/utils/quoteCalculations';
 
 interface QuotesListProps {
   quotes: Quote[];
@@ -52,20 +53,6 @@ export const QuotesList: React.FC<QuotesListProps> = ({
         toast.error('Delete Failed', 'Could not delete quote');
       }
     }
-  };
-
-  const calculateQuoteTotal = (quote: Quote) => {
-    // Fix: Aggregate totals from all sections instead of accessing items directly on the quote
-    const sections = quote.sections || [];
-    const materialsTotal = sections.reduce((sum, section) => 
-      sum + (section.items || []).reduce((itemSum, item) => itemSum + (item.totalPrice || 0), 0), 0);
-    const labourHoursTotal = sections.reduce((sum, section) => sum + (section.labourHours || 0), 0);
-    const labourTotal = labourHoursTotal * (quote.labourRate || 0);
-    
-    const subtotal = materialsTotal + labourTotal;
-    const markup = subtotal * (quote.markupPercent / 100);
-    const tax = (subtotal + markup) * (quote.taxPercent / 100);
-    return subtotal + markup + tax;
   };
 
   // Filter by tab status first
@@ -145,27 +132,25 @@ export const QuotesList: React.FC<QuotesListProps> = ({
               hapticTap();
               setActiveTab(tab);
             }}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2 ${
-              activeTab === tab
+            className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === tab
                 ? tab === 'declined'
                   ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
                   : tab === 'accepted'
                     ? 'bg-green-500 text-white shadow-lg shadow-green-500/20'
                     : 'bg-slate-900 text-white shadow-lg'
                 : 'bg-white text-slate-600 border-2 border-slate-100 hover:border-slate-200'
-            }`}
+              }`}
           >
             {tab}
             {tabCounts[tab] > 0 && (
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                activeTab === tab
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab
                   ? 'bg-white/20'
                   : tab === 'declined' && tabCounts.declined > 0
                     ? 'bg-red-100 text-red-600'
                     : tab === 'accepted' && tabCounts.accepted > 0
                       ? 'bg-green-100 text-green-600'
                       : 'bg-slate-100'
-              }`}>
+                }`}>
                 {tabCounts[tab]}
               </span>
             )}
@@ -198,7 +183,7 @@ export const QuotesList: React.FC<QuotesListProps> = ({
         <div className="text-right">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Combined Value</p>
           <p className="text-xl font-black text-teal-600">
-            £{filtered.reduce((sum, q) => sum + calculateQuoteTotal(q), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            £{filtered.reduce((sum, q) => sum + getQuoteGrandTotal(q, settings), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
       </div>
@@ -236,13 +221,12 @@ export const QuotesList: React.FC<QuotesListProps> = ({
               <div
                 key={quote.id}
                 onClick={() => onViewQuote(quote.id)}
-                className={`bg-white p-5 rounded-[28px] border-2 transition-all group cursor-pointer shadow-sm hover:shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                  quote.status === 'declined'
+                className={`bg-white p-5 rounded-[28px] border-2 transition-all group cursor-pointer shadow-sm hover:shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${quote.status === 'declined'
                     ? 'border-red-100 hover:border-red-300'
                     : quote.status === 'accepted'
                       ? 'border-green-100 hover:border-green-300'
                       : 'border-slate-100 hover:border-teal-500'
-                }`}
+                  }`}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -274,7 +258,7 @@ export const QuotesList: React.FC<QuotesListProps> = ({
                       £{calculateQuoteTotal(quote).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <div className="p-3 bg-teal-50 text-teal-600 rounded-xl transition-all border border-teal-100 group-hover:scale-105">
                       <Eye size={20} />

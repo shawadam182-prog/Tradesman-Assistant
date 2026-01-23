@@ -45,7 +45,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   const drawingInputRef = useRef<HTMLInputElement>(null);
 
   // Modal states
-  const [selectedImage, setSelectedImage] = useState<{item: SitePhoto, type: 'photo' | 'drawing'} | null>(null);
+  const [selectedImage, setSelectedImage] = useState<{ item: SitePhoto, type: 'photo' | 'drawing' } | null>(null);
   const [rotation, setRotation] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isEditingCaption, setIsEditingCaption] = useState(false);
@@ -120,7 +120,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
 
   const toggleRecording = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
+
     if (!SpeechRecognition) {
       alert("Voice not supported in this browser. Please use Chrome or Safari.");
       return;
@@ -234,7 +234,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
     if (!selectedImage) return;
 
     const listKey = selectedImage.type === 'photo' ? 'photos' : 'drawings';
-    const updatedList = (project[listKey] || []).map(p => 
+    const updatedList = (project[listKey] || []).map(p =>
       p.id === selectedImage.item.id ? { ...p, caption: tempCaption } : p
     );
 
@@ -243,10 +243,10 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
       [listKey]: updatedList,
       updatedAt: new Date().toISOString()
     });
-    
-    setSelectedImage({ 
-      ...selectedImage, 
-      item: { ...selectedImage.item, caption: tempCaption } 
+
+    setSelectedImage({
+      ...selectedImage,
+      item: { ...selectedImage.item, caption: tempCaption }
     });
     setIsEditingCaption(false);
   };
@@ -337,23 +337,23 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Annotations</h4>
-                  <button 
+                  <button
                     onClick={() => setIsEditingCaption(!isEditingCaption)}
                     className="p-2 text-amber-500 hover:bg-amber-500/10 rounded-lg transition-all"
                   >
                     <Pencil size={18} />
                   </button>
                 </div>
-                
+
                 {isEditingCaption ? (
                   <div className="space-y-3">
-                    <textarea 
+                    <textarea
                       className="w-full bg-slate-900 border border-white/10 rounded-2xl p-4 text-white font-medium text-sm outline-none focus:border-amber-500 transition-all min-h-[120px]"
                       value={tempCaption}
                       onChange={(e) => setTempCaption(e.target.value)}
                       placeholder="Enter notes/caption..."
                     />
-                    <button 
+                    <button
                       onClick={saveAnnotation}
                       className="w-full bg-amber-500 text-slate-900 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/20"
                     >
@@ -394,34 +394,34 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
             <ArrowLeft size={20} />
           </button>
           <div className="flex flex-col">
-             {isEditingTitle ? (
-               <input
-                 autoFocus
-                 className="text-lg font-bold text-slate-900 outline-none bg-slate-50 rounded px-2 -ml-2"
-                 value={tempTitle}
-                 onChange={e => setTempTitle(e.target.value)}
-                 onBlur={handleSaveTitle}
-               />
-             ) : (
-               <h1 onClick={() => setIsEditingTitle(true)} className="text-lg font-bold text-slate-900 flex items-center gap-2 cursor-text">
-                 {project.title}
-               </h1>
-             )}
-             <p className="text-xs text-slate-500">{customer?.name || 'No Client'}</p>
+            {isEditingTitle ? (
+              <input
+                autoFocus
+                className="text-lg font-bold text-slate-900 outline-none bg-slate-50 rounded px-2 -ml-2"
+                value={tempTitle}
+                onChange={e => setTempTitle(e.target.value)}
+                onBlur={handleSaveTitle}
+              />
+            ) : (
+              <h1 onClick={() => setIsEditingTitle(true)} className="text-lg font-bold text-slate-900 flex items-center gap-2 cursor-text">
+                {project.title}
+              </h1>
+            )}
+            <p className="text-xs text-slate-500">{customer?.name || 'No Client'}</p>
           </div>
         </div>
         <div className="flex gap-2">
-           {customer?.address && (
-                <a 
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(customer.address)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100"
-                >
-                  <Navigation size={18} />
-                </a>
-           )}
-           {onDeleteProject && <button onClick={handleDeleteProject} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><Trash2 size={18} /></button>}
+          {customer?.address && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(customer.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100"
+            >
+              <Navigation size={18} />
+            </a>
+          )}
+          {onDeleteProject && <button onClick={handleDeleteProject} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><Trash2 size={18} /></button>}
         </div>
       </div>
 
@@ -437,11 +437,10 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[9px] font-bold transition-all whitespace-nowrap ${
-                activeTab === tab.id
+              className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[9px] font-bold transition-all whitespace-nowrap ${activeTab === tab.id
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-500 hover:text-slate-700'
-              }`}
+                }`}
             >
               <tab.icon size={12} /> {tab.label}
             </button>
@@ -452,32 +451,32 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
       {activeTab === 'log' && (
         <div className="max-w-4xl mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-2">
           <div className="flex justify-between items-center px-2">
-             <div className="flex items-center gap-2">
-               <StickyNote className="text-amber-500" size={16}/>
-               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Site Notes & Daily Log</h3>
-             </div>
-             <div className="flex gap-2">
-               <button 
-                 onClick={() => { if(confirm('Clear notepad?')) { setNotepadContent(''); handleSaveNotepad(''); } }} 
-                 className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-400 rounded-xl text-[9px] font-black uppercase hover:bg-red-50 hover:text-red-500 transition-all"
-               >
-                 <Eraser size={12}/> Clear Pad
-               </button>
-               <button
+            <div className="flex items-center gap-2">
+              <StickyNote className="text-amber-500" size={16} />
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Site Notes & Daily Log</h3>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { if (confirm('Clear notepad?')) { setNotepadContent(''); handleSaveNotepad(''); } }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-400 rounded-xl text-[9px] font-black uppercase hover:bg-red-50 hover:text-red-500 transition-all"
+              >
+                <Eraser size={12} /> Clear Pad
+              </button>
+              <button
                 onClick={toggleRecording}
                 className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[9px] font-black uppercase transition-all ${isRecording ? 'bg-red-500 text-white' : 'bg-teal-500 text-white shadow-lg shadow-teal-200'}`}
-               >
-                {isRecording ? <MicOff size={12}/> : <Mic size={12}/>}
+              >
+                {isRecording ? <MicOff size={12} /> : <Mic size={12} />}
                 {isRecording ? 'Listening' : 'Dictate'}
-               </button>
-             </div>
+              </button>
+            </div>
           </div>
 
           <div className="bg-[#fffdf2] rounded-[24px] border border-amber-100 shadow-xl relative min-h-[400px] overflow-hidden flex flex-col">
             {/* Notepad lines decoration */}
             <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px)', backgroundSize: '100% 2.5rem' }}></div>
-            
-            <textarea 
+
+            <textarea
               className="w-full flex-1 bg-transparent p-4 md:p-10 text-base md:text-lg font-medium text-slate-800 outline-none resize-none leading-[2.5rem] relative z-10 placeholder:text-amber-200 placeholder:italic"
               placeholder="Start typing your site notes here, or use the mic to dictate..."
               value={notepadContent}
@@ -486,16 +485,16 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
                 handleSaveNotepad(e.target.value);
               }}
             />
-            
+
             <div className="p-3 border-t border-amber-50 bg-[#fffef7] flex justify-between items-center text-[8px] font-black text-amber-300 uppercase tracking-widest italic relative z-10 px-4 md:px-10">
-              <span>Ref: {project.id.substr(0,8)}</span>
+              <span>Ref: {project.id.substr(0, 8)}</span>
               <span>Saved: {new Date(project.updatedAt).toLocaleTimeString()}</span>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 rounded-xl border border-amber-100 text-[9px] font-bold text-amber-700 italic">
-             <Sparkles size={10} className="shrink-0" />
-             Notes saved automatically. Use dictation for hands-free updates.
+            <Sparkles size={10} className="shrink-0" />
+            Notes saved automatically. Use dictation for hands-free updates.
           </div>
         </div>
       )}
@@ -546,7 +545,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
               >
                 <img src={photo.url} className="w-full h-full object-cover" alt="Site" />
                 <button
-                  onClick={(e) => { e.stopPropagation(); onSaveProject({...project, photos: (project.photos || []).filter(p => p.id !== photo.id)}); }}
+                  onClick={(e) => { e.stopPropagation(); onSaveProject({ ...project, photos: (project.photos || []).filter(p => p.id !== photo.id) }); }}
                   className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
                 >
                   <Trash2 size={12} />
@@ -588,7 +587,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
                   <Plus className="text-white" size={32} />
                 </div>
                 <button
-                  onClick={(e) => { e.stopPropagation(); onSaveProject({...project, drawings: (project.drawings || []).filter(p => p.id !== drawing.id)}); }}
+                  onClick={(e) => { e.stopPropagation(); onSaveProject({ ...project, drawings: (project.drawings || []).filter(p => p.id !== drawing.id) }); }}
                   className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                 >
                   <Trash2 size={12} />

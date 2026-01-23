@@ -1103,10 +1103,10 @@ export const Home: React.FC<HomeProps> = ({
               onClick={startVoiceReminder}
               disabled={isProcessingReminder}
               className={`h-10 w-10 md:h-16 md:w-16 rounded-lg md:rounded-[24px] flex items-center justify-center shadow-md md:shadow-2xl transition-all ${isListeningReminder
-                  ? 'bg-red-500 text-white animate-pulse'
-                  : isProcessingReminder
-                    ? 'bg-teal-500 text-white'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-red-500 text-white animate-pulse'
+                : isProcessingReminder
+                  ? 'bg-teal-500 text-white'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
                 }`}
             >
               {isProcessingReminder ? <Loader2 size={16} className="md:w-6 md:h-6 animate-spin" /> : isListeningReminder ? <MicOff size={16} className="md:w-6 md:h-6" /> : <Mic size={16} className="md:w-6 md:h-6" />}
@@ -1149,10 +1149,10 @@ export const Home: React.FC<HomeProps> = ({
                 <div
                   key={reminder.id}
                   className={`p-3 md:p-6 rounded-xl md:rounded-[32px] border-2 transition-all flex items-center justify-between group ${reminder.isAlarming
-                      ? 'bg-red-500 border-red-600 text-white animate-pulse'
-                      : reminder.isCompleted
-                        ? 'bg-slate-50 border-transparent opacity-40'
-                        : 'bg-white border-slate-100 hover:border-blue-200'
+                    ? 'bg-red-500 border-red-600 text-white animate-pulse'
+                    : reminder.isCompleted
+                      ? 'bg-slate-50 border-transparent opacity-40'
+                      : 'bg-white border-slate-100 hover:border-blue-200'
                     }`}
                 >
                   <div className="flex items-center gap-3 md:gap-6 min-w-0">
@@ -1161,8 +1161,8 @@ export const Home: React.FC<HomeProps> = ({
                         setReminders(prev => prev.map(r => r.id === reminder.id ? { ...r, isCompleted: !r.isCompleted, isAlarming: false } : r));
                       }}
                       className={`h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-[20px] flex items-center justify-center shrink-0 transition-all ${reminder.isAlarming
-                          ? 'bg-slate-900 text-white shadow-2xl'
-                          : reminder.isCompleted ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400 hover:bg-blue-100 hover:text-blue-600'
+                        ? 'bg-slate-900 text-white shadow-2xl'
+                        : reminder.isCompleted ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400 hover:bg-blue-100 hover:text-blue-600'
                         }`}
                     >
                       {reminder.isCompleted ? <CheckCircle2 size={18} className="md:w-6 md:h-6" /> : reminder.isAlarming ? <BellRing size={18} className="md:w-6 md:h-6 animate-bounce" /> : <Play size={16} className="md:w-[22px] md:h-[22px]" />}
@@ -1211,8 +1211,8 @@ export const Home: React.FC<HomeProps> = ({
               <button
                 onClick={startVoiceNote}
                 className={`h-9 w-9 md:h-16 md:w-16 rounded-lg md:rounded-[24px] flex items-center justify-center shadow-md md:shadow-2xl transition-all ${isListeningNote
-                    ? 'bg-red-500 text-white animate-pulse'
-                    : 'bg-teal-500 text-white hover:bg-teal-600'
+                  ? 'bg-red-500 text-white animate-pulse'
+                  : 'bg-teal-500 text-white hover:bg-teal-600'
                   }`}
               >
                 {isListeningNote ? <MicOff size={16} className="md:w-6 md:h-6" /> : <Mic size={16} className="md:w-6 md:h-6" />}

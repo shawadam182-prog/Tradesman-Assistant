@@ -336,8 +336,10 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         ...prev,
         sections: prev.sections?.map(s =>
           s.id === (targetSectionId || prev.sections?.[0].id)
-            ? { ...s, title: s.title === 'Work Section 1' ? (result.suggestedTitle || s.title) : s.title,
-                labourHours: s.labourHours + (result.laborHoursEstimate || 0), items: [...s.items, ...newItems] } : s
+            ? {
+              ...s, title: s.title === 'Work Section 1' ? (result.suggestedTitle || s.title) : s.title,
+              labourHours: s.labourHours + (result.laborHoursEstimate || 0), items: [...s.items, ...newItems]
+            } : s
         )
       }));
       setAiInput(''); setAttachedImage(null);
@@ -566,7 +568,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div className="col-span-1 md:col-span-2">
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Project Title</label>
-              <input type="text" className="w-full text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors placeholder:text-slate-300" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Enter title..." />
+              <input type="text" className="w-full text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors placeholder:text-slate-300" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Enter title..." />
             </div>
 
             {/* Document Type Selector */}
@@ -575,11 +577,10 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               <div className="flex gap-1.5 sm:gap-2">
                 {(['estimate', 'quotation', 'invoice'] as const).map(type => (
                   <button key={type} type="button" onClick={() => { hapticTap(); handleTypeChange(type); }}
-                    className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-all ${
-                      formData.type === type
+                    className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-all ${formData.type === type
                         ? type === 'estimate' ? 'bg-teal-500 text-white shadow-lg' : type === 'quotation' ? 'bg-blue-500 text-white shadow-lg' : 'bg-slate-900 text-white shadow-lg'
                         : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                    }`}>
+                      }`}>
                     {type === 'estimate' ? <><span className="sm:hidden">Est.</span><span className="hidden sm:inline">Estimate</span></> : type === 'quotation' ? <><span className="sm:hidden">Quote</span><span className="hidden sm:inline">Quotation</span></> : 'Invoice'}
                   </button>
                 ))}
@@ -591,7 +592,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Client</label>
               <div className="flex items-center gap-2">
                 <input type="text" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors placeholder:text-slate-300" value={customerSearch} onFocus={() => setShowCustomerDropdown(true)} onChange={e => setCustomerSearch(e.target.value)} placeholder="Select client" />
-                <button onClick={() => setIsAddingCustomer(true)} className="p-1 bg-slate-50 text-teal-600 rounded-md"><UserPlus size={14}/></button>
+                <button onClick={() => setIsAddingCustomer(true)} className="p-1 bg-slate-50 text-teal-600 rounded-md"><UserPlus size={14} /></button>
               </div>
               {showCustomerDropdown && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-100 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
@@ -607,7 +608,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
 
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{formData.type === 'invoice' ? 'Invoice Date' : 'Date'}</label>
-              <input type="date" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors" value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})} />
+              <input type="date" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
             </div>
 
             {/* Job Address */}
@@ -626,7 +627,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1"><Calendar size={12} className="inline mr-1" /> Due Date</label>
-                    <input type="date" className="w-full font-medium text-slate-900 bg-white border border-emerald-200 rounded-lg px-3 py-2 outline-none focus:border-emerald-400 transition-colors" value={formData.dueDate || ''} onChange={e => setFormData({...formData, dueDate: e.target.value})} />
+                    <input type="date" className="w-full font-medium text-slate-900 bg-white border border-emerald-200 rounded-lg px-3 py-2 outline-none focus:border-emerald-400 transition-colors" value={formData.dueDate || ''} onChange={e => setFormData({ ...formData, dueDate: e.target.value })} />
                   </div>
                   <div className="flex items-end">
                     <div className="text-xs text-emerald-600 font-bold">
@@ -652,7 +653,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
             <div className="flex items-center gap-2 mb-2">
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Target:</span>
               <select className="bg-white border border-teal-100 rounded-lg text-[9px] font-black uppercase px-2 py-1 outline-none text-teal-600 cursor-pointer flex-1" value={targetSectionId || ''} onChange={e => setTargetSectionId(e.target.value)}>
-                {(formData.sections || []).map((s, idx) => <option key={s.id} value={s.id}>{s.title || `Job ${idx+1}`}</option>)}
+                {(formData.sections || []).map((s, idx) => <option key={s.id} value={s.id}>{s.title || `Job ${idx + 1}`}</option>)}
               </select>
             </div>
             <div className="relative mb-2">
@@ -662,7 +663,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               </button>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.onchange = (e: any) => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload = (ev) => setAttachedImage(ev.target?.result as string); r.readAsDataURL(f); } }; i.click(); }} className="flex-1 bg-white border border-teal-100 text-teal-600 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-teal-50 transition-all shadow-sm flex items-center justify-center gap-1.5">
+              <button onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.onchange = (e: any) => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = (ev) => setAttachedImage(ev.target?.result as string); r.readAsDataURL(f); } }; i.click(); }} className="flex-1 bg-white border border-teal-100 text-teal-600 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-teal-50 transition-all shadow-sm flex items-center justify-center gap-1.5">
                 <Camera size={12} /> {attachedImage ? 'Photo Attached' : 'Photo'}
               </button>
               <button onClick={runAIAnalysis} disabled={loading || (!aiInput && !attachedImage)} className="flex-1 bg-slate-900 text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-xl hover:bg-black disabled:opacity-30 flex items-center justify-center gap-1.5 transition-all">
@@ -719,10 +720,10 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
             <div><h3 className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-widest">Document Terms & Document-wide Rates</h3><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Apply to all sections</p></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><PoundSterling size={12} className="text-teal-500" /> Default Hourly Rate</label><input type="number" className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 text-slate-950 font-black text-sm outline-none focus:border-teal-400 transition-all" value={formData.labourRate || ''} onChange={e => setFormData({...formData, labourRate: parseFloat(e.target.value) || 0})} placeholder="65.00" /></div>
-            <div className="space-y-1"><label className="text-[10px] font-black text-teal-600 uppercase tracking-widest px-1 flex items-center gap-2 italic"><Percent size={12} className="text-teal-500" /> Global Markup %</label><input type="number" className="w-full bg-teal-50 border-2 border-teal-100 rounded-xl p-3 text-teal-900 font-black text-sm outline-none focus:border-teal-400 transition-all" value={formData.markupPercent || ''} onChange={e => setFormData({...formData, markupPercent: parseFloat(e.target.value) || 0})} placeholder="15" /></div>
+            <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><PoundSterling size={12} className="text-teal-500" /> Default Hourly Rate</label><input type="number" className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 text-slate-950 font-black text-sm outline-none focus:border-teal-400 transition-all" value={formData.labourRate || ''} onChange={e => setFormData({ ...formData, labourRate: parseFloat(e.target.value) || 0 })} placeholder="65.00" /></div>
+            <div className="space-y-1"><label className="text-[10px] font-black text-teal-600 uppercase tracking-widest px-1 flex items-center gap-2 italic"><Percent size={12} className="text-teal-500" /> Global Markup %</label><input type="number" className="w-full bg-teal-50 border-2 border-teal-100 rounded-xl p-3 text-teal-900 font-black text-sm outline-none focus:border-teal-400 transition-all" value={formData.markupPercent || ''} onChange={e => setFormData({ ...formData, markupPercent: parseFloat(e.target.value) || 0 })} placeholder="15" /></div>
           </div>
-          <div className="pt-2 space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><FileText size={14} className="text-teal-500" /> Document Footer / Terms</label><textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] p-3 md:p-4 text-slate-900 font-medium text-sm outline-none focus:border-teal-400 transition-all min-h-[100px]" value={formData.notes || ''} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Final notes, bank details etc..." /></div>
+          <div className="pt-2 space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><FileText size={14} className="text-teal-500" /> Document Footer / Terms</label><textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] p-3 md:p-4 text-slate-900 font-medium text-sm outline-none focus:border-teal-400 transition-all min-h-[100px]" value={formData.notes || ''} onChange={e => setFormData({ ...formData, notes: e.target.value })} placeholder="Final notes, bank details etc..." /></div>
         </div>
 
         {/* Discount Section */}

@@ -147,10 +147,10 @@ export const JobPackList: React.FC<JobPackListProps> = ({
   const handleCreateProject = () => {
     if (!selectedCustomer) return;
     setIsCreating(true);
-    
+
     // Auto-generate title if none provided
     const finalTitle = newTitle.trim() || `Job Pack - ${new Date().toLocaleDateString('en-GB')}`;
-    
+
     const project: JobPack = {
       id: Math.random().toString(36).substr(2, 9),
       title: finalTitle,
@@ -220,13 +220,12 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                     type="button"
                     onClick={() => startListening()}
                     disabled={isProcessing}
-                    className={`flex items-center gap-1 px-3 py-1.5 md:px-6 md:py-3 rounded-xl font-black text-[9px] md:text-[10px] uppercase transition-all border ${
-                      isListening && !activeFieldVoiceRef.current
+                    className={`flex items-center gap-1 px-3 py-1.5 md:px-6 md:py-3 rounded-xl font-black text-[9px] md:text-[10px] uppercase transition-all border ${isListening && !activeFieldVoiceRef.current
                         ? 'bg-red-500 text-white border-red-600 animate-pulse'
                         : isProcessing
-                        ? 'bg-amber-500 text-white border-amber-600'
-                        : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50'
-                    }`}
+                          ? 'bg-amber-500 text-white border-amber-600'
+                          : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50'
+                      }`}
                   >
                     {isProcessing ? <Loader2 size={10} className="md:w-3 md:h-3 animate-spin" /> : isListening && !activeFieldVoiceRef.current ? <MicOff size={10} className="md:w-3 md:h-3" /> : <Sparkles size={10} className="md:w-3 md:h-3" />}
                     <span className="hidden sm:inline">{isProcessing ? 'Analyzing...' : isListening && !activeFieldVoiceRef.current ? 'Stop' : 'Voice'}</span>
@@ -246,7 +245,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                         className="w-full bg-slate-50 border-2 border-slate-100 rounded-lg sm:rounded-xl px-3 py-2 sm:py-2.5 md:px-4 md:py-3 pr-10 md:pr-12 text-slate-950 font-bold text-sm outline-none focus:bg-white focus:border-teal-500 transition-all"
                         value={newCustomer.name || ''}
                         placeholder="e.g. John Smith"
-                        onChange={e => setNewCustomer({...newCustomer, name: e.target.value})}
+                        onChange={e => setNewCustomer({ ...newCustomer, name: e.target.value })}
                       />
                       <button
                         type="button"
@@ -270,7 +269,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                         className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-1.5 md:px-4 md:py-4 pr-10 md:pr-12 text-slate-950 font-bold text-sm md:text-base outline-none focus:bg-white focus:border-teal-500 transition-all"
                         value={newCustomer.company || ''}
                         placeholder="e.g. Smith & Co Roofing"
-                        onChange={e => setNewCustomer({...newCustomer, company: e.target.value})}
+                        onChange={e => setNewCustomer({ ...newCustomer, company: e.target.value })}
                       />
                       <button
                         type="button"
@@ -295,7 +294,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                         className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-1.5 md:px-4 md:py-4 pr-10 md:pr-12 text-slate-950 font-bold text-sm md:text-base outline-none focus:bg-white focus:border-teal-500 transition-all"
                         value={newCustomer.email || ''}
                         placeholder="john@example.com"
-                        onChange={e => setNewCustomer({...newCustomer, email: e.target.value})}
+                        onChange={e => setNewCustomer({ ...newCustomer, email: e.target.value })}
                       />
                       <button
                         type="button"
@@ -320,7 +319,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                         className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-1.5 md:px-4 md:py-4 pr-10 md:pr-12 text-slate-950 font-bold text-sm md:text-base outline-none focus:bg-white focus:border-teal-500 transition-all"
                         value={newCustomer.phone || ''}
                         placeholder="07123 456789"
-                        onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})}
+                        onChange={e => setNewCustomer({ ...newCustomer, phone: e.target.value })}
                       />
                       <button
                         type="button"
@@ -336,7 +335,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                   <div className="md:col-span-2">
                     <AddressAutocomplete
                       value={newCustomer.address || ''}
-                      onChange={(address) => setNewCustomer({...newCustomer, address})}
+                      onChange={(address) => setNewCustomer({ ...newCustomer, address })}
                       placeholder="Start typing address or postcode..."
                       onVoiceStart={() => startListening('address')}
                       onVoiceEnd={() => recognitionRef.current?.stop()}
@@ -377,7 +376,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                   </div>
                   <div className="flex flex-col gap-3 pt-4">
                     <button onClick={handleCreateProject} disabled={!selectedCustomer || isCreating} className="w-full bg-teal-500 text-white font-black py-4 sm:py-6 rounded-xl sm:rounded-[32px] hover:bg-teal-600 shadow-2xl shadow-teal-500/30 disabled:opacity-30 transition-all uppercase tracking-widest text-xs sm:text-sm flex items-center justify-center gap-2 sm:gap-3">
-                      {isCreating ? <Loader2 className="animate-spin" size={18}/> : <FolderPlus size={18}/>}
+                      {isCreating ? <Loader2 className="animate-spin" size={18} /> : <FolderPlus size={18} />}
                       Start Job Pack
                     </button>
                     <button onClick={() => { setIsAdding(false); setNewTitle(''); setSelectedCustomer(''); }} className="w-full bg-slate-50 text-slate-400 font-black py-4 sm:py-6 rounded-xl sm:rounded-[32px] hover:bg-slate-100 transition-all uppercase tracking-widest text-xs">Dismiss</button>

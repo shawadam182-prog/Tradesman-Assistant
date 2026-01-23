@@ -348,8 +348,8 @@ export const BankImportPage: React.FC<BankImportPageProps> = ({ onBack }) => {
                   key={id}
                   onClick={() => handleBankSelect(id)}
                   className={`p-4 rounded-2xl border-2 transition-all text-left ${selectedBank === id
-                      ? 'border-teal-500 bg-teal-50'
-                      : 'border-slate-100 hover:border-slate-200'
+                    ? 'border-teal-500 bg-teal-50'
+                    : 'border-slate-100 hover:border-slate-200'
                     }`}
                 >
                   <p className={`font-bold text-sm ${selectedBank === id ? 'text-teal-700' : 'text-slate-700'}`}>
