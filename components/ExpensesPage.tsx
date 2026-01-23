@@ -197,6 +197,13 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
     return () => clearInterval(interval);
   }, [showAddModal]);
 
+  // Cleanup blob URL when it changes or on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (receiptPreview) URL.revokeObjectURL(receiptPreview);
+    };
+  }, [receiptPreview]);
+
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
@@ -276,6 +283,8 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
 
   const processFile = async (file: File) => {
     try {
+      // Revoke previous blob URL if exists to prevent memory leak
+      if (receiptPreview) URL.revokeObjectURL(receiptPreview);
       setReceiptPreview(URL.createObjectURL(file));
       setReceiptFile(file);
       setScanning(true);
@@ -476,6 +485,8 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
       expense_date: new Date().toISOString().split('T')[0],
       payment_method: 'card', job_pack_id: '',
     });
+    // Revoke blob URL to prevent memory leak
+    if (receiptPreview) URL.revokeObjectURL(receiptPreview);
     setReceiptPreview(null);
     setReceiptFile(null);
     setSuggestedCategory(null);
@@ -664,7 +675,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
                 {receiptPreview ? (
                   <div className="relative">
                     <img src={receiptPreview} className="w-full h-48 object-cover rounded-2xl" alt="Receipt" />
-                    <button onClick={() => { setReceiptPreview(null); setReceiptFile(null); }} className="absolute top-2 right-2 p-2 bg-white rounded-full shadow"><X size={16} /></button>
+                    <button onClick={() => { if (receiptPreview) URL.revokeObjectURL(receiptPreview); setReceiptPreview(null); setReceiptFile(null); }} className="absolute top-2 right-2 p-2 bg-white rounded-full shadow"><X size={16} /></button>
                     {scanning && (<div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center"><div className="text-center text-white"><Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /><p className="text-sm font-bold">Scanning receipt...</p></div></div>)}
                   </div>
                 ) : (
