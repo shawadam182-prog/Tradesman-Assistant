@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Quote, Customer, AppSettings, MaterialItem, QuoteSection, LabourItem, DBMaterialLibraryItem } from '../types';
 import {
   analyzeJobRequirements,
@@ -16,6 +16,9 @@ import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 import { MaterialsLibrary } from './MaterialsLibrary';
 import { useData } from '../src/contexts/DataContext';
 import { useToast } from '../src/contexts/ToastContext';
+
+// Draft auto-save key prefix
+const DRAFT_STORAGE_KEY = 'quote_creator_draft';
 
 // Import extracted components
 import {
@@ -68,8 +71,48 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   // Part Payment modal
   const [showPartPaymentModal, setShowPartPaymentModal] = useState(false);
 
+  // Generate a unique storage key for this draft
+  // For new quotes: based on projectId or 'new'
+  // For existing quotes: based on the quote ID
+  const getDraftStorageKey = useCallback(() => {
+    if (existingQuote?.id) {
+      return `${DRAFT_STORAGE_KEY}_edit_${existingQuote.id}`;
+    }
+    return `${DRAFT_STORAGE_KEY}_new_${projectId || 'standalone'}`;
+  }, [existingQuote?.id, projectId]);
+
+  // Check for saved draft on mount
+  const getSavedDraft = useCallback((): Partial<Quote> | null => {
+    try {
+      const key = getDraftStorageKey();
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Check if the draft is less than 7 days old
+        if (parsed._draftSavedAt && Date.now() - parsed._draftSavedAt < 7 * 24 * 60 * 60 * 1000) {
+          // Remove the internal timestamp before returning
+          const { _draftSavedAt, ...draftData } = parsed;
+          return draftData;
+        } else {
+          // Draft is too old, remove it
+          localStorage.removeItem(key);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load draft:', e);
+    }
+    return null;
+  }, [getDraftStorageKey]);
+
   // Migration logic for old flat quotes
   const getInitialData = (): Partial<Quote> => {
+    // First check for a saved draft
+    const savedDraft = getSavedDraft();
+    if (savedDraft) {
+      // We'll show a toast after mount via useEffect
+      return savedDraft;
+    }
+
     if (!existingQuote) {
       const defaultDueDate = initialType === 'invoice'
         ? (() => { const d = new Date(); d.setDate(d.getDate() + 14); return d.toISOString().split('T')[0]; })()
@@ -106,6 +149,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   };
 
   const [formData, setFormData] = useState<Partial<Quote>>(getInitialData());
+  const [draftRestored, setDraftRestored] = useState<boolean>(() => getSavedDraft() !== null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -118,6 +162,48 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       if (c) setCustomerSearch(c.name);
     }
   }, [formData.customerId, customers]);
+
+  // Show toast when draft is restored on mount
+  useEffect(() => {
+    if (draftRestored) {
+      toast.success('Draft Restored', 'Your unsaved changes have been recovered');
+      setDraftRestored(false);
+    }
+  }, [draftRestored, toast]);
+
+  // Auto-save draft to localStorage whenever formData changes (debounced)
+  useEffect(() => {
+    // Don't save if form is essentially empty (no title, no items with names)
+    const hasContent = formData.title ||
+      formData.sections?.some(s => s.items.some(i => i.name) || s.labourItems?.some(l => l.description));
+
+    if (!hasContent) return;
+
+    const timeoutId = setTimeout(() => {
+      try {
+        const key = getDraftStorageKey();
+        const dataToSave = {
+          ...formData,
+          _draftSavedAt: Date.now()
+        };
+        localStorage.setItem(key, JSON.stringify(dataToSave));
+      } catch (e) {
+        console.error('Failed to save draft:', e);
+      }
+    }, 1000); // Debounce: save 1 second after last change
+
+    return () => clearTimeout(timeoutId);
+  }, [formData, getDraftStorageKey]);
+
+  // Clear draft from localStorage
+  const clearDraft = useCallback(() => {
+    try {
+      const key = getDraftStorageKey();
+      localStorage.removeItem(key);
+    } catch (e) {
+      console.error('Failed to clear draft:', e);
+    }
+  }, [getDraftStorageKey]);
 
   const handleTypeChange = (newType: 'estimate' | 'quotation' | 'invoice') => {
     setFormData(prev => {
@@ -449,7 +535,14 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     const quoteToSave = !existingQuote && formData.type === 'invoice' && formData.status === 'draft'
       ? { ...formData, status: 'sent' } as Quote
       : formData as Quote;
+    clearDraft(); // Clear the draft on successful save
     onSave(quoteToSave);
+  };
+
+  const handleCancel = () => {
+    clearDraft(); // Clear the draft when cancelling
+    hapticTap();
+    onCancel();
   };
 
   return (
@@ -457,7 +550,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       {/* Header */}
       <div className="sticky top-0 z-40 bg-white border-b border-slate-100 p-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <button onClick={() => { hapticTap(); onCancel(); }} className="p-2 -ml-2 text-slate-400 hover:text-slate-700">
+          <button onClick={handleCancel} className="p-2 -ml-2 text-slate-400 hover:text-slate-700">
             <ArrowLeft size={20} />
           </button>
           <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
