@@ -386,7 +386,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
       </div>
 
       {/* Main Container - Space Savvy UI */}
-      <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-2xl overflow-hidden flex flex-col min-h-[400px] md:min-h-[600px] relative">
+      <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-2xl overflow-hidden flex flex-col min-h-[300px] md:min-h-[600px] relative">
         
         {/* Navigation Bar */}
         <div className="p-3 sm:p-4 md:p-8 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between bg-slate-50/30 gap-3 sm:gap-6">
@@ -536,13 +536,13 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
           )}
 
           {viewType === 'day' && (
-            <div className="max-w-2xl mx-auto space-y-3 p-3 md:p-6 animate-in slide-in-from-bottom-8 duration-500">
+            <div className="max-w-2xl mx-auto space-y-2 md:space-y-3 p-2 md:p-6 animate-in slide-in-from-bottom-8 duration-500">
               {getDayEntries(selectedDay).length === 0 ? (
-                <div className="py-16 text-center bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center">
-                  <div className="h-12 w-12 bg-white rounded-xl flex items-center justify-center text-slate-100 shadow-inner mb-3">
-                    <CalendarIcon size={28} />
+                <div className="py-8 md:py-16 text-center bg-slate-50 rounded-2xl md:rounded-[32px] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center">
+                  <div className="h-10 w-10 md:h-12 md:w-12 bg-white rounded-xl flex items-center justify-center text-slate-100 shadow-inner mb-2 md:mb-3">
+                    <CalendarIcon size={24} className="md:w-7 md:h-7" />
                   </div>
-                  <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-xs italic">Nothing on the agenda for today</p>
+                  <p className="text-slate-400 font-black uppercase tracking-[0.15em] md:tracking-[0.2em] text-[10px] md:text-xs italic">Nothing on the agenda for today</p>
                   <button
                     onClick={() => {
                       const defaultDate = new Date(selectedDay);
@@ -550,40 +550,40 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                       setDraft({ start: defaultDate.toISOString() });
                       setIsAddingManual(true);
                     }}
-                    className="mt-5 bg-slate-900 text-teal-500 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95"
+                    className="mt-3 md:mt-5 bg-slate-900 text-teal-500 px-5 md:px-6 py-2 md:py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95"
                   >
                     + Log New Site Booking
                   </button>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2 md:space-y-3">
                   {getDayEntries(selectedDay).map(entry => {
                     const customer = customers.find(c => c.id === entry.customerId);
                     return (
-                      <div key={entry.id} className="bg-white rounded-2xl border border-slate-100 p-4 hover:border-teal-400 transition-all shadow-sm hover:shadow-lg group relative overflow-hidden">
+                      <div key={entry.id} className="bg-white rounded-xl md:rounded-2xl border border-slate-100 p-3 md:p-4 hover:border-teal-400 transition-all shadow-sm hover:shadow-lg group relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-1.5 h-full bg-slate-900 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                          <div className="space-y-3 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <div className="flex items-center gap-1.5 bg-teal-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-black shadow-md">
-                                <Clock size={12} />
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 md:gap-4">
+                          <div className="space-y-2 md:space-y-3 flex-1">
+                            <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
+                              <div className="flex items-center gap-1 md:gap-1.5 bg-teal-500 text-white px-2 md:px-2.5 py-0.5 md:py-1 rounded-md md:rounded-lg text-[9px] md:text-[10px] font-black shadow-md">
+                                <Clock size={10} className="md:w-3 md:h-3" />
                                 {new Date(entry.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </div>
-                              <div className="h-px w-4 bg-slate-200"></div>
-                              <div className="flex items-center gap-1.5 bg-slate-900 text-white px-2.5 py-1 rounded-lg text-[10px] font-black">
+                              <div className="h-px w-3 md:w-4 bg-slate-200"></div>
+                              <div className="flex items-center gap-1 md:gap-1.5 bg-slate-900 text-white px-2 md:px-2.5 py-0.5 md:py-1 rounded-md md:rounded-lg text-[9px] md:text-[10px] font-black">
                                 {new Date(entry.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </div>
                             </div>
 
                             <div>
-                              <h4 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-2 group-hover:text-teal-600 transition-colors">
+                              <h4 className="text-lg md:text-xl font-black text-slate-900 tracking-tight leading-none mb-1 md:mb-2 group-hover:text-teal-600 transition-colors">
                                 {entry.title}
                               </h4>
-                              <div className="flex flex-wrap gap-2">
+                              <div className="flex flex-wrap gap-1.5 md:gap-2">
                                 {customer && (
-                                  <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-lg text-slate-500 font-bold text-xs">
-                                    <div className="h-6 w-6 bg-slate-100 rounded-lg flex items-center justify-center text-teal-500 font-black not-italic text-[10px] shadow-sm">
+                                  <div className="flex items-center gap-1.5 md:gap-2 bg-slate-50 p-1 md:p-1.5 rounded-md md:rounded-lg text-slate-500 font-bold text-[10px] md:text-xs">
+                                    <div className="h-5 w-5 md:h-6 md:w-6 bg-slate-100 rounded-md md:rounded-lg flex items-center justify-center text-teal-500 font-black not-italic text-[9px] md:text-[10px] shadow-sm">
                                       {customer.name.charAt(0)}
                                     </div>
                                     {customer.name}
@@ -595,12 +595,12 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => e.stopPropagation()}
-                                    className="flex items-center gap-1.5 bg-teal-500 text-white px-3 py-1.5 rounded-lg font-black text-[10px] uppercase tracking-wide hover:bg-teal-600 transition-all shadow-md group/map"
+                                    className="flex items-center gap-1 md:gap-1.5 bg-teal-500 text-white px-2 md:px-3 py-1 md:py-1.5 rounded-md md:rounded-lg font-black text-[9px] md:text-[10px] uppercase tracking-wide hover:bg-teal-600 transition-all shadow-md group/map"
                                   >
-                                    <MapPin size={12} />
-                                    <span className="max-w-[150px] truncate">Navigate</span>
-                                    <div className="h-5 w-5 bg-slate-900 rounded-md flex items-center justify-center text-teal-500 ml-1">
-                                      <ArrowRight size={10} className="group-hover/map:translate-x-0.5 transition-transform" />
+                                    <MapPin size={10} className="md:w-3 md:h-3" />
+                                    <span className="max-w-[120px] md:max-w-[150px] truncate">Navigate</span>
+                                    <div className="h-4 w-4 md:h-5 md:w-5 bg-slate-900 rounded flex items-center justify-center text-teal-500 ml-0.5 md:ml-1">
+                                      <ArrowRight size={8} className="md:w-2.5 md:h-2.5 group-hover/map:translate-x-0.5 transition-transform" />
                                     </div>
                                   </a>
                                 )}
@@ -608,24 +608,24 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                             </div>
 
                             {entry.description && (
-                              <p className="text-sm text-slate-500 italic font-medium bg-slate-50/50 p-3 rounded-xl border border-slate-100/50 leading-relaxed">
+                              <p className="text-xs md:text-sm text-slate-500 italic font-medium bg-slate-50/50 p-2 md:p-3 rounded-lg md:rounded-xl border border-slate-100/50 leading-relaxed">
                                 {entry.description}
                               </p>
                             )}
                           </div>
 
-                          <div className="flex flex-row md:flex-col gap-2 shrink-0">
+                          <div className="flex flex-row md:flex-col gap-1.5 md:gap-2 shrink-0">
                             <button
                               onClick={() => handleEdit(entry)}
-                              className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                              className="p-2 md:p-3 bg-slate-50 text-slate-400 rounded-lg md:rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm"
                             >
-                              <Pencil size={16}/>
+                              <Pencil size={14} className="md:w-4 md:h-4"/>
                             </button>
                             <button
                               onClick={() => confirm('Cancel site booking?') && onDeleteEntry(entry.id)}
-                              className="p-3 bg-red-50 text-red-300 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                              className="p-2 md:p-3 bg-red-50 text-red-300 rounded-lg md:rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"
                             >
-                              <Trash2 size={16}/>
+                              <Trash2 size={14} className="md:w-4 md:h-4"/>
                             </button>
                           </div>
                         </div>
