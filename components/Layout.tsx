@@ -171,7 +171,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
           title="Go to landing page"
         >
           <img src="/tradesync-logo.png" alt="TradeSync" className="h-10 rounded-lg" />
-          <h1 className="text-xl font-bold tracking-tight text-white">Trade<span className="text-teal-500">Sync</span></h1>
+          <h1 className="text-xl font-black tracking-tight text-white">Trade<span className="text-teal-500">Sync</span></h1>
         </button>
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {navGroups.map((group) => (

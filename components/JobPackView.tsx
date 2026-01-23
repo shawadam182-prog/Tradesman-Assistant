@@ -403,7 +403,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
                 onBlur={handleSaveTitle}
               />
             ) : (
-              <h1 onClick={() => setIsEditingTitle(true)} className="text-lg font-bold text-slate-900 flex items-center gap-2 cursor-text">
+              <h1 onClick={() => setIsEditingTitle(true)} className="text-xl md:text-2xl font-black text-slate-900 flex items-center gap-2 cursor-text tracking-tight">
                 {project.title}
               </h1>
             )}
@@ -448,191 +448,201 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
         </div>
       </div>
 
-      {activeTab === 'log' && (
-        <div className="max-w-4xl mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-2">
-          <div className="flex justify-between items-center px-2">
-            <div className="flex items-center gap-2">
-              <StickyNote className="text-amber-500" size={16} />
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Site Notes & Daily Log</h3>
-            </div>
-            <div className="flex gap-2">
+      {
+    activeTab === 'log' && (
+      <div className="max-w-4xl mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-2">
+        <div className="flex justify-between items-center px-2">
+          <div className="flex items-center gap-2">
+            <StickyNote className="text-amber-500" size={16} />
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Site Notes & Daily Log</h3>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { if (confirm('Clear notepad?')) { setNotepadContent(''); handleSaveNotepad(''); } }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-400 rounded-xl text-[9px] font-black uppercase hover:bg-red-50 hover:text-red-500 transition-all"
+            >
+              <Eraser size={12} /> Clear Pad
+            </button>
+            <button
+              onClick={toggleRecording}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[9px] font-black uppercase transition-all ${isRecording ? 'bg-red-500 text-white' : 'bg-teal-500 text-white shadow-lg shadow-teal-200'}`}
+            >
+              {isRecording ? <MicOff size={12} /> : <Mic size={12} />}
+              {isRecording ? 'Listening' : 'Dictate'}
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-[#fffdf2] rounded-[24px] border border-amber-100 shadow-xl relative min-h-[400px] overflow-hidden flex flex-col">
+          {/* Notepad lines decoration */}
+          <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px)', backgroundSize: '100% 2.5rem' }}></div>
+
+          <textarea
+            className="w-full flex-1 bg-transparent p-4 md:p-10 text-base md:text-lg font-medium text-slate-800 outline-none resize-none leading-[2.5rem] relative z-10 placeholder:text-amber-200 placeholder:italic"
+            placeholder="Start typing your site notes here, or use the mic to dictate..."
+            value={notepadContent}
+            onChange={(e) => {
+              setNotepadContent(e.target.value);
+              handleSaveNotepad(e.target.value);
+            }}
+          />
+
+          <div className="p-3 border-t border-amber-50 bg-[#fffef7] flex justify-between items-center text-[8px] font-black text-amber-300 uppercase tracking-widest italic relative z-10 px-4 md:px-10">
+            <span>Ref: {project.id.substr(0, 8)}</span>
+            <span>Saved: {new Date(project.updatedAt).toLocaleTimeString()}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 rounded-xl border border-amber-100 text-[9px] font-bold text-amber-700 italic">
+          <Sparkles size={10} className="shrink-0" />
+          Notes saved automatically. Use dictation for hands-free updates.
+        </div>
+      </div>
+    )
+  }
+
+  {
+    activeTab === 'photos' && (
+      <div className="animate-in fade-in space-y-4">
+        {/* Hidden file inputs */}
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => handleFileInputChange(e, false)}
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={(e) => handleFileInputChange(e, false)}
+        />
+
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4">
+          {/* Camera button */}
+          <button
+            onClick={() => cameraInputRef.current?.click()}
+            disabled={isUploadingPhoto}
+            className="aspect-square border-2 border-dashed border-amber-300 rounded-xl flex flex-col items-center justify-center text-amber-500 hover:border-amber-400 hover:bg-amber-50 transition-all bg-amber-50/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isUploadingPhoto ? <Loader2 size={24} className="animate-spin" /> : <Camera size={24} />}
+            <span className="text-[9px] font-bold mt-1">{isUploadingPhoto ? 'Uploading...' : 'Camera'}</span>
+          </button>
+          {/* Add from files button */}
+          <button
+            onClick={() => photoInputRef.current?.click()}
+            disabled={isUploadingPhoto}
+            className="aspect-square border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-amber-300 hover:text-amber-500 transition-all bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isUploadingPhoto ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />}
+            <span className="text-[9px] font-bold mt-1">{isUploadingPhoto ? 'Uploading...' : 'Add'}</span>
+          </button>
+          {(project.photos || []).map(photo => (
+            <div
+              key={photo.id}
+              onClick={() => openImageViewer(photo, 'photo')}
+              className="aspect-square relative group overflow-hidden rounded-xl border border-slate-100 cursor-pointer"
+            >
+              <img src={photo.url} className="w-full h-full object-cover" alt="Site" />
               <button
-                onClick={() => { if (confirm('Clear notepad?')) { setNotepadContent(''); handleSaveNotepad(''); } }}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-400 rounded-xl text-[9px] font-black uppercase hover:bg-red-50 hover:text-red-500 transition-all"
+                onClick={(e) => { e.stopPropagation(); onSaveProject({ ...project, photos: (project.photos || []).filter(p => p.id !== photo.id) }); }}
+                className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
               >
-                <Eraser size={12} /> Clear Pad
+                <Trash2 size={12} />
               </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  {
+    activeTab === 'drawings' && (
+      <div className="animate-in fade-in space-y-4">
+        {/* Hidden file input for drawings */}
+        <input
+          ref={drawingInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => handleFileInputChange(e, true)}
+        />
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <button
+            onClick={() => drawingInputRef.current?.click()}
+            disabled={isUploadingPhoto}
+            className="aspect-square border-4 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center text-slate-400 hover:border-amber-300 hover:text-amber-500 transition-all bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isUploadingPhoto ? <Loader2 size={40} className="animate-spin" /> : <Plus size={40} />}
+            <span className="text-[10px] font-black uppercase mt-2">{isUploadingPhoto ? 'Uploading...' : 'Add Drawing'}</span>
+          </button>
+          {(project.drawings || []).map(drawing => (
+            <div
+              key={drawing.id}
+              onClick={() => openImageViewer(drawing, 'drawing')}
+              className="aspect-square relative group overflow-hidden rounded-3xl border-2 border-slate-100 cursor-pointer"
+            >
+              <img src={drawing.url} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500" alt="Drawing" />
+              <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Plus className="text-white" size={32} />
+              </div>
               <button
-                onClick={toggleRecording}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[9px] font-black uppercase transition-all ${isRecording ? 'bg-red-500 text-white' : 'bg-teal-500 text-white shadow-lg shadow-teal-200'}`}
+                onClick={(e) => { e.stopPropagation(); onSaveProject({ ...project, drawings: (project.drawings || []).filter(p => p.id !== drawing.id) }); }}
+                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
               >
-                {isRecording ? <MicOff size={12} /> : <Mic size={12} />}
-                {isRecording ? 'Listening' : 'Dictate'}
+                <Trash2 size={12} />
               </button>
             </div>
-          </div>
-
-          <div className="bg-[#fffdf2] rounded-[24px] border border-amber-100 shadow-xl relative min-h-[400px] overflow-hidden flex flex-col">
-            {/* Notepad lines decoration */}
-            <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px)', backgroundSize: '100% 2.5rem' }}></div>
-
-            <textarea
-              className="w-full flex-1 bg-transparent p-4 md:p-10 text-base md:text-lg font-medium text-slate-800 outline-none resize-none leading-[2.5rem] relative z-10 placeholder:text-amber-200 placeholder:italic"
-              placeholder="Start typing your site notes here, or use the mic to dictate..."
-              value={notepadContent}
-              onChange={(e) => {
-                setNotepadContent(e.target.value);
-                handleSaveNotepad(e.target.value);
-              }}
-            />
-
-            <div className="p-3 border-t border-amber-50 bg-[#fffef7] flex justify-between items-center text-[8px] font-black text-amber-300 uppercase tracking-widest italic relative z-10 px-4 md:px-10">
-              <span>Ref: {project.id.substr(0, 8)}</span>
-              <span>Saved: {new Date(project.updatedAt).toLocaleTimeString()}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 rounded-xl border border-amber-100 text-[9px] font-bold text-amber-700 italic">
-            <Sparkles size={10} className="shrink-0" />
-            Notes saved automatically. Use dictation for hands-free updates.
-          </div>
+          ))}
         </div>
-      )}
+      </div>
+    )
+  }
 
-      {activeTab === 'photos' && (
-        <div className="animate-in fade-in space-y-4">
-          {/* Hidden file inputs */}
-          <input
-            ref={photoInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => handleFileInputChange(e, false)}
-          />
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => handleFileInputChange(e, false)}
-          />
+  {
+    activeTab === 'materials' && (
+      <MaterialsTracker project={project} quotes={quotes} onSaveProject={onSaveProject} />
+    )
+  }
 
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4">
-            {/* Camera button */}
-            <button
-              onClick={() => cameraInputRef.current?.click()}
-              disabled={isUploadingPhoto}
-              className="aspect-square border-2 border-dashed border-amber-300 rounded-xl flex flex-col items-center justify-center text-amber-500 hover:border-amber-400 hover:bg-amber-50 transition-all bg-amber-50/50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isUploadingPhoto ? <Loader2 size={24} className="animate-spin" /> : <Camera size={24} />}
-              <span className="text-[9px] font-bold mt-1">{isUploadingPhoto ? 'Uploading...' : 'Camera'}</span>
-            </button>
-            {/* Add from files button */}
-            <button
-              onClick={() => photoInputRef.current?.click()}
-              disabled={isUploadingPhoto}
-              className="aspect-square border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-amber-300 hover:text-amber-500 transition-all bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isUploadingPhoto ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />}
-              <span className="text-[9px] font-bold mt-1">{isUploadingPhoto ? 'Uploading...' : 'Add'}</span>
-            </button>
-            {(project.photos || []).map(photo => (
-              <div
-                key={photo.id}
-                onClick={() => openImageViewer(photo, 'photo')}
-                className="aspect-square relative group overflow-hidden rounded-xl border border-slate-100 cursor-pointer"
-              >
-                <img src={photo.url} className="w-full h-full object-cover" alt="Site" />
-                <button
-                  onClick={(e) => { e.stopPropagation(); onSaveProject({ ...project, photos: (project.photos || []).filter(p => p.id !== photo.id) }); }}
-                  className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
-                >
-                  <Trash2 size={12} />
-                </button>
-              </div>
-            ))}
-          </div>
+  {
+    activeTab === 'finance' && (
+      <div className="space-y-3 md:space-y-6 animate-in fade-in">
+        {/* Profit Summary for completed jobs */}
+        {project.status === 'completed' && (
+          <JobProfitSummary jobPackId={project.id} quotes={quotes} />
+        )}
+
+        <div className="flex justify-between items-center">
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Financials</h3>
+          <button onClick={onCreateQuote} className="bg-teal-500 text-white px-6 py-2 rounded-xl text-xs font-black uppercase shadow-lg shadow-teal-200">+ New Doc</button>
         </div>
-      )}
-
-      {activeTab === 'drawings' && (
-        <div className="animate-in fade-in space-y-4">
-          {/* Hidden file input for drawings */}
-          <input
-            ref={drawingInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => handleFileInputChange(e, true)}
-          />
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <button
-              onClick={() => drawingInputRef.current?.click()}
-              disabled={isUploadingPhoto}
-              className="aspect-square border-4 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center text-slate-400 hover:border-amber-300 hover:text-amber-500 transition-all bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isUploadingPhoto ? <Loader2 size={40} className="animate-spin" /> : <Plus size={40} />}
-              <span className="text-[10px] font-black uppercase mt-2">{isUploadingPhoto ? 'Uploading...' : 'Add Drawing'}</span>
-            </button>
-            {(project.drawings || []).map(drawing => (
-              <div
-                key={drawing.id}
-                onClick={() => openImageViewer(drawing, 'drawing')}
-                className="aspect-square relative group overflow-hidden rounded-3xl border-2 border-slate-100 cursor-pointer"
-              >
-                <img src={drawing.url} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500" alt="Drawing" />
-                <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Plus className="text-white" size={32} />
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onSaveProject({ ...project, drawings: (project.drawings || []).filter(p => p.id !== drawing.id) }); }}
-                  className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                >
-                  <Trash2 size={12} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'materials' && (
-        <MaterialsTracker project={project} quotes={quotes} onSaveProject={onSaveProject} />
-      )}
-
-      {activeTab === 'finance' && (
-        <div className="space-y-3 md:space-y-6 animate-in fade-in">
-          {/* Profit Summary for completed jobs */}
-          {project.status === 'completed' && (
-            <JobProfitSummary jobPackId={project.id} quotes={quotes} />
-          )}
-
-          <div className="flex justify-between items-center">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Financials</h3>
-            <button onClick={onCreateQuote} className="bg-teal-500 text-white px-6 py-2 rounded-xl text-xs font-black uppercase shadow-lg shadow-teal-200">+ New Doc</button>
-          </div>
-          <div className="bg-white rounded-3xl border-2 border-slate-100 overflow-hidden">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="px-4 md:px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Document</th>
-                  <th className="px-4 md:px-6 py-4 text-[10px] font-black text-slate-400 uppercase text-right">Action</th>
+        <div className="bg-white rounded-3xl border-2 border-slate-100 overflow-hidden">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100">
+                <th className="px-4 md:px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Document</th>
+                <th className="px-4 md:px-6 py-4 text-[10px] font-black text-slate-400 uppercase text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {quotes.map(q => (
+                <tr key={q.id}>
+                  <td className="px-4 md:px-6 py-4"><p className="text-sm font-black text-slate-900">{q.title}</p></td>
+                  <td className="px-4 md:px-6 py-4 text-right"><button onClick={() => onViewQuote(q.id)} className="text-amber-500 font-black text-xs uppercase">View</button></td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {quotes.map(q => (
-                  <tr key={q.id}>
-                    <td className="px-4 md:px-6 py-4"><p className="text-sm font-black text-slate-900">{q.title}</p></td>
-                    <td className="px-4 md:px-6 py-4 text-right"><button onClick={() => onViewQuote(q.id)} className="text-amber-500 font-black text-xs uppercase">View</button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
+    )
+  }
     </div>
   );
 };

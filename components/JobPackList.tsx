@@ -221,10 +221,10 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                     onClick={() => startListening()}
                     disabled={isProcessing}
                     className={`flex items-center gap-1 px-3 py-1.5 md:px-6 md:py-3 rounded-xl font-black text-[9px] md:text-[10px] uppercase transition-all border ${isListening && !activeFieldVoiceRef.current
-                        ? 'bg-red-500 text-white border-red-600 animate-pulse'
-                        : isProcessing
-                          ? 'bg-amber-500 text-white border-amber-600'
-                          : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50'
+                      ? 'bg-red-500 text-white border-red-600 animate-pulse'
+                      : isProcessing
+                        ? 'bg-amber-500 text-white border-amber-600'
+                        : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50'
                       }`}
                   >
                     {isProcessing ? <Loader2 size={10} className="md:w-3 md:h-3 animate-spin" /> : isListening && !activeFieldVoiceRef.current ? <MicOff size={10} className="md:w-3 md:h-3" /> : <Sparkles size={10} className="md:w-3 md:h-3" />}

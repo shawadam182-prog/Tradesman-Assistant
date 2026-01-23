@@ -369,3 +369,32 @@ export const QuickAction: React.FC<QuickActionProps> = ({ onClick, icon, label, 
     </button>
   );
 };
+
+/**
+ * Standardized Mobile Page Header
+ */
+interface MobilePageHeaderProps {
+  title: string;
+  leftAction?: ReactNode;
+  rightAction?: ReactNode;
+  className?: string;
+}
+
+export const MobilePageHeader: React.FC<MobilePageHeaderProps> = ({
+  title,
+  leftAction,
+  rightAction,
+  className = ''
+}) => {
+  return (
+    <div className={`sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 flex items-center justify-between safe-area-top shadow-sm ${className}`}>
+      <div className="flex items-center gap-3">
+        {leftAction}
+        <h1 className="text-xl font-black text-slate-900 tracking-tight">{title}</h1>
+      </div>
+      <div className="flex items-center gap-2">
+        {rightAction}
+      </div>
+    </div>
+  );
+};

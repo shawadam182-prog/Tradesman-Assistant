@@ -625,8 +625,8 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
     <button
       onClick={() => toggleOption(optionKey)}
       className={`flex items-center justify-between w-full px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${displayOptions[optionKey]
-          ? `${activeColor} border-transparent shadow-sm`
-          : 'bg-white text-slate-300 border-slate-100 italic opacity-60'
+        ? `${activeColor} border-transparent shadow-sm`
+        : 'bg-white text-slate-300 border-slate-100 italic opacity-60'
         }`}
     >
       <span className="truncate mr-2">{label}</span>
@@ -646,7 +646,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           <button onClick={onBack} className="p-2 -ml-2 text-slate-400 hover:text-slate-700">
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-lg font-bold text-slate-900">{activeQuote.type === 'invoice' ? 'Invoice' : 'Quote'} Details</h1>
+          <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">{activeQuote.type === 'invoice' ? 'Invoice' : 'Quote'} Details</h1>
         </div>
         <div className="flex gap-2">
           <button onClick={onEdit} className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100"><Edit3 size={18} /></button>
@@ -1574,8 +1574,8 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                   setTimeout(() => setEmailHelper(prev => prev ? { ...prev, copied: false } : null), 2000);
                 }}
                 className={`w-full py-1 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${emailHelper.copied
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
               >
                 {emailHelper.copied ? <Check size={18} /> : <Copy size={18} />}
