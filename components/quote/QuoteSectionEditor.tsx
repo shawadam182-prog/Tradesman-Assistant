@@ -215,10 +215,14 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
               <div className="flex items-center bg-white border-2 border-slate-100 rounded-xl px-2 py-1.5 focus-within:border-blue-400 transition-all">
                 <span className="text-slate-400 text-sm font-bold">£</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   className="bg-transparent border-none text-slate-950 font-black text-sm outline-none w-20 text-center"
                   value={section.labourCost !== undefined ? section.labourCost : ''}
-                  onChange={e => onUpdateLabourCost(section.id, parseFloat(e.target.value) || 0)}
+                  onChange={e => {
+                    const numValue = parseFloat(e.target.value);
+                    onUpdateLabourCost(section.id, isNaN(numValue) ? 0 : numValue);
+                  }}
                   placeholder="0.00"
                 />
               </div>
@@ -264,12 +268,20 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
             <div className="flex items-center bg-emerald-50 border-2 border-emerald-200 rounded-lg md:rounded-xl px-1 md:px-3 py-1.5 md:py-2.5 focus-within:border-emerald-400 transition-all">
               <span className="text-emerald-600 text-[10px] md:text-base font-bold mr-0.5 md:mr-1">£</span>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 className="bg-transparent border-none text-emerald-700 font-black text-[10px] md:text-lg outline-none w-full"
                 value={section.subsectionPrice !== undefined ? section.subsectionPrice : calculatedTotal.toFixed(2)}
                 onChange={e => {
-                  const value = e.target.value === '' ? undefined : parseFloat(e.target.value) || 0;
-                  onUpdateSubsectionPrice(section.id, value);
+                  const inputValue = e.target.value;
+                  if (inputValue === '') {
+                    onUpdateSubsectionPrice(section.id, undefined);
+                  } else {
+                    const numValue = parseFloat(inputValue);
+                    if (!isNaN(numValue)) {
+                      onUpdateSubsectionPrice(section.id, numValue);
+                    }
+                  }
                 }}
                 placeholder="Auto"
               />
