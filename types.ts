@@ -31,6 +31,7 @@ export interface LabourItem {
 export interface QuoteSection {
   id: string;
   title: string;
+  description?: string; // Optional description for the work section
   items: MaterialItem[];
   labourHours: number;
   labourRate?: number; // Optional override per section

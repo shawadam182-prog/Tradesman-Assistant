@@ -280,6 +280,10 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     setFormData(prev => ({ ...prev, sections: prev.sections?.map(s => s.id === id ? { ...s, title } : s) }));
   };
 
+  const updateSectionDescription = (id: string, description: string) => {
+    setFormData(prev => ({ ...prev, sections: prev.sections?.map(s => s.id === id ? { ...s, description } : s) }));
+  };
+
   // Material item handlers
   const addMaterialToSection = (sectionId: string) => {
     setFormData(prev => ({
@@ -599,6 +603,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               onIncrementLabourHours={incrementLabourHours}
               onDecrementLabourHours={decrementLabourHours}
               onUpdateTitle={updateSectionTitle}
+              onUpdateDescription={updateSectionDescription}
               onUpdateLabourCost={updateLabourCost}
               onUpdateSubsectionPrice={updateSubsectionPrice}
               onRemoveSection={removeSection}
