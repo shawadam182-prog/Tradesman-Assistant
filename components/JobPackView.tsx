@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { JobPack, Customer, Quote, SiteNote, SitePhoto, SiteDocument } from '../types';
 import {
@@ -14,6 +13,11 @@ import { JobProfitSummary } from './JobProfitSummary';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { sitePhotosService } from '../src/services/dataService';
+import { useVoiceInput } from '../src/hooks/useVoiceInput';
+
+// Detect iOS for voice input fallback
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 interface JobPackViewProps {
   project: JobPack;
@@ -38,6 +42,8 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
 
   const [notepadContent, setNotepadContent] = useState(project.notepad || '');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const notepadContentRef = useRef(notepadContent);
+  notepadContentRef.current = notepadContent;
 
   // File input refs to prevent navigation bugs
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -118,11 +124,43 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
     setIsEditingTitle(false);
   };
 
+  // Voice input hook for iOS fallback
+  const handleVoiceResult = useCallback((text: string) => {
+    const current = notepadContentRef.current;
+    const updated = current ? `${current}\n${text}` : text;
+    setNotepadContent(updated);
+    handleSaveNotepad(updated);
+    setIsRecording(false);
+  }, [handleSaveNotepad]);
+
+  const handleVoiceError = useCallback((error: string) => {
+    toast.error('Voice Input', error);
+    setIsRecording(false);
+  }, [toast]);
+
+  const { isListening: isHookListening, startListening: startHookListening, stopListening: stopHookListening } = useVoiceInput({
+    onResult: handleVoiceResult,
+    onError: handleVoiceError,
+  });
+
   const toggleRecording = () => {
+    // iOS: use cloud transcription via hook
+    if (isIOS) {
+      if (isRecording || isHookListening) {
+        stopHookListening();
+        setIsRecording(false);
+      } else {
+        setIsRecording(true);
+        startHookListening();
+      }
+      return;
+    }
+
+    // Non-iOS: use native Web Speech API
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert("Voice not supported in this browser. Please use Chrome or Safari.");
+      toast.error('Not Supported', 'Voice input is not available in this browser.');
       return;
     }
 

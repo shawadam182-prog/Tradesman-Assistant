@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { ScheduleEntry, JobPack, Customer } from '../types';
 import {
   ChevronLeft, ChevronRight, Plus, Mic, Sparkles,
@@ -14,6 +13,12 @@ import {
 import { parseScheduleVoiceInput, parseCustomerVoiceInput } from '../src/services/geminiService';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { hapticTap } from '../src/hooks/useHaptic';
+import { useVoiceInput } from '../src/hooks/useVoiceInput';
+import { useToast } from '../src/contexts/ToastContext';
+
+// Detect iOS for voice input fallback
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 interface ScheduleCalendarProps {
   entries: ScheduleEntry[];
@@ -36,10 +41,11 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   onDeleteEntry,
   onBack
 }) => {
+  const toast = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date>(new Date());
   const [viewType, setViewType] = useState<'month' | 'week' | 'day'>('week');
-  
+
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,8 +69,39 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   const recognitionRef = useRef<any>(null);
   const customerRecognitionRef = useRef<any>(null);
   const titleRecognitionRef = useRef<any>(null);
+  const voiceTargetRef = useRef<'booking' | 'customer' | 'title'>('booking');
 
+  // Voice input hook for iOS fallback
+  const handleVoiceResult = useCallback((text: string) => {
+    const target = voiceTargetRef.current;
+    if (target === 'booking') {
+      handleVoiceBooking(text);
+    } else if (target === 'customer') {
+      handleVoiceCustomer(text);
+    } else if (target === 'title') {
+      setDraft(prev => ({ ...prev, title: text }));
+    }
+    setIsListening(false);
+    setIsListeningCustomer(false);
+    setIsListeningTitle(false);
+  }, []);
+
+  const handleVoiceError = useCallback((error: string) => {
+    toast.error('Voice Input', error);
+    setIsListening(false);
+    setIsListeningCustomer(false);
+    setIsListeningTitle(false);
+  }, [toast]);
+
+  const { isListening: isHookListening, startListening: startHookListening, stopListening: stopHookListening } = useVoiceInput({
+    onResult: handleVoiceResult,
+    onError: handleVoiceError,
+  });
+
+  // Native speech recognition setup (for non-iOS)
   useEffect(() => {
+    if (isIOS) return;
+
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
@@ -116,6 +153,52 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
       titleRecognitionRef.current?.abort();
     };
   }, []);
+
+  // Voice input start functions with iOS support
+  const startBookingVoice = () => {
+    if (isListening || isHookListening) {
+      if (isIOS) stopHookListening();
+      else recognitionRef.current?.stop();
+      return;
+    }
+    voiceTargetRef.current = 'booking';
+    if (isIOS) {
+      setIsListening(true);
+      startHookListening();
+    } else {
+      try { recognitionRef.current?.start(); } catch (e) { setIsListening(false); }
+    }
+  };
+
+  const startCustomerVoice = () => {
+    if (isListeningCustomer || isHookListening) {
+      if (isIOS) stopHookListening();
+      else customerRecognitionRef.current?.stop();
+      return;
+    }
+    voiceTargetRef.current = 'customer';
+    if (isIOS) {
+      setIsListeningCustomer(true);
+      startHookListening();
+    } else {
+      try { customerRecognitionRef.current?.start(); } catch (e) { setIsListeningCustomer(false); }
+    }
+  };
+
+  const startTitleVoice = () => {
+    if (isListeningTitle || isHookListening) {
+      if (isIOS) stopHookListening();
+      else titleRecognitionRef.current?.stop();
+      return;
+    }
+    voiceTargetRef.current = 'title';
+    if (isIOS) {
+      setIsListeningTitle(true);
+      startHookListening();
+    } else {
+      try { titleRecognitionRef.current?.start(); } catch (e) { setIsListeningTitle(false); }
+    }
+  };
 
   const handleVoiceBooking = async (transcript: string) => {
     setIsProcessing(true);
@@ -372,15 +455,15 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
             <Plus size={18} /> Book Site
           </button>
 
-          <button 
-            onClick={() => isListening ? recognitionRef.current?.stop() : recognitionRef.current?.start()}
+          <button
+            onClick={startBookingVoice}
             disabled={isProcessing}
             className={`h-12 px-6 rounded-2xl flex items-center gap-3 font-black uppercase text-[10px] tracking-widest transition-all shadow-lg ${
-              isListening ? 'bg-red-500 text-white animate-pulse' : isProcessing ? 'bg-teal-500 text-white' : 'bg-slate-100 text-teal-600 hover:bg-white border-2 border-transparent hover:border-teal-400'
+              (isListening || isHookListening) ? 'bg-red-500 text-white animate-pulse' : isProcessing ? 'bg-teal-500 text-white' : 'bg-slate-100 text-teal-600 hover:bg-white border-2 border-transparent hover:border-teal-400'
             }`}
           >
             {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Mic size={16} />}
-            {isProcessing ? 'Analysing' : isListening ? 'Listening' : 'Voice'}
+            {isProcessing ? 'Analysing' : (isListening || isHookListening) ? 'Listening' : 'Voice'}
           </button>
         </div>
       </div>
@@ -652,7 +735,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                   <h3 className="font-black text-sm md:text-xl text-slate-900 uppercase tracking-tight">Register Client</h3>
                   <button
                     type="button"
-                    onClick={() => isListeningCustomer ? customerRecognitionRef.current?.stop() : customerRecognitionRef.current?.start()}
+                    onClick={startCustomerVoice}
                     disabled={isProcessingCustomer}
                     className={`flex items-center gap-1 px-3 py-1.5 md:px-6 md:py-3 rounded-xl font-black text-[9px] md:text-[10px] uppercase transition-all border ${
                       isListeningCustomer
@@ -787,7 +870,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                       <input className="flex-1 min-w-0 bg-slate-50 border-2 border-slate-100 rounded-[24px] md:rounded-[36px] px-4 py-3 md:px-6 md:py-5 font-black text-lg md:text-2xl text-slate-950 outline-none focus:border-teal-400 focus:bg-white transition-all shadow-inner" value={draft.title || ''} onChange={e => setDraft({...draft, title: e.target.value})} placeholder="e.g. Groundworks" />
                       <button
                         type="button"
-                        onClick={() => isListeningTitle ? titleRecognitionRef.current?.stop() : titleRecognitionRef.current?.start()}
+                        onClick={startTitleVoice}
                         className={`shrink-0 w-[50px] h-[50px] md:w-[70px] md:h-[70px] rounded-[24px] md:rounded-[36px] shadow-lg transition-all active:scale-95 flex items-center justify-center ${
                           isListeningTitle ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-900 text-teal-500 hover:bg-black'
                         }`}

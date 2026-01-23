@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Customer } from '../types';
 import {
   Search, UserPlus, Phone, Mail, MapPin, Trash2, Edit2, X,
@@ -12,6 +11,7 @@ import { validateCustomerData } from '../src/utils/inputValidation';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { PageHeader } from './common/PageHeader';
+import { useVoiceInput } from '../src/hooks/useVoiceInput';
 
 interface CustomerManagerProps {
   customers: Customer[];
@@ -21,14 +21,17 @@ interface CustomerManagerProps {
   onBack?: () => void;
 }
 
+// Detect iOS for voice input fallback
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
 export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, addCustomer: addCustomerProp, updateCustomer: updateCustomerProp, deleteCustomer: deleteCustomerProp, onBack }) => {
   const toast = useToast();
-  // Explicitly type searchTerm as string to avoid unknown inference issues
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [editingId, setEditingId] = useState<string | 'new' | null>(null);
   const [customerForm, setCustomerForm] = useState<Partial<Customer>>({});
   const [error, setError] = useState<string | null>(null);
-  
+
   const [isListeningGlobal, setIsListeningGlobal] = useState(false);
   const [activeFieldVoice, setActiveFieldVoice] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -52,12 +55,42 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
     });
   };
 
+  // Handle voice result from hook (for iOS)
+  const handleVoiceResult = useCallback((text: string) => {
+    if (isListeningGlobalRef.current) {
+      handleParsedSpeech(text);
+    } else if (activeFieldVoiceRef.current) {
+      setCustomerForm(prev => ({ ...prev, [activeFieldVoiceRef.current!]: text.trim() }));
+    }
+    setIsListeningGlobal(false);
+    setActiveFieldVoice(null);
+    isListeningGlobalRef.current = false;
+    activeFieldVoiceRef.current = null;
+  }, []);
+
+  const handleVoiceError = useCallback((error: string) => {
+    toast.error('Voice Input', error);
+    setIsListeningGlobal(false);
+    setActiveFieldVoice(null);
+    isListeningGlobalRef.current = false;
+    activeFieldVoiceRef.current = null;
+  }, [toast]);
+
+  // Voice input hook (used for iOS fallback)
+  const { isListening: isHookListening, startListening: startHookListening, stopListening: stopHookListening } = useVoiceInput({
+    onResult: handleVoiceResult,
+    onError: handleVoiceError,
+  });
+
+  // Native speech recognition setup (for non-iOS)
   useEffect(() => {
+    if (isIOS) return; // Skip native setup on iOS
+
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
-      recognition.continuous = true; // Keep listening through pauses
-      recognition.interimResults = true; // Show what's being heard
+      recognition.continuous = true;
+      recognition.interimResults = true;
       recognition.lang = 'en-GB';
       recognition.maxAlternatives = 1;
 
@@ -65,7 +98,6 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
       let silenceTimeout: NodeJS.Timeout | null = null;
 
       recognition.onend = () => {
-        // Process final transcript when recognition ends
         if (finalTranscript && isListeningGlobalRef.current) {
           handleParsedSpeech(finalTranscript);
         }
@@ -79,7 +111,6 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
       };
 
       recognition.onerror = (e: any) => {
-        // Ignore no-speech errors, they're normal
         if (e.error !== 'no-speech') {
           console.error('Speech recognition error:', e.error);
         }
@@ -103,16 +134,13 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
           }
         }
 
-        // Show interim results to user
         setInterimTranscript(finalTranscript + interim);
 
-        // For single field voice input (not magic fill), update immediately
         const targetField = activeFieldVoiceRef.current;
         if (targetField && !isListeningGlobalRef.current) {
           setCustomerForm(prev => ({ ...prev, [targetField]: (finalTranscript + interim).trim() }));
         }
 
-        // Reset silence timeout - stop after 2 seconds of silence
         if (silenceTimeout) clearTimeout(silenceTimeout);
         silenceTimeout = setTimeout(() => {
           recognition.stop();
@@ -143,17 +171,26 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
   };
 
   const startGlobalListening = () => {
-    if (isListeningGlobal) {
-      recognitionRef.current?.stop();
+    if (isListeningGlobal || isHookListening) {
+      if (isIOS) {
+        stopHookListening();
+      } else {
+        recognitionRef.current?.stop();
+      }
       return;
     }
     isListeningGlobalRef.current = true;
     activeFieldVoiceRef.current = null;
     setIsListeningGlobal(true);
     setActiveFieldVoice(null);
-    try { recognitionRef.current?.start(); } catch (e) {
-      setIsListeningGlobal(false);
-      isListeningGlobalRef.current = false;
+
+    if (isIOS) {
+      startHookListening();
+    } else {
+      try { recognitionRef.current?.start(); } catch (e) {
+        setIsListeningGlobal(false);
+        isListeningGlobalRef.current = false;
+      }
     }
   };
 
@@ -162,11 +199,19 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
     activeFieldVoiceRef.current = fieldName;
     setIsListeningGlobal(false);
     setActiveFieldVoice(fieldName);
-    try { recognitionRef.current?.start(); } catch (e) {
-      setActiveFieldVoice(null);
-      activeFieldVoiceRef.current = null;
+
+    if (isIOS) {
+      startHookListening();
+    } else {
+      try { recognitionRef.current?.start(); } catch (e) {
+        setActiveFieldVoice(null);
+        activeFieldVoiceRef.current = null;
+      }
     }
   };
+
+  // Combined listening state for UI
+  const isAnyListening = isListeningGlobal || isHookListening || activeFieldVoice !== null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -266,23 +311,23 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
                 onClick={startGlobalListening}
                 disabled={isProcessing}
                 className={`flex items-center gap-1 px-3 py-1.5 md:px-6 md:py-3 rounded-xl font-black text-[9px] md:text-[10px] uppercase transition-all border ${
-                  isListeningGlobal
+                  (isListeningGlobal || isHookListening)
                     ? 'bg-red-500 text-white border-red-600 animate-pulse'
                     : isProcessing
                     ? 'bg-teal-500 text-white border-teal-600'
                     : 'bg-white text-teal-600 border-teal-100 hover:bg-teal-50'
                 }`}
               >
-                {isProcessing ? <Loader2 size={10} className="md:w-3 md:h-3 animate-spin" /> : isListeningGlobal ? <MicOff size={10} className="md:w-3 md:h-3" /> : <Sparkles size={10} className="md:w-3 md:h-3" />}
-                <span className="hidden sm:inline">{isProcessing ? 'Analyzing...' : isListeningGlobal ? 'Stop' : 'Voice'}</span>
+                {isProcessing ? <Loader2 size={10} className="md:w-3 md:h-3 animate-spin" /> : (isListeningGlobal || isHookListening) ? <MicOff size={10} className="md:w-3 md:h-3" /> : <Sparkles size={10} className="md:w-3 md:h-3" />}
+                <span className="hidden sm:inline">{isProcessing ? 'Analyzing...' : (isListeningGlobal || isHookListening) ? 'Stop' : 'Voice'}</span>
               </button>
             </div>
 
           {/* Live transcript display */}
-          {(isListeningGlobal || interimTranscript) && (
+          {(isListeningGlobal || isHookListening || interimTranscript) && (
             <div className="bg-slate-800 rounded-lg p-2 md:p-4 border border-slate-700 mb-2 md:mb-4">
               <div className="flex items-center gap-1.5">
-                <div className={`w-1.5 h-1.5 rounded-full ${isListeningGlobal ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
+                <div className={`w-1.5 h-1.5 rounded-full ${(isListeningGlobal || isHookListening) ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
                 <p className="text-white text-xs flex-1 truncate">
                   {interimTranscript || 'Speak now...'}
                 </p>

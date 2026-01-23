@@ -1,12 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { JobPack, ProjectMaterial, Quote } from '../types';
-import { 
-  ShoppingCart, Loader2, Sparkles, 
+import {
+  ShoppingCart, Loader2, Sparkles,
   Mic, MicOff, CheckCircle2, Trash2,
   Plus, Minus, X, Send, ListPlus, PencilLine,
   Info
 } from 'lucide-react';
 import { parseVoiceCommandForItems } from '../src/services/geminiService';
+import { useVoiceInput } from '../src/hooks/useVoiceInput';
+import { useToast } from '../src/contexts/ToastContext';
 
 interface MaterialsTrackerProps {
   project: JobPack;
@@ -14,66 +16,52 @@ interface MaterialsTrackerProps {
   onSaveProject: (project: JobPack) => void;
 }
 
-export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({ 
-  project, quotes, onSaveProject 
+export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
+  project, quotes, onSaveProject
 }) => {
+  const toast = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const [showScratchpad, setShowScratchpad] = useState(false);
   const [scratchpadText, setScratchpadText] = useState('');
   const [quickInput, setQuickInput] = useState('');
-  const recognitionInstance = useRef<any>(null);
+  const voiceTargetRef = useRef<'quick' | 'scratch'>('quick');
 
   // One-tap common materials
   const COMMON_ITEMS = [
-    "C24 Timber", "Cement", "Ballast", "Plasterboard", "Multi-finish", 
+    "C24 Timber", "Cement", "Ballast", "Plasterboard", "Multi-finish",
     "Screws", "PVA", "Expanding Foam", "Sealant", "Sand"
   ];
 
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  // Handle voice result based on target
+  const handleVoiceResult = useCallback((text: string) => {
+    if (voiceTargetRef.current === 'scratch') {
+      setScratchpadText(prev => (prev + ' ' + text).trim());
+    } else {
+      setQuickInput(text);
+      handleQuickAdd(text);
+    }
+  }, []);
+
+  const handleVoiceError = useCallback((error: string) => {
+    toast.error('Voice Input', error);
+  }, [toast]);
+
+  const { isListening, isSupported, startListening: startVoice, stopListening } = useVoiceInput({
+    onResult: handleVoiceResult,
+    onError: handleVoiceError,
+  });
 
   const startListening = (target: 'quick' | 'scratch') => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser. Please use Google Chrome for the best experience.");
+    if (!isSupported) {
+      toast.error('Not Supported', 'Voice input is not available in this browser.');
       return;
     }
-
+    voiceTargetRef.current = target;
     if (isListening) {
-      recognitionInstance.current?.stop();
-      return;
+      stopListening();
+    } else {
+      startVoice();
     }
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-GB';
-
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    
-    recognition.onerror = (event: any) => {
-      setIsListening(false);
-      if (event.error === 'not-allowed') {
-        alert("Microphone access denied. If you are on a Mac, please use Chrome or check Safari's Website Settings.");
-      }
-    };
-
-    recognition.onresult = (event: any) => {
-      if (event.results?.[0]?.[0]?.transcript) {
-        const transcript = event.results[0][0].transcript;
-        if (target === 'scratch') {
-          setScratchpadText(prev => (prev + ' ' + transcript).trim());
-        } else {
-          setQuickInput(transcript);
-          handleQuickAdd(transcript);
-        }
-      }
-    };
-
-    recognitionInstance.current = recognition;
-    recognition.start();
   };
 
   const handleQuickAdd = async (text: string) => {
@@ -223,12 +211,6 @@ export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
         </button>
       </div>
 
-      {/* Browser Tip */}
-      {isSafari && (
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-bold border border-blue-100 italic">
-          <Info size={12}/> Using Safari on Mac? For best voice accuracy, Google Chrome is recommended.
-        </div>
-      )}
 
       {/* Quick Picks - The "Easy Way" */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">

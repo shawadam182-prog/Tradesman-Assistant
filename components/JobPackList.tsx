@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { JobPack, Customer, TIER_LIMITS } from '../types';
 import {
   FolderPlus, User, ArrowRight, Clock,
@@ -11,6 +10,12 @@ import { useSubscription } from '../src/hooks/useFeatureAccess';
 import { UpgradePrompt } from './UpgradePrompt';
 import { PageHeader } from './common/PageHeader';
 import { AddressAutocomplete } from './AddressAutocomplete';
+import { useVoiceInput } from '../src/hooks/useVoiceInput';
+import { useToast } from '../src/contexts/ToastContext';
+
+// Detect iOS for voice input fallback
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 interface JobPackListProps {
   projects: JobPack[];
@@ -25,6 +30,7 @@ interface JobPackListProps {
 export const JobPackList: React.FC<JobPackListProps> = ({
   projects, customers, onOpenProject, onAddProject, onAddCustomer, onDeleteProject, onBack
 }) => {
+  const toast = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -51,7 +57,43 @@ export const JobPackList: React.FC<JobPackListProps> = ({
 
   const recognitionRef = useRef<any>(null);
 
+  // Voice input hook for iOS fallback
+  const handleVoiceResult = useCallback(async (text: string) => {
+    const targetField = activeFieldVoiceRef.current;
+    if (targetField) {
+      setNewCustomer(prev => ({ ...prev, [targetField]: text }));
+    } else {
+      setIsProcessing(true);
+      setCustomerError(null);
+      try {
+        const details = await parseCustomerVoiceInput(text);
+        setNewCustomer(prev => ({ ...prev, ...details }));
+      } catch (err) {
+        setCustomerError("Magic fill failed to parse your voice input.");
+      } finally {
+        setIsProcessing(false);
+      }
+    }
+    setIsListening(false);
+    setIsListeningField(null);
+    activeFieldVoiceRef.current = null;
+  }, []);
+
+  const handleVoiceError = useCallback((error: string) => {
+    toast.error('Voice Input', error);
+    setIsListening(false);
+    setIsListeningField(null);
+    activeFieldVoiceRef.current = null;
+  }, [toast]);
+
+  const { isListening: isHookListening, startListening: startHookListening, stopListening: stopHookListening } = useVoiceInput({
+    onResult: handleVoiceResult,
+    onError: handleVoiceError,
+  });
+
+  // Native speech recognition setup (non-iOS only)
   useEffect(() => {
+    if (isIOS) return;
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
@@ -110,9 +152,19 @@ export const JobPackList: React.FC<JobPackListProps> = ({
   });
 
   const startListening = (fieldName?: string) => {
+    if (isListening || isHookListening) {
+      if (isIOS) stopHookListening();
+      else recognitionRef.current?.stop();
+      return;
+    }
     setIsListeningField(fieldName || null);
     activeFieldVoiceRef.current = fieldName || null;
-    try { recognitionRef.current?.start(); } catch (e) { setIsListening(false); }
+    if (isIOS) {
+      setIsListening(true);
+      startHookListening();
+    } else {
+      try { recognitionRef.current?.start(); } catch (e) { setIsListening(false); }
+    }
   };
 
   const handleQuickAddCustomer = async (e?: React.FormEvent | React.MouseEvent) => {

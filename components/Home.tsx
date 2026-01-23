@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ScheduleEntry, Customer, JobPack, Quote, AppSettings, TIER_LIMITS } from '../types';
 import {
@@ -21,6 +20,11 @@ import { BusinessDashboard } from './BusinessDashboard';
 import { FinancialOverview } from './FinancialOverview';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
 import { UpgradePrompt } from './UpgradePrompt';
+import { useVoiceInput } from '../src/hooks/useVoiceInput';
+
+// Detect iOS for voice input fallback
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 interface HomeProps {
   schedule: ScheduleEntry[];
@@ -167,7 +171,34 @@ export const Home: React.FC<HomeProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  // Voice input hook for iOS fallback
+  const voiceTargetRef = useRef<'reminder' | 'note'>('reminder');
+
+  const handleVoiceResult = useCallback((text: string) => {
+    if (voiceTargetRef.current === 'reminder') {
+      handleVoiceReminder(text);
+    } else {
+      setQuickNotes(prev => (prev ? `${prev}\n${text}` : text));
+    }
+    setIsListeningReminder(false);
+    setIsListeningNote(false);
+  }, []);
+
+  const handleVoiceError = useCallback((error: string) => {
+    toast.error('Voice Input', error);
+    setIsListeningReminder(false);
+    setIsListeningNote(false);
+  }, [toast]);
+
+  const { isListening: isHookListening, startListening: startHookListening, stopListening: stopHookListening } = useVoiceInput({
+    onResult: handleVoiceResult,
+    onError: handleVoiceError,
+  });
+
+  // Native speech recognition setup (for non-iOS)
   useEffect(() => {
+    if (isIOS) return;
+
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       // Setup for Reminders
@@ -206,26 +237,32 @@ export const Home: React.FC<HomeProps> = ({
   }, []);
 
   const startVoiceReminder = () => {
-    if (isListeningReminder) {
-      recognitionRef.current?.stop();
+    if (isListeningReminder || isHookListening) {
+      if (isIOS) stopHookListening();
+      else recognitionRef.current?.stop();
       return;
     }
-    try {
-      recognitionRef.current?.start();
-    } catch (e) {
-      console.error("Mic start failed", e);
+    voiceTargetRef.current = 'reminder';
+    if (isIOS) {
+      setIsListeningReminder(true);
+      startHookListening();
+    } else {
+      try { recognitionRef.current?.start(); } catch (e) { console.error("Mic start failed", e); }
     }
   };
 
   const startVoiceNote = () => {
-    if (isListeningNote) {
-      noteRecognitionRef.current?.stop();
+    if (isListeningNote || isHookListening) {
+      if (isIOS) stopHookListening();
+      else noteRecognitionRef.current?.stop();
       return;
     }
-    try {
-      noteRecognitionRef.current?.start();
-    } catch (e) {
-      console.error("Note mic start failed", e);
+    voiceTargetRef.current = 'note';
+    if (isIOS) {
+      setIsListeningNote(true);
+      startHookListening();
+    } else {
+      try { noteRecognitionRef.current?.start(); } catch (e) { console.error("Note mic start failed", e); }
     }
   };
 

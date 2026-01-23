@@ -304,6 +304,23 @@ const actions: Record<string, (data: any) => Promise<any>> = {
     }
   },
 
+  // Transcribe audio to text (for iOS voice input fallback)
+  async transcribeAudio({ audioBase64, mimeType }: { audioBase64: string; mimeType: string }) {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+    const result = await model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [
+          { text: 'Transcribe this audio exactly as spoken. Return ONLY the transcription text, nothing else. If the audio is unclear or silent, return an empty string.' },
+          { inlineData: { mimeType: mimeType || 'audio/webm', data: audioBase64 } }
+        ]
+      }]
+    });
+
+    return { text: result.response.text()?.trim() || '' };
+  },
+
   // Parse receipt image for expense data
   async parseReceipt({ imageBase64 }: { imageBase64: string }) {
     const model = genAI.getGenerativeModel({

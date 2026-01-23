@@ -16,6 +16,11 @@ import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 import { MaterialsLibrary } from './MaterialsLibrary';
 import { useData } from '../src/contexts/DataContext';
 import { useToast } from '../src/contexts/ToastContext';
+import { useVoiceInput } from '../src/hooks/useVoiceInput';
+
+// Detect iOS for voice input fallback
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 // Draft auto-save key prefix
 const DRAFT_STORAGE_KEY = 'quote_creator_draft';
@@ -159,6 +164,48 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   const recognitionRef = useRef<any>(null);
   const titleRecognitionRef = useRef<any>(null);
   const customerRecognitionRef = useRef<any>(null);
+  const voiceTargetRef = useRef<'command' | 'title' | 'customer'>('command');
+
+  // Voice input hook for iOS fallback
+  const handleVoiceResult = useCallback((text: string) => {
+    const target = voiceTargetRef.current;
+    if (target === 'command') {
+      handleVoiceCommand(text);
+    } else if (target === 'title') {
+      setFormData(prev => ({ ...prev, title: text }));
+    } else if (target === 'customer') {
+      handleCustomerVoiceResult(text);
+    }
+    setIsListening(false);
+    setIsListeningTitle(false);
+    setIsListeningCustomer(false);
+  }, []);
+
+  const handleVoiceError = useCallback((error: string) => {
+    toast.error('Voice Input', error);
+    setIsListening(false);
+    setIsListeningTitle(false);
+    setIsListeningCustomer(false);
+  }, [toast]);
+
+  const { isListening: isHookListening, startListening: startHookListening, stopListening: stopHookListening } = useVoiceInput({
+    onResult: handleVoiceResult,
+    onError: handleVoiceError,
+  });
+
+  // Helper for customer voice (async)
+  const handleCustomerVoiceResult = async (transcript: string) => {
+    setIsProcessingCustomer(true);
+    setCustomerError(null);
+    try {
+      const details = await parseCustomerVoiceInput(transcript);
+      setNewCustomer(prev => ({ ...prev, ...details }));
+    } catch (err) {
+      setCustomerError("Magic fill failed.");
+    } finally {
+      setIsProcessingCustomer(false);
+    }
+  };
 
   useEffect(() => {
     if (formData.customerId) {
@@ -321,8 +368,9 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     });
   };
 
-  // Speech Recognition Setup
+  // Speech Recognition Setup (non-iOS only)
   useEffect(() => {
+    if (isIOS) return; // Skip native setup on iOS
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
@@ -624,8 +672,18 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   };
 
   const handleToggleCustomerVoice = () => {
-    if (isListeningCustomer) { customerRecognitionRef.current?.stop(); }
-    else { customerRecognitionRef.current?.start(); }
+    if (isListeningCustomer || isHookListening) {
+      if (isIOS) stopHookListening();
+      else customerRecognitionRef.current?.stop();
+      return;
+    }
+    voiceTargetRef.current = 'customer';
+    if (isIOS) {
+      setIsListeningCustomer(true);
+      startHookListening();
+    } else {
+      customerRecognitionRef.current?.start();
+    }
   };
 
   const handleSave = () => {
@@ -753,8 +811,17 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
             </div>
             <div className="relative mb-2">
               <textarea className="w-full bg-white border border-teal-100 rounded-xl p-3 min-h-[60px] text-xs font-bold text-slate-900 outline-none focus:border-teal-400 transition-all placeholder:text-teal-300/60 shadow-inner" placeholder="Describe items..." value={aiInput} onChange={e => setAiInput(e.target.value)} />
-              <button onClick={() => isListening ? recognitionRef.current?.stop() : recognitionRef.current?.start()} className={`absolute right-2 bottom-2 p-1.5 rounded-lg shadow-sm transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-teal-500 text-white hover:bg-teal-600'}`}>
-                {isListening ? <MicOff size={14} /> : <Mic size={14} />}
+              <button onClick={() => {
+                if (isListening || isHookListening) {
+                  if (isIOS) stopHookListening();
+                  else recognitionRef.current?.stop();
+                  return;
+                }
+                voiceTargetRef.current = 'command';
+                if (isIOS) { setIsListening(true); startHookListening(); }
+                else { recognitionRef.current?.start(); }
+              }} className={`absolute right-2 bottom-2 p-1.5 rounded-lg shadow-sm transition-all ${(isListening || isHookListening) ? 'bg-red-500 text-white animate-pulse' : 'bg-teal-500 text-white hover:bg-teal-600'}`}>
+                {(isListening || isHookListening) ? <MicOff size={14} /> : <Mic size={14} />}
               </button>
             </div>
             <div className="flex gap-2">
