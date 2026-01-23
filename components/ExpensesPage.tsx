@@ -114,6 +114,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
   const [loading, setLoading] = useState(true);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [filterJobId, setFilterJobId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [scanning, setScanning] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
@@ -500,6 +501,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
 
   const filteredExpenses = expenses.filter(expense => {
     if (filterCategory && expense.category !== filterCategory) return false;
+    if (filterJobId && expense.job_pack?.id !== filterJobId) return false;
     if (searchTerm && !expense.vendor.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     return true;
   });
@@ -616,6 +618,18 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
               className={`px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-colors ${filterCategory === cat.name ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}>{cat.name}</button>
           ))}
         </div>
+        {projects.length > 0 && (
+          <select
+            value={filterJobId || ''}
+            onChange={(e) => setFilterJobId(e.target.value || null)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors border ${filterJobId ? 'bg-teal-50 border-teal-300 text-teal-700' : 'bg-white text-slate-600 border-slate-200'}`}
+          >
+            <option value="">All Jobs</option>
+            {projects.map(p => (
+              <option key={p.id} value={p.id}>{p.title}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden">

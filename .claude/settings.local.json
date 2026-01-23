@@ -4,7 +4,16 @@
       "Bash(if [ -d \"C:/Users/shawa/Tradesman-Assistant\" ])",
       "Bash(then echo \"EXISTS\")",
       "Bash(else echo \"DOES NOT EXIST\")",
-      "Bash(fi:*)"
+      "Bash(fi:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(npm test:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx supabase functions deploy:*)",
+      "Bash(supabase projects:*)",
+      "Bash(supabase link:*)",
+      "Bash(supabase functions deploy:*)"
     ]
   }
 }
