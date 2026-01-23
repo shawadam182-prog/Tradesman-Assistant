@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { QuoteSection, MaterialItem, LabourItem, AppSettings } from '../../types';
 import { MaterialItemRow } from './MaterialItemRow';
 import { LabourItemRow } from './LabourItemRow';
@@ -68,6 +68,19 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
   const labourTotal = calculateSectionLabour(section);
   const calculatedTotal = materialsTotal + labourTotal;
   const displayTotal = section.subsectionPrice !== undefined ? section.subsectionPrice : calculatedTotal;
+
+  // Local state for subsection price input to allow typing decimals
+  const [subsectionPriceInput, setSubsectionPriceInput] = useState<string>(
+    section.subsectionPrice !== undefined ? String(section.subsectionPrice) : ''
+  );
+  const [isEditingSubsectionPrice, setIsEditingSubsectionPrice] = useState(false);
+
+  // Sync local state when external value changes (but not while editing)
+  useEffect(() => {
+    if (!isEditingSubsectionPrice) {
+      setSubsectionPriceInput(section.subsectionPrice !== undefined ? String(section.subsectionPrice) : '');
+    }
+  }, [section.subsectionPrice, isEditingSubsectionPrice]);
 
   return (
     <div className="bg-white p-2 md:p-5 rounded-xl md:rounded-[28px] shadow-md border border-slate-100 md:border-slate-200">
@@ -271,13 +284,24 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
                 type="text"
                 inputMode="decimal"
                 className="bg-transparent border-none text-emerald-700 font-black text-[10px] md:text-lg outline-none w-full"
-                value={section.subsectionPrice !== undefined ? section.subsectionPrice : calculatedTotal.toFixed(2)}
+                value={isEditingSubsectionPrice ? subsectionPriceInput : (section.subsectionPrice !== undefined ? section.subsectionPrice : calculatedTotal.toFixed(2))}
+                onFocus={() => {
+                  setIsEditingSubsectionPrice(true);
+                  setSubsectionPriceInput(section.subsectionPrice !== undefined ? String(section.subsectionPrice) : '');
+                }}
                 onChange={e => {
                   const inputValue = e.target.value;
-                  if (inputValue === '') {
+                  // Allow empty, digits, and one decimal point
+                  if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                    setSubsectionPriceInput(inputValue);
+                  }
+                }}
+                onBlur={() => {
+                  setIsEditingSubsectionPrice(false);
+                  if (subsectionPriceInput === '') {
                     onUpdateSubsectionPrice(section.id, undefined);
                   } else {
-                    const numValue = parseFloat(inputValue);
+                    const numValue = parseFloat(subsectionPriceInput);
                     if (!isNaN(numValue)) {
                       onUpdateSubsectionPrice(section.id, numValue);
                     }
