@@ -255,7 +255,7 @@ export const QuotesList: React.FC<QuotesListProps> = ({
                       Estimate Total
                     </p>
                     <p className="font-black text-slate-900 text-sm md:text-xl tracking-tight">
-                      £{calculateQuoteTotal(quote).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      £{getQuoteGrandTotal(quote, settings).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
 
