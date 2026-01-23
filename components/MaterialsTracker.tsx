@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { parseVoiceCommandForItems } from '../src/services/geminiService';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
+import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 
 interface MaterialsTrackerProps {
@@ -159,7 +160,8 @@ export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
   };
 
   const toggleStatus = (id: string) => {
-    const updated = (project.materials || []).map(m => 
+    hapticTap();
+    const updated = (project.materials || []).map(m =>
       m.id === id ? { ...m, status: m.status === 'delivered' ? 'pending' : 'delivered' } : m
     );
     onSaveProject({ ...project, materials: updated as any });

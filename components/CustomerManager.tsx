@@ -233,6 +233,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
           address: validation.sanitized.address,
           company: validation.sanitized.company || '',
         });
+        hapticSuccess();
         toast.success('Contact Added', `${validation.sanitized.name} added to directory`);
       } else if (editingId) {
         await updateCustomerProp(editingId, {
@@ -242,6 +243,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
           address: validation.sanitized.address,
           company: validation.sanitized.company || '',
         });
+        hapticSuccess();
         toast.success('Contact Updated', 'Changes saved successfully');
       }
 

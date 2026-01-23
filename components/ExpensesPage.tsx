@@ -12,6 +12,7 @@ import { expensesService, expenseCategoriesService, vendorKeywordsService, vendo
 import { CategoryManager } from './CategoryManager';
 import { ExpensesListSkeleton } from './Skeletons';
 import { useToast } from '../src/contexts/ToastContext';
+import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 import { handleApiError } from '../src/utils/errorHandler';
 
 interface Expense {
@@ -457,6 +458,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
       await loadData();
       resetForm();
       setShowAddModal(false);
+      hapticSuccess();
       toast.success('Expense Saved', `£${formData.amount} expense recorded`);
     } catch (error) {
       console.error('Failed to save expense:', error);
@@ -467,6 +469,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
   };
 
   const handleDelete = async (id: string) => {
+    hapticTap();
     if (!confirm('Delete this expense?')) return;
     try {
       await expensesService.delete(id);

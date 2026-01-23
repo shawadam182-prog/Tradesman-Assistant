@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { TEMPLATE_METADATA, TEMPLATE_DESCRIPTIONS, COLOR_SCHEMES, getTemplateConfig } from '../src/lib/invoiceTemplates';
 import { useToast } from '../src/contexts/ToastContext';
+import { hapticSuccess } from '../src/hooks/useHaptic';
 import { handleApiError } from '../src/utils/errorHandler';
 import { userSettingsService } from '../src/services/dataService';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
@@ -157,6 +158,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
 
   const handleSave = async () => {
     if (!onSave) {
+      hapticSuccess();
       toast.success('Settings Saved', 'Your preferences have been updated');
       return;
     }
@@ -164,6 +166,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
     setSaving(true);
     try {
       await onSave(settings);
+      hapticSuccess();
       toast.success('Settings Saved', 'Your preferences have been synchronized');
     } catch (error) {
       console.error('Failed to save settings:', error);

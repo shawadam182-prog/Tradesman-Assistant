@@ -5,6 +5,7 @@ import {
   AlertTriangle, Filter, Plus, Eye, Clock, ChevronDown, ArrowLeft
 } from 'lucide-react';
 import { filingService, DocumentCategory, FiledDocument } from '../src/services/dataService';
+import { hapticTap } from '../src/hooks/useHaptic';
 
 const CATEGORIES: { id: DocumentCategory; label: string; icon: typeof FileText; color: string }[] = [
   { id: 'receipt', label: 'Receipts', icon: FileText, color: 'bg-blue-100 text-blue-600' },
@@ -162,6 +163,7 @@ export const FilingCabinetPage: React.FC<FilingCabinetPageProps> = ({ onBack }) 
   };
 
   const handleDelete = async (id: string) => {
+    hapticTap();
     if (!confirm('Delete this document permanently?')) return;
     setProcessing(id);
     try {

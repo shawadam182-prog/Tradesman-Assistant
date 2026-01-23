@@ -11,6 +11,7 @@ import { UpgradePrompt } from './UpgradePrompt';
 import { PageHeader } from './common/PageHeader';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
+import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 
 // Detect iOS for voice input fallback
@@ -225,6 +226,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
   const handleDeleteProject = async (e: React.MouseEvent, projectId: string) => {
     e.stopPropagation();
     if (!onDeleteProject) return;
+    hapticTap();
     if (!confirm('Delete this job pack? This cannot be undone.')) return;
     setDeletingId(projectId);
     try {

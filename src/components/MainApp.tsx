@@ -6,6 +6,7 @@ import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { hapticSuccess } from '../hooks/useHaptic';
 import { useHistoryNavigation } from '../hooks/useHistoryNavigation';
 import { usePageTracking } from '../hooks/usePageTracking';
 import { Quote, JobPack, Customer } from '../../types';
@@ -191,6 +192,7 @@ const App: React.FC = () => {
       const saved = await saveQuote(quote);
       setViewingQuoteId(saved.id);
       setActiveTab('view');
+      hapticSuccess();
       toast.success('Quote Saved', quote.title);
     } catch (error) {
       console.error('Failed to save quote:', error);

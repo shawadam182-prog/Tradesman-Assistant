@@ -5,6 +5,7 @@ import {
   Zap, Coffee, Phone, Home, Truck, HardHat, Hammer, Lightbulb
 } from 'lucide-react';
 import { expenseCategoriesService } from '../src/services/dataService';
+import { hapticTap } from '../src/hooks/useHaptic';
 
 interface ExpenseCategory {
   id: string;
@@ -146,6 +147,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
       alert('Cannot delete the "Other" category');
       return;
     }
+    hapticTap();
     if (!confirm(`Delete "${name}"? Expenses with this category will be moved to "Other".`)) {
       return;
     }

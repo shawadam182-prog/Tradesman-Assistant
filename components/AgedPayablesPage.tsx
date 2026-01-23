@@ -8,6 +8,7 @@ import {
 import { payablesService, vendorsService, Payable } from '../src/services/dataService';
 import { ExpensesListSkeleton } from './Skeletons';
 import { useToast } from '../src/contexts/ToastContext';
+import { hapticTap } from '../src/hooks/useHaptic';
 import { handleApiError } from '../src/utils/errorHandler';
 
 interface Vendor {
@@ -470,6 +471,7 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
   };
 
   const handleDelete = async (id: string) => {
+    hapticTap();
     if (!confirm('Delete this bill?')) return;
     setProcessing(id);
     try {
