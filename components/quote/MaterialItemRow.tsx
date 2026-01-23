@@ -117,10 +117,14 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
         <div className="flex-1">
           <label className="text-[6px] md:text-xs font-bold text-slate-400 uppercase tracking-wider block leading-none mb-0.5 md:mb-1.5">Price (£)</label>
           <input
-            type="number"
+            type="text"
+            inputMode="decimal"
             className="w-full h-6 md:h-11 bg-white rounded md:rounded-lg text-[10px] md:text-lg font-bold px-0.5 md:px-3 text-center shadow-sm outline-none focus:ring-1 focus:ring-teal-100 md:focus:ring-2 md:focus:ring-teal-200 border border-slate-100 md:border-slate-200"
             value={item.unitPrice || ''}
-            onChange={e => onUpdate(sectionId, item.id, { unitPrice: parseFloat(e.target.value) || 0 })}
+            onChange={e => {
+              const numValue = parseFloat(e.target.value);
+              onUpdate(sectionId, item.id, { unitPrice: isNaN(numValue) ? 0 : numValue });
+            }}
             placeholder="0.00"
           />
         </div>
