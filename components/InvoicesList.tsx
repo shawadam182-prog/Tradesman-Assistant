@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Quote, Customer, AppSettings, TIER_LIMITS } from '../types';
-import { ReceiptText, Eye, Search, CheckCircle2, AlertCircle, Plus, Hash, User, ChevronRight, Trash2, Clock, AlertTriangle } from 'lucide-react';
+import { ReceiptText, Eye, Search, CheckCircle2, AlertCircle, Plus, Hash, User, ChevronRight, Trash2, Clock, AlertTriangle, MapPin } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
@@ -107,19 +107,22 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
     }
   };
 
-  const filtered = quotes.filter(q => {
-    // First apply tab filter
-    if (!filterByTab(q)) return false;
+  const filtered = quotes
+    .filter(q => {
+      // First apply tab filter
+      if (!filterByTab(q)) return false;
 
-    // Then apply search filter
-    const searchLower = searchTerm.toLowerCase();
-    const customer = customers.find(c => c.id === q.customerId);
-    return (
-      q.title.toLowerCase().includes(searchLower) ||
-      (customer?.name?.toLowerCase().includes(searchLower) ?? false) ||
-      (customer?.company?.toLowerCase().includes(searchLower) ?? false)
-    );
-  });
+      // Then apply search filter
+      const searchLower = searchTerm.toLowerCase();
+      const customer = customers.find(c => c.id === q.customerId);
+      return (
+        q.title.toLowerCase().includes(searchLower) ||
+        (customer?.name?.toLowerCase().includes(searchLower) ?? false) ||
+        (customer?.company?.toLowerCase().includes(searchLower) ?? false)
+      );
+    })
+    // Sort by most recently updated first
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
   // Count invoices for each tab (for badges)
   const tabCounts = {
@@ -277,6 +280,12 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                       {customer?.name || 'Unknown'}
                       {customer?.company && <span className="text-teal-600 text-[10px] font-black uppercase not-italic ml-1">({customer.company})</span>}
                     </div>
+                    {(invoice.jobAddress || customer?.address) && (
+                      <div className="flex items-center gap-1 text-slate-400 truncate max-w-[200px]">
+                        <MapPin size={12} className="text-slate-300 shrink-0" />
+                        <span className="truncate">{invoice.jobAddress || customer?.address}</span>
+                      </div>
+                    )}
                     {invoice.dueDate && !isPaid && (
                       <div className={`flex items-center gap-1 text-xs font-black uppercase not-italic ${
                         overdue ? 'text-red-500' : daysUntilDue <= 7 ? 'text-teal-500' : 'text-slate-400'

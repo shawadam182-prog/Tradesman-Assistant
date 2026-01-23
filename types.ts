@@ -179,11 +179,17 @@ export type DocumentTemplate =
 // Alias for backwards compatibility
 export type InvoiceTemplate = DocumentTemplate;
 
+export interface LabourRatePreset {
+  name: string;
+  rate: number;
+}
+
 export interface AppSettings {
   defaultLabourRate: number;
   defaultMarkupPercent: number;
   defaultTaxRate: number;
   defaultCisRate: number;
+  labourRatePresets?: LabourRatePreset[];
   companyName: string;
   companyLogo?: string;
   companyLogoPath?: string;  // Storage path for logo persistence

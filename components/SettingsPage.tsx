@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { AppSettings, QuoteDisplayOptions, DocumentTemplate, TIER_LIMITS } from '../types';
+import { AppSettings, QuoteDisplayOptions, DocumentTemplate, TIER_LIMITS, LabourRatePreset } from '../types';
 import {
   Save, Building2, Calculator, MapPin,
   PoundSterling, CheckCircle, FileText,
@@ -639,6 +639,74 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       />
                     </div>
                   </div>
+
+                  {/* Labour Rate Presets */}
+                  <div className="col-span-1 md:col-span-2 space-y-2 md:space-y-4 pt-4 md:pt-6 border-t border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 px-1">
+                        <HardHat size={14} className="md:w-4 md:h-4 text-blue-500" />
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Labour Rate Presets</label>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-slate-500 italic px-1">
+                      Define quick-select rates for different job types (e.g., Standard, Callout, Overtime).
+                    </p>
+
+                    <div className="space-y-2">
+                      {(settings.labourRatePresets || []).map((preset, index) => (
+                        <div key={index} className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl p-2 md:p-3">
+                          <input
+                            type="text"
+                            className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-blue-400 transition-colors"
+                            value={preset.name}
+                            onChange={e => {
+                              const newPresets = [...(settings.labourRatePresets || [])];
+                              newPresets[index] = { ...preset, name: e.target.value };
+                              setSettings({ ...settings, labourRatePresets: newPresets });
+                            }}
+                            placeholder="Rate name"
+                          />
+                          <div className="flex items-center bg-white border border-slate-200 rounded-lg px-2 py-2 focus-within:border-blue-400 transition-colors">
+                            <PoundSterling size={14} className="text-slate-400 mr-1" />
+                            <input
+                              type="number"
+                              step="0.50"
+                              className="w-16 md:w-20 bg-transparent text-sm font-bold text-slate-900 outline-none"
+                              value={preset.rate}
+                              onChange={e => {
+                                const newPresets = [...(settings.labourRatePresets || [])];
+                                newPresets[index] = { ...preset, rate: parseFloat(e.target.value) || 0 };
+                                setSettings({ ...settings, labourRatePresets: newPresets });
+                              }}
+                              placeholder="0.00"
+                            />
+                            <span className="text-slate-400 text-xs">/hr</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const newPresets = (settings.labourRatePresets || []).filter((_, i) => i !== index);
+                              setSettings({ ...settings, labourRatePresets: newPresets });
+                            }}
+                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Remove preset"
+                          >
+                            <Minus size={16} />
+                          </button>
+                        </div>
+                      ))}
+
+                      <button
+                        onClick={() => {
+                          const newPresets = [...(settings.labourRatePresets || []), { name: '', rate: settings.defaultLabourRate || 65 }];
+                          setSettings({ ...settings, labourRatePresets: newPresets });
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-blue-50 border-2 border-dashed border-blue-200 rounded-xl text-blue-600 font-bold text-xs uppercase tracking-wider hover:bg-blue-100 transition-colors"
+                      >
+                        <Plus size={16} />
+                        Add Rate Preset
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -843,6 +911,72 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         />
                       </div>
                       <p className="text-[9px] text-slate-400 italic px-1">Applied when creating new invoices</p>
+                    </div>
+                  </div>
+
+                  {/* Labour Rate Presets - Invoice Section */}
+                  <div className="space-y-2 md:space-y-4 pt-4 md:pt-6 border-t border-slate-100">
+                    <div className="flex items-center gap-2 px-1">
+                      <HardHat size={14} className="md:w-4 md:h-4 text-blue-500" />
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Labour Rate Presets</label>
+                    </div>
+                    <p className="text-[10px] text-slate-500 italic px-1">
+                      Quick-select rates for labour items (shared with Quote Preferences).
+                    </p>
+
+                    <div className="space-y-2">
+                      {(settings.labourRatePresets || []).map((preset, index) => (
+                        <div key={index} className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl p-2 md:p-3">
+                          <input
+                            type="text"
+                            className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-emerald-400 transition-colors"
+                            value={preset.name}
+                            onChange={e => {
+                              const newPresets = [...(settings.labourRatePresets || [])];
+                              newPresets[index] = { ...preset, name: e.target.value };
+                              setSettings({ ...settings, labourRatePresets: newPresets });
+                            }}
+                            placeholder="Rate name"
+                          />
+                          <div className="flex items-center bg-white border border-slate-200 rounded-lg px-2 py-2 focus-within:border-emerald-400 transition-colors">
+                            <PoundSterling size={14} className="text-slate-400 mr-1" />
+                            <input
+                              type="number"
+                              step="0.50"
+                              className="w-16 md:w-20 bg-transparent text-sm font-bold text-slate-900 outline-none"
+                              value={preset.rate}
+                              onChange={e => {
+                                const newPresets = [...(settings.labourRatePresets || [])];
+                                newPresets[index] = { ...preset, rate: parseFloat(e.target.value) || 0 };
+                                setSettings({ ...settings, labourRatePresets: newPresets });
+                              }}
+                              placeholder="0.00"
+                            />
+                            <span className="text-slate-400 text-xs">/hr</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const newPresets = (settings.labourRatePresets || []).filter((_, i) => i !== index);
+                              setSettings({ ...settings, labourRatePresets: newPresets });
+                            }}
+                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Remove preset"
+                          >
+                            <Minus size={16} />
+                          </button>
+                        </div>
+                      ))}
+
+                      <button
+                        onClick={() => {
+                          const newPresets = [...(settings.labourRatePresets || []), { name: '', rate: settings.defaultLabourRate || 65 }];
+                          setSettings({ ...settings, labourRatePresets: newPresets });
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-50 border-2 border-dashed border-emerald-200 rounded-xl text-emerald-600 font-bold text-xs uppercase tracking-wider hover:bg-emerald-100 transition-colors"
+                      >
+                        <Plus size={16} />
+                        Add Rate Preset
+                      </button>
                     </div>
                   </div>
 

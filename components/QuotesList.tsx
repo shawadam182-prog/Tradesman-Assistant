@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Quote, Customer, AppSettings, TIER_LIMITS } from '../types';
-import { FileText, Plus, Eye, Search, Hash, User, ChevronRight, Trash2, Clock, Send, CheckCircle2, XCircle, ReceiptText } from 'lucide-react';
+import { FileText, Plus, Eye, Search, Hash, User, ChevronRight, Trash2, Clock, Send, CheckCircle2, XCircle, ReceiptText, MapPin } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
@@ -72,19 +72,22 @@ export const QuotesList: React.FC<QuotesListProps> = ({
     }
   };
 
-  const filtered = quotes.filter(q => {
-    // First apply tab filter
-    if (!filterByTab(q)) return false;
+  const filtered = quotes
+    .filter(q => {
+      // First apply tab filter
+      if (!filterByTab(q)) return false;
 
-    // Then apply search filter
-    const searchLower = searchTerm.toLowerCase();
-    const customer = customers.find(c => c.id === q.customerId);
-    return (
-      q.title.toLowerCase().includes(searchLower) ||
-      (customer?.name?.toLowerCase().includes(searchLower) ?? false) ||
-      (customer?.company?.toLowerCase().includes(searchLower) ?? false)
-    );
-  });
+      // Then apply search filter
+      const searchLower = searchTerm.toLowerCase();
+      const customer = customers.find(c => c.id === q.customerId);
+      return (
+        q.title.toLowerCase().includes(searchLower) ||
+        (customer?.name?.toLowerCase().includes(searchLower) ?? false) ||
+        (customer?.company?.toLowerCase().includes(searchLower) ?? false)
+      );
+    })
+    // Sort by most recently updated first
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
   // Count quotes for each tab (for badges)
   const tabCounts = {
@@ -241,11 +244,17 @@ export const QuotesList: React.FC<QuotesListProps> = ({
                     </h3>
                   </div>
 
-                  <div className="flex items-center gap-3 text-slate-500 text-xs font-bold italic">
+                  <div className="flex items-center gap-3 text-slate-500 text-xs font-bold italic flex-wrap">
                     <div className="flex items-center gap-1.5 truncate">
                       <User size={14} className="text-slate-300" />
                       {customer?.name || 'Unknown Client'}
                     </div>
+                    {(quote.jobAddress || customer?.address) && (
+                      <div className="flex items-center gap-1 text-slate-400 truncate max-w-[200px]">
+                        <MapPin size={12} className="text-slate-300 shrink-0" />
+                        <span className="truncate">{quote.jobAddress || customer?.address}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

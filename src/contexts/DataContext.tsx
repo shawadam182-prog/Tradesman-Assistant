@@ -22,7 +22,15 @@ import {
 } from '../services/dataService';
 import { offlineService } from '../services/offlineStorage';
 import { syncManager } from '../services/syncManager';
-import type { Customer, Quote, JobPack, ScheduleEntry, AppSettings, DocumentTemplate, ProjectMaterial, SiteNote, SitePhoto } from '../../types';
+import type { Customer, Quote, JobPack, ScheduleEntry, AppSettings, DocumentTemplate, ProjectMaterial, SiteNote, SitePhoto, LabourRatePreset } from '../../types';
+
+// Default labour rate presets
+const DEFAULT_LABOUR_RATE_PRESETS: LabourRatePreset[] = [
+  { name: 'Standard', rate: 65 },
+  { name: 'Callout (1st Hr)', rate: 85 },
+  { name: 'Overtime', rate: 97.50 },
+  { name: 'Weekend', rate: 97.50 },
+];
 
 // Default settings
 const DEFAULT_SETTINGS: AppSettings = {
@@ -30,6 +38,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultMarkupPercent: 15,
   defaultTaxRate: 20,
   defaultCisRate: 20,
+  labourRatePresets: DEFAULT_LABOUR_RATE_PRESETS,
   companyName: 'My Trade Business',
   companyAddress: '',
   companyLogo: undefined,
@@ -278,6 +287,7 @@ function dbSettingsToApp(dbSettings: any): AppSettings {
     defaultMarkupPercent: Number(dbSettings.default_markup_percent) || 15,
     defaultTaxRate: Number(dbSettings.default_tax_rate) || 20,
     defaultCisRate: Number(dbSettings.default_cis_rate) || 20,
+    labourRatePresets: dbSettings.labour_rate_presets || DEFAULT_LABOUR_RATE_PRESETS,
     companyName: dbSettings.company_name || '',
     companyAddress: dbSettings.company_address || '',
     // Store the path for now, we'll fetch the signed URL separately
@@ -923,6 +933,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       default_markup_percent: updates.defaultMarkupPercent,
       default_tax_rate: updates.defaultTaxRate,
       default_cis_rate: updates.defaultCisRate,
+      labour_rate_presets: updates.labourRatePresets || null,
       company_name: updates.companyName || null,
       company_address: updates.companyAddress || null,
       is_vat_registered: updates.isVatRegistered,

@@ -1,11 +1,12 @@
-import React from 'react';
-import { LabourItem } from '../../types';
-import { Plus, Minus, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { LabourItem, LabourRatePreset } from '../../types';
+import { Plus, Minus, Trash2, ChevronDown } from 'lucide-react';
 
 interface LabourItemRowProps {
   item: LabourItem;
   sectionId: string;
   defaultRate: number;
+  labourRatePresets?: LabourRatePreset[];
   onUpdate: (sectionId: string, itemId: string, updates: Partial<LabourItem>) => void;
   onRemove: (sectionId: string, itemId: string) => void;
   onIncrement: (sectionId: string, itemId: string) => void;
@@ -16,13 +17,33 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
   item,
   sectionId,
   defaultRate,
+  labourRatePresets = [],
   onUpdate,
   onRemove,
   onIncrement,
   onDecrement,
 }) => {
+  const [showRateDropdown, setShowRateDropdown] = useState(false);
   const rate = item.rate || defaultRate;
   const total = item.hours * rate;
+
+  // Find if current rate matches a preset
+  const currentPreset = labourRatePresets.find(p => p.rate === rate);
+  const isCustomRate = item.rate !== undefined && !currentPreset;
+
+  const handlePresetSelect = (preset: LabourRatePreset) => {
+    onUpdate(sectionId, item.id, { rate: preset.rate });
+    setShowRateDropdown(false);
+  };
+
+  const handleCustomRate = (customRate: number) => {
+    onUpdate(sectionId, item.id, { rate: customRate });
+  };
+
+  const handleUseDefault = () => {
+    onUpdate(sectionId, item.id, { rate: undefined });
+    setShowRateDropdown(false);
+  };
 
   return (
     <div className="bg-blue-50 p-0.5 md:p-3 rounded md:rounded-xl mb-1 md:mb-2">
@@ -72,7 +93,101 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
           </button>
         </div>
         <div className="flex items-center gap-1 md:gap-2">
-          <span className="text-[8px] md:text-sm text-slate-400">@ £{rate}/hr</span>
+          {/* Rate selector dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowRateDropdown(!showRateDropdown)}
+              className={`flex items-center gap-0.5 md:gap-1 text-[8px] md:text-sm px-1.5 md:px-2 py-0.5 md:py-1 rounded md:rounded-lg border transition-all ${
+                isCustomRate
+                  ? 'bg-amber-50 border-amber-200 text-amber-700'
+                  : currentPreset
+                    ? 'bg-blue-100 border-blue-200 text-blue-700'
+                    : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300'
+              }`}
+            >
+              <span className="font-bold">
+                {currentPreset ? currentPreset.name : isCustomRate ? 'Custom' : 'Default'}
+              </span>
+              <span className="text-slate-400">£{rate}/hr</span>
+              <ChevronDown size={10} className="md:hidden" />
+              <ChevronDown size={14} className="hidden md:block" />
+            </button>
+
+            {showRateDropdown && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowRateDropdown(false)}
+                />
+                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg md:rounded-xl shadow-xl z-50 min-w-[140px] md:min-w-[180px] overflow-hidden">
+                  {/* Default rate option */}
+                  <button
+                    type="button"
+                    onClick={handleUseDefault}
+                    className={`w-full text-left px-2 md:px-3 py-1.5 md:py-2 text-[10px] md:text-sm hover:bg-slate-50 transition-colors border-b border-slate-100 ${
+                      !item.rate ? 'bg-slate-50 font-bold' : ''
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span>Default</span>
+                      <span className="text-slate-400">£{defaultRate}/hr</span>
+                    </div>
+                  </button>
+
+                  {/* Preset options */}
+                  {labourRatePresets.map((preset) => (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => handlePresetSelect(preset)}
+                      className={`w-full text-left px-2 md:px-3 py-1.5 md:py-2 text-[10px] md:text-sm hover:bg-blue-50 transition-colors ${
+                        currentPreset?.name === preset.name ? 'bg-blue-50 text-blue-700 font-bold' : ''
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span>{preset.name}</span>
+                        <span className="text-slate-400">£{preset.rate}/hr</span>
+                      </div>
+                    </button>
+                  ))}
+
+                  {/* Custom rate input */}
+                  <div className="px-2 md:px-3 py-1.5 md:py-2 border-t border-slate-100 bg-slate-50">
+                    <label className="text-[8px] md:text-xs text-slate-400 font-bold uppercase tracking-wider mb-1 block">
+                      Custom Rate
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400 text-[10px] md:text-sm">£</span>
+                      <input
+                        type="number"
+                        step="0.50"
+                        placeholder={String(defaultRate)}
+                        className="w-full bg-white border border-slate-200 rounded px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-sm font-bold outline-none focus:border-blue-400"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const value = parseFloat((e.target as HTMLInputElement).value);
+                            if (!isNaN(value) && value > 0) {
+                              handleCustomRate(value);
+                              setShowRateDropdown(false);
+                            }
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = parseFloat(e.target.value);
+                          if (!isNaN(value) && value > 0) {
+                            handleCustomRate(value);
+                          }
+                        }}
+                      />
+                      <span className="text-slate-400 text-[10px] md:text-sm">/hr</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
           <div className="bg-blue-600 text-white px-2 md:px-3 py-0.5 md:py-1.5 rounded md:rounded-lg font-black text-[10px] md:text-base">
             £{total.toFixed(2)}
           </div>

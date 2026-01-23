@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { QuoteSection, MaterialItem, LabourItem, AppSettings } from '../../types';
+import { QuoteSection, MaterialItem, LabourItem, AppSettings, LabourRatePreset } from '../../types';
 import { MaterialItemRow } from './MaterialItemRow';
 import { LabourItemRow } from './LabourItemRow';
 import { Trash2, Plus, Package, Type, HardHat, PoundSterling } from 'lucide-react';
@@ -191,6 +191,7 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
             item={labourItem}
             sectionId={section.id}
             defaultRate={sectionRate}
+            labourRatePresets={settings.labourRatePresets}
             onUpdate={onUpdateLabourItem}
             onRemove={onRemoveLabourItem}
             onIncrement={onIncrementLabourHours}

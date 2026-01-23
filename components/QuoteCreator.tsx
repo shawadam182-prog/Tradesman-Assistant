@@ -171,29 +171,72 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     }
   }, [draftRestored, toast]);
 
+  // Helper function to save draft immediately
+  const saveDraftNow = useCallback(() => {
+    const hasContent = formData.title ||
+      formData.customerId ||
+      formData.jobAddress ||
+      formData.dueDate ||
+      formData.sections?.some(s => s.items.some(i => i.name) || s.labourItems?.some(l => l.description));
+
+    if (!hasContent) return;
+
+    try {
+      const key = getDraftStorageKey();
+      const dataToSave = {
+        ...formData,
+        _draftSavedAt: Date.now()
+      };
+      localStorage.setItem(key, JSON.stringify(dataToSave));
+    } catch (e) {
+      console.error('Failed to save draft:', e);
+    }
+  }, [formData, getDraftStorageKey]);
+
   // Auto-save draft to localStorage whenever formData changes (debounced)
   useEffect(() => {
-    // Don't save if form is essentially empty (no title, no items with names)
+    // Don't save if form is essentially empty (no meaningful content)
     const hasContent = formData.title ||
+      formData.customerId ||
+      formData.jobAddress ||
+      formData.dueDate ||
       formData.sections?.some(s => s.items.some(i => i.name) || s.labourItems?.some(l => l.description));
 
     if (!hasContent) return;
 
     const timeoutId = setTimeout(() => {
-      try {
-        const key = getDraftStorageKey();
-        const dataToSave = {
-          ...formData,
-          _draftSavedAt: Date.now()
-        };
-        localStorage.setItem(key, JSON.stringify(dataToSave));
-      } catch (e) {
-        console.error('Failed to save draft:', e);
-      }
+      saveDraftNow();
     }, 1000); // Debounce: save 1 second after last change
 
     return () => clearTimeout(timeoutId);
-  }, [formData, getDraftStorageKey]);
+  }, [formData, saveDraftNow]);
+
+  // Save draft immediately when page becomes hidden (mobile app switch) or before unload
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        saveDraftNow();
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      saveDraftNow();
+    };
+
+    const handlePageHide = () => {
+      saveDraftNow();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handlePageHide);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handlePageHide);
+    };
+  }, [saveDraftNow]);
 
   // Clear draft from localStorage
   const clearDraft = useCallback(() => {
