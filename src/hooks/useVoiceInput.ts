@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { hapticTap, hapticSuccess } from './useHaptic';
 
 interface UseVoiceInputOptions {
   onResult: (text: string) => void;
@@ -73,11 +74,15 @@ export function useVoiceInput({ onResult, onError, lang = 'en-GB' }: UseVoiceInp
     recognition.interimResults = false;
     recognition.lang = lang;
 
-    recognition.onstart = () => setIsListening(true);
+    recognition.onstart = () => {
+      hapticTap();
+      setIsListening(true);
+    };
     recognition.onend = () => setIsListening(false);
 
     recognition.onresult = (event: any) => {
       const text = event.results[0][0].transcript;
+      hapticSuccess();
       onResult(text);
     };
 
@@ -127,6 +132,7 @@ export function useVoiceInput({ onResult, onError, lang = 'en-GB' }: UseVoiceInp
           try {
             const text = await transcribeWithCloud(audioBlob);
             if (text) {
+              hapticSuccess();
               onResult(text);
             } else {
               onError?.('No speech detected. Please try again.');
@@ -146,6 +152,7 @@ export function useVoiceInput({ onResult, onError, lang = 'en-GB' }: UseVoiceInp
       };
 
       setIsListening(true);
+      hapticTap();
       mediaRecorder.start();
 
       // Auto-stop after 10 seconds to prevent very long recordings
@@ -182,6 +189,8 @@ export function useVoiceInput({ onResult, onError, lang = 'en-GB' }: UseVoiceInp
   }, [isListening, startNativeListening, startMediaRecorderListening, onError]);
 
   const stopListening = useCallback(() => {
+    hapticTap();
+
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
