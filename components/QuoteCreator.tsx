@@ -550,7 +550,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   return (
     <div className="max-w-4xl mx-auto pb-40 md:pb-32 bg-slate-50 min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-white border-b border-slate-100 p-4 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 p-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <button onClick={handleCancel} className="p-2 -ml-2 text-slate-400 hover:text-slate-700">
             <ArrowLeft size={20} />
