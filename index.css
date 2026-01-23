@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* PWA Animations */
 @keyframes slide-up {
   from {
