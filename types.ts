@@ -181,6 +181,7 @@ export type InvoiceTemplate = DocumentTemplate;
 
 export interface AppSettings {
   defaultLabourRate: number;
+  defaultMarkupPercent: number;
   defaultTaxRate: number;
   defaultCisRate: number;
   companyName: string;

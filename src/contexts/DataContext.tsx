@@ -27,6 +27,7 @@ import type { Customer, Quote, JobPack, ScheduleEntry, AppSettings, DocumentTemp
 // Default settings
 const DEFAULT_SETTINGS: AppSettings = {
   defaultLabourRate: 65,
+  defaultMarkupPercent: 15,
   defaultTaxRate: 20,
   defaultCisRate: 20,
   companyName: 'My Trade Business',
@@ -274,6 +275,7 @@ function dbScheduleToApp(dbEntry: any): ScheduleEntry {
 function dbSettingsToApp(dbSettings: any): AppSettings {
   return {
     defaultLabourRate: Number(dbSettings.default_labour_rate) || 65,
+    defaultMarkupPercent: Number(dbSettings.default_markup_percent) || 15,
     defaultTaxRate: Number(dbSettings.default_tax_rate) || 20,
     defaultCisRate: Number(dbSettings.default_cis_rate) || 20,
     companyName: dbSettings.company_name || '',
@@ -918,6 +920,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateSettings = async (updates: Partial<AppSettings>) => {
     await userSettingsService.update({
       default_labour_rate: updates.defaultLabourRate,
+      default_markup_percent: updates.defaultMarkupPercent,
       default_tax_rate: updates.defaultTaxRate,
       default_cis_rate: updates.defaultCisRate,
       company_name: updates.companyName || null,

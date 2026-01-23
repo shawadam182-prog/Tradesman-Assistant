@@ -127,7 +127,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         customerId: '',
         sections: [{ id: Math.random().toString(36).substr(2, 9), title: 'Work Section 1', items: [], labourHours: 0 }],
         labourRate: settings.defaultLabourRate,
-        markupPercent: 15,
+        markupPercent: settings.defaultMarkupPercent ?? 15,
         taxPercent: settings.enableVat ? settings.defaultTaxRate : 0,
         cisPercent: settings.enableCis ? settings.defaultCisRate : 0,
         status: 'draft',
