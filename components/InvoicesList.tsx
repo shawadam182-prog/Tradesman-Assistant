@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Quote, Customer, AppSettings, TIER_LIMITS } from '../types';
-import { ReceiptText, Eye, Search, CheckCircle2, AlertCircle, Plus, Hash, User, ChevronRight, Trash2, Clock, AlertTriangle, MapPin } from 'lucide-react';
+import { ReceiptText, Eye, Search, CheckCircle2, AlertCircle, Plus, Hash, User, ChevronRight, Trash2, Clock, AlertTriangle, MapPin, ArrowUpDown } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
@@ -41,12 +41,30 @@ interface InvoicesListProps {
 // Tab filter types
 type InvoiceFilterTab = 'all' | 'draft' | 'unpaid' | 'overdue' | 'cancelled';
 
+// Sort options
+type SortOption = 'updated_desc' | 'updated_asc' | 'created_desc' | 'created_asc' | 'amount_desc' | 'amount_asc' | 'customer_asc' | 'customer_desc' | 'title_asc' | 'title_desc';
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'updated_desc', label: 'Recently Updated' },
+  { value: 'updated_asc', label: 'Oldest Updated' },
+  { value: 'created_desc', label: 'Newest Created' },
+  { value: 'created_asc', label: 'Oldest Created' },
+  { value: 'amount_desc', label: 'Highest Amount' },
+  { value: 'amount_asc', label: 'Lowest Amount' },
+  { value: 'customer_asc', label: 'Customer A-Z' },
+  { value: 'customer_desc', label: 'Customer Z-A' },
+  { value: 'title_asc', label: 'Title A-Z' },
+  { value: 'title_desc', label: 'Title Z-A' },
+];
+
 export const InvoicesList: React.FC<InvoicesListProps> = ({
   quotes, customers, settings, onViewQuote, onCreateInvoice, onDeleteInvoice, onBack
 }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [activeTab, setActiveTab] = React.useState<InvoiceFilterTab>('all');
   const [showUpgradePrompt, setShowUpgradePrompt] = React.useState(false);
+  const [sortBy, setSortBy] = React.useState<SortOption>('updated_desc');
+  const [showSortDropdown, setShowSortDropdown] = React.useState(false);
   const toast = useToast();
 
   // Get all invoices for limit checking
@@ -86,6 +104,39 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
     return subtotal + markup + tax;
   };
 
+  // Sort function
+  const sortInvoices = (invoices: Quote[]): Quote[] => {
+    return [...invoices].sort((a, b) => {
+      const customerA = customers.find(c => c.id === a.customerId);
+      const customerB = customers.find(c => c.id === b.customerId);
+
+      switch (sortBy) {
+        case 'updated_desc':
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        case 'updated_asc':
+          return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+        case 'created_desc':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'created_asc':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'amount_desc':
+          return calculateQuoteTotal(b) - calculateQuoteTotal(a);
+        case 'amount_asc':
+          return calculateQuoteTotal(a) - calculateQuoteTotal(b);
+        case 'customer_asc':
+          return (customerA?.name || '').localeCompare(customerB?.name || '');
+        case 'customer_desc':
+          return (customerB?.name || '').localeCompare(customerA?.name || '');
+        case 'title_asc':
+          return a.title.localeCompare(b.title);
+        case 'title_desc':
+          return b.title.localeCompare(a.title);
+        default:
+          return 0;
+      }
+    });
+  };
+
   // Filter by tab status first
   const filterByTab = (invoice: Quote): boolean => {
     switch (activeTab) {
@@ -107,8 +158,8 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
     }
   };
 
-  const filtered = quotes
-    .filter(q => {
+  const filtered = sortInvoices(
+    quotes.filter(q => {
       // First apply tab filter
       if (!filterByTab(q)) return false;
 
@@ -121,8 +172,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
         (customer?.company?.toLowerCase().includes(searchLower) ?? false)
       );
     })
-    // Sort by most recently updated first
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  );
 
   // Count invoices for each tab (for badges)
   const tabCounts = {
@@ -194,15 +244,60 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
         ))}
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hidden sm:block" size={20} />
-        <input
-          type="text"
-          placeholder="Search invoices..."
-          className="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 px-4 sm:pl-12 pr-4 font-bold text-slate-900 focus:border-teal-200 outline-none shadow-sm transition-all"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-        />
+      {/* Search and Sort Row */}
+      <div className="flex gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hidden sm:block" size={20} />
+          <input
+            type="text"
+            placeholder="Search invoices..."
+            className="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 px-4 sm:pl-12 pr-4 font-bold text-slate-900 focus:border-teal-200 outline-none shadow-sm transition-all"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        {/* Sort Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              hapticTap();
+              setShowSortDropdown(!showSortDropdown);
+            }}
+            className="flex items-center gap-2 bg-white border-2 border-slate-100 hover:border-slate-200 rounded-2xl px-4 py-4 font-bold text-slate-700 transition-all"
+          >
+            <ArrowUpDown size={18} className="text-slate-400" />
+            <span className="hidden sm:inline text-sm">{SORT_OPTIONS.find(o => o.value === sortBy)?.label}</span>
+          </button>
+
+          {showSortDropdown && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowSortDropdown(false)}
+              />
+              <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border-2 border-slate-100 py-2 z-50 min-w-[200px]">
+                {SORT_OPTIONS.map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      hapticTap();
+                      setSortBy(option.value);
+                      setShowSortDropdown(false);
+                    }}
+                    className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-all ${
+                      sortBy === option.value
+                        ? 'bg-teal-50 text-teal-700'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Summary Tally */}

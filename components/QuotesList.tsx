@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Quote, Customer, AppSettings, TIER_LIMITS } from '../types';
-import { FileText, Plus, Eye, Search, Hash, User, ChevronRight, Trash2, Clock, Send, CheckCircle2, XCircle, ReceiptText, MapPin } from 'lucide-react';
+import { FileText, Plus, Eye, Search, Hash, User, ChevronRight, Trash2, Clock, Send, CheckCircle2, XCircle, ReceiptText, MapPin, ArrowUpDown, ChevronDown } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
@@ -24,12 +24,30 @@ interface QuotesListProps {
 // Tab filter types for quotes
 type QuoteFilterTab = 'all' | 'draft' | 'pending' | 'accepted' | 'declined';
 
+// Sort options
+type SortOption = 'updated_desc' | 'updated_asc' | 'created_desc' | 'created_asc' | 'amount_desc' | 'amount_asc' | 'customer_asc' | 'customer_desc' | 'title_asc' | 'title_desc';
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'updated_desc', label: 'Last Updated (Newest)' },
+  { value: 'updated_asc', label: 'Last Updated (Oldest)' },
+  { value: 'created_desc', label: 'Date Created (Newest)' },
+  { value: 'created_asc', label: 'Date Created (Oldest)' },
+  { value: 'amount_desc', label: 'Amount (Highest)' },
+  { value: 'amount_asc', label: 'Amount (Lowest)' },
+  { value: 'customer_asc', label: 'Customer (A-Z)' },
+  { value: 'customer_desc', label: 'Customer (Z-A)' },
+  { value: 'title_asc', label: 'Title (A-Z)' },
+  { value: 'title_desc', label: 'Title (Z-A)' },
+];
+
 export const QuotesList: React.FC<QuotesListProps> = ({
   quotes, customers, settings, onViewQuote, onEditQuote, onCreateQuote, onDeleteQuote, onBack
 }) => {
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [activeTab, setActiveTab] = React.useState<QuoteFilterTab>('all');
-  const [showUpgradePrompt, setShowUpgradePrompt] = React.useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState<QuoteFilterTab>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('updated_desc');
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const toast = useToast();
 
   // Get all quotes (estimates + quotations) for limit checking
@@ -72,6 +90,37 @@ export const QuotesList: React.FC<QuotesListProps> = ({
     }
   };
 
+  // Sort function based on selected option
+  const sortQuotes = (a: Quote, b: Quote): number => {
+    const customerA = customers.find(c => c.id === a.customerId);
+    const customerB = customers.find(c => c.id === b.customerId);
+
+    switch (sortBy) {
+      case 'updated_desc':
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      case 'updated_asc':
+        return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+      case 'created_desc':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case 'created_asc':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case 'amount_desc':
+        return getQuoteGrandTotal(b, settings) - getQuoteGrandTotal(a, settings);
+      case 'amount_asc':
+        return getQuoteGrandTotal(a, settings) - getQuoteGrandTotal(b, settings);
+      case 'customer_asc':
+        return (customerA?.name || '').localeCompare(customerB?.name || '');
+      case 'customer_desc':
+        return (customerB?.name || '').localeCompare(customerA?.name || '');
+      case 'title_asc':
+        return a.title.localeCompare(b.title);
+      case 'title_desc':
+        return b.title.localeCompare(a.title);
+      default:
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    }
+  };
+
   const filtered = quotes
     .filter(q => {
       // First apply tab filter
@@ -86,8 +135,7 @@ export const QuotesList: React.FC<QuotesListProps> = ({
         (customer?.company?.toLowerCase().includes(searchLower) ?? false)
       );
     })
-    // Sort by most recently updated first
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    .sort(sortQuotes);
 
   // Count quotes for each tab (for badges)
   const tabCounts = {
@@ -161,15 +209,52 @@ export const QuotesList: React.FC<QuotesListProps> = ({
         ))}
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hidden sm:block" size={20} />
-        <input
-          type="text"
-          placeholder="Search quotes or customers..."
-          className="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 px-4 sm:pl-14 pr-4 font-bold text-slate-900 focus:border-teal-200 outline-none shadow-sm transition-all"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-        />
+      {/* Search and Sort Row */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hidden sm:block" size={20} />
+          <input
+            type="text"
+            placeholder="Search quotes or customers..."
+            className="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 px-4 sm:pl-14 pr-4 font-bold text-slate-900 focus:border-teal-200 outline-none shadow-sm transition-all"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        {/* Sort Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setShowSortDropdown(!showSortDropdown)}
+            className="h-full flex items-center gap-2 bg-white border-2 border-slate-100 rounded-2xl px-4 font-bold text-slate-600 hover:border-slate-200 transition-all shadow-sm"
+          >
+            <ArrowUpDown size={18} className="text-slate-400" />
+            <span className="hidden md:inline text-sm">{SORT_OPTIONS.find(o => o.value === sortBy)?.label.split(' (')[0]}</span>
+            <ChevronDown size={16} className="text-slate-400" />
+          </button>
+
+          {showSortDropdown && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowSortDropdown(false)} />
+              <div className="absolute right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 min-w-[200px] overflow-hidden">
+                {SORT_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setSortBy(option.value);
+                      setShowSortDropdown(false);
+                    }}
+                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors ${
+                      sortBy === option.value ? 'bg-teal-50 text-teal-700 font-bold' : 'text-slate-600'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Summary Tally */}
