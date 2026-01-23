@@ -601,6 +601,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     </div>
                   </div>
                   <div className="space-y-1 md:space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Markup (%)</label>
+                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-teal-400 focus-within:bg-white transition-all">
+                      <Calculator size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
+                      <input
+                        type="number"
+                        className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
+                        value={settings.defaultMarkupPercent || ''}
+                        onChange={e => handleNumericChange('defaultMarkupPercent', e.target.value)}
+                        placeholder="15"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1 md:space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Standard VAT Rate (%)</label>
                     <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-teal-400 focus-within:bg-white transition-all">
                       <Landmark size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
@@ -799,6 +812,37 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         onChange={e => setSettings({...settings, invoicePrefix: e.target.value.toUpperCase()})}
                         placeholder="INV-"
                       />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div className="space-y-1 md:space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Labour Rate (£/hr)</label>
+                      <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
+                        <PoundSterling size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
+                        <input
+                          type="number"
+                          className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
+                          value={settings.defaultLabourRate || ''}
+                          onChange={e => handleNumericChange('defaultLabourRate', e.target.value)}
+                          placeholder="65.00"
+                        />
+                      </div>
+                      <p className="text-[9px] text-slate-400 italic px-1">Applied when creating new invoices</p>
+                    </div>
+                    <div className="space-y-1 md:space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Markup (%)</label>
+                      <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
+                        <Calculator size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
+                        <input
+                          type="number"
+                          className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
+                          value={settings.defaultMarkupPercent || ''}
+                          onChange={e => handleNumericChange('defaultMarkupPercent', e.target.value)}
+                          placeholder="15"
+                        />
+                      </div>
+                      <p className="text-[9px] text-slate-400 italic px-1">Applied when creating new invoices</p>
                     </div>
                   </div>
 
