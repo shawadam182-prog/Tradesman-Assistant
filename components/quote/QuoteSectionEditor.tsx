@@ -27,6 +27,7 @@ interface QuoteSectionEditorProps {
   onDecrementLabourHours: (sectionId: string, itemId: string) => void;
   // Section handlers
   onUpdateTitle: (sectionId: string, title: string) => void;
+  onUpdateDescription: (sectionId: string, description: string) => void;
   onUpdateLabourCost: (sectionId: string, cost: number) => void;
   onUpdateSubsectionPrice: (sectionId: string, price: number | undefined) => void;
   onRemoveSection: (sectionId: string) => void;
@@ -55,6 +56,7 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
   onIncrementLabourHours,
   onDecrementLabourHours,
   onUpdateTitle,
+  onUpdateDescription,
   onUpdateLabourCost,
   onUpdateSubsectionPrice,
   onRemoveSection,
@@ -84,9 +86,13 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
               placeholder="Job Section Title (e.g. Rewire Kitchen)"
             />
           </div>
-          <p className="text-[8px] md:text-xs font-black text-slate-400 uppercase tracking-widest italic ml-8 md:ml-[52px]">
-            Work Specifications & Labour
-          </p>
+          <input
+            type="text"
+            className="text-[10px] md:text-sm text-slate-500 outline-none focus:text-slate-700 transition-colors w-full ml-8 md:ml-[52px] bg-transparent placeholder:text-slate-300 placeholder:italic"
+            value={section.description || ''}
+            onChange={e => onUpdateDescription(section.id, e.target.value)}
+            placeholder="Add a description of this work..."
+          />
         </div>
         <div className="flex gap-1 md:gap-2">
           <button
