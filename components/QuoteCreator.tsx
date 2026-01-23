@@ -43,8 +43,12 @@ interface QuoteCreatorProps {
 export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   existingQuote, projectId, initialType = 'estimate', customers, settings, onSave, onAddCustomer, onCancel
 }) => {
-  const { services } = useData();
+  const { services, saveQuote } = useData();
   const toast = useToast();
+
+  // Track if we've saved to DB yet (for new quotes)
+  const hasSavedToDbRef = useRef(!!existingQuote);
+  const dbSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -237,6 +241,54 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       window.removeEventListener('pagehide', handlePageHide);
     };
   }, [saveDraftNow]);
+
+  // Auto-save to database (debounced, longer delay)
+  // This makes the quote appear in the list view
+  useEffect(() => {
+    // Don't auto-save if form is essentially empty
+    const hasContent = formData.title ||
+      formData.customerId ||
+      formData.jobAddress ||
+      formData.sections?.some(s => s.items.some(i => i.name) || s.labourItems?.some(l => l.description));
+
+    if (!hasContent) return;
+
+    // Clear any pending save
+    if (dbSaveTimeoutRef.current) {
+      clearTimeout(dbSaveTimeoutRef.current);
+    }
+
+    // Debounce database saves (3 seconds after last change)
+    dbSaveTimeoutRef.current = setTimeout(async () => {
+      try {
+        // Prepare the quote for saving
+        const quoteToSave: Quote = {
+          ...formData,
+          id: formData.id || crypto.randomUUID(),
+          status: formData.status || 'draft',
+          createdAt: formData.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        } as Quote;
+
+        // Save to database
+        const savedQuote = await saveQuote(quoteToSave);
+
+        // Update formData with the saved quote's ID (for new quotes)
+        if (!hasSavedToDbRef.current && savedQuote.id) {
+          setFormData(prev => ({ ...prev, id: savedQuote.id }));
+          hasSavedToDbRef.current = true;
+        }
+      } catch (e) {
+        console.error('Failed to auto-save to database:', e);
+      }
+    }, 3000);
+
+    return () => {
+      if (dbSaveTimeoutRef.current) {
+        clearTimeout(dbSaveTimeoutRef.current);
+      }
+    };
+  }, [formData, saveQuote]);
 
   // Clear draft from localStorage
   const clearDraft = useCallback(() => {
