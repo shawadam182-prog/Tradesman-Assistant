@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppSettings, QuoteDisplayOptions, DocumentTemplate, TIER_LIMITS, LabourRatePreset } from '../types';
 import {
   Save, Building2, Calculator, MapPin,
@@ -53,6 +53,28 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const currentJobPackCount = projects.length;
   const currentCustomerCount = customers.length;
   const limits = subscription.usageLimits || TIER_LIMITS[subscription.tier];
+
+  // Handle checkout success/cancel from Stripe return URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkoutStatus = params.get('checkout');
+
+    if (checkoutStatus === 'success') {
+      toast.success(
+        'Subscription Activated! 🎉',
+        'Welcome to your new plan. Your premium features are now unlocked.'
+      );
+      // Clean up the URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (checkoutStatus === 'cancelled') {
+      toast.info(
+        'Checkout Cancelled',
+        'No worries! You can upgrade anytime from your subscription settings.'
+      );
+      // Clean up the URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [toast]);
 
   const handleUpgrade = async (tier: 'professional' | 'business') => {
     setUpgradingTier(tier);
@@ -216,11 +238,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const CategoryButton = ({ id, label, icon: Icon, color }: { id: SettingsCategory, label: string, icon: any, color: string }) => (
     <button
       onClick={() => setActiveCategory(id)}
-      className={`w-full flex items-center justify-between p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl md:rounded-[24px] transition-all border-2 ${
-        activeCategory === id
-        ? 'bg-gradient-to-r from-teal-600 to-teal-500 text-white border-teal-500 shadow-xl shadow-teal-500/25'
-        : 'bg-white text-slate-500 border-slate-100 hover:border-teal-200 hover:bg-teal-50/30'
-      }`}
+      className={`w-full flex items-center justify-between p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl md:rounded-[24px] transition-all border-2 ${activeCategory === id
+          ? 'bg-gradient-to-r from-teal-600 to-teal-500 text-white border-teal-500 shadow-xl shadow-teal-500/25'
+          : 'bg-white text-slate-500 border-slate-100 hover:border-teal-200 hover:bg-teal-50/30'
+        }`}
     >
       <div className="flex items-center gap-2 sm:gap-3 md:gap-4 text-left">
         <div className={`p-2 sm:p-2.5 rounded-xl sm:rounded-2xl ${activeCategory === id ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-400'}`}>
@@ -240,7 +261,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row gap-4 md:gap-10">
-        
+
         {/* Sidebar Navigation */}
         <aside className="md:w-80 shrink-0 space-y-4">
           <div className="mb-4 md:mb-10 px-2">
@@ -260,7 +281,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-2 md:space-y-3">
             <CategoryButton id="subscription" label="Subscription" icon={Crown} color="bg-purple-500 text-white" />
             <CategoryButton id="company" label="My Company" icon={Building} color="bg-amber-500 text-slate-900" />
@@ -299,19 +320,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-10">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
-                        <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${
-                          subscription.tier === 'free' ? 'bg-slate-100 text-slate-600' :
-                          subscription.tier === 'professional' ? 'bg-purple-100 text-purple-600' :
-                          'bg-amber-100 text-amber-600'
-                        }`}>
+                        <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${subscription.tier === 'free' ? 'bg-slate-100 text-slate-600' :
+                            subscription.tier === 'professional' ? 'bg-purple-100 text-purple-600' :
+                              'bg-amber-100 text-amber-600'
+                          }`}>
                           {subscription.tier}
                         </span>
                         {subscription.status === 'trialing' && (
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                            subscription.trialDaysRemaining !== null && subscription.trialDaysRemaining <= 3
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${subscription.trialDaysRemaining !== null && subscription.trialDaysRemaining <= 3
                               ? 'bg-amber-100 text-amber-600'
                               : 'bg-blue-100 text-blue-600'
-                          }`}>
+                            }`}>
                             Trial
                           </span>
                         )}
@@ -323,13 +342,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       </div>
                       <p className="text-2xl font-black text-slate-900 capitalize">{subscription.tier} Plan</p>
                       {subscription.status === 'trialing' && subscription.trialDaysRemaining !== null && (
-                        <p className={`text-sm mt-1 ${
-                          subscription.trialDaysRemaining === 0
+                        <p className={`text-sm mt-1 ${subscription.trialDaysRemaining === 0
                             ? 'text-red-600 font-semibold'
                             : subscription.trialDaysRemaining <= 3
-                            ? 'text-amber-600'
-                            : 'text-slate-500'
-                        }`}>
+                              ? 'text-amber-600'
+                              : 'text-slate-500'
+                          }`}>
                           <Clock size={14} className="inline mr-1" />
                           {subscription.trialDaysRemaining === 0
                             ? 'Your trial ends today!'
@@ -347,11 +365,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       <button
                         onClick={() => handleUpgrade('professional')}
                         disabled={upgradingTier !== null}
-                        className={`flex items-center gap-2 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 ${
-                          subscription.status === 'expired'
+                        className={`flex items-center gap-2 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 ${subscription.status === 'expired'
                             ? 'bg-red-500 hover:bg-red-600 shadow-red-200'
                             : 'bg-purple-500 hover:bg-purple-600 shadow-purple-200'
-                        }`}
+                          }`}
                       >
                         {upgradingTier === 'professional' ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
                         {subscription.status === 'expired' ? 'Choose a Plan' : 'Upgrade to Pro'}
@@ -525,7 +542,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     type="text"
                     className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] p-3 md:p-5 focus:border-teal-400 focus:bg-white outline-none text-slate-900 font-bold text-sm transition-all"
                     value={settings.companyName}
-                    onChange={e => setSettings({...settings, companyName: e.target.value})}
+                    onChange={e => setSettings({ ...settings, companyName: e.target.value })}
                     placeholder="e.g. Acme Construction Ltd"
                   />
                 </div>
@@ -536,7 +553,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     <textarea
                       className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm min-h-[100px] md:min-h-[140px] leading-relaxed"
                       value={settings.companyAddress}
-                      onChange={e => setSettings({...settings, companyAddress: e.target.value})}
+                      onChange={e => setSettings({ ...settings, companyAddress: e.target.value })}
                       placeholder="Line 1&#10;Line 2&#10;Postcode&#10;Phone / Email"
                     />
                   </div>
@@ -546,7 +563,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 <div className="p-4 md:p-10 border-t border-slate-100 space-y-3 md:space-y-6">
                   <div className="flex items-center justify-between bg-amber-50 p-4 md:p-7 rounded-xl md:rounded-[32px] border border-amber-100">
                     <div className="flex gap-2 md:gap-4">
-                      <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl border border-amber-200 shadow-sm flex items-center justify-center text-amber-600"><Landmark size={18} className="md:w-5 md:h-5"/></div>
+                      <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl border border-amber-200 shadow-sm flex items-center justify-center text-amber-600"><Landmark size={18} className="md:w-5 md:h-5" /></div>
                       <div>
                         <p className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-tight">VAT Registered</p>
                         <p className="text-[9px] md:text-[10px] font-medium text-slate-500 italic mt-0.5 hidden md:block">Toggle if your business is registered for VAT with HMRC.</p>
@@ -568,7 +585,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                           type="text"
                           className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
                           value={settings.vatNumber || ''}
-                          onChange={e => setSettings({...settings, vatNumber: e.target.value.toUpperCase()})}
+                          onChange={e => setSettings({ ...settings, vatNumber: e.target.value.toUpperCase() })}
                           placeholder="GB 123 4567 89"
                         />
                       </div>
@@ -637,7 +654,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         type="text"
                         className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
                         value={settings.quotePrefix}
-                        onChange={e => setSettings({...settings, quotePrefix: e.target.value.toUpperCase()})}
+                        onChange={e => setSettings({ ...settings, quotePrefix: e.target.value.toUpperCase() })}
                         placeholder="EST-"
                       />
                     </div>
@@ -790,7 +807,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                   <div className="flex items-center justify-between bg-slate-50 p-3 md:p-7 rounded-xl md:rounded-[32px] border border-slate-100">
                     <div className="flex gap-2 md:gap-4">
-                      <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><Landmark size={18} className="md:w-5 md:h-5"/></div>
+                      <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><Landmark size={18} className="md:w-5 md:h-5" /></div>
                       <div>
                         <p className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-tight">Show VAT</p>
                         <p className="text-[9px] md:text-[10px] font-medium text-slate-500 italic mt-0.5 hidden md:block">Include standard UK tax calculations.</p>
@@ -806,7 +823,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
 
                   <div className="flex items-center justify-between bg-slate-50 p-3 md:p-7 rounded-xl md:rounded-[32px] border border-slate-100">
                     <div className="flex gap-2 md:gap-4">
-                      <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><ShieldCheck size={18} className="md:w-5 md:h-5"/></div>
+                      <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><ShieldCheck size={18} className="md:w-5 md:h-5" /></div>
                       <div>
                         <p className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-tight">Show CIS</p>
                         <p className="text-[9px] md:text-[10px] font-medium text-slate-500 italic mt-0.5 hidden md:block">Subcontractor tax (Construction Industry Scheme).</p>
@@ -835,11 +852,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       <button
                         key={scheme.id}
                         onClick={() => setSettings({ ...settings, quoteColorScheme: scheme.id })}
-                        className={`flex flex-col items-center gap-1.5 md:gap-3 p-2 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all ${
-                          (settings.quoteColorScheme || 'default') === scheme.id
+                        className={`flex flex-col items-center gap-1.5 md:gap-3 p-2 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all ${(settings.quoteColorScheme || 'default') === scheme.id
                             ? 'border-blue-500 bg-blue-50/30 shadow-lg'
                             : 'border-slate-100 bg-white hover:border-blue-200'
-                        }`}
+                          }`}
                       >
                         <div className={`w-full h-8 md:h-12 rounded-lg md:rounded-xl ${scheme.headerBg} flex items-center justify-center border border-slate-200`}>
                           <span className={`text-[7px] md:text-[9px] font-bold ${scheme.headerText}`}>Header</span>
@@ -880,7 +896,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         type="text"
                         className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
                         value={settings.invoicePrefix}
-                        onChange={e => setSettings({...settings, invoicePrefix: e.target.value.toUpperCase()})}
+                        onChange={e => setSettings({ ...settings, invoicePrefix: e.target.value.toUpperCase() })}
                         placeholder="INV-"
                       />
                     </div>
@@ -1040,11 +1056,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                           <button
                             key={template.id}
                             onClick={() => setSettings({ ...settings, documentTemplate: template.id as DocumentTemplate })}
-                            className={`relative flex flex-col items-center gap-1 md:gap-2 p-2 md:p-3 rounded-xl md:rounded-2xl border-2 transition-all ${
-                              (settings.documentTemplate || 'professional') === template.id
+                            className={`relative flex flex-col items-center gap-1 md:gap-2 p-2 md:p-3 rounded-xl md:rounded-2xl border-2 transition-all ${(settings.documentTemplate || 'professional') === template.id
                                 ? 'border-emerald-500 bg-emerald-50/50 shadow-lg'
                                 : 'border-slate-100 bg-white hover:border-emerald-200'
-                            }`}
+                              }`}
                           >
                             {template.recommended && (
                               <span className="absolute -top-1 -right-1 md:-top-1.5 md:-right-1.5 bg-amber-400 text-[6px] md:text-[7px] font-black text-amber-900 px-1 md:px-1.5 py-0.5 rounded-full">
@@ -1058,11 +1073,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                               </pre>
                             </div>
 
-                            <div className={`w-6 md:w-8 h-6 md:h-8 rounded-lg flex items-center justify-center ${
-                              (settings.documentTemplate || 'professional') === template.id
+                            <div className={`w-6 md:w-8 h-6 md:h-8 rounded-lg flex items-center justify-center ${(settings.documentTemplate || 'professional') === template.id
                                 ? 'bg-emerald-500 text-white'
                                 : 'bg-slate-100 text-slate-400'
-                            }`}>
+                              }`}>
                               <Icon size={10} className="md:w-3 md:h-3" />
                             </div>
 
@@ -1106,11 +1120,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                             <button
                               key={scheme.id}
                               onClick={() => setSettings({ ...settings, invoiceColorScheme: scheme.id })}
-                              className={`flex flex-col items-center gap-1.5 md:gap-3 p-2 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all ${
-                                (settings.invoiceColorScheme || 'default') === scheme.id
+                              className={`flex flex-col items-center gap-1.5 md:gap-3 p-2 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all ${(settings.invoiceColorScheme || 'default') === scheme.id
                                   ? 'border-emerald-500 bg-emerald-50/30 shadow-lg'
                                   : 'border-slate-100 bg-white hover:border-emerald-200'
-                              }`}
+                                }`}
                             >
                               <div className={`w-full h-8 md:h-12 rounded-lg md:rounded-xl ${scheme.headerBg} flex items-center justify-center border border-slate-200`}>
                                 <span className={`text-[7px] md:text-[9px] font-bold ${scheme.headerText}`}>Header</span>
@@ -1192,7 +1205,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     <textarea
                       className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[32px] p-4 md:p-7 text-slate-900 font-medium text-sm outline-none focus:bg-white focus:border-emerald-500 transition-all min-h-[120px] md:min-h-[200px] leading-relaxed"
                       value={settings.defaultInvoiceNotes}
-                      onChange={e => setSettings({...settings, defaultInvoiceNotes: e.target.value})}
+                      onChange={e => setSettings({ ...settings, defaultInvoiceNotes: e.target.value })}
                       placeholder="e.g. Please settle this invoice within 14 days."
                     />
                   </div>
