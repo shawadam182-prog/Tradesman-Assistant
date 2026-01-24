@@ -808,9 +808,13 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
           <button
             onClick={() => setShowCustomiser(!showCustomiser)}
-            className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-white border border-slate-100 text-slate-600 text-xs font-bold shadow-sm"
+            className={`flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg text-xs font-bold shadow-sm transition-all ${showCustomiser
+              ? 'bg-slate-900 text-white border-slate-900 ring-2 ring-slate-900/20'
+              : 'bg-white border border-slate-100 text-slate-600 hover:bg-slate-50'
+              }`}
           >
-            <Settings2 size={14} /> Layout
+            {showCustomiser ? <X size={14} /> : <Settings2 size={14} />}
+            {showCustomiser ? 'Close' : 'Layout'}
           </button>
           {onDuplicate && (
             <button onClick={onDuplicate} className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-white border border-slate-100 text-slate-600 text-xs font-bold shadow-sm">
@@ -889,6 +893,15 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                 <CustomiseToggle label="Business Logo" optionKey="showLogo" activeColor="bg-slate-900 text-white" />
                 <CustomiseToggle label="Terms/Notes" optionKey="showNotes" activeColor="bg-slate-900 text-white" />
               </div>
+            </div>
+            {/* Done button */}
+            <div className="flex justify-end mt-4 pt-3 border-t border-slate-100">
+              <button
+                onClick={() => setShowCustomiser(false)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-lg hover:bg-slate-800 transition-colors"
+              >
+                <Check size={14} /> Done
+              </button>
             </div>
           </div>
         )}
