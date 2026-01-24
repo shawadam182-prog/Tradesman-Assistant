@@ -111,31 +111,41 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
           </div>
 
           <div className="relative ml-8 md:ml-[52px]">
-            <textarea
-              ref={textareaRef}
-              className={`w-full bg-transparent outline-none transition-all resize-none font-medium placeholder:text-slate-300 placeholder:italic ${isExpanded ? 'text-xs md:text-sm text-slate-700' : 'text-[9px] md:text-xs text-slate-500 overflow-hidden whitespace-nowrap text-ellipsis'
-                }`}
-              value={section.description || ''}
-              onChange={e => {
-                onUpdateDescription(section.id, e.target.value);
-                const target = e.target;
-                target.style.height = 'auto'; // Reset height
-                target.style.height = `${target.scrollHeight}px`; // Set to scroll height
-              }}
-              onFocus={() => setIsExpanded(true)}
-              placeholder="Add a description of this work..."
-              rows={isExpanded ? undefined : 1}
-              style={{
-                height: isExpanded ? 'auto' : '1.5em',
-                minHeight: isExpanded ? '3em' : '1.5em'
-              }}
-            />
-            {section.description && section.description.length > 50 && (
+            {isExpanded ? (
+              <textarea
+                ref={textareaRef}
+                className="w-full bg-transparent outline-none transition-all resize-none font-medium placeholder:text-slate-300 placeholder:italic text-xs md:text-sm text-slate-700"
+                value={section.description || ''}
+                onChange={e => {
+                  onUpdateDescription(section.id, e.target.value);
+                  const target = e.target;
+                  target.style.height = 'auto';
+                  target.style.height = `${target.scrollHeight}px`;
+                }}
+                onBlur={() => {
+                  // Collapse when clicking away, unless empty (keep expanded for new input)
+                  if (section.description && section.description.length > 0) {
+                    setIsExpanded(false);
+                  }
+                }}
+                placeholder="Add a description of this work..."
+                autoFocus
+                style={{ minHeight: '3em' }}
+              />
+            ) : (
+              <div
+                onClick={() => setIsExpanded(true)}
+                className="cursor-text text-[9px] md:text-xs text-slate-500 font-medium truncate pr-6"
+              >
+                {section.description || <span className="italic text-slate-300">Add a description of this work...</span>}
+              </div>
+            )}
+            {section.description && section.description.length > 50 && !isExpanded && (
               <button
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={() => setIsExpanded(true)}
                 className="absolute right-0 top-0 p-1 text-slate-300 hover:text-slate-500 transition-colors"
               >
-                {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                <ChevronDown size={14} />
               </button>
             )}
           </div>
