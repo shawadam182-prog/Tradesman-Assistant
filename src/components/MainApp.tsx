@@ -3,7 +3,7 @@ import { Layout } from '../../components/Layout';
 import { Home } from '../../components/Home';
 import { JobPackList } from '../../components/JobPackList';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
-import { DevErrorTrigger } from '../../components/DevErrorTrigger';
+
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -370,8 +370,7 @@ const App: React.FC = () => {
         {activeTab === 'view' && viewingQuoteId && (activeViewQuote ? <QuoteView quote={activeViewQuote} customer={activeViewCustomer || { id: 'unknown', name: 'Unassigned Client', email: '', phone: '', address: 'N/A' }} settings={settings} onEdit={() => handleEditQuote(viewingQuoteId)} onBack={() => activeProjectId ? setActiveTab('jobpack_detail') : (activeViewQuote.type === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes'))} onUpdateStatus={(status) => handleUpdateQuoteStatus(viewingQuoteId, status)} onUpdateQuote={handleUpdateQuote} onConvertToInvoice={handleConvertToInvoice} onDuplicate={handleDuplicateQuote} onDelete={async () => { await deleteQuote(viewingQuoteId); setViewingQuoteId(null); activeProjectId ? setActiveTab('jobpack_detail') : (activeViewQuote.type === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes')); toast.success('Deleted', 'Document has been discarded'); }} /> : <div className="flex flex-col items-center justify-center py-20 text-slate-400"><FileWarning size={48} className="text-teal-500 mb-4" /><p>Document Not Found</p><button onClick={() => setActiveTab('quotes')} className="mt-4 bg-slate-900 text-white px-4 py-2 rounded">Back</button></div>)}
       </Suspense>
       </ErrorBoundary>
-      {/* Dev-only error trigger for testing error boundaries */}
-      <DevErrorTrigger />
+
     </Layout>
   );
 };
