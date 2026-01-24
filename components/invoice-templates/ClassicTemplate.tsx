@@ -48,6 +48,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
               colorScheme.id === 'rose' ? '#be123c' : '#334155';
 
   // Flatten all items with section headers
+  // Respects displayOptions for filtering materials and labour
   const getAllItems = () => {
     const items: Array<{
       type?: 'header' | 'item';
@@ -56,63 +57,84 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
       rate: number;
       amount: number;
       isDescription?: boolean;
+      itemType?: 'material' | 'labour';
     }> = [];
 
-    (quote.sections || []).forEach(section => {
-      // Add section title
-      items.push({
-        type: 'header',
-        description: section.title || 'Work Section',
-        qty: '',
-        rate: 0,
-        amount: 0,
-        isDescription: false,
-      });
+    const hasMaterialsToShow = displayOptions.showMaterials;
+    const hasLabourToShow = displayOptions.showLabour;
 
-      // Add section description if present
-      if (section.description) {
+    (quote.sections || []).forEach(section => {
+      // Determine if this section has visible content
+      const sectionHasMaterials = hasMaterialsToShow && (section.items || []).filter(i => !i.isHeading).length > 0;
+      const sectionHasLabour = hasLabourToShow && (
+        (section.labourItems && section.labourItems.length > 0) ||
+        (section.labourHours || 0) > 0
+      );
+
+      // Only add section header if it has visible content
+      if (sectionHasMaterials || sectionHasLabour) {
+        // Add section title
         items.push({
           type: 'header',
-          description: section.description,
+          description: section.title || 'Work Section',
           qty: '',
           rate: 0,
           amount: 0,
-          isDescription: true,
+          isDescription: false,
+        });
+
+        // Add section description if present
+        if (section.description) {
+          items.push({
+            type: 'header',
+            description: section.description,
+            qty: '',
+            rate: 0,
+            amount: 0,
+            isDescription: true,
+          });
+        }
+      }
+
+      // Add material items (only if showMaterials is enabled)
+      if (hasMaterialsToShow) {
+        (section.items || []).filter(i => !i.isHeading).forEach(item => {
+          items.push({
+            type: 'item',
+            description: [item.name, item.description].filter(Boolean).join(' - '),
+            qty: `${item.quantity} ${item.unit}`,
+            rate: item.unitPrice * markupMultiplier,
+            amount: (item.totalPrice || 0) * markupMultiplier,
+            itemType: 'material',
+          });
         });
       }
 
-      // Add material items
-      (section.items || []).filter(i => !i.isHeading).forEach(item => {
-        items.push({
-          type: 'item',
-          description: [item.name, item.description].filter(Boolean).join(' - '),
-          qty: `${item.quantity} ${item.unit}`,
-          rate: item.unitPrice * markupMultiplier,
-          amount: (item.totalPrice || 0) * markupMultiplier,
-        });
-      });
-
-      // Add labour items
-      if (section.labourItems?.length) {
-        section.labourItems.forEach(labour => {
-          const rate = labour.rate || section.labourRate || quote.labourRate || settings.defaultLabourRate;
+      // Add labour items (only if showLabour is enabled)
+      if (hasLabourToShow) {
+        if (section.labourItems?.length) {
+          section.labourItems.forEach(labour => {
+            const rate = labour.rate || section.labourRate || quote.labourRate || settings.defaultLabourRate;
+            items.push({
+              type: 'item',
+              description: labour.description || 'Labour',
+              qty: `${labour.hours} hrs`,
+              rate: rate * markupMultiplier,
+              amount: labour.hours * rate * markupMultiplier,
+              itemType: 'labour',
+            });
+          });
+        } else if ((section.labourHours || 0) > 0) {
+          const rate = section.labourRate || quote.labourRate || settings.defaultLabourRate;
           items.push({
             type: 'item',
-            description: labour.description || 'Labour',
-            qty: `${labour.hours} hrs`,
+            description: 'Labour',
+            qty: `${section.labourHours} hrs`,
             rate: rate * markupMultiplier,
-            amount: labour.hours * rate * markupMultiplier,
+            amount: (section.labourHours || 0) * rate * markupMultiplier,
+            itemType: 'labour',
           });
-        });
-      } else if ((section.labourHours || 0) > 0) {
-        const rate = section.labourRate || quote.labourRate || settings.defaultLabourRate;
-        items.push({
-          type: 'item',
-          description: 'Labour',
-          qty: `${section.labourHours} hrs`,
-          rate: rate * markupMultiplier,
-          amount: (section.labourHours || 0) * rate * markupMultiplier,
-        });
+        }
       }
     });
 
@@ -174,42 +196,67 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
       </div>
 
       {/* ITEMS TABLE */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '4mm' }}>
-        <thead>
-          <tr style={{ background: headerBgColor, color: headerTextColor }}>
-            <th style={{ padding: '4px 6px', textAlign: 'left', fontSize: '8px', fontWeight: 'bold' }}>Description</th>
-            <th style={{ padding: '4px 6px', textAlign: 'center', fontSize: '8px', fontWeight: 'bold', width: '50px' }}>Qty</th>
-            <th style={{ padding: '4px 6px', textAlign: 'right', fontSize: '8px', fontWeight: 'bold', width: '60px' }}>Rate</th>
-            <th style={{ padding: '4px 6px', textAlign: 'right', fontSize: '8px', fontWeight: 'bold', width: '70px' }}>Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item, idx) => (
-            item.type === 'header' ? (
-              <tr key={idx} style={{ borderBottom: item.isDescription ? 'none' : '1px solid #e2e8f0' }}>
-                <td colSpan={4} style={{
-                  padding: item.isDescription ? '2px 6px 8px 6px' : '8px 6px 2px 6px',
-                  fontSize: item.isDescription ? '11px' : '13px',
-                  fontWeight: item.isDescription ? 'normal' : 'bold',
-                  color: item.isDescription ? '#64748b' : '#334155',
-                  whiteSpace: 'pre-line',
-                  fontStyle: item.isDescription ? 'italic' : 'normal',
-                  backgroundColor: item.isDescription ? 'transparent' : '#f8fafc'
-                }}>
-                  {item.description}
-                </td>
+      {(() => {
+        // Determine which columns to show based on displayOptions
+        const showQtyColumn = (displayOptions.showMaterials && displayOptions.showMaterialQty) ||
+          (displayOptions.showLabour && displayOptions.showLabourQty);
+        const showRateColumn = (displayOptions.showMaterials && displayOptions.showMaterialUnitPrice) ||
+          (displayOptions.showLabour && displayOptions.showLabourUnitPrice);
+        const showAmountColumn = (displayOptions.showMaterials && displayOptions.showMaterialLineTotals) ||
+          (displayOptions.showLabour && displayOptions.showLabourLineTotals);
+        const colSpan = 1 + (showQtyColumn ? 1 : 0) + (showRateColumn ? 1 : 0) + (showAmountColumn ? 1 : 0);
+
+        return (
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '4mm' }}>
+            <thead>
+              <tr style={{ background: headerBgColor, color: headerTextColor }}>
+                <th style={{ padding: '4px 6px', textAlign: 'left', fontSize: '8px', fontWeight: 'bold' }}>Description</th>
+                {showQtyColumn && (
+                  <th style={{ padding: '4px 6px', textAlign: 'center', fontSize: '8px', fontWeight: 'bold', width: '50px' }}>Qty</th>
+                )}
+                {showRateColumn && (
+                  <th style={{ padding: '4px 6px', textAlign: 'right', fontSize: '8px', fontWeight: 'bold', width: '60px' }}>Rate</th>
+                )}
+                {showAmountColumn && (
+                  <th style={{ padding: '4px 6px', textAlign: 'right', fontSize: '8px', fontWeight: 'bold', width: '70px' }}>Amount</th>
+                )}
               </tr>
-            ) : (
-              <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                <td style={{ padding: '4px 6px', fontSize: '9px' }}>{item.description}</td>
-                <td style={{ padding: '4px 6px', textAlign: 'center', color: '#64748b', fontSize: '9px' }}>{item.qty}</td>
-                <td style={{ padding: '4px 6px', textAlign: 'right', color: '#64748b', fontSize: '9px' }}>£{item.rate.toFixed(2)}</td>
-                <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: '500', fontSize: '9px' }}>£{item.amount.toFixed(2)}</td>
-              </tr>
-            )
-          ))}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {items.map((item, idx) => (
+                item.type === 'header' ? (
+                  <tr key={idx} style={{ borderBottom: item.isDescription ? 'none' : '1px solid #e2e8f0' }}>
+                    <td colSpan={colSpan} style={{
+                      padding: item.isDescription ? '2px 6px 8px 6px' : '8px 6px 2px 6px',
+                      fontSize: item.isDescription ? '11px' : '13px',
+                      fontWeight: item.isDescription ? 'normal' : 'bold',
+                      color: item.isDescription ? '#64748b' : '#334155',
+                      whiteSpace: 'pre-line',
+                      fontStyle: item.isDescription ? 'italic' : 'normal',
+                      backgroundColor: item.isDescription ? 'transparent' : '#f8fafc'
+                    }}>
+                      {item.description}
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '4px 6px', fontSize: '9px' }}>{item.description}</td>
+                    {showQtyColumn && (
+                      <td style={{ padding: '4px 6px', textAlign: 'center', color: '#64748b', fontSize: '9px' }}>{item.qty}</td>
+                    )}
+                    {showRateColumn && (
+                      <td style={{ padding: '4px 6px', textAlign: 'right', color: '#64748b', fontSize: '9px' }}>£{item.rate.toFixed(2)}</td>
+                    )}
+                    {showAmountColumn && (
+                      <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: '500', fontSize: '9px' }}>£{item.amount.toFixed(2)}</td>
+                    )}
+                  </tr>
+                )
+              ))}
+            </tbody>
+          </table>
+        );
+      })()}
 
       {/* TOTALS */}
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

@@ -111,6 +111,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   );
 
   // Helper to flatten all items (materials + labour) into a single table
+  // Respects displayOptions for filtering materials and labour
   const getAllLineItems = () => {
     const items: Array<{
       type?: 'header' | 'item';
@@ -123,95 +124,119 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       amount: number;
       isHeading?: boolean;
       isDescription?: boolean;
+      itemType?: 'material' | 'labour';
     }> = [];
 
     const markupMultiplier = 1 + ((activeQuote.markupPercent || 0) / 100);
     let lineNum = 1;
 
-    (activeQuote.sections || []).forEach(section => {
-      // Add section title
-      items.push({
-        type: 'header',
-        lineNum: 0,
-        name: section.title || 'Work Section',
-        description: section.title || 'Work Section',
-        qty: '',
-        amount: 0,
-        isHeading: true,
-        isDescription: false,
-      });
+    // Check if we have ANY content to show in this section
+    const hasMaterialsToShow = displayOptions.showMaterials;
+    const hasLabourToShow = displayOptions.showLabour;
 
-      // Add section description if present
-      if (section.description) {
+    (activeQuote.sections || []).forEach(section => {
+      // Determine if this section has visible content
+      const sectionHasMaterials = hasMaterialsToShow && (section.items || []).length > 0;
+      const sectionHasLabour = hasLabourToShow && (
+        (section.labourItems && section.labourItems.length > 0) ||
+        (section.labourHours || 0) > 0
+      );
+
+      // Only add section header if it has visible content
+      if (sectionHasMaterials || sectionHasLabour) {
+        // Add section title
         items.push({
           type: 'header',
           lineNum: 0,
-          name: section.description,
-          description: section.description,
+          name: section.title || 'Work Section',
+          description: section.title || 'Work Section',
           qty: '',
           amount: 0,
           isHeading: true,
-          isDescription: true,
+          isDescription: false,
+        });
+
+        // Add section description if present
+        if (section.description) {
+          items.push({
+            type: 'header',
+            lineNum: 0,
+            name: section.description,
+            description: section.description,
+            qty: '',
+            amount: 0,
+            isHeading: true,
+            isDescription: true,
+          });
+        }
+      }
+
+      // Add materials (only if showMaterials is enabled)
+      if (hasMaterialsToShow) {
+        (section.items || []).forEach(item => {
+          if (item.isHeading) {
+            items.push({
+              type: 'item',
+              lineNum: 0,
+              name: item.name || 'Section',
+              description: item.name || 'Section',
+              qty: '',
+              amount: 0,
+              isHeading: true,
+              itemType: 'material',
+            });
+          } else {
+            const unitPrice = (item.unitPrice || 0) * markupMultiplier;
+            items.push({
+              type: 'item',
+              lineNum: lineNum++,
+              name: item.name || '',
+              description: [item.name, item.description].filter(Boolean).join(' '),
+              subtext: item.description || undefined,
+              qty: `${item.quantity}`,
+              rate: unitPrice,
+              amount: (item.totalPrice || 0) * markupMultiplier,
+              itemType: 'material',
+            });
+          }
         });
       }
 
-      // Add materials
-      (section.items || []).forEach(item => {
-        if (item.isHeading) {
-          items.push({
-            type: 'item',
-            lineNum: 0,
-            name: item.name || 'Section',
-            description: item.name || 'Section',
-            qty: '',
-            amount: 0,
-            isHeading: true
+      // Add labour items (only if showLabour is enabled)
+      if (hasLabourToShow) {
+        if (section.labourItems && section.labourItems.length > 0) {
+          section.labourItems.forEach(labour => {
+            const rate = (labour.rate || section.labourRate || activeQuote.labourRate || settings.defaultLabourRate) * markupMultiplier;
+            items.push({
+              type: 'item',
+              lineNum: lineNum++,
+              name: labour.description || 'Labour',
+              description: labour.description || 'Labour',
+              qty: `${labour.hours}`,
+              rate: rate,
+              amount: labour.hours * rate,
+              itemType: 'labour',
+            });
           });
-        } else {
-          const unitPrice = (item.unitPrice || 0) * markupMultiplier;
+        } else if ((section.labourHours || 0) > 0) {
+          const rate = (section.labourRate || activeQuote.labourRate || settings.defaultLabourRate) * markupMultiplier;
           items.push({
             type: 'item',
             lineNum: lineNum++,
-            name: item.name || '',
-            description: [item.name, item.description].filter(Boolean).join(' '),
-            subtext: item.description || undefined,
-            qty: `${item.quantity}`,
-            rate: unitPrice,
-            amount: (item.totalPrice || 0) * markupMultiplier,
+            name: 'Labour',
+            description: 'Labour',
+            qty: `${section.labourHours}`,
+            rate: rate,
+            amount: (section.labourHours || 0) * rate,
+            itemType: 'labour',
           });
         }
-      });
-
-      // Add labour items
-      if (section.labourItems && section.labourItems.length > 0) {
-        section.labourItems.forEach(labour => {
-          const rate = (labour.rate || section.labourRate || activeQuote.labourRate || settings.defaultLabourRate) * markupMultiplier;
-          items.push({
-            type: 'item',
-            lineNum: lineNum++,
-            name: labour.description || 'Labour',
-            description: labour.description || 'Labour',
-            qty: `${labour.hours}`,
-            rate: rate,
-            amount: labour.hours * rate,
-          });
-        });
-      } else if ((section.labourHours || 0) > 0) {
-        const rate = (section.labourRate || activeQuote.labourRate || settings.defaultLabourRate) * markupMultiplier;
-        items.push({
-          type: 'item',
-          lineNum: lineNum++,
-          name: 'Labour',
-          description: 'Labour',
-          qty: `${section.labourHours}`,
-          rate: rate,
-          amount: (section.labourHours || 0) * rate,
-        });
       }
     });
 
     return items;
   };
+
 
   // Generate PDF as a Blob for filing
   const generatePDFBlob = async (): Promise<{ blob: Blob; filename: string } | null> => {
@@ -1077,82 +1102,110 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
             {/* COMBINED LINE ITEMS TABLE - For templates that combine materials + labour */}
             {templateConfig.combineLineItems ? (
               <div className="px-4 pb-2">
-                <table className="w-full text-[10px]" style={{ borderCollapse: 'collapse' }}>
-                  {templateConfig.showColumnHeaders && (
-                    <thead>
-                      <tr className={tableHeaderStyle}>
-                        {templateConfig.showLineNumbers && (
-                          <th className="py-2 px-2 text-left w-10 text-[10px] font-semibold">#</th>
-                        )}
-                        <th className="py-2 px-2 text-left text-[10px] font-semibold">Item & Description</th>
-                        <th className="py-2 px-2 text-center w-16 text-[10px] font-semibold">Qty</th>
-                        {(activeTemplate === 'professional' || activeTemplate === 'spacious') && (
-                          <th className="py-2 px-2 text-right w-24 text-[10px] font-semibold">Rate</th>
-                        )}
-                        <th className="py-2 px-2 text-right w-24 text-[10px] font-semibold">Amount</th>
-                      </tr>
-                    </thead>
-                  )}
-                  <tbody>
-                    {getAllLineItems().map((item, idx) => (
-                      item.type === 'header' ? (
-                        // Section Title or Section Description
-                        <tr key={`header-${idx}`} style={{ borderBottom: item.isDescription ? 'none' : '1px solid #e2e8f0' }}>
-                          <td colSpan={(activeTemplate === 'professional' || activeTemplate === 'spacious') ? 5 : (templateConfig.showLineNumbers ? 4 : 3)} style={{
-                            padding: item.isDescription ? '2px 8px 8px 8px' : '8px 8px 2px 8px',
-                            fontSize: item.isDescription ? '12px' : '14px',
-                            fontWeight: item.isDescription ? 'normal' : 'bold',
-                            color: item.isDescription ? '#64748b' : '#334155',
-                            whiteSpace: 'pre-line',
-                            fontStyle: item.isDescription ? 'italic' : 'normal',
-                            backgroundColor: item.isDescription ? 'transparent' : '#f8fafc'
-                          }}>
-                            {item.description}
-                          </td>
-                        </tr>
-                      ) : item.isHeading ? (
-                        // Inline material heading
-                        <tr key={`heading-${idx}`} className="bg-slate-50">
-                          <td colSpan={(activeTemplate === 'professional' || activeTemplate === 'spacious') ? 5 : (templateConfig.showLineNumbers ? 4 : 3)} className="py-1 px-2">
-                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{item.description}</span>
-                          </td>
-                        </tr>
-                      ) : activeTemplate === 'spacious' ? (
-                        <tr key={`item-${idx}`} className={templateConfig.showTableBorders ? 'border-b border-slate-100' : ''}>
-                          {templateConfig.showLineNumbers && (
-                            <td className={`${templateConfig.rowPadding} text-slate-600 ${templateConfig.fontSize}`}>{item.lineNum}</td>
-                          )}
-                          <td className={templateConfig.rowPadding}>
-                            <div className={`text-slate-900 font-medium ${templateConfig.fontSize}`}>{item.name}</div>
-                            {item.subtext && <div className="text-[11px] text-slate-500 mt-0.5">{item.subtext}</div>}
-                          </td>
-                          <td className={`${templateConfig.rowPadding} text-slate-900 text-center font-medium ${templateConfig.fontSize}`}>{item.qty}</td>
-                          <td className={`${templateConfig.rowPadding} text-slate-900 text-right ${templateConfig.fontSize}`}>{item.rate ? `${item.rate.toFixed(2)}` : '-'}</td>
-                          <td className={`${templateConfig.rowPadding} text-slate-900 text-right font-medium ${templateConfig.fontSize}`}>
-                            {item.amount.toFixed(2)}
-                          </td>
-                        </tr>
-                      ) : (
-                        <tr key={`item-${idx}`} className={templateConfig.showTableBorders ? 'border-b border-slate-100' : ''}>
-                          {templateConfig.showLineNumbers && (
-                            <td className="py-2 px-2 text-slate-600 text-[10px]">{item.lineNum}</td>
-                          )}
-                          <td className="py-2 px-2 text-[10px]">
-                            <div className="text-slate-900 font-medium">{item.name}</div>
-                            {item.subtext && <div className="text-[9px] text-slate-500 mt-0.5">{item.subtext}</div>}
-                          </td>
-                          <td className="py-2 px-2 text-slate-900 text-[10px] text-center font-medium">{item.qty}</td>
-                          {activeTemplate === 'professional' && (
-                            <td className="py-2 px-2 text-slate-900 text-[10px] text-right">{item.rate ? `${item.rate.toFixed(2)}` : '-'}</td>
-                          )}
-                          <td className="py-2 px-2 text-slate-900 text-[10px] text-right font-medium">
-                            {item.amount.toFixed(2)}
-                          </td>
-                        </tr>
-                      )
-                    ))}
-                  </tbody>
-                </table>
+                {/* Determine which columns to show based on displayOptions */}
+                {(() => {
+                  const showQtyColumn = (displayOptions.showMaterials && displayOptions.showMaterialQty) ||
+                    (displayOptions.showLabour && displayOptions.showLabourQty);
+                  const showRateColumn = (displayOptions.showMaterials && displayOptions.showMaterialUnitPrice) ||
+                    (displayOptions.showLabour && displayOptions.showLabourUnitPrice);
+                  const showAmountColumn = (displayOptions.showMaterials && displayOptions.showMaterialLineTotals) ||
+                    (displayOptions.showLabour && displayOptions.showLabourLineTotals);
+                  const colSpan = 1 + (templateConfig.showLineNumbers ? 1 : 0) + (showQtyColumn ? 1 : 0) + (showRateColumn ? 1 : 0) + (showAmountColumn ? 1 : 0);
+
+                  return (
+                    <table className="w-full text-[10px]" style={{ borderCollapse: 'collapse' }}>
+                      {templateConfig.showColumnHeaders && (
+                        <thead>
+                          <tr className={tableHeaderStyle}>
+                            {templateConfig.showLineNumbers && (
+                              <th className="py-2 px-2 text-left w-10 text-[10px] font-semibold">#</th>
+                            )}
+                            <th className="py-2 px-2 text-left text-[10px] font-semibold">Item & Description</th>
+                            {showQtyColumn && (
+                              <th className="py-2 px-2 text-center w-16 text-[10px] font-semibold">Qty</th>
+                            )}
+                            {showRateColumn && (activeTemplate === 'professional' || activeTemplate === 'spacious') && (
+                              <th className="py-2 px-2 text-right w-24 text-[10px] font-semibold">Rate</th>
+                            )}
+                            {showAmountColumn && (
+                              <th className="py-2 px-2 text-right w-24 text-[10px] font-semibold">Amount</th>
+                            )}
+                          </tr>
+                        </thead>
+                      )}
+
+                      <tbody>
+                        {getAllLineItems().map((item, idx) => (
+                          item.type === 'header' ? (
+                            // Section Title or Section Description
+                            <tr key={`header-${idx}`} style={{ borderBottom: item.isDescription ? 'none' : '1px solid #e2e8f0' }}>
+                              <td colSpan={colSpan} style={{
+                                padding: item.isDescription ? '2px 8px 8px 8px' : '8px 8px 2px 8px',
+                                fontSize: item.isDescription ? '12px' : '14px',
+                                fontWeight: item.isDescription ? 'normal' : 'bold',
+                                color: item.isDescription ? '#64748b' : '#334155',
+                                whiteSpace: 'pre-line',
+                                fontStyle: item.isDescription ? 'italic' : 'normal',
+                                backgroundColor: item.isDescription ? 'transparent' : '#f8fafc'
+                              }}>
+                                {item.description}
+                              </td>
+                            </tr>
+                          ) : item.isHeading ? (
+                            // Inline material heading
+                            <tr key={`heading-${idx}`} className="bg-slate-50">
+                              <td colSpan={colSpan} className="py-1 px-2">
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{item.description}</span>
+                              </td>
+                            </tr>
+                          ) : activeTemplate === 'spacious' ? (
+                            <tr key={`item-${idx}`} className={templateConfig.showTableBorders ? 'border-b border-slate-100' : ''}>
+                              {templateConfig.showLineNumbers && (
+                                <td className={`${templateConfig.rowPadding} text-slate-600 ${templateConfig.fontSize}`}>{item.lineNum}</td>
+                              )}
+                              <td className={templateConfig.rowPadding}>
+                                <div className={`text-slate-900 font-medium ${templateConfig.fontSize}`}>{item.name}</div>
+                                {item.subtext && <div className="text-[11px] text-slate-500 mt-0.5">{item.subtext}</div>}
+                              </td>
+                              {showQtyColumn && (
+                                <td className={`${templateConfig.rowPadding} text-slate-900 text-center font-medium ${templateConfig.fontSize}`}>{item.qty}</td>
+                              )}
+                              {showRateColumn && (
+                                <td className={`${templateConfig.rowPadding} text-slate-900 text-right ${templateConfig.fontSize}`}>{item.rate ? `${item.rate.toFixed(2)}` : '-'}</td>
+                              )}
+                              {showAmountColumn && (
+                                <td className={`${templateConfig.rowPadding} text-slate-900 text-right font-medium ${templateConfig.fontSize}`}>
+                                  {item.amount.toFixed(2)}
+                                </td>
+                              )}
+                            </tr>
+                          ) : (
+                            <tr key={`item-${idx}`} className={templateConfig.showTableBorders ? 'border-b border-slate-100' : ''}>
+                              {templateConfig.showLineNumbers && (
+                                <td className="py-2 px-2 text-slate-600 text-[10px]">{item.lineNum}</td>
+                              )}
+                              <td className="py-2 px-2 text-[10px]">
+                                <div className="text-slate-900 font-medium">{item.name}</div>
+                                {item.subtext && <div className="text-[9px] text-slate-500 mt-0.5">{item.subtext}</div>}
+                              </td>
+                              {showQtyColumn && (
+                                <td className="py-2 px-2 text-slate-900 text-[10px] text-center font-medium">{item.qty}</td>
+                              )}
+                              {showRateColumn && activeTemplate === 'professional' && (
+                                <td className="py-2 px-2 text-slate-900 text-[10px] text-right">{item.rate ? `${item.rate.toFixed(2)}` : '-'}</td>
+                              )}
+                              {showAmountColumn && (
+                                <td className="py-2 px-2 text-slate-900 text-[10px] text-right font-medium">
+                                  {item.amount.toFixed(2)}
+                                </td>
+                              )}
+                            </tr>
+                          )
+                        ))}
+                      </tbody>
+                    </table>
+                  );
+                })()}
               </div>
             ) : (
               /* SEPARATE SECTIONS - For templates that split materials/labour */
