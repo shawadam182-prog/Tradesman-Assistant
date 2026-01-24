@@ -113,6 +113,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   // Helper to flatten all items (materials + labour) into a single table
   const getAllLineItems = () => {
     const items: Array<{
+      type?: 'header' | 'item';
       lineNum: number;
       name: string;
       description: string;
@@ -121,16 +122,44 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       rate?: number;
       amount: number;
       isHeading?: boolean;
+      isDescription?: boolean;
     }> = [];
 
     const markupMultiplier = 1 + ((activeQuote.markupPercent || 0) / 100);
     let lineNum = 1;
 
     (activeQuote.sections || []).forEach(section => {
+      // Add section title
+      items.push({
+        type: 'header',
+        lineNum: 0,
+        name: section.title || 'Work Section',
+        description: section.title || 'Work Section',
+        qty: '',
+        amount: 0,
+        isHeading: true,
+        isDescription: false,
+      });
+
+      // Add section description if present
+      if (section.description) {
+        items.push({
+          type: 'header',
+          lineNum: 0,
+          name: section.description,
+          description: section.description,
+          qty: '',
+          amount: 0,
+          isHeading: true,
+          isDescription: true,
+        });
+      }
+
       // Add materials
       (section.items || []).forEach(item => {
         if (item.isHeading) {
           items.push({
+            type: 'item',
             lineNum: 0,
             name: item.name || 'Section',
             description: item.name || 'Section',
@@ -141,6 +170,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
         } else {
           const unitPrice = (item.unitPrice || 0) * markupMultiplier;
           items.push({
+            type: 'item',
             lineNum: lineNum++,
             name: item.name || '',
             description: [item.name, item.description].filter(Boolean).join(' '),
@@ -157,6 +187,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
         section.labourItems.forEach(labour => {
           const rate = (labour.rate || section.labourRate || activeQuote.labourRate || settings.defaultLabourRate) * markupMultiplier;
           items.push({
+            type: 'item',
             lineNum: lineNum++,
             name: labour.description || 'Labour',
             description: labour.description || 'Labour',
@@ -168,6 +199,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       } else if ((section.labourHours || 0) > 0) {
         const rate = (section.labourRate || activeQuote.labourRate || settings.defaultLabourRate) * markupMultiplier;
         items.push({
+          type: 'item',
           lineNum: lineNum++,
           name: 'Labour',
           description: 'Labour',
@@ -1063,7 +1095,23 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                   )}
                   <tbody>
                     {getAllLineItems().map((item, idx) => (
-                      item.isHeading ? (
+                      item.type === 'header' ? (
+                        // Section Title or Section Description
+                        <tr key={`header-${idx}`} style={{ borderBottom: item.isDescription ? 'none' : '1px solid #e2e8f0' }}>
+                          <td colSpan={(activeTemplate === 'professional' || activeTemplate === 'spacious') ? 5 : (templateConfig.showLineNumbers ? 4 : 3)} style={{
+                            padding: item.isDescription ? '2px 8px 8px 8px' : '8px 8px 2px 8px',
+                            fontSize: item.isDescription ? '9px' : '10px',
+                            fontWeight: item.isDescription ? 'normal' : 'bold',
+                            color: item.isDescription ? '#64748b' : '#334155',
+                            whiteSpace: 'pre-line',
+                            fontStyle: item.isDescription ? 'italic' : 'normal',
+                            backgroundColor: item.isDescription ? 'transparent' : '#f8fafc'
+                          }}>
+                            {item.description}
+                          </td>
+                        </tr>
+                      ) : item.isHeading ? (
+                        // Inline material heading
                         <tr key={`heading-${idx}`} className="bg-slate-50">
                           <td colSpan={(activeTemplate === 'professional' || activeTemplate === 'spacious') ? 5 : (templateConfig.showLineNumbers ? 4 : 3)} className="py-1 px-2">
                             <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{item.description}</span>
