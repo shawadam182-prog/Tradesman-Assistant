@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { Quote, Customer, AppSettings, QuoteDisplayOptions, QuoteSection, LabourItem } from '../types';
 import {
-  ArrowLeft, Edit3, Hammer, User, FileText, Info,
+  ArrowLeft, Edit3, Hammer, User, FileText, Info, Trash2,
   Landmark, Package, HardHat, FileDown, Loader2, Navigation, PoundSterling,
   Settings2, Eye, EyeOff, ChevronDown, ChevronUp, LayoutGrid, List,
   Image as ImageIcon, AlignLeft, ReceiptText, ShieldCheck, ListChecks, FileDigit,
@@ -31,11 +31,12 @@ interface QuoteViewProps {
   onUpdateQuote: (quote: Quote) => void;
   onConvertToInvoice?: () => void;
   onDuplicate?: () => void;
+  onDelete?: () => Promise<void>;
 }
 
 export const QuoteView: React.FC<QuoteViewProps> = ({
   quote, customer, settings, onEdit, onBack, onUpdateStatus, onUpdateQuote,
-  onConvertToInvoice, onDuplicate
+  onConvertToInvoice, onDuplicate, onDelete
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [showCustomiser, setShowCustomiser] = useState(false);
@@ -739,6 +740,19 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           {customer?.address && (
             <button onClick={handleOpenMaps} className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-blue-50 text-blue-600 text-xs font-bold shadow-sm border border-blue-100">
               <MapPin size={14} /> Map
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={async () => {
+                const docType = activeQuote.type === 'invoice' ? 'invoice' : 'quote';
+                if (confirm(`Are you sure you want to delete this ${docType}? This cannot be undone.`)) {
+                  await onDelete();
+                }
+              }}
+              className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-red-50 text-red-600 text-xs font-bold shadow-sm border border-red-100 hover:bg-red-100 transition-colors"
+            >
+              <Trash2 size={14} /> Discard
             </button>
           )}
         </div>
