@@ -205,6 +205,20 @@ export default defineConfig(({ mode }) => {
           '@': path.resolve(__dirname, '.'),
         }
       },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              // Vendor chunks - split heavy dependencies
+              'vendor-react': ['react', 'react-dom'],
+              'vendor-supabase': ['@supabase/supabase-js'],
+              'vendor-pdf': ['jspdf', 'html2canvas'],
+              'vendor-icons': ['lucide-react'],
+              'vendor-sentry': ['@sentry/react'],
+            }
+          }
+        }
+      },
       test: {
         globals: true,
         environment: 'jsdom',

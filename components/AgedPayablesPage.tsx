@@ -153,11 +153,11 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
   // Calculate summary stats
   const summaryStats = useMemo(() => {
     const dueSoon = outstandingPayables.filter(p => {
-      const days = getDaysUntilDue(p.due_date);
+      const days = getDaysUntilDue(p.due_date ?? null);
       return days !== null && days >= 0 && days <= 7 && p.status !== 'disputed';
     });
     const overdue = outstandingPayables.filter(p => {
-      const days = getDaysUntilDue(p.due_date);
+      const days = getDaysUntilDue(p.due_date ?? null);
       return days !== null && days < 0 && p.status !== 'disputed';
     });
     const disputed = outstandingPayables.filter(p => p.status === 'disputed');
@@ -165,19 +165,19 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
     return {
       total: {
         count: outstandingPayables.length,
-        amount: outstandingPayables.reduce((sum, p) => sum + (p.amount - p.amount_paid), 0)
+        amount: outstandingPayables.reduce((sum, p) => sum + (p.amount - (p.amount_paid ?? 0)), 0)
       },
       dueSoon: {
         count: dueSoon.length,
-        amount: dueSoon.reduce((sum, p) => sum + (p.amount - p.amount_paid), 0)
+        amount: dueSoon.reduce((sum, p) => sum + (p.amount - (p.amount_paid ?? 0)), 0)
       },
       overdue: {
         count: overdue.length,
-        amount: overdue.reduce((sum, p) => sum + (p.amount - p.amount_paid), 0)
+        amount: overdue.reduce((sum, p) => sum + (p.amount - (p.amount_paid ?? 0)), 0)
       },
       disputed: {
         count: disputed.length,
-        amount: disputed.reduce((sum, p) => sum + (p.amount - p.amount_paid), 0)
+        amount: disputed.reduce((sum, p) => sum + (p.amount - (p.amount_paid ?? 0)), 0)
       }
     };
   }, [outstandingPayables]);
@@ -222,10 +222,10 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
     });
 
     return [
-      { label: 'This Week', amount: thisWeek.reduce((sum, p) => sum + (p.amount - p.amount_paid), 0), billCount: thisWeek.length },
-      { label: 'Next Week', amount: nextWeek.reduce((sum, p) => sum + (p.amount - p.amount_paid), 0), billCount: nextWeek.length },
-      { label: 'In 2 Weeks', amount: twoWeeks.reduce((sum, p) => sum + (p.amount - p.amount_paid), 0), billCount: twoWeeks.length },
-      { label: 'Next 30 Days', amount: thirtyDays.reduce((sum, p) => sum + (p.amount - p.amount_paid), 0), billCount: thirtyDays.length },
+      { label: 'This Week', amount: thisWeek.reduce((sum, p) => sum + (p.amount - (p.amount_paid ?? 0)), 0), billCount: thisWeek.length },
+      { label: 'Next Week', amount: nextWeek.reduce((sum, p) => sum + (p.amount - (p.amount_paid ?? 0)), 0), billCount: nextWeek.length },
+      { label: 'In 2 Weeks', amount: twoWeeks.reduce((sum, p) => sum + (p.amount - (p.amount_paid ?? 0)), 0), billCount: twoWeeks.length },
+      { label: 'Next 30 Days', amount: thirtyDays.reduce((sum, p) => sum + (p.amount - (p.amount_paid ?? 0)), 0), billCount: thirtyDays.length },
     ];
   }, [outstandingPayables]);
 
@@ -235,8 +235,8 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
 
     outstandingPayables.forEach(p => {
       const existing = summaryMap.get(p.vendor_name);
-      const remaining = p.amount - p.amount_paid;
-      const daysUntilDue = getDaysUntilDue(p.due_date);
+      const remaining = p.amount - (p.amount_paid ?? 0);
+      const daysUntilDue = getDaysUntilDue(p.due_date ?? null);
 
       if (existing) {
         existing.totalOwed += remaining;
@@ -274,8 +274,8 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
     // Apply bucket filter
     if (activeBucket !== 'all') {
       filtered = filtered.filter(p => {
-        const daysUntilDue = getDaysUntilDue(p.due_date);
-        const bucket = getAgingBucket(daysUntilDue, p.status);
+        const daysUntilDue = getDaysUntilDue(p.due_date ?? null);
+        const bucket = getAgingBucket(daysUntilDue, p.status ?? 'unpaid');
         return bucket === activeBucket;
       });
     }
@@ -305,12 +305,12 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
       let comparison = 0;
       switch (sortField) {
         case 'due_date':
-          const aDays = getDaysUntilDue(a.due_date) ?? 999;
-          const bDays = getDaysUntilDue(b.due_date) ?? 999;
+          const aDays = getDaysUntilDue(a.due_date ?? null) ?? 999;
+          const bDays = getDaysUntilDue(b.due_date ?? null) ?? 999;
           comparison = aDays - bDays;
           break;
         case 'amount':
-          comparison = (a.amount - a.amount_paid) - (b.amount - b.amount_paid);
+          comparison = (a.amount - (a.amount_paid ?? 0)) - (b.amount - (b.amount_paid ?? 0));
           break;
         case 'vendor':
           comparison = a.vendor_name.localeCompare(b.vendor_name);
@@ -359,9 +359,9 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
       description: payable.description || '',
       amount: payable.amount.toString(),
       vat_amount: payable.vat_amount?.toString() || '',
-      invoice_date: payable.invoice_date,
+      invoice_date: payable.invoice_date ?? new Date().toISOString().split('T')[0],
       due_date: payable.due_date || '',
-      category: payable.category,
+      category: payable.category ?? 'materials',
       notes: payable.notes || '',
     });
     setEditingPayable(payable);
@@ -370,7 +370,7 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
 
   const openPaymentModal = (payable: Payable) => {
     setPayingPayable(payable);
-    setPaymentAmount((payable.amount - payable.amount_paid).toFixed(2));
+    setPaymentAmount((payable.amount - (payable.amount_paid ?? 0)).toFixed(2));
     setShowPaymentModal(true);
   };
 
@@ -418,7 +418,7 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
     setProcessing(payingPayable.id);
     try {
       const amount = parseFloat(paymentAmount);
-      const newAmountPaid = payingPayable.amount_paid + amount;
+      const newAmountPaid = (payingPayable.amount_paid ?? 0) + amount;
       const newStatus = newAmountPaid >= payingPayable.amount ? 'paid' : 'partial';
 
       await payablesService.update(payingPayable.id, {
@@ -492,17 +492,17 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
     const headers = ['Vendor', 'Invoice #', 'Date', 'Due Date', 'Amount', 'Paid', 'Remaining', 'Status', 'Category', 'Days Until Due'];
 
     const rows = filteredPayables.map(p => {
-      const daysUntilDue = getDaysUntilDue(p.due_date);
+      const daysUntilDue = getDaysUntilDue(p.due_date ?? null);
       return [
         p.vendor_name,
         p.invoice_number || '',
-        p.invoice_date,
+        p.invoice_date ?? '',
         p.due_date || '',
         p.amount.toFixed(2),
-        p.amount_paid.toFixed(2),
-        (p.amount - p.amount_paid).toFixed(2),
-        p.status,
-        p.category,
+        (p.amount_paid ?? 0).toFixed(2),
+        (p.amount - (p.amount_paid ?? 0)).toFixed(2),
+        p.status ?? 'unpaid',
+        p.category ?? '',
         daysUntilDue !== null ? daysUntilDue.toString() : ''
       ];
     });
@@ -809,11 +809,12 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
         ) : (
           <div className="divide-y divide-slate-50">
             {filteredPayables.map(payable => {
-              const daysUntilDue = getDaysUntilDue(payable.due_date);
-              const bucket = getAgingBucket(daysUntilDue, payable.status);
+              const daysUntilDue = getDaysUntilDue(payable.due_date ?? null);
+              const status = payable.status ?? 'unpaid';
+              const bucket = getAgingBucket(daysUntilDue, status);
               const bucketColors = getBucketColors(bucket);
-              const remaining = payable.amount - payable.amount_paid;
-              const StatusIcon = STATUS_CONFIG[payable.status]?.icon || Clock;
+              const remaining = payable.amount - (payable.amount_paid ?? 0);
+              const StatusIcon = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.icon || Clock;
 
               return (
                 <div key={payable.id} className={`p-4 md:grid md:grid-cols-12 md:gap-4 md:items-center hover:bg-slate-50/50 transition-colors ${bucketColors.bg}`}>
@@ -831,7 +832,7 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
                       </div>
                       <div className="text-right">
                         <p className={`font-black text-lg ${bucketColors.text}`}>{formatCurrency(remaining)}</p>
-                        {payable.amount_paid > 0 && (
+                        {(payable.amount_paid ?? 0) > 0 && (
                           <p className="text-xs text-slate-400">of {formatCurrency(payable.amount)}</p>
                         )}
                       </div>
@@ -841,8 +842,8 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
                         {daysUntilDue !== null && daysUntilDue < 0 && <AlertTriangle size={12} />}
                         {formatDaysUntilDue(daysUntilDue)}
                       </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-black ${STATUS_CONFIG[payable.status]?.color || 'bg-slate-100 text-slate-600'}`}>
-                        {STATUS_CONFIG[payable.status]?.label || payable.status}
+                      <span className={`px-2 py-1 rounded-full text-xs font-black ${STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.color || 'bg-slate-100 text-slate-600'}`}>
+                        {STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.label || status}
                       </span>
                     </div>
                     <div className="flex gap-2">
@@ -895,14 +896,14 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
                     </div>
                     <div className="col-span-2">
                       <p className={`font-black ${bucketColors.text}`}>{formatCurrency(remaining)}</p>
-                      {payable.amount_paid > 0 && (
+                      {(payable.amount_paid ?? 0) > 0 && (
                         <p className="text-xs text-slate-400">of {formatCurrency(payable.amount)}</p>
                       )}
                     </div>
                     <div className="col-span-2">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-black ${STATUS_CONFIG[payable.status]?.color || 'bg-slate-100 text-slate-600'}`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-black ${STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.color || 'bg-slate-100 text-slate-600'}`}>
                         <StatusIcon size={12} />
-                        {STATUS_CONFIG[payable.status]?.label || payable.status}
+                        {STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.label || status}
                       </span>
                     </div>
                     <div className="col-span-1 flex justify-end gap-1">
@@ -921,7 +922,7 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
                       >
                         {processing === payable.id ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                       </button>
-                      {payable.status !== 'disputed' && (
+                      {status !== 'disputed' && (
                         <button
                           onClick={() => handleMarkDisputed(payable)}
                           className="p-2 bg-slate-100 text-slate-400 rounded-lg hover:bg-purple-100 hover:text-purple-600 transition-colors"
@@ -1175,11 +1176,11 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Already Paid</span>
-                  <span className="font-bold text-emerald-600">{formatCurrency(payingPayable.amount_paid)}</span>
+                  <span className="font-bold text-emerald-600">{formatCurrency(payingPayable.amount_paid ?? 0)}</span>
                 </div>
                 <div className="flex justify-between text-sm border-t border-slate-200 pt-2 mt-2">
                   <span className="font-bold text-slate-700">Remaining</span>
-                  <span className="font-black text-slate-900">{formatCurrency(payingPayable.amount - payingPayable.amount_paid)}</span>
+                  <span className="font-black text-slate-900">{formatCurrency(payingPayable.amount - (payingPayable.amount_paid ?? 0))}</span>
                 </div>
               </div>
 
@@ -1194,7 +1195,7 @@ export const AgedPayablesPage: React.FC<AgedPayablesPageProps> = ({ onBack }) =>
                     step="0.01"
                     value={paymentAmount}
                     onChange={(e) => setPaymentAmount(e.target.value)}
-                    max={payingPayable.amount - payingPayable.amount_paid}
+                    max={payingPayable.amount - (payingPayable.amount_paid ?? 0)}
                     className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl text-lg font-bold focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
