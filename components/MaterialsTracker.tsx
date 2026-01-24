@@ -208,12 +208,12 @@ export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
           </button>
         </div>
         
-        <button 
+        <button
           onClick={() => setShowScratchpad(!showScratchpad)}
-          className={`px-4 rounded-2xl border font-bold text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm ${showScratchpad ? 'bg-amber-500 border-amber-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+          className={`px-3 sm:px-4 rounded-2xl border font-bold text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm shrink-0 ${showScratchpad ? 'bg-amber-500 border-amber-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
         >
           <PencilLine size={16} />
-          {showScratchpad ? 'Close' : 'Scratchpad'}
+          <span className="hidden sm:inline">{showScratchpad ? 'Close' : 'Scratchpad'}</span>
         </button>
       </div>
 
