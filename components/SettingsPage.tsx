@@ -9,7 +9,7 @@ import {
   Plus, Eye, EyeOff, HardHat, Package, Landmark, ShieldCheck, Hash, Loader2,
   Calendar, Layout, FileSpreadsheet, FileEdit, List, ArrowLeft,
   Crown, Zap, Clock, Users, Briefcase, Camera, FileBox, ExternalLink,
-  HelpCircle, MessageSquare, Send, Hammer, Minus, Minimize2, LayoutGrid, Check, Type
+  HelpCircle, MessageSquare, Send, Hammer, Minus, Minimize2, LayoutGrid, Check, Type, Trash2
 } from 'lucide-react';
 import { TEMPLATE_METADATA, TEMPLATE_DESCRIPTIONS, COLOR_SCHEMES, getTemplateConfig } from '../src/lib/invoiceTemplates';
 import { useToast } from '../src/contexts/ToastContext';
@@ -29,7 +29,7 @@ interface SettingsPageProps {
   onBack?: () => void;
 }
 
-type SettingsCategory = 'company' | 'quotes' | 'invoices' | 'subscription' | 'help';
+type SettingsCategory = 'company' | 'quotes' | 'invoices' | 'materials' | 'subscription' | 'help';
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSettings, onSave, onBack }) => {
   const toast = useToast();
@@ -46,6 +46,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const [helpTitle, setHelpTitle] = useState('');
   const [helpMessage, setHelpMessage] = useState('');
   const [submittingHelp, setSubmittingHelp] = useState(false);
+  const [newMaterialInput, setNewMaterialInput] = useState('');
 
   // Calculate current usage for limits display
   const currentInvoiceCount = quotes.filter(q => q.type === 'invoice').length;
@@ -239,8 +240,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
     <button
       onClick={() => setActiveCategory(id)}
       className={`w-full flex items-center justify-between p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl md:rounded-[24px] transition-all border-2 ${activeCategory === id
-          ? 'bg-gradient-to-r from-teal-600 to-teal-500 text-white border-teal-500 shadow-xl shadow-teal-500/25'
-          : 'bg-white text-slate-500 border-slate-100 hover:border-teal-200 hover:bg-teal-50/30'
+        ? 'bg-gradient-to-r from-teal-600 to-teal-500 text-white border-teal-500 shadow-xl shadow-teal-500/25'
+        : 'bg-white text-slate-500 border-slate-100 hover:border-teal-200 hover:bg-teal-50/30'
         }`}
     >
       <div className="flex items-center gap-2 sm:gap-3 md:gap-4 text-left">
@@ -287,6 +288,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
             <CategoryButton id="company" label="My Company" icon={Building} color="bg-amber-500 text-slate-900" />
             <CategoryButton id="quotes" label="Quote Preferences" icon={FileText} color="bg-blue-500 text-white" />
             <CategoryButton id="invoices" label="Invoice Preferences" icon={ReceiptText} color="bg-emerald-500 text-white" />
+            <CategoryButton id="materials" label="Materials Library" icon={Package} color="bg-amber-500 text-white" />
             <CategoryButton id="help" label="Help & Contact" icon={HelpCircle} color="bg-teal-500 text-white" />
           </div>
 
@@ -321,15 +323,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     <div>
                       <div className="flex items-center gap-3 mb-2">
                         <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${subscription.tier === 'free' ? 'bg-slate-100 text-slate-600' :
-                            subscription.tier === 'professional' ? 'bg-purple-100 text-purple-600' :
-                              'bg-amber-100 text-amber-600'
+                          subscription.tier === 'professional' ? 'bg-purple-100 text-purple-600' :
+                            'bg-amber-100 text-amber-600'
                           }`}>
                           {subscription.tier}
                         </span>
                         {subscription.status === 'trialing' && (
                           <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${subscription.trialDaysRemaining !== null && subscription.trialDaysRemaining <= 3
-                              ? 'bg-amber-100 text-amber-600'
-                              : 'bg-blue-100 text-blue-600'
+                            ? 'bg-amber-100 text-amber-600'
+                            : 'bg-blue-100 text-blue-600'
                             }`}>
                             Trial
                           </span>
@@ -343,10 +345,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       <p className="text-2xl font-black text-slate-900 capitalize">{subscription.tier} Plan</p>
                       {subscription.status === 'trialing' && subscription.trialDaysRemaining !== null && (
                         <p className={`text-sm mt-1 ${subscription.trialDaysRemaining === 0
-                            ? 'text-red-600 font-semibold'
-                            : subscription.trialDaysRemaining <= 3
-                              ? 'text-amber-600'
-                              : 'text-slate-500'
+                          ? 'text-red-600 font-semibold'
+                          : subscription.trialDaysRemaining <= 3
+                            ? 'text-amber-600'
+                            : 'text-slate-500'
                           }`}>
                           <Clock size={14} className="inline mr-1" />
                           {subscription.trialDaysRemaining === 0
@@ -366,8 +368,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         onClick={() => handleUpgrade('professional')}
                         disabled={upgradingTier !== null}
                         className={`flex items-center gap-2 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 ${subscription.status === 'expired'
-                            ? 'bg-red-500 hover:bg-red-600 shadow-red-200'
-                            : 'bg-purple-500 hover:bg-purple-600 shadow-purple-200'
+                          ? 'bg-red-500 hover:bg-red-600 shadow-red-200'
+                          : 'bg-purple-500 hover:bg-purple-600 shadow-purple-200'
                           }`}
                       >
                         {upgradingTier === 'professional' ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
@@ -853,8 +855,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         key={scheme.id}
                         onClick={() => setSettings({ ...settings, quoteColorScheme: scheme.id })}
                         className={`flex flex-col items-center gap-1.5 md:gap-3 p-2 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all ${(settings.quoteColorScheme || 'default') === scheme.id
-                            ? 'border-blue-500 bg-blue-50/30 shadow-lg'
-                            : 'border-slate-100 bg-white hover:border-blue-200'
+                          ? 'border-blue-500 bg-blue-50/30 shadow-lg'
+                          : 'border-slate-100 bg-white hover:border-blue-200'
                           }`}
                       >
                         <div className={`w-full h-8 md:h-12 rounded-lg md:rounded-xl ${scheme.headerBg} flex items-center justify-center border border-slate-200`}>
@@ -1137,8 +1139,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                             key={template.id}
                             onClick={() => setSettings({ ...settings, documentTemplate: template.id as DocumentTemplate })}
                             className={`relative flex flex-col items-center gap-1 md:gap-2 p-2 md:p-3 rounded-xl md:rounded-2xl border-2 transition-all ${(settings.documentTemplate || 'professional') === template.id
-                                ? 'border-emerald-500 bg-emerald-50/50 shadow-lg'
-                                : 'border-slate-100 bg-white hover:border-emerald-200'
+                              ? 'border-emerald-500 bg-emerald-50/50 shadow-lg'
+                              : 'border-slate-100 bg-white hover:border-emerald-200'
                               }`}
                           >
                             {template.recommended && (
@@ -1154,8 +1156,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                             </div>
 
                             <div className={`w-6 md:w-8 h-6 md:h-8 rounded-lg flex items-center justify-center ${(settings.documentTemplate || 'professional') === template.id
-                                ? 'bg-emerald-500 text-white'
-                                : 'bg-slate-100 text-slate-400'
+                              ? 'bg-emerald-500 text-white'
+                              : 'bg-slate-100 text-slate-400'
                               }`}>
                               <Icon size={10} className="md:w-3 md:h-3" />
                             </div>
@@ -1201,8 +1203,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                               key={scheme.id}
                               onClick={() => setSettings({ ...settings, invoiceColorScheme: scheme.id })}
                               className={`flex flex-col items-center gap-1.5 md:gap-3 p-2 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all ${(settings.invoiceColorScheme || 'default') === scheme.id
-                                  ? 'border-emerald-500 bg-emerald-50/30 shadow-lg'
-                                  : 'border-slate-100 bg-white hover:border-emerald-200'
+                                ? 'border-emerald-500 bg-emerald-50/30 shadow-lg'
+                                : 'border-slate-100 bg-white hover:border-emerald-200'
                                 }`}
                             >
                               <div className={`w-full h-8 md:h-12 rounded-lg md:rounded-xl ${scheme.headerBg} flex items-center justify-center border border-slate-200`}>
@@ -1289,6 +1291,107 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       placeholder="e.g. Please settle this invoice within 14 days."
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeCategory === 'materials' && (
+            <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
+                <div className="p-4 md:p-10 border-b border-slate-100 bg-slate-50/50">
+                  <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                    <div className="p-2 md:p-3 bg-amber-100 text-amber-600 rounded-xl md:rounded-2xl"><Package size={20} className="md:w-6 md:h-6" /></div>
+                    <h3 className="text-base md:text-xl font-black text-slate-900 uppercase tracking-tight">Materials Library</h3>
+                  </div>
+                  <p className="text-slate-500 text-xs md:text-sm font-medium italic hidden md:block">Configure your "Quick Pick" list for faster job costing.</p>
+                </div>
+                <div className="p-4 md:p-10 space-y-6">
+
+                  {/* Add New Item */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Add New Quick Pick</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 py-3 md:py-4 focus:border-amber-400 focus:bg-white outline-none text-slate-900 font-bold text-sm transition-all"
+                        value={newMaterialInput}
+                        onChange={e => setNewMaterialInput(e.target.value)}
+                        placeholder="e.g. Paint White 10L"
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && newMaterialInput.trim()) {
+                            const current = settings.quickPickMaterials || [];
+                            if (!current.includes(newMaterialInput.trim())) {
+                              setSettings({ ...settings, quickPickMaterials: [...current, newMaterialInput.trim()] });
+                              setNewMaterialInput('');
+                              toast.success('Added', 'Material added to quick picks');
+                            }
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          if (newMaterialInput.trim()) {
+                            const current = settings.quickPickMaterials || [];
+                            if (!current.includes(newMaterialInput.trim())) {
+                              setSettings({ ...settings, quickPickMaterials: [...current, newMaterialInput.trim()] });
+                              setNewMaterialInput('');
+                              hapticSuccess();
+                            }
+                          }
+                        }}
+                        disabled={!newMaterialInput.trim()}
+                        className="bg-amber-500 text-white px-4 md:px-6 rounded-xl md:rounded-[20px] font-black uppercase text-xs tracking-widest hover:bg-amber-600 disabled:opacity-50 transition-all shadow-lg shadow-amber-200"
+                      >
+                        <Plus size={20} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Current Items List */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between px-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Current Items</label>
+                      <button
+                        onClick={() => {
+                          if (confirm('Reset to default quick picks?')) {
+                            setSettings({ ...settings, quickPickMaterials: undefined }); // Will fall back to defaults
+                            toast.success('Reset', 'Restored default materials');
+                          }
+                        }}
+                        className="text-[10px] font-bold text-amber-500 hover:text-amber-600 uppercase tracking-widest"
+                      >
+                        Restore Defaults
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {(settings.quickPickMaterials || [
+                        'C24 Timber', 'Cement', 'Ballast', 'Plasterboard', 'Multi-finish',
+                        'Screws', 'PVA', 'Expanding Foam', 'Sealant', 'Sand'
+                      ]).map((item) => (
+                        <div key={item} className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl pl-3 pr-2 py-2 shadow-sm group hover:border-amber-300 transition-all">
+                          <span className="text-xs font-bold text-slate-700">{item}</span>
+                          <button
+                            onClick={() => {
+                              const current = settings.quickPickMaterials || [
+                                'C24 Timber', 'Cement', 'Ballast', 'Plasterboard', 'Multi-finish',
+                                'Screws', 'PVA', 'Expanding Foam', 'Sealant', 'Sand'
+                              ];
+                              setSettings({
+                                ...settings,
+                                quickPickMaterials: current.filter(i => i !== item)
+                              });
+                            }}
+                            className="p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>

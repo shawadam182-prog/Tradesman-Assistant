@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { QuoteSection, MaterialItem, LabourItem, AppSettings, LabourRatePreset } from '../../types';
 import { MaterialItemRow } from './MaterialItemRow';
 import { LabourItemRow } from './LabourItemRow';
-import { Trash2, Plus, Package, Type, HardHat, PoundSterling } from 'lucide-react';
+import { Trash2, Plus, Package, Type, HardHat, PoundSterling, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface QuoteSectionEditorProps {
   section: QuoteSection;
@@ -74,6 +74,16 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
     section.subsectionPrice !== undefined ? String(section.subsectionPrice) : ''
   );
   const [isEditingSubsectionPrice, setIsEditingSubsectionPrice] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea when expanded or content changes
+  useLayoutEffect(() => {
+    if (textareaRef.current && isExpanded) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [section.description, isExpanded]);
 
   // Sync local state when external value changes (but not while editing)
   useEffect(() => {
@@ -99,18 +109,36 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
               placeholder="Job Section Title (e.g. Rewire Kitchen)"
             />
           </div>
-          <textarea
-            className="text-[10px] md:text-sm text-slate-500 outline-none focus:text-slate-700 transition-colors w-full ml-8 md:ml-[52px] bg-transparent placeholder:text-slate-300 placeholder:italic resize-none min-h-[1.5em]"
-            value={section.description || ''}
-            onChange={e => onUpdateDescription(section.id, e.target.value)}
-            placeholder="Add a description of this work..."
-            rows={1}
-            onInput={e => {
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = 'auto';
-              target.style.height = target.scrollHeight + 'px';
-            }}
-          />
+
+          <div className="relative ml-8 md:ml-[52px]">
+            <textarea
+              ref={textareaRef}
+              className={`w-full bg-transparent outline-none transition-all resize-none font-medium placeholder:text-slate-300 placeholder:italic ${isExpanded ? 'text-xs md:text-sm text-slate-700' : 'text-[9px] md:text-xs text-slate-500 overflow-hidden whitespace-nowrap text-ellipsis'
+                }`}
+              value={section.description || ''}
+              onChange={e => {
+                onUpdateDescription(section.id, e.target.value);
+                const target = e.target;
+                target.style.height = 'auto'; // Reset height
+                target.style.height = `${target.scrollHeight}px`; // Set to scroll height
+              }}
+              onFocus={() => setIsExpanded(true)}
+              placeholder="Add a description of this work..."
+              rows={isExpanded ? undefined : 1}
+              style={{
+                height: isExpanded ? 'auto' : '1.5em',
+                minHeight: isExpanded ? '3em' : '1.5em'
+              }}
+            />
+            {section.description && section.description.length > 50 && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="absolute right-0 top-0 p-1 text-slate-300 hover:text-slate-500 transition-colors"
+              >
+                {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+            )}
+          </div>
         </div>
         <div className="flex gap-1 md:gap-2">
           <button

@@ -104,8 +104,8 @@ export interface Quote {
 export interface ScheduleEntry {
   id: string;
   title: string;
-  start: string; 
-  end: string;   
+  start: string;
+  end: string;
   description?: string;
   projectId?: string;
   customerId?: string;
@@ -121,7 +121,7 @@ export interface SiteNote {
 
 export interface SitePhoto {
   id: string;
-  url: string; 
+  url: string;
   caption: string;
   timestamp: string;
   tags: string[];
