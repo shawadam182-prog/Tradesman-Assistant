@@ -1058,8 +1058,9 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                   )}
                   <tbody>
                     {getAllLineItems().map((item, idx) => (
-                      item.isHeading ? (
-                        <tr key={`heading-${idx}`} style={{ borderBottom: item.isDescription ? 'none' : '1px solid #f1f5f9' }}>
+                      item.type === 'header' ? (
+                        // Section Title or Section Description
+                        <tr key={`header-${idx}`} style={{ borderBottom: item.isDescription ? 'none' : '1px solid #f1f5f9' }}>
                           <td colSpan={(activeTemplate === 'professional' || activeTemplate === 'spacious') ? 5 : (templateConfig.showLineNumbers ? 4 : 3)} style={{
                             padding: item.isDescription ? '2px 8px 8px 8px' : '8px 8px 2px 8px',
                             fontSize: item.isDescription ? '9px' : '10px',
@@ -1070,6 +1071,13 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                             backgroundColor: item.isDescription ? 'transparent' : '#f8fafc'
                           }}>
                             {item.description}
+                          </td>
+                        </tr>
+                      ) : item.isHeading ? (
+                        // Inline material heading (e.g., "Plumbing", "Electrical")
+                        <tr key={`heading-${idx}`} className="bg-slate-50">
+                          <td colSpan={(activeTemplate === 'professional' || activeTemplate === 'spacious') ? 5 : (templateConfig.showLineNumbers ? 4 : 3)} className="py-1 px-2">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{item.description}</span>
                           </td>
                         </tr>
                       ) : activeTemplate === 'spacious' ? (
