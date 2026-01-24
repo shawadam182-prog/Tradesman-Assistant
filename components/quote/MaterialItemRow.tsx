@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MaterialItem } from '../../types';
 import { Plus, Minus, Trash2, BookmarkPlus, Type } from 'lucide-react';
 
@@ -21,6 +21,19 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
   onDecrement,
   onSaveToLibrary,
 }) => {
+  // Local state for price input to allow typing decimals
+  const [priceInput, setPriceInput] = useState<string>(
+    item.unitPrice !== undefined && item.unitPrice !== 0 ? String(item.unitPrice) : ''
+  );
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
+
+  // Sync local state when external value changes (but not while editing)
+  useEffect(() => {
+    if (!isEditingPrice) {
+      setPriceInput(item.unitPrice !== undefined && item.unitPrice !== 0 ? String(item.unitPrice) : '');
+    }
+  }, [item.unitPrice, isEditingPrice]);
+
   if (item.isHeading) {
     return (
       <div className="bg-slate-100 px-2 md:px-4 py-0.5 md:py-2 rounded md:rounded-lg my-0.5 md:my-2 flex items-center gap-1 md:gap-3">
@@ -120,9 +133,21 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
             type="text"
             inputMode="decimal"
             className="w-full h-6 md:h-11 bg-white rounded md:rounded-lg text-[10px] md:text-lg font-bold px-0.5 md:px-3 text-center shadow-sm outline-none focus:ring-1 focus:ring-teal-100 md:focus:ring-2 md:focus:ring-teal-200 border border-slate-100 md:border-slate-200"
-            value={item.unitPrice || ''}
+            value={isEditingPrice ? priceInput : (item.unitPrice || '')}
+            onFocus={() => {
+              setIsEditingPrice(true);
+              setPriceInput(item.unitPrice !== undefined && item.unitPrice !== 0 ? String(item.unitPrice) : '');
+            }}
             onChange={e => {
-              const numValue = parseFloat(e.target.value);
+              const inputValue = e.target.value;
+              // Allow empty, digits, and one decimal point
+              if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                setPriceInput(inputValue);
+              }
+            }}
+            onBlur={() => {
+              setIsEditingPrice(false);
+              const numValue = parseFloat(priceInput);
               onUpdate(sectionId, item.id, { unitPrice: isNaN(numValue) ? 0 : numValue });
             }}
             placeholder="0.00"
