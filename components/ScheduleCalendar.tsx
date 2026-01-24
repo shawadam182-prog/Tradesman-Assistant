@@ -25,6 +25,7 @@ interface ScheduleCalendarProps {
   projects: JobPack[];
   customers: Customer[];
   onAddCustomer: (customer: Customer) => Promise<Customer>;
+  onAddProject: (project: JobPack) => Promise<JobPack>;
   onAddEntry: (entry: Omit<ScheduleEntry, 'id'>) => Promise<ScheduleEntry>;
   onUpdateEntry: (id: string, updates: Partial<ScheduleEntry>) => Promise<void>;
   onDeleteEntry: (id: string) => Promise<void>;
@@ -36,6 +37,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   projects,
   customers,
   onAddCustomer,
+  onAddProject,
   onAddEntry,
   onUpdateEntry,
   onDeleteEntry,
@@ -62,6 +64,12 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   const [isListeningCustomer, setIsListeningCustomer] = useState(false);
   const [isProcessingCustomer, setIsProcessingCustomer] = useState(false);
   const [customerError, setCustomerError] = useState<string | null>(null);
+
+  // Job Pack Quick Add States
+  const [isCreatingJobPack, setIsCreatingJobPack] = useState(false);
+  const [newJobPackTitle, setNewJobPackTitle] = useState('');
+  const [newJobPackCustomerId, setNewJobPackCustomerId] = useState<string>('');
+  const [jobPackError, setJobPackError] = useState<string | null>(null);
 
   // Schedule entry location and linking
   const [linkType, setLinkType] = useState<'none' | 'job' | 'customer'>('none');
@@ -254,6 +262,48 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
       setCustomerError(null);
     } catch (error) {
       setCustomerError("Failed to create customer. Please try again.");
+    }
+  };
+
+  const saveQuickJobPack = async () => {
+    if (!newJobPackCustomerId) {
+      setJobPackError("Please select a customer for the job pack.");
+      return;
+    }
+
+    const finalTitle = newJobPackTitle.trim() || `Job Pack - ${new Date().toLocaleDateString('en-GB')}`;
+    const selectedCust = customers.find(c => c.id === newJobPackCustomerId);
+
+    const jobPack: JobPack = {
+      id: Math.random().toString(36).substr(2, 9),
+      title: finalTitle,
+      customerId: newJobPackCustomerId,
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      notes: [],
+      photos: [],
+      drawings: [],
+      documents: []
+    };
+
+    try {
+      const createdJobPack = await onAddProject(jobPack);
+      // Link the schedule entry to the new job pack
+      setDraft(prev => ({
+        ...prev,
+        projectId: createdJobPack.id,
+        customerId: createdJobPack.customerId,
+        title: prev.title || createdJobPack.title,
+        location: prev.location || selectedCust?.address || '',
+      }));
+      setLinkType('job');
+      setIsCreatingJobPack(false);
+      setNewJobPackTitle('');
+      setNewJobPackCustomerId('');
+      setJobPackError(null);
+    } catch (error) {
+      setJobPackError("Failed to create job pack. Please try again.");
     }
   };
 
@@ -844,6 +894,83 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                   <button onClick={() => setIsAddingCustomer(false)} className="px-12 bg-slate-50 text-slate-500 font-black py-5 rounded-[24px] hover:bg-slate-100 transition-all uppercase tracking-widest text-xs">Cancel</button>
                 </div>
               </div>
+            ) : isCreatingJobPack ? (
+              <div className="space-y-2 md:space-y-6 animate-in slide-in-from-right-4">
+                <div className="flex justify-between items-center mb-2 md:mb-4">
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="h-10 w-10 md:h-14 md:w-14 rounded-2xl md:rounded-3xl bg-blue-500 text-white flex items-center justify-center shadow-lg">
+                      <Briefcase className="w-5 h-5 md:w-7 md:h-7" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-sm md:text-xl text-slate-900 uppercase tracking-tight">New Job Pack</h3>
+                      <p className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Create & Link to Visit</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsCreatingJobPack(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-300 transition-all hover:text-slate-900">
+                    <X className="w-5 h-5 md:w-6 md:h-6" />
+                  </button>
+                </div>
+
+                <div className="space-y-4 md:space-y-6">
+                  {/* Job Pack Title Field */}
+                  <div className="space-y-1 md:space-y-2">
+                    <label className="text-[9px] md:text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5 px-0.5">
+                      <Briefcase size={12} className="md:w-3.5 md:h-3.5" /> Job Pack Title
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full bg-blue-50 border-2 border-blue-200 rounded-2xl md:rounded-3xl px-4 py-3 md:px-5 md:py-5 text-slate-950 font-bold text-base md:text-lg outline-none focus:bg-white focus:border-blue-400 transition-all"
+                      value={newJobPackTitle}
+                      placeholder={`Job Pack - ${new Date().toLocaleDateString('en-GB')}`}
+                      onChange={e => setNewJobPackTitle(e.target.value)}
+                    />
+                    <p className="text-[8px] md:text-[9px] font-bold text-slate-400 px-1 italic">Leave blank to auto-generate title</p>
+                  </div>
+
+                  {/* Assign to Customer Field */}
+                  <div className="space-y-1 md:space-y-2">
+                    <label className="text-[9px] md:text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5 px-0.5">
+                      <User size={12} className="md:w-3.5 md:h-3.5" /> Assign to Client *
+                    </label>
+                    <div className="relative">
+                      <select
+                        className="w-full bg-blue-50 border-2 border-blue-200 rounded-2xl md:rounded-3xl px-4 py-3 md:px-5 md:py-5 font-bold text-base md:text-lg text-slate-950 outline-none focus:border-blue-400 focus:bg-white transition-all appearance-none cursor-pointer"
+                        value={newJobPackCustomerId}
+                        onChange={e => setNewJobPackCustomerId(e.target.value)}
+                      >
+                        <option value="">Select Client...</option>
+                        {customers.map(c => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} {c.company ? `(${c.company})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 text-blue-300 pointer-events-none w-5 h-5 md:w-6 md:h-6" />
+                    </div>
+                  </div>
+                </div>
+
+                {jobPackError && (
+                  <div className="flex items-center gap-2 p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100">
+                    <AlertCircle size={18} />
+                    <p className="text-xs font-bold uppercase tracking-widest">{jobPackError}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-4 pt-4">
+                  <button
+                    onClick={() => {
+                      hapticTap();
+                      saveQuickJobPack();
+                    }}
+                    disabled={!newJobPackCustomerId}
+                    className="flex-1 bg-blue-500 text-white font-black py-5 rounded-[24px] hover:bg-blue-600 transition-all shadow-xl shadow-blue-200 uppercase tracking-widest text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Create Job Pack
+                  </button>
+                  <button onClick={() => setIsCreatingJobPack(false)} className="px-12 bg-slate-50 text-slate-500 font-black py-5 rounded-[24px] hover:bg-slate-100 transition-all uppercase tracking-widest text-xs">Cancel</button>
+                </div>
+              </div>
             ) : (
               <div className="space-y-4 md:space-y-12">
                 <div className="flex justify-between items-start">
@@ -925,23 +1052,32 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                       <label className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic flex items-center gap-2">
                         <Briefcase className="w-3 h-3 md:w-3.5 md:h-3.5" /> Select Job Pack
                       </label>
-                      <div className="relative">
-                        <select
-                          className="w-full bg-blue-50 border-2 border-blue-200 rounded-[24px] md:rounded-[36px] p-4 md:p-7 font-bold text-base md:text-xl text-slate-950 outline-none focus:border-blue-400 focus:bg-white transition-all appearance-none cursor-pointer"
-                          value={(draft as any).projectId || ''}
-                          onChange={e => handleLinkToJob(e.target.value)}
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <select
+                            className="w-full bg-blue-50 border-2 border-blue-200 rounded-[24px] md:rounded-[36px] p-4 md:p-7 font-bold text-base md:text-xl text-slate-950 outline-none focus:border-blue-400 focus:bg-white transition-all appearance-none cursor-pointer"
+                            value={(draft as any).projectId || ''}
+                            onChange={e => handleLinkToJob(e.target.value)}
+                          >
+                            <option value="">Select Job Pack...</option>
+                            {projects.map(p => {
+                              const customer = customers.find(c => c.id === p.customerId);
+                              return (
+                                <option key={p.id} value={p.id}>
+                                  {p.title} {customer ? `- ${customer.name}` : ''}
+                                </option>
+                              );
+                            })}
+                          </select>
+                          <ChevronDown className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 text-blue-300 pointer-events-none w-6 h-6 md:w-8 md:h-8" />
+                        </div>
+                        <button
+                          onClick={() => { hapticTap(); setIsCreatingJobPack(true); }}
+                          className="p-4 md:p-7 bg-slate-900 text-blue-400 rounded-[24px] md:rounded-[36px] hover:bg-black transition-all shadow-lg active:scale-95"
+                          title="Create New Job Pack"
                         >
-                          <option value="">Select Job Pack...</option>
-                          {projects.map(p => {
-                            const customer = customers.find(c => c.id === p.customerId);
-                            return (
-                              <option key={p.id} value={p.id}>
-                                {p.title} {customer ? `- ${customer.name}` : ''}
-                              </option>
-                            );
-                          })}
-                        </select>
-                        <ChevronDown className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 text-blue-300 pointer-events-none w-6 h-6 md:w-8 md:h-8" />
+                          <Plus className="w-6 h-6 md:w-8 md:h-8" />
+                        </button>
                       </div>
                     </div>
                   )}
