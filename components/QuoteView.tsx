@@ -49,7 +49,15 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
     filename: string;
     copied: boolean;
   } | null>(null);
+  const [showMarkAsSentPrompt, setShowMarkAsSentPrompt] = useState(false);
   const documentRef = useRef<HTMLDivElement>(null);
+
+  // Show prompt to mark as sent after sharing (only if status is draft)
+  const promptMarkAsSent = () => {
+    if (activeQuote.status === 'draft') {
+      setShowMarkAsSentPrompt(true);
+    }
+  };
 
   const getProcessedQuote = (): Quote => {
     if (!quote) return quote;
@@ -457,6 +465,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       }
 
       pdf.save(filename);
+      promptMarkAsSent();
     } catch (err) {
       console.error('PDF generation failed:', err);
       alert('PDF generation failed. Please try again or use screenshot instead.');
@@ -542,6 +551,7 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
       : `https://wa.me/?text=${encodeURIComponent(message)}`;
 
     window.open(url, '_blank');
+    promptMarkAsSent();
   };
 
   const handleEmailShare = async () => {
@@ -643,6 +653,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
 
           if (navigator.canShare(shareData)) {
             await navigator.share(shareData);
+            promptMarkAsSent();
             return; // Success - email app opened with PDF attached
           }
         } catch (shareErr) {
@@ -659,6 +670,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
       const mailtoLink = `mailto:${customerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       await new Promise(resolve => setTimeout(resolve, 300));
       window.location.href = mailtoLink;
+      promptMarkAsSent();
     } catch (err) {
       console.error('Email share failed:', err);
       alert('Could not prepare email. Please try downloading the PDF instead.');
@@ -799,6 +811,33 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
             {activeQuote.status === 'declined' && (
               <div className="flex items-center gap-2 px-2 py-1 rounded-xl bg-red-100 text-red-700 text-xs font-bold">
                 <X size={14} /> Quote Declined
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Status Action Buttons for Invoices */}
+        {activeQuote.type === 'invoice' && (
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+            {activeQuote.status === 'draft' && (
+              <button
+                onClick={() => {
+                  onUpdateStatus('sent');
+                  hapticSuccess();
+                }}
+                className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-xl bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-colors"
+              >
+                <Share2 size={14} /> Mark as Sent
+              </button>
+            )}
+            {activeQuote.status === 'sent' && (
+              <div className="flex items-center gap-2 px-2 py-1 rounded-xl bg-blue-100 text-blue-700 text-xs font-bold">
+                <Clock size={14} /> Awaiting Payment
+              </div>
+            )}
+            {activeQuote.status === 'paid' && (
+              <div className="flex items-center gap-2 px-2 py-1 rounded-xl bg-emerald-100 text-emerald-700 text-xs font-bold">
+                <Check size={14} /> Paid
               </div>
             )}
           </div>
@@ -1761,6 +1800,43 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                 <p className="text-xs text-amber-800 text-center">
                   In your email app, tap the <strong>paperclip icon</strong> to attach the PDF from your Downloads folder
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mark as Sent Prompt Modal */}
+      {showMarkAsSentPrompt && (
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-2">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm overflow-hidden animate-in slide-in-from-bottom-4">
+            <div className="p-5 text-center">
+              <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Share2 size={28} className="text-blue-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">
+                Mark as Sent?
+              </h3>
+              <p className="text-sm text-slate-600 mb-6">
+                Would you like to update the status to show this {activeQuote.type === 'invoice' ? 'invoice' : 'document'} has been sent to the customer?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowMarkAsSentPrompt(false)}
+                  className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors"
+                >
+                  Not Yet
+                </button>
+                <button
+                  onClick={() => {
+                    onUpdateStatus('sent');
+                    setShowMarkAsSentPrompt(false);
+                    hapticSuccess();
+                  }}
+                  className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/30"
+                >
+                  Yes, Mark Sent
+                </button>
               </div>
             </div>
           </div>

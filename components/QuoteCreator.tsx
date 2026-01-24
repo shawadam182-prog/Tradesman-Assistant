@@ -687,11 +687,8 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   };
 
   const handleSave = () => {
-    const quoteToSave = !existingQuote && formData.type === 'invoice' && formData.status === 'draft'
-      ? { ...formData, status: 'sent' } as Quote
-      : formData as Quote;
     clearDraft(); // Clear the draft on successful save
-    onSave(quoteToSave);
+    onSave(formData as Quote);
   };
 
   const handleCancel = () => {
