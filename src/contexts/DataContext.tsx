@@ -329,7 +329,15 @@ function dbSettingsToApp(dbSettings: any): AppSettings {
     stripeSubscriptionId: dbSettings.stripe_subscription_id || undefined,
     referralCode: dbSettings.referral_code || undefined,
     usageLimits: dbSettings.usage_limits || undefined,
-    quickPickMaterials: dbSettings.quick_pick_materials || DEFAULT_SETTINGS.quickPickMaterials,
+    // Load quick picks from localStorage (not stored in DB yet)
+    quickPickMaterials: (() => {
+      try {
+        const saved = localStorage.getItem('quickPickMaterials');
+        return saved ? JSON.parse(saved) : DEFAULT_SETTINGS.quickPickMaterials;
+      } catch {
+        return DEFAULT_SETTINGS.quickPickMaterials;
+      }
+    })(),
   };
 }
 
@@ -958,8 +966,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       bank_name: updates.bankName || null,
       tax_year_start_month: updates.taxYearStartMonth,
       tax_year_start_day: updates.taxYearStartDay,
-      quick_pick_materials: updates.quickPickMaterials || null,
     });
+
+    // Save quick pick materials to localStorage (not in DB yet)
+    if (updates.quickPickMaterials !== undefined) {
+      try {
+        localStorage.setItem('quickPickMaterials', JSON.stringify(updates.quickPickMaterials));
+      } catch (e) {
+        console.error('Failed to save quick picks to localStorage:', e);
+      }
+    }
 
     setSettings(prev => ({ ...prev, ...updates }));
   };
