@@ -1100,7 +1100,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                         <tr key={`header-${idx}`} style={{ borderBottom: item.isDescription ? 'none' : '1px solid #e2e8f0' }}>
                           <td colSpan={(activeTemplate === 'professional' || activeTemplate === 'spacious') ? 5 : (templateConfig.showLineNumbers ? 4 : 3)} style={{
                             padding: item.isDescription ? '2px 8px 8px 8px' : '8px 8px 2px 8px',
-                            fontSize: item.isDescription ? '9px' : '10px',
+                            fontSize: item.isDescription ? '10px' : '12px',
                             fontWeight: item.isDescription ? 'normal' : 'bold',
                             color: item.isDescription ? '#64748b' : '#334155',
                             whiteSpace: 'pre-line',

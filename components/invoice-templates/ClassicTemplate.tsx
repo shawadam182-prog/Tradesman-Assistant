@@ -189,7 +189,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
               <tr key={idx} style={{ borderBottom: item.isDescription ? 'none' : '1px solid #e2e8f0' }}>
                 <td colSpan={4} style={{
                   padding: item.isDescription ? '2px 6px 8px 6px' : '8px 6px 2px 6px',
-                  fontSize: item.isDescription ? '8px' : '9px',
+                  fontSize: item.isDescription ? '9px' : '11px',
                   fontWeight: item.isDescription ? 'normal' : 'bold',
                   color: item.isDescription ? '#64748b' : '#334155',
                   whiteSpace: 'pre-line',
