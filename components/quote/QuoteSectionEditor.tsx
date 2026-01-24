@@ -74,12 +74,12 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
     section.subsectionPrice !== undefined ? String(section.subsectionPrice) : ''
   );
   const [isEditingSubsectionPrice, setIsEditingSubsectionPrice] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(!!section.description);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea when expanded or content changes
   useLayoutEffect(() => {
-    if (textareaRef.current && isExpanded) {
+    if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
@@ -123,8 +123,8 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
                   target.style.height = `${target.scrollHeight}px`;
                 }}
                 onBlur={() => {
-                  // Collapse when clicking away, unless empty (keep expanded for new input)
-                  if (section.description && section.description.length > 0) {
+                  // Only collapse if empty
+                  if (!section.description || section.description.length === 0) {
                     setIsExpanded(false);
                   }
                 }}
@@ -137,7 +137,7 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
                 onClick={() => setIsExpanded(true)}
                 className="cursor-text text-[9px] md:text-xs text-slate-500 font-medium truncate pr-6"
               >
-                {section.description || <span className="italic text-slate-300">Add a description of this work...</span>}
+                <span className="italic text-slate-300">Add a description of this work...</span>
               </div>
             )}
             {section.description && section.description.length > 50 && !isExpanded && (

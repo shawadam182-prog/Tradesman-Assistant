@@ -33,27 +33,51 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
   // Convert Tailwind classes to inline styles
   const headerBgColor = isDark ? '#1e293b' :
     colorScheme.id === 'slate' ? '#f1f5f9' :
-    colorScheme.id === 'blue' ? '#dbeafe' :
-    colorScheme.id === 'teal' ? '#ccfbf1' :
-    colorScheme.id === 'emerald' ? '#d1fae5' :
-    colorScheme.id === 'purple' ? '#e9d5ff' :
-    colorScheme.id === 'rose' ? '#fce7f3' : '#f1f5f9';
+      colorScheme.id === 'blue' ? '#dbeafe' :
+        colorScheme.id === 'teal' ? '#ccfbf1' :
+          colorScheme.id === 'emerald' ? '#d1fae5' :
+            colorScheme.id === 'purple' ? '#e9d5ff' :
+              colorScheme.id === 'rose' ? '#fce7f3' : '#f1f5f9';
 
   const headerTextColor = isDark ? '#ffffff' :
     colorScheme.id === 'slate' ? '#334155' :
-    colorScheme.id === 'blue' ? '#1e40af' :
-    colorScheme.id === 'teal' ? '#0f766e' :
-    colorScheme.id === 'emerald' ? '#047857' :
-    colorScheme.id === 'purple' ? '#7c3aed' :
-    colorScheme.id === 'rose' ? '#be123c' : '#334155';
+      colorScheme.id === 'blue' ? '#1e40af' :
+        colorScheme.id === 'teal' ? '#0f766e' :
+          colorScheme.id === 'emerald' ? '#047857' :
+            colorScheme.id === 'purple' ? '#7c3aed' :
+              colorScheme.id === 'rose' ? '#be123c' : '#334155';
 
-  // Flatten all items
+  // Flatten all items including section headers
   const getAllItems = () => {
-    const items: Array<{ description: string; qty: string; rate: number; amount: number }> = [];
+    const items: Array<{
+      type: 'header' | 'item';
+      description: string;
+      qty?: string;
+      rate?: number;
+      amount?: number;
+      isDescription?: boolean;
+    }> = [];
 
     (quote.sections || []).forEach(section => {
+      // Add Section Header
+      items.push({
+        type: 'header',
+        description: section.title || 'Work Section',
+        isDescription: false,
+      });
+
+      // Add Section Description if present
+      if (section.description) {
+        items.push({
+          type: 'header',
+          description: section.description,
+          isDescription: true,
+        });
+      }
+
       (section.items || []).filter(i => !i.isHeading).forEach(item => {
         items.push({
+          type: 'item',
           description: [item.name, item.description].filter(Boolean).join(' - '),
           qty: `${item.quantity} ${item.unit}`,
           rate: item.unitPrice * markupMultiplier,
@@ -65,6 +89,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
         section.labourItems.forEach(labour => {
           const rate = labour.rate || section.labourRate || quote.labourRate || settings.defaultLabourRate;
           items.push({
+            type: 'item',
             description: labour.description || 'Labour',
             qty: `${labour.hours} hrs`,
             rate: rate * markupMultiplier,
@@ -74,6 +99,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
       } else if ((section.labourHours || 0) > 0) {
         const rate = section.labourRate || quote.labourRate || settings.defaultLabourRate;
         items.push({
+          type: 'item',
           description: 'Labour',
           qty: `${section.labourHours} hrs`,
           rate: rate * markupMultiplier,
@@ -151,12 +177,30 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
         </thead>
         <tbody>
           {items.map((item, idx) => (
-            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-              <td style={{ padding: '4px 6px', fontSize: '9px' }}>{item.description}</td>
-              <td style={{ padding: '4px 6px', textAlign: 'center', color: '#64748b', fontSize: '9px' }}>{item.qty}</td>
-              <td style={{ padding: '4px 6px', textAlign: 'right', color: '#64748b', fontSize: '9px' }}>£{item.rate.toFixed(2)}</td>
-              <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: '500', fontSize: '9px' }}>£{item.amount.toFixed(2)}</td>
-            </tr>
+            <React.Fragment key={idx}>
+              {item.type === 'header' ? (
+                <tr style={{ borderBottom: item.isDescription ? 'none' : '1px solid #f1f5f9' }}>
+                  <td colSpan={4} style={{
+                    padding: item.isDescription ? '2px 6px 8px 6px' : '8px 6px 2px 6px',
+                    fontSize: item.isDescription ? '8px' : '9px',
+                    fontWeight: item.isDescription ? 'normal' : 'bold',
+                    color: item.isDescription ? '#64748b' : '#334155',
+                    whiteSpace: 'pre-line',
+                    fontStyle: item.isDescription ? 'italic' : 'normal',
+                    backgroundColor: item.isDescription ? 'transparent' : '#f8fafc'
+                  }}>
+                    {item.description}
+                  </td>
+                </tr>
+              ) : (
+                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '4px 6px', fontSize: '9px' }}>{item.description}</td>
+                  <td style={{ padding: '4px 6px', textAlign: 'center', color: '#64748b', fontSize: '9px' }}>{item.qty}</td>
+                  <td style={{ padding: '4px 6px', textAlign: 'right', color: '#64748b', fontSize: '9px' }}>£{item.rate?.toFixed(2)}</td>
+                  <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: '500', fontSize: '9px' }}>£{item.amount?.toFixed(2)}</td>
+                </tr>
+              )}
+            </React.Fragment>
           ))}
         </tbody>
       </table>
