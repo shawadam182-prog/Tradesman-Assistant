@@ -201,6 +201,23 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
         backgroundColor: '#ffffff',
         windowWidth: documentRef.current.scrollWidth,
         windowHeight: documentRef.current.scrollHeight,
+        onclone: (clonedDoc) => {
+          // Convert any oklch colors to rgb for html2canvas compatibility
+          const allElements = clonedDoc.querySelectorAll('*');
+          allElements.forEach((el) => {
+            const computed = window.getComputedStyle(el);
+            const htmlEl = el as HTMLElement;
+            if (computed.color) {
+              htmlEl.style.color = computed.color;
+            }
+            if (computed.backgroundColor && computed.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+              htmlEl.style.backgroundColor = computed.backgroundColor;
+            }
+            if (computed.borderColor) {
+              htmlEl.style.borderColor = computed.borderColor;
+            }
+          });
+        },
       });
 
       let imgData: string;
@@ -320,6 +337,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       const scale = isMobile ? 1.5 : 2;
 
       // Capture the document as canvas
+      // Note: html2canvas doesn't support oklch colors (Tailwind v4), so we convert them in onclone
       const canvas = await html2canvas(documentRef.current, {
         scale,
         useCORS: true,
@@ -327,6 +345,24 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
         backgroundColor: '#ffffff',
         windowWidth: documentRef.current.scrollWidth,
         windowHeight: documentRef.current.scrollHeight,
+        onclone: (clonedDoc) => {
+          // Convert any oklch colors to rgb for html2canvas compatibility
+          const allElements = clonedDoc.querySelectorAll('*');
+          allElements.forEach((el) => {
+            const computed = window.getComputedStyle(el);
+            const htmlEl = el as HTMLElement;
+            // Get computed colors and apply as inline styles
+            if (computed.color) {
+              htmlEl.style.color = computed.color;
+            }
+            if (computed.backgroundColor && computed.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+              htmlEl.style.backgroundColor = computed.backgroundColor;
+            }
+            if (computed.borderColor) {
+              htmlEl.style.borderColor = computed.borderColor;
+            }
+          });
+        },
       });
 
       // Use PNG for better compatibility, with fallback to JPEG
