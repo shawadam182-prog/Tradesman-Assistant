@@ -759,10 +759,31 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               )}
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{formData.type === 'invoice' ? 'Invoice Date' : 'Date'}</label>
-              <input type="date" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
-            </div>
+            {/* Date field(s) - side-by-side for invoices */}
+            {formData.type === 'invoice' ? (
+              <div className="col-span-1 md:col-span-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Invoice Date</label>
+                    <input type="date" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1 flex items-center gap-1"><Calendar size={12} /> Due Date</label>
+                    <input type="date" className="w-full font-medium text-slate-900 border-b border-emerald-200 pb-2 outline-none focus:border-emerald-400 transition-colors" value={formData.dueDate || ''} onChange={e => setFormData({ ...formData, dueDate: e.target.value })} />
+                    {formData.dueDate && formData.date && (
+                      <div className="text-xs text-emerald-600 font-bold mt-1">
+                        Payment due in {Math.ceil((new Date(formData.dueDate).getTime() - new Date(formData.date).getTime()) / (1000 * 60 * 60 * 24))} days
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Date</label>
+                <input type="date" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
+              </div>
+            )}
 
             {/* Job Address */}
             <div className="col-span-1 md:col-span-2 mt-2">
@@ -773,23 +794,6 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                 <AddressAutocomplete value={formData.jobAddress || ''} onChange={(address) => setFormData(prev => ({ ...prev, jobAddress: address }))} placeholder="Enter job site address if different from client..." showLabel={false} />
               </div>
             </div>
-
-            {/* Invoice-specific fields */}
-            {formData.type === 'invoice' && (
-              <div className="col-span-1 md:col-span-2 mt-2 p-4 bg-slate-100 rounded-xl border border-slate-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1"><Calendar size={12} className="inline mr-1" /> Due Date</label>
-                    <input type="date" className="w-full font-medium text-slate-900 bg-white border border-emerald-200 rounded-lg px-3 py-2 outline-none focus:border-emerald-400 transition-colors" value={formData.dueDate || ''} onChange={e => setFormData({ ...formData, dueDate: e.target.value })} />
-                  </div>
-                  <div className="flex items-end">
-                    <div className="text-xs text-emerald-600 font-bold">
-                      {formData.dueDate && formData.date && (<>Payment due in {Math.ceil((new Date(formData.dueDate).getTime() - new Date(formData.date).getTime()) / (1000 * 60 * 60 * 24))} days</>)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
