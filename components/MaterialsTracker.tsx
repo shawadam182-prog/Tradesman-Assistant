@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { JobPack, ProjectMaterial, Quote } from '../types';
+import { JobPack, ProjectMaterial, Quote, AppSettings } from '../types';
 import {
   ShoppingCart, Loader2, Sparkles,
   Mic, MicOff, CheckCircle2, Trash2,
@@ -14,11 +14,18 @@ import { useToast } from '../src/contexts/ToastContext';
 interface MaterialsTrackerProps {
   project: JobPack;
   quotes: Quote[];
+  settings: AppSettings;
   onSaveProject: (project: JobPack) => void;
 }
 
+// Default quick picks as fallback
+const DEFAULT_QUICK_PICKS = [
+  'C24 Timber', 'Cement', 'Ballast', 'Plasterboard', 'Multi-finish',
+  'Screws', 'PVA', 'Expanding Foam', 'Sealant', 'Sand'
+];
+
 export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
-  project, quotes, onSaveProject
+  project, quotes, settings, onSaveProject
 }) => {
   const toast = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -27,11 +34,8 @@ export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
   const [quickInput, setQuickInput] = useState('');
   const voiceTargetRef = useRef<'quick' | 'scratch'>('quick');
 
-  // One-tap common materials
-  const COMMON_ITEMS = [
-    "C24 Timber", "Cement", "Ballast", "Plasterboard", "Multi-finish",
-    "Screws", "PVA", "Expanding Foam", "Sealant", "Sand"
-  ];
+  // Quick pick materials from settings (with fallback)
+  const quickPickItems = settings.quickPickMaterials || DEFAULT_QUICK_PICKS;
 
   // Handle voice result based on target
   const handleVoiceResult = useCallback((text: string) => {
@@ -215,12 +219,12 @@ export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
 
 
       {/* Quick Picks - The "Easy Way" */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-        {COMMON_ITEMS.map(item => (
-          <button 
+      <div className="flex flex-wrap gap-2 pb-1">
+        {quickPickItems.map(item => (
+          <button
             key={item}
             onClick={() => handleQuickAdd(item)}
-            className="whitespace-nowrap px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-widest hover:border-amber-400 hover:text-amber-600 transition-all shadow-sm shrink-0"
+            className="whitespace-nowrap px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-widest hover:border-amber-400 hover:text-amber-600 transition-all shadow-sm"
           >
             + {item}
           </button>

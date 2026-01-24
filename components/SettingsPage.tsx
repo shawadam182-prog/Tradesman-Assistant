@@ -874,6 +874,86 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 </div>
 
               </div>
+
+              {/* Materials Quick Picks */}
+              <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
+                <div className="p-4 md:p-10 border-b border-slate-100 bg-amber-50/50">
+                  <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                    <div className="p-2 md:p-3 bg-amber-100 text-amber-600 rounded-xl md:rounded-2xl"><Package size={20} className="md:w-6 md:h-6" /></div>
+                    <h3 className="text-base md:text-xl font-black text-slate-900 uppercase tracking-tight">Materials Quick Picks</h3>
+                  </div>
+                  <p className="text-slate-500 text-xs md:text-sm font-medium italic hidden md:block">Customize one-tap materials for the job tracker.</p>
+                </div>
+                <div className="p-4 md:p-10 space-y-4 md:space-y-6">
+                  {/* Current quick picks as chips */}
+                  <div className="flex flex-wrap gap-2">
+                    {(settings.quickPickMaterials || []).map((item, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-xl text-[10px] font-black text-amber-700 uppercase tracking-widest"
+                      >
+                        {item}
+                        <button
+                          onClick={() => {
+                            const updated = [...(settings.quickPickMaterials || [])];
+                            updated.splice(index, 1);
+                            setSettings({ ...settings, quickPickMaterials: updated });
+                          }}
+                          className="p-0.5 hover:bg-amber-200 rounded-full transition-colors"
+                        >
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))}
+                    {(settings.quickPickMaterials || []).length === 0 && (
+                      <p className="text-slate-400 text-xs italic">No quick picks configured. Add some below!</p>
+                    )}
+                  </div>
+
+                  {/* Add new quick pick */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      id="new-quick-pick"
+                      className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-2xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-400 focus:bg-white transition-all placeholder:text-slate-400"
+                      placeholder="Add material (e.g. Copper Pipe)..."
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const input = e.target as HTMLInputElement;
+                          const value = input.value.trim();
+                          if (value && !(settings.quickPickMaterials || []).includes(value)) {
+                            setSettings({
+                              ...settings,
+                              quickPickMaterials: [...(settings.quickPickMaterials || []), value]
+                            });
+                            input.value = '';
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        const input = document.getElementById('new-quick-pick') as HTMLInputElement;
+                        const value = input?.value?.trim();
+                        if (value && !(settings.quickPickMaterials || []).includes(value)) {
+                          setSettings({
+                            ...settings,
+                            quickPickMaterials: [...(settings.quickPickMaterials || []), value]
+                          });
+                          input.value = '';
+                        }
+                      }}
+                      className="px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl md:rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-amber-200"
+                    >
+                      <Plus size={18} />
+                    </button>
+                  </div>
+
+                  <p className="text-[10px] text-slate-400 italic">
+                    These appear as one-tap buttons in the Job Pack materials tracker. Press Enter or click + to add.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 

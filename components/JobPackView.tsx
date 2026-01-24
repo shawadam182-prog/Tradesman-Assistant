@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { JobPack, Customer, Quote, SiteNote, SitePhoto, SiteDocument } from '../types';
+import { JobPack, Customer, Quote, SiteNote, SitePhoto, SiteDocument, AppSettings } from '../types';
 import {
   ArrowLeft, Camera, Mic, FileText, Plus, Trash2,
   Clock, CheckCircle2, Image as ImageIcon,
@@ -23,6 +23,7 @@ interface JobPackViewProps {
   project: JobPack;
   customers: Customer[];
   quotes: Quote[];
+  settings: AppSettings;
   onSaveProject: (project: JobPack) => void;
   onViewQuote: (id: string) => void;
   onCreateQuote: () => void;
@@ -32,7 +33,7 @@ interface JobPackViewProps {
 }
 
 export const JobPackView: React.FC<JobPackViewProps> = ({
-  project, customers, quotes, onSaveProject, onViewQuote, onCreateQuote, onBack, onDeleteProject, onRefresh
+  project, customers, quotes, settings, onSaveProject, onViewQuote, onCreateQuote, onBack, onDeleteProject, onRefresh
 }) => {
   const [activeTab, setActiveTab] = useState<'log' | 'photos' | 'drawings' | 'materials' | 'finance'>('log');
   const [isRecording, setIsRecording] = useState(false);
@@ -644,7 +645,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
 
   {
     activeTab === 'materials' && (
-      <MaterialsTracker project={project} quotes={quotes} onSaveProject={onSaveProject} />
+      <MaterialsTracker project={project} quotes={quotes} settings={settings} onSaveProject={onSaveProject} />
     )
   }
 

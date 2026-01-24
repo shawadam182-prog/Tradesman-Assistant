@@ -231,6 +231,8 @@ export interface AppSettings {
   stripeSubscriptionId?: string;
   referralCode?: string;
   usageLimits?: UsageLimits;
+  // Materials quick picks for job tracker
+  quickPickMaterials?: string[];
 }
 
 export interface Expense {

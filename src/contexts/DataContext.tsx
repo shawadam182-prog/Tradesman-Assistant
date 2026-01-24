@@ -85,6 +85,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   stripeSubscriptionId: undefined,
   referralCode: undefined,
   usageLimits: undefined, // Will fall back to TIER_LIMITS[tier]
+  quickPickMaterials: ['C24 Timber', 'Cement', 'Ballast', 'Plasterboard', 'Multi-finish', 'Screws', 'PVA', 'Expanding Foam', 'Sealant', 'Sand'],
 };
 
 interface DataContextType {
@@ -328,6 +329,7 @@ function dbSettingsToApp(dbSettings: any): AppSettings {
     stripeSubscriptionId: dbSettings.stripe_subscription_id || undefined,
     referralCode: dbSettings.referral_code || undefined,
     usageLimits: dbSettings.usage_limits || undefined,
+    quickPickMaterials: dbSettings.quick_pick_materials || DEFAULT_SETTINGS.quickPickMaterials,
   };
 }
 
@@ -956,6 +958,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       bank_name: updates.bankName || null,
       tax_year_start_month: updates.taxYearStartMonth,
       tax_year_start_day: updates.taxYearStartDay,
+      quick_pick_materials: updates.quickPickMaterials || null,
     });
 
     setSettings(prev => ({ ...prev, ...updates }));
