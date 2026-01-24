@@ -74,7 +74,8 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
     section.subsectionPrice !== undefined ? String(section.subsectionPrice) : ''
   );
   const [isEditingSubsectionPrice, setIsEditingSubsectionPrice] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  // Start expanded if there's already a description
+  const [isExpanded, setIsExpanded] = useState(!!section.description);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea when expanded or content changes
@@ -123,8 +124,8 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
                   target.style.height = `${target.scrollHeight}px`;
                 }}
                 onBlur={() => {
-                  // Collapse when clicking away, unless empty (keep expanded for new input)
-                  if (section.description && section.description.length > 0) {
+                  // Only collapse when empty - keep expanded if has content
+                  if (!section.description || section.description.length === 0) {
                     setIsExpanded(false);
                   }
                 }}
