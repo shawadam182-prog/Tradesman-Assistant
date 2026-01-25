@@ -117,56 +117,28 @@ const actions: Record<string, (data: any) => Promise<any>> = {
   async parseCustomer({ input }: { input: string }) {
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.0-flash',
-      systemInstruction: `You parse NATURAL CONVERSATIONAL speech from UK tradesmen adding clients.
+      systemInstruction: `You extract customer fields from PRE-PROCESSED voice input.
 
-        CRITICAL: Users speak NATURALLY without labels. They do NOT say "name is" or "email is".
-        Typical input: "Adam Shaw, works for FFF, adam dot shaw at gmail dot com, oh seven seven double oh one two three four five six"
+        IMPORTANT: The input has ALREADY been pre-processed on the client:
+        - Emails are ALREADY converted to proper format: "adam.shaw@gmail.com"
+        - Phone numbers have "oh"→"0", "double X"→"XX" already applied
 
-        DUPLICATE NAME BUG - AVOID THIS:
-        Speech recognition often repeats words. If you see "Adam Adam Shaw" or "John John Smith",
-        the name is just "Adam Shaw" or "John Smith" - NEVER include duplicated first names.
+        YOUR JOB: Just identify which piece of text is which field. Copy values as-is.
 
-        FIELD EXTRACTION:
-        - name: The PERSON (human). First + last name. Remove any duplicates. "Adam Adam Shaw" → "Adam Shaw"
-        - company: Extract if mentioned in ANY of these patterns:
-          * "works for X" / "from X" / "at X" / "with X" → company is X
-          * "X company" / "company X" / "company is X" → company is X
-          * Just a word/acronym after the name that isn't an address → likely company
-          * Examples: "Adam Shaw FFF" → company is "FFF", "John from Acme" → company is "Acme"
-        - email: See EMAIL PARSING below
-        - phone: UK number. See PHONE PARSING below
-        - address: UK address if mentioned (house number, street, town, postcode)
+        FIELDS:
+        - name: Person's name. Fix duplicates like "adam adam shaw" → "Adam Shaw"
+        - company: Business name. Found after "works for", "from", "at", "with", OR a word/acronym after the name
+          Examples: "adam shaw fff" → company="FFF", "john from acme" → company="Acme"
+        - email: COPY the email EXACTLY as it appears (it's already in correct format)
+        - phone: Clean up to 07xxx xxxxxx or 01234 xxxxxx format
+        - address: UK address if present
 
-        EMAIL PARSING (MOST CRITICAL):
-        Voice input converts email to spoken words. You MUST reconstruct:
+        CRITICAL FOR EMAIL:
+        - The email is ALREADY converted (e.g., "adam.shaw@gmail.com")
+        - DO NOT modify it. Just copy it exactly.
+        - If you see an @ symbol, everything around it is the email.
 
-        Pattern: [local-part] "at" [domain]
-        - The LOCAL PART (before @) is CRITICAL - don't drop any of it!
-        - "dot" or "point" → "."
-        - "at" or "add" → "@"
-        - "underscore" → "_"
-        - "dash" or "hyphen" → "-"
-
-        EXAMPLES - study these carefully:
-        "adam dot shaw at gmail dot com" → "adam.shaw@gmail.com"
-        "a dot shaw at outlook dot com" → "a.shaw@outlook.com"
-        "adamshaw at gmail dot com" → "adamshaw@gmail.com"
-        "adam underscore shaw at hotmail dot co dot uk" → "adam_shaw@hotmail.co.uk"
-        "shaw dot adam at yahoo dot com" → "shaw.adam@yahoo.com"
-        "info at fff dot co dot uk" → "info@fff.co.uk"
-
-        COMMON MISTAKES TO AVOID:
-        - DON'T drop the first part of email (adam.shaw → shaw is WRONG)
-        - DON'T confuse the person's name with email local part - they may differ
-        - DON'T add extra dots or characters not in the input
-
-        PHONE PARSING:
-        - "oh" or "zero" = "0"
-        - "double [digit]" = repeat that digit twice
-        - "triple [digit]" = repeat three times
-        - Format: 07xxx xxxxxx (mobile) or 01234 xxxxxx (landline)
-
-        Return valid JSON. Empty string for any field not mentioned.`,
+        Return JSON. Empty string if field not found.`,
     });
 
     const result = await model.generateContent({

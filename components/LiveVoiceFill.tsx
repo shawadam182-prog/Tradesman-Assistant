@@ -81,6 +81,55 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
     return '';
   };
 
+  // Pre-process transcript to convert speech patterns before AI parsing
+  const preprocessTranscript = (text: string): string => {
+    let processed = text.toLowerCase();
+
+    // Convert email patterns FIRST (most critical)
+    // Pattern: "[words] at [domain] dot [tld]" or "[words] at [domain] dot co dot uk"
+    // Handle spoken email: "adam dot shaw at gmail dot com"
+    processed = processed
+      // First, mark email boundaries by finding "at [word] dot com/co/org/net/uk"
+      .replace(/\b(\w+(?:\s+(?:dot|point)\s+\w+)*)\s+(?:at|add)\s+(\w+(?:\s+(?:dot|point)\s+\w+)*\s+(?:dot|point)\s+(?:com|co|org|net|uk|io)(?:\s+(?:dot|point)\s+uk)?)\b/gi,
+        (match, localPart, domain) => {
+          // Convert local part: "adam dot shaw" → "adam.shaw"
+          const cleanLocal = localPart
+            .replace(/\s+(?:dot|point)\s+/gi, '.')
+            .replace(/\s+(?:underscore)\s+/gi, '_')
+            .replace(/\s+(?:dash|hyphen)\s+/gi, '-')
+            .replace(/\s+/g, '');
+
+          // Convert domain: "gmail dot com" → "gmail.com"
+          const cleanDomain = domain
+            .replace(/\s+(?:dot|point)\s+/gi, '.')
+            .replace(/\s+/g, '');
+
+          return `${cleanLocal}@${cleanDomain}`;
+        }
+      );
+
+    // Convert phone patterns
+    // "oh seven" → "07", "zero seven" → "07"
+    processed = processed
+      .replace(/\boh\s+/gi, '0')
+      .replace(/\bzero\s+/gi, '0')
+      .replace(/\bdouble\s+(\d)/gi, '$1$1')
+      .replace(/\btriple\s+(\d)/gi, '$1$1$1')
+      // Clean up phone number spacing
+      .replace(/(\d)\s+(\d)/g, '$1$2');
+
+    // Convert remaining standalone "dot" and "at" that might have been missed
+    // But be careful not to break already converted emails
+    // Only convert if not already part of an email
+    if (!processed.includes('@')) {
+      processed = processed
+        .replace(/\s+(?:dot|point)\s+/gi, '.')
+        .replace(/\s+(?:at|add)\s+/gi, '@');
+    }
+
+    return processed;
+  };
+
   // Parse transcript with debounce and request tracking
   const parseTranscript = useCallback(async (text: string) => {
     if (!text.trim() || text.trim() === lastParsedTextRef.current) {
@@ -93,7 +142,12 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
     setError(null);
 
     try {
-      const result = await parseAction(text);
+      // Pre-process to convert speech patterns
+      const preprocessed = preprocessTranscript(text);
+      console.log('Original:', text);
+      console.log('Preprocessed:', preprocessed);
+
+      const result = await parseAction(preprocessed);
 
       // Ignore stale responses
       if (currentRequestId !== requestIdRef.current) {
@@ -490,8 +544,15 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
 
           {/* Transcript Display */}
           {transcript && (
-            <div className="w-full bg-slate-50 rounded-xl p-3 max-h-24 overflow-y-auto">
-              <p className="text-sm text-slate-700 leading-relaxed">{transcript}</p>
+            <div className="w-full space-y-2">
+              <div className="bg-slate-50 rounded-xl p-3 max-h-20 overflow-y-auto">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Raw Speech</p>
+                <p className="text-sm text-slate-600 leading-relaxed">{transcript}</p>
+              </div>
+              <div className="bg-teal-50 rounded-xl p-3 max-h-20 overflow-y-auto">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-teal-600 mb-1">Processed</p>
+                <p className="text-sm text-teal-700 leading-relaxed">{preprocessTranscript(transcript)}</p>
+              </div>
             </div>
           )}
 
