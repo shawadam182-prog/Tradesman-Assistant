@@ -199,12 +199,14 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
     recognition.onend = () => {
       clearSilenceTimeout();
 
-      // Chrome sometimes ends recognition unexpectedly - restart if user didn't stop manually
-      // and we haven't collected much transcript yet
-      if (!manualStopRef.current && !finalTranscript.trim()) {
-        // Restart recognition - browser ended it prematurely
+      // Chrome ends recognition after each phrase even with continuous=true
+      // Keep restarting until user manually stops or silence timeout fires
+      if (!manualStopRef.current) {
         try {
+          // Restart to keep listening
           recognition.start();
+          // Reset the silence timeout
+          resetSilenceTimeout();
           return;
         } catch (e) {
           // Failed to restart, fall through to normal end handling
