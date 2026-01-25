@@ -1,31 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Customer } from '../../types';
-import { User, Hammer, Mail, Phone, AlertCircle, Loader2, MicOff, Sparkles, X } from 'lucide-react';
+import { User, Hammer, Mail, Phone, AlertCircle, Mic, MapPin } from 'lucide-react';
 import { AddressAutocomplete } from '../AddressAutocomplete';
+import { LiveVoiceFill, VoiceFieldConfig } from '../LiveVoiceFill';
+import { parseCustomerVoiceInput } from '../../src/services/geminiService';
+import { hapticTap } from '../../src/hooks/useHaptic';
+
+// Field configuration for customer voice fill
+const customerVoiceFields: VoiceFieldConfig[] = [
+  { key: 'name', label: 'Full Name', icon: <User size={14} /> },
+  { key: 'company', label: 'Company', icon: <Hammer size={14} /> },
+  { key: 'phone', label: 'Phone Number', icon: <Phone size={14} /> },
+  { key: 'email', label: 'Email Address', icon: <Mail size={14} /> },
+  { key: 'address', label: 'Address', icon: <MapPin size={14} /> },
+];
 
 interface CustomerModalProps {
   isOpen: boolean;
   newCustomer: Partial<Customer>;
-  isListening: boolean;
-  isProcessing: boolean;
+  isListening?: boolean;
+  isProcessing?: boolean;
   error: string | null;
   onCustomerChange: (updates: Partial<Customer>) => void;
   onSave: () => void;
   onClose: () => void;
-  onToggleVoice: () => void;
+  onToggleVoice?: () => void;
 }
 
 export const CustomerModal: React.FC<CustomerModalProps> = ({
   isOpen,
   newCustomer,
-  isListening,
-  isProcessing,
   error,
   onCustomerChange,
   onSave,
   onClose,
-  onToggleVoice,
 }) => {
+  const [showLiveVoiceFill, setShowLiveVoiceFill] = useState(false);
+
   if (!isOpen) return null;
 
   return (
@@ -36,26 +47,11 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
             <h3 className="font-black text-sm md:text-xl text-slate-900 uppercase tracking-tight">Register Client</h3>
             <button
               type="button"
-              onClick={onToggleVoice}
-              disabled={isProcessing}
-              className={`flex items-center gap-1 px-3 py-1.5 md:px-6 md:py-3 rounded-xl font-black text-[9px] md:text-[10px] uppercase transition-all border ${
-                isListening
-                  ? 'bg-red-500 text-white border-red-600 animate-pulse'
-                  : isProcessing
-                  ? 'bg-teal-500 text-white border-teal-600'
-                  : 'bg-white text-teal-600 border-teal-100 hover:bg-teal-50'
-              }`}
+              onClick={() => { hapticTap(); setShowLiveVoiceFill(true); }}
+              className="flex items-center gap-1 px-3 py-1.5 md:px-6 md:py-3 rounded-xl font-black text-[9px] md:text-[10px] uppercase transition-all border bg-white text-teal-600 border-teal-100 hover:bg-teal-50 active:scale-95"
             >
-              {isProcessing ? (
-                <Loader2 size={10} className="md:w-3 md:h-3 animate-spin" />
-              ) : isListening ? (
-                <MicOff size={10} className="md:w-3 md:h-3" />
-              ) : (
-                <Sparkles size={10} className="md:w-3 md:h-3" />
-              )}
-              <span className="hidden sm:inline">
-                {isProcessing ? 'Analyzing...' : isListening ? 'Stop' : 'Voice'}
-              </span>
+              <Mic size={10} className="md:w-3 md:h-3" />
+              <span className="hidden sm:inline">Voice Fill</span>
             </button>
           </div>
 
@@ -155,6 +151,32 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* LiveVoiceFill Modal */}
+      {showLiveVoiceFill && (
+        <LiveVoiceFill
+          fields={customerVoiceFields}
+          currentData={{
+            name: newCustomer.name || '',
+            company: newCustomer.company || '',
+            phone: newCustomer.phone || '',
+            email: newCustomer.email || '',
+            address: newCustomer.address || '',
+          }}
+          parseAction={parseCustomerVoiceInput}
+          onComplete={(data) => {
+            // Merge detected data into form (only non-empty values)
+            onCustomerChange(
+              Object.fromEntries(
+                Object.entries(data).filter(([_, v]) => v)
+              ) as Partial<Customer>
+            );
+            setShowLiveVoiceFill(false);
+          }}
+          onCancel={() => setShowLiveVoiceFill(false)}
+          title="Voice Fill Customer"
+        />
+      )}
     </div>
   );
 };

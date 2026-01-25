@@ -12,6 +12,7 @@ import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { PageHeader } from './common/PageHeader';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
+import { LiveVoiceFill, VoiceFieldConfig } from './LiveVoiceFill';
 
 interface CustomerManagerProps {
   customers: Customer[];
@@ -42,6 +43,16 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
 
   const [interimTranscript, setInterimTranscript] = useState('');
   const [expandedCustomers, setExpandedCustomers] = useState<Set<string>>(new Set());
+  const [showLiveVoiceFill, setShowLiveVoiceFill] = useState(false);
+
+  // Field configuration for LiveVoiceFill
+  const voiceFields: VoiceFieldConfig[] = [
+    { key: 'name', label: 'Full Name', icon: <UserIcon size={14} /> },
+    { key: 'company', label: 'Company', icon: <Briefcase size={14} /> },
+    { key: 'phone', label: 'Phone Number', icon: <Phone size={14} /> },
+    { key: 'email', label: 'Email Address', icon: <Mail size={14} /> },
+    { key: 'address', label: 'Address', icon: <MapPin size={14} /> },
+  ];
 
   const toggleExpand = (id: string) => {
     setExpandedCustomers(prev => {
@@ -310,32 +321,13 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
               </h3>
               <button
                 type="button"
-                onClick={startGlobalListening}
-                disabled={isProcessing}
-                className={`flex items-center gap-1 px-3 py-1.5 md:px-6 md:py-3 rounded-xl font-black text-[9px] md:text-[10px] uppercase transition-all border ${
-                  (isListeningGlobal || isHookListening)
-                    ? 'bg-red-500 text-white border-red-600 animate-pulse'
-                    : isProcessing
-                    ? 'bg-teal-500 text-white border-teal-600'
-                    : 'bg-white text-teal-600 border-teal-100 hover:bg-teal-50'
-                }`}
+                onClick={() => { hapticTap(); setShowLiveVoiceFill(true); }}
+                className="flex items-center gap-1 px-3 py-1.5 md:px-6 md:py-3 rounded-xl font-black text-[9px] md:text-[10px] uppercase transition-all border bg-white text-teal-600 border-teal-100 hover:bg-teal-50 active:scale-95"
               >
-                {isProcessing ? <Loader2 size={10} className="md:w-3 md:h-3 animate-spin" /> : (isListeningGlobal || isHookListening) ? <MicOff size={10} className="md:w-3 md:h-3" /> : <Sparkles size={10} className="md:w-3 md:h-3" />}
-                <span className="hidden sm:inline">{isProcessing ? 'Analyzing...' : (isListeningGlobal || isHookListening) ? 'Stop' : 'Voice'}</span>
+                <Mic size={10} className="md:w-3 md:h-3" />
+                <span className="hidden sm:inline">Voice Fill</span>
               </button>
             </div>
-
-          {/* Live transcript display */}
-          {(isListeningGlobal || isHookListening || interimTranscript) && (
-            <div className="bg-slate-800 rounded-lg p-2 md:p-4 border border-slate-700 mb-2 md:mb-4">
-              <div className="flex items-center gap-1.5">
-                <div className={`w-1.5 h-1.5 rounded-full ${(isListeningGlobal || isHookListening) ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
-                <p className="text-white text-xs flex-1 truncate">
-                  {interimTranscript || 'Speak now...'}
-                </p>
-              </div>
-            </div>
-          )}
 
           <form id="customer-form" onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 md:space-y-6">
             <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 md:gap-6">
@@ -584,6 +576,33 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
             )}
           </div>
         </>
+      )}
+
+      {/* LiveVoiceFill Modal */}
+      {showLiveVoiceFill && (
+        <LiveVoiceFill
+          fields={voiceFields}
+          currentData={{
+            name: customerForm.name || '',
+            company: customerForm.company || '',
+            phone: customerForm.phone || '',
+            email: customerForm.email || '',
+            address: customerForm.address || '',
+          }}
+          parseAction={parseCustomerVoiceInput}
+          onComplete={(data) => {
+            // Merge detected data into form (only non-empty values)
+            setCustomerForm(prev => ({
+              ...prev,
+              ...Object.fromEntries(
+                Object.entries(data).filter(([_, v]) => v)
+              ),
+            }));
+            setShowLiveVoiceFill(false);
+          }}
+          onCancel={() => setShowLiveVoiceFill(false)}
+          title="Voice Fill Customer"
+        />
       )}
     </div>
   );

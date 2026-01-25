@@ -56,3 +56,13 @@ export function hapticSuccess() {
     }
   }
 }
+
+export function hapticError() {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      navigator.vibrate([50, 100, 50]);
+    } catch (e) {
+      // Silently fail
+    }
+  }
+}

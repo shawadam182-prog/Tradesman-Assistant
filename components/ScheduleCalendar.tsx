@@ -15,6 +15,16 @@ import { AddressAutocomplete } from './AddressAutocomplete';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
 import { useToast } from '../src/contexts/ToastContext';
+import { LiveVoiceFill, VoiceFieldConfig } from './LiveVoiceFill';
+
+// Field configuration for customer voice fill
+const customerVoiceFields: VoiceFieldConfig[] = [
+  { key: 'name', label: 'Full Name', icon: <User size={14} /> },
+  { key: 'company', label: 'Company', icon: <Hammer size={14} /> },
+  { key: 'phone', label: 'Phone Number', icon: <Phone size={14} /> },
+  { key: 'email', label: 'Email Address', icon: <Mail size={14} /> },
+  { key: 'address', label: 'Address', icon: <MapPin size={14} /> },
+];
 
 // Detect iOS for voice input fallback
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -64,6 +74,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   const [isListeningCustomer, setIsListeningCustomer] = useState(false);
   const [isProcessingCustomer, setIsProcessingCustomer] = useState(false);
   const [customerError, setCustomerError] = useState<string | null>(null);
+  const [showCustomerVoiceFill, setShowCustomerVoiceFill] = useState(false);
 
   // Job Pack Quick Add States
   const [isCreatingJobPack, setIsCreatingJobPack] = useState(false);
@@ -785,18 +796,11 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                   <h3 className="font-black text-sm md:text-xl text-slate-900 uppercase tracking-tight">Register Client</h3>
                   <button
                     type="button"
-                    onClick={startCustomerVoice}
-                    disabled={isProcessingCustomer}
-                    className={`flex items-center gap-1 px-3 py-1.5 md:px-6 md:py-3 rounded-xl font-black text-[9px] md:text-[10px] uppercase transition-all border ${
-                      isListeningCustomer
-                        ? 'bg-red-500 text-white border-red-600 animate-pulse'
-                        : isProcessingCustomer
-                        ? 'bg-amber-500 text-white border-amber-600'
-                        : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50'
-                    }`}
+                    onClick={() => { hapticTap(); setShowCustomerVoiceFill(true); }}
+                    className="flex items-center gap-1 px-3 py-1.5 md:px-6 md:py-3 rounded-xl font-black text-[9px] md:text-[10px] uppercase transition-all border bg-white text-amber-600 border-amber-100 hover:bg-amber-50 active:scale-95"
                   >
-                    {isProcessingCustomer ? <Loader2 size={10} className="md:w-3 md:h-3 animate-spin" /> : isListeningCustomer ? <MicOff size={10} className="md:w-3 md:h-3" /> : <Sparkles size={10} className="md:w-3 md:h-3" />}
-                    <span className="hidden sm:inline">{isProcessingCustomer ? 'Analyzing...' : isListeningCustomer ? 'Stop' : 'Voice'}</span>
+                    <Mic size={10} className="md:w-3 md:h-3" />
+                    <span className="hidden sm:inline">Voice Fill</span>
                   </button>
                 </div>
 
@@ -1176,6 +1180,32 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
             )}
           </div>
         </div>
+      )}
+
+      {/* LiveVoiceFill Modal for Customer */}
+      {showCustomerVoiceFill && (
+        <LiveVoiceFill
+          fields={customerVoiceFields}
+          currentData={{
+            name: newCustomer.name || '',
+            company: newCustomer.company || '',
+            phone: newCustomer.phone || '',
+            email: newCustomer.email || '',
+            address: newCustomer.address || '',
+          }}
+          parseAction={parseCustomerVoiceInput}
+          onComplete={(data) => {
+            setNewCustomer(prev => ({
+              ...prev,
+              ...Object.fromEntries(
+                Object.entries(data).filter(([_, v]) => v)
+              ),
+            }));
+            setShowCustomerVoiceFill(false);
+          }}
+          onCancel={() => setShowCustomerVoiceFill(false)}
+          title="Voice Fill Customer"
+        />
       )}
     </div>
   );
