@@ -137,9 +137,26 @@ const actions: Record<string, (data: any) => Promise<any>> = {
         - phone: UK phone number - format as 07xxx or 01234 xxx xxx (empty string if not mentioned)
         - address: UK address (empty string if not mentioned)
 
-        Voice recognition fixes:
-        - "at" often means "@" in emails
-        - Numbers may be spelled out ("oh seven" = "07")
+        EMAIL PARSING (CRITICAL):
+        Speech recognition converts emails to spoken form. You MUST convert back:
+        - "at" or "add" → "@"
+        - "dot" or "point" → "."
+        - "underscore" → "_"
+        - "hyphen" or "dash" → "-"
+
+        Examples of spoken emails → correct format:
+        - "john dot smith at gmail dot com" → "john.smith@gmail.com"
+        - "dave underscore wilson at hotmail dot co dot uk" → "dave_wilson@hotmail.co.uk"
+        - "info at smithbuilders dot com" → "info@smithbuilders.com"
+        - "j dot blogs at outlook dot com" → "j.blogs@outlook.com"
+        - "test at test dot com" → "test@test.com"
+
+        PHONE PARSING:
+        - "oh seven" or "zero seven" = "07"
+        - Spell out numbers: "oh seven seven double oh" = "0770"
+        - "double" before a digit means repeat it
+        - Format UK mobiles as: 07xxx xxxxxx
+        - Format landlines as: 01234 xxxxxx or 0121 xxx xxxx
 
         Return valid JSON. Empty strings for missing fields.`,
     });
