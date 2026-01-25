@@ -37,6 +37,7 @@ import {
 interface QuoteCreatorProps {
   existingQuote?: Quote;
   projectId?: string;
+  projectTitle?: string;
   initialType?: 'estimate' | 'quotation' | 'invoice';
   customers: Customer[];
   settings: AppSettings;
@@ -46,7 +47,7 @@ interface QuoteCreatorProps {
 }
 
 export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
-  existingQuote, projectId, initialType = 'estimate', customers, settings, onSave, onAddCustomer, onCancel
+  existingQuote, projectId, projectTitle, initialType = 'estimate', customers, settings, onSave, onAddCustomer, onCancel
 }) => {
   const { services, saveQuote } = useData();
   const toast = useToast();
@@ -132,7 +133,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         projectId,
         date: new Date().toISOString().split('T')[0],
         updatedAt: new Date().toISOString(),
-        title: '',
+        title: projectTitle || '',
         customerId: '',
         sections: [{ id: Math.random().toString(36).substr(2, 9), title: 'Work Section 1', items: [], labourHours: 0 }],
         labourRate: settings.defaultLabourRate,
