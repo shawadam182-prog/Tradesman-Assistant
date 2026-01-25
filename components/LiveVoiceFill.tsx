@@ -44,6 +44,7 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
   const parseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const requestIdRef = useRef(0);
   const lastParsedTextRef = useRef('');
+  const manualStopRef = useRef(false);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -149,10 +150,28 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
     let finalTranscript = '';
     let silenceTimeout: NodeJS.Timeout | null = null;
 
+    const clearSilenceTimeout = () => {
+      if (silenceTimeout) {
+        clearTimeout(silenceTimeout);
+        silenceTimeout = null;
+      }
+    };
+
+    const resetSilenceTimeout = () => {
+      clearSilenceTimeout();
+      silenceTimeout = setTimeout(() => {
+        manualStopRef.current = true;
+        recognition.stop();
+      }, 8000); // 8 seconds of silence before auto-stop
+    };
+
     recognition.onstart = () => {
       hapticTap();
       setIsListening(true);
       setError(null);
+      manualStopRef.current = false;
+      // Start initial timeout - if no speech detected in 8s, stop
+      resetSilenceTimeout();
     };
 
     recognition.onresult = (event: any) => {
@@ -173,16 +192,26 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
       // Schedule parse on silence
       scheduleParse(fullTranscript);
 
-      // Reset silence timeout
-      if (silenceTimeout) clearTimeout(silenceTimeout);
-      silenceTimeout = setTimeout(() => {
-        recognition.stop();
-      }, 6000); // Stop after 6s silence - gives time to pause and think
+      // Reset silence timeout - user is still speaking
+      resetSilenceTimeout();
     };
 
     recognition.onend = () => {
+      clearSilenceTimeout();
+
+      // Chrome sometimes ends recognition unexpectedly - restart if user didn't stop manually
+      // and we haven't collected much transcript yet
+      if (!manualStopRef.current && !finalTranscript.trim()) {
+        // Restart recognition - browser ended it prematurely
+        try {
+          recognition.start();
+          return;
+        } catch (e) {
+          // Failed to restart, fall through to normal end handling
+        }
+      }
+
       setIsListening(false);
-      if (silenceTimeout) clearTimeout(silenceTimeout);
 
       // Final parse on stop
       if (finalTranscript.trim()) {
@@ -191,8 +220,20 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
     };
 
     recognition.onerror = (event: any) => {
+      clearSilenceTimeout();
+
+      // 'no-speech' is common - just restart recognition
+      if (event.error === 'no-speech') {
+        try {
+          recognition.start();
+          return;
+        } catch (e) {
+          // Failed to restart
+        }
+      }
+
       setIsListening(false);
-      if (event.error !== 'no-speech' && event.error !== 'aborted') {
+      if (event.error !== 'aborted') {
         setError(`Speech error: ${event.error}`);
         hapticError();
       }
@@ -315,6 +356,7 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
 
   const stopListening = useCallback(() => {
     hapticTap();
+    manualStopRef.current = true;
 
     if (recognitionRef.current) {
       recognitionRef.current.stop();
