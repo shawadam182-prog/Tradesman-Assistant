@@ -177,7 +177,7 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
       if (silenceTimeout) clearTimeout(silenceTimeout);
       silenceTimeout = setTimeout(() => {
         recognition.stop();
-      }, 3000); // Stop after 3s silence
+      }, 6000); // Stop after 6s silence - gives time to pause and think
     };
 
     recognition.onend = () => {
