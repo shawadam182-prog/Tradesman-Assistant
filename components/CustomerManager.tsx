@@ -322,10 +322,10 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
               <button
                 type="button"
                 onClick={() => { hapticTap(); setShowLiveVoiceFill(true); }}
-                className="flex items-center gap-1 px-3 py-1.5 md:px-6 md:py-3 rounded-xl font-black text-[9px] md:text-[10px] uppercase transition-all border bg-white text-teal-600 border-teal-100 hover:bg-teal-50 active:scale-95"
+                className="flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full font-black text-[10px] md:text-xs uppercase transition-all bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-200 hover:shadow-teal-300 hover:scale-105 active:scale-95"
               >
-                <Mic size={10} className="md:w-3 md:h-3" />
-                <span className="hidden sm:inline">Voice Fill</span>
+                <Mic size={14} className="md:w-4 md:h-4" />
+                <span>Voice</span>
               </button>
             </div>
 

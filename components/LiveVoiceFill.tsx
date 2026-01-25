@@ -439,33 +439,53 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
         </div>
 
         {/* Mic Button Section */}
-        <div className="p-6 flex flex-col items-center gap-4">
-          <button
-            onClick={toggleListening}
-            disabled={isProcessing && !isListening}
-            className={`w-24 h-24 rounded-full flex items-center justify-center transition-all shadow-lg ${
-              isListening
-                ? 'bg-red-500 text-white animate-pulse shadow-red-200'
-                : isProcessing
-                  ? 'bg-amber-500 text-white shadow-amber-200'
-                  : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-300 active:scale-95'
-            }`}
-          >
-            {isProcessing && !isListening ? (
-              <Loader2 size={36} className="animate-spin" />
-            ) : isListening ? (
-              <MicOff size={36} />
-            ) : (
-              <Mic size={36} />
+        <div className="p-8 flex flex-col items-center gap-4 bg-gradient-to-b from-slate-50 to-white">
+          {/* Animated rings container */}
+          <div className="relative">
+            {/* Outer pulsing rings when listening */}
+            {isListening && (
+              <>
+                <div className="absolute inset-0 w-32 h-32 -m-4 rounded-full bg-red-400/20 animate-ping" style={{ animationDuration: '1.5s' }} />
+                <div className="absolute inset-0 w-32 h-32 -m-4 rounded-full bg-red-400/30 animate-ping" style={{ animationDuration: '2s', animationDelay: '0.5s' }} />
+              </>
             )}
-          </button>
 
-          <p className="text-sm text-slate-500 text-center">
+            {/* Main button */}
+            <button
+              onClick={toggleListening}
+              disabled={isProcessing && !isListening}
+              className={`relative w-28 h-28 rounded-full flex items-center justify-center transition-all duration-300 ${
+                isListening
+                  ? 'bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-[0_0_40px_rgba(239,68,68,0.5)] scale-110'
+                  : isProcessing
+                    ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_0_30px_rgba(251,191,36,0.4)]'
+                    : 'bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-[0_8px_30px_rgba(20,184,166,0.4)] hover:shadow-[0_8px_40px_rgba(20,184,166,0.6)] hover:scale-105 active:scale-95'
+              }`}
+            >
+              {/* Inner glow */}
+              <div className={`absolute inset-2 rounded-full bg-white/20 ${isListening ? 'animate-pulse' : ''}`} />
+
+              {/* Icon */}
+              <div className="relative z-10">
+                {isProcessing && !isListening ? (
+                  <Loader2 size={44} className="animate-spin" />
+                ) : isListening ? (
+                  <MicOff size={44} />
+                ) : (
+                  <Mic size={44} />
+                )}
+              </div>
+            </button>
+          </div>
+
+          <p className={`text-sm font-medium text-center transition-colors ${
+            isListening ? 'text-red-600' : isProcessing ? 'text-amber-600' : 'text-slate-500'
+          }`}>
             {isListening
               ? 'Listening... Tap to stop'
               : isProcessing
                 ? 'Detecting fields...'
-                : 'Tap to start speaking'}
+                : 'Tap the mic to start'}
           </p>
 
           {/* Transcript Display */}

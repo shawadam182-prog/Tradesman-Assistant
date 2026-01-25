@@ -128,7 +128,11 @@ const actions: Record<string, (data: any) => Promise<any>> = {
 
         FIELD EXTRACTION:
         - name: The PERSON (human). First + last name. Remove any duplicates. "Adam Adam Shaw" → "Adam Shaw"
-        - company: Business name ONLY if clearly stated (contains Ltd, Inc, or sounds like a business). Most customers are private - leave empty.
+        - company: Extract if mentioned in ANY of these patterns:
+          * "works for X" / "from X" / "at X" / "with X" → company is X
+          * "X company" / "company X" / "company is X" → company is X
+          * Just a word/acronym after the name that isn't an address → likely company
+          * Examples: "Adam Shaw FFF" → company is "FFF", "John from Acme" → company is "Acme"
         - email: See EMAIL PARSING below
         - phone: UK number. See PHONE PARSING below
         - address: UK address if mentioned (house number, street, town, postcode)
