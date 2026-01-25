@@ -117,48 +117,52 @@ const actions: Record<string, (data: any) => Promise<any>> = {
   async parseCustomer({ input }: { input: string }) {
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.0-flash',
-      systemInstruction: `You are parsing voice input from a UK tradesman adding a new client/customer.
+      systemInstruction: `You parse NATURAL CONVERSATIONAL speech from UK tradesmen adding clients.
 
-        CRITICAL DISTINCTION:
-        - name: The PERSON's name (human being) - e.g. "John Smith", "Mrs Jones", "Dave"
-        - company: Their BUSINESS name (if they have one) - e.g. "Smith & Sons Roofing", "ABC Ltd"
+        CRITICAL: Users speak NATURALLY without labels. They do NOT say "name is" or "email is".
+        Typical input: "Adam Shaw, works for FFF, adam dot shaw at gmail dot com, oh seven seven double oh one two three four five six"
 
-        Many customers are private homeowners with NO company - leave company as empty string.
-        The tradesman is usually saying something like "John Smith, 42 High Street" or "Mrs Jones on 07700 123456"
+        DUPLICATE NAME BUG - AVOID THIS:
+        Speech recognition often repeats words. If you see "Adam Adam Shaw" or "John John Smith",
+        the name is just "Adam Shaw" or "John Smith" - NEVER include duplicated first names.
 
-        DO NOT put a company name in the name field.
-        DO NOT put the person's name in the company field.
-        If only one name-like thing is mentioned, it's probably the PERSON's name, not a company.
+        FIELD EXTRACTION:
+        - name: The PERSON (human). First + last name. Remove any duplicates. "Adam Adam Shaw" → "Adam Shaw"
+        - company: Business name ONLY if clearly stated (contains Ltd, Inc, or sounds like a business). Most customers are private - leave empty.
+        - email: See EMAIL PARSING below
+        - phone: UK number. See PHONE PARSING below
+        - address: UK address if mentioned (house number, street, town, postcode)
 
-        Extract:
-        - name: Person's full name (required - the human being)
-        - company: Their business name ONLY if explicitly mentioned (empty string if private customer)
-        - email: Email address (empty string if not mentioned)
-        - phone: UK phone number - format as 07xxx or 01234 xxx xxx (empty string if not mentioned)
-        - address: UK address (empty string if not mentioned)
+        EMAIL PARSING (MOST CRITICAL):
+        Voice input converts email to spoken words. You MUST reconstruct:
 
-        EMAIL PARSING (CRITICAL):
-        Speech recognition converts emails to spoken form. You MUST convert back:
-        - "at" or "add" → "@"
+        Pattern: [local-part] "at" [domain]
+        - The LOCAL PART (before @) is CRITICAL - don't drop any of it!
         - "dot" or "point" → "."
+        - "at" or "add" → "@"
         - "underscore" → "_"
-        - "hyphen" or "dash" → "-"
+        - "dash" or "hyphen" → "-"
 
-        Examples of spoken emails → correct format:
-        - "john dot smith at gmail dot com" → "john.smith@gmail.com"
-        - "dave underscore wilson at hotmail dot co dot uk" → "dave_wilson@hotmail.co.uk"
-        - "info at smithbuilders dot com" → "info@smithbuilders.com"
-        - "j dot blogs at outlook dot com" → "j.blogs@outlook.com"
-        - "test at test dot com" → "test@test.com"
+        EXAMPLES - study these carefully:
+        "adam dot shaw at gmail dot com" → "adam.shaw@gmail.com"
+        "a dot shaw at outlook dot com" → "a.shaw@outlook.com"
+        "adamshaw at gmail dot com" → "adamshaw@gmail.com"
+        "adam underscore shaw at hotmail dot co dot uk" → "adam_shaw@hotmail.co.uk"
+        "shaw dot adam at yahoo dot com" → "shaw.adam@yahoo.com"
+        "info at fff dot co dot uk" → "info@fff.co.uk"
+
+        COMMON MISTAKES TO AVOID:
+        - DON'T drop the first part of email (adam.shaw → shaw is WRONG)
+        - DON'T confuse the person's name with email local part - they may differ
+        - DON'T add extra dots or characters not in the input
 
         PHONE PARSING:
-        - "oh seven" or "zero seven" = "07"
-        - Spell out numbers: "oh seven seven double oh" = "0770"
-        - "double" before a digit means repeat it
-        - Format UK mobiles as: 07xxx xxxxxx
-        - Format landlines as: 01234 xxxxxx or 0121 xxx xxxx
+        - "oh" or "zero" = "0"
+        - "double [digit]" = repeat that digit twice
+        - "triple [digit]" = repeat three times
+        - Format: 07xxx xxxxxx (mobile) or 01234 xxxxxx (landline)
 
-        Return valid JSON. Empty strings for missing fields.`,
+        Return valid JSON. Empty string for any field not mentioned.`,
     });
 
     const result = await model.generateContent({
