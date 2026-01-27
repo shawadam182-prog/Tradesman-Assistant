@@ -360,7 +360,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
               >
                 {/* Status indicator bar */}
                 <div className={`w-1 self-stretch rounded-full shrink-0 ${
-                  isPaid ? 'bg-teal-500' : overdue ? 'bg-red-500' : 'bg-slate-200'
+                  isPaid ? 'bg-emerald-500' : overdue ? 'bg-red-500' : invoice.status === 'sent' || invoice.status === 'accepted' ? 'bg-blue-500' : invoice.status === 'draft' ? 'bg-amber-400' : 'bg-slate-200'
                 }`} />
 
                 <div className="flex-1 min-w-0">
@@ -396,7 +396,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                       £{calculateQuoteTotal(invoice).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </p>
                     <div className={`text-[10px] font-bold uppercase ${
-                      isPaid ? 'text-teal-600' : overdue ? 'text-red-500' : 'text-slate-400'
+                      isPaid ? 'text-emerald-600' : overdue ? 'text-red-500' : invoice.status === 'sent' || invoice.status === 'accepted' ? 'text-blue-600' : invoice.status === 'draft' ? 'text-amber-600' : 'text-slate-400'
                     }`}>
                       {overdue ? 'Overdue' : invoice.status}
                     </div>
