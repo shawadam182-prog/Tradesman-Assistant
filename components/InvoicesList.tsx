@@ -40,7 +40,7 @@ interface InvoicesListProps {
 }
 
 // Tab filter types
-type InvoiceFilterTab = 'all' | 'draft' | 'unpaid' | 'overdue' | 'cancelled';
+type InvoiceFilterTab = 'all' | 'draft' | 'unpaid' | 'paid' | 'overdue' | 'cancelled';
 
 // Sort options
 type SortOption = 'updated_desc' | 'updated_asc' | 'created_desc' | 'created_asc' | 'amount_desc' | 'amount_asc' | 'customer_asc' | 'customer_desc' | 'title_asc' | 'title_desc';
@@ -154,6 +154,8 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                invoice.status !== 'draft' &&
                invoice.status !== 'declined' &&
                !isOverdue(invoice);
+      case 'paid':
+        return invoice.status === 'paid';
       case 'overdue':
         return isOverdue(invoice);
       case 'cancelled':
@@ -185,6 +187,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
     all: quotes.length,
     draft: quotes.filter(q => q.status === 'draft').length,
     unpaid: quotes.filter(q => q.status !== 'paid' && q.status !== 'draft' && q.status !== 'declined' && !isOverdue(q)).length,
+    paid: quotes.filter(q => q.status === 'paid').length,
     overdue: quotes.filter(q => isOverdue(q)).length,
     cancelled: quotes.filter(q => q.status === 'declined').length,
   };
@@ -219,7 +222,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
 
       {/* Status Filter Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-        {(['all', 'draft', 'unpaid', 'overdue', 'cancelled'] as const).map(tab => (
+        {(['all', 'draft', 'unpaid', 'paid', 'overdue', 'cancelled'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => {
@@ -230,7 +233,9 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
               activeTab === tab
                 ? tab === 'overdue'
                   ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
-                  : 'bg-slate-900 text-white shadow-lg'
+                  : tab === 'paid'
+                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
+                    : 'bg-slate-900 text-white shadow-lg'
                 : 'bg-white text-slate-600 border-2 border-slate-100 hover:border-slate-200'
             }`}
           >
@@ -241,7 +246,9 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                   ? 'bg-white/20'
                   : tab === 'overdue' && tabCounts.overdue > 0
                     ? 'bg-red-100 text-red-600'
-                    : 'bg-slate-100'
+                    : tab === 'paid' && tabCounts.paid > 0
+                      ? 'bg-emerald-100 text-emerald-600'
+                      : 'bg-slate-100'
               }`}>
                 {tabCounts[tab]}
               </span>
@@ -333,6 +340,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
               {activeTab === 'all' && 'No invoices recorded yet.'}
               {activeTab === 'draft' && 'No draft invoices.'}
               {activeTab === 'unpaid' && 'No unpaid invoices.'}
+              {activeTab === 'paid' && 'No paid invoices.'}
               {activeTab === 'overdue' && 'No overdue invoices.'}
               {activeTab === 'cancelled' && 'No cancelled invoices.'}
             </p>
