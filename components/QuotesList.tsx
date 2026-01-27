@@ -363,7 +363,7 @@ export const QuotesList: React.FC<QuotesListProps> = ({
                     {onDeleteQuote && (
                       <button
                         onClick={(e) => handleDelete(e, quote)}
-                        className="p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                        className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                         title="Delete quote"
                       >
                         <Trash2 size={16} />
