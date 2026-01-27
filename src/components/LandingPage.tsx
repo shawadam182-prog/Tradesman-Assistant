@@ -5,6 +5,7 @@ import {
   Smartphone, Wifi, WifiOff, Cloud, Calculator, FolderOpen,
   TrendingUp, MessageSquare, Play, Menu, X, Sparkles
 } from 'lucide-react';
+import { VideoModal } from './VideoModal';
 
 interface LandingPageProps {
   onLogin: () => void;
@@ -134,6 +135,7 @@ const testimonials = [
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onSignUp }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -160,9 +162,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onSignUp }) =
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
-      }`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
+        }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
@@ -264,11 +265,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onSignUp }) =
                   Start Free Trial
                   <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
                 </button>
-                <button className="group bg-white text-slate-700 px-8 py-4 rounded-2xl font-bold text-lg border-2 border-slate-200 hover:border-teal-300 transition-all flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setShowDemo(true)}
+                  className="group bg-white text-slate-700 px-8 py-4 rounded-2xl font-bold text-lg border-2 border-slate-200 hover:border-teal-300 transition-all flex items-center justify-center gap-2"
+                >
                   <Play size={20} className="text-teal-600" />
                   Watch Demo
                 </button>
               </div>
+
+              <VideoModal
+                isOpen={showDemo}
+                onClose={() => setShowDemo(false)}
+                videoUrl="https://jpftetfqoqabftgzkorr.supabase.co/storage/v1/object/public/marketing/demo-video.mp4"
+              />
 
               {/* Trust indicators */}
               <div className="flex items-center justify-center lg:justify-start gap-6 text-sm text-slate-500">
@@ -440,16 +450,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onSignUp }) =
                 <button
                   key={index}
                   onClick={() => setActiveFeature(index)}
-                  className={`w-full text-left p-6 rounded-2xl transition-all duration-300 ${
-                    activeFeature === index
-                      ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-xl shadow-teal-500/25 scale-[1.02]'
-                      : 'bg-slate-50 hover:bg-slate-100'
-                  }`}
+                  className={`w-full text-left p-6 rounded-2xl transition-all duration-300 ${activeFeature === index
+                    ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-xl shadow-teal-500/25 scale-[1.02]'
+                    : 'bg-slate-50 hover:bg-slate-100'
+                    }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                      activeFeature === index ? 'bg-white/20' : 'bg-teal-100'
-                    }`}>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${activeFeature === index ? 'bg-white/20' : 'bg-teal-100'
+                      }`}>
                       <feature.icon size={24} className={activeFeature === index ? 'text-white' : 'text-teal-600'} />
                     </div>
                     <div>
@@ -460,9 +468,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onSignUp }) =
                         {feature.description}
                       </p>
                     </div>
-                    <ChevronRight className={`shrink-0 transition-transform ${
-                      activeFeature === index ? 'text-white rotate-90' : 'text-slate-400'
-                    }`} />
+                    <ChevronRight className={`shrink-0 transition-transform ${activeFeature === index ? 'text-white rotate-90' : 'text-slate-400'
+                      }`} />
                   </div>
                 </button>
               ))}
