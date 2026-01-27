@@ -621,7 +621,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
           )}
 
           {viewType === 'week' && (
-            <div className="flex flex-col gap-1 md:gap-2 p-1 md:p-8 animate-in slide-in-from-right-4 duration-500">
+            <div className="flex flex-col gap-3 md:gap-4 p-2 md:p-8 animate-in slide-in-from-right-4 duration-500">
               {daysInWeek.map((date, idx) => {
                 const isToday = date.toDateString() === new Date().toDateString();
                 const dayEntries = getDayEntries(date);
@@ -631,42 +631,48 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                   <div
                     key={idx}
                     onClick={() => { setSelectedDay(date); setViewType('day'); }}
-                    className={`group rounded-xl md:rounded-[28px] border md:border-2 transition-all cursor-pointer overflow-hidden ${
-                      isToday ? 'bg-teal-50 border-teal-200 shadow-md md:shadow-lg' : 'bg-white border-slate-100 md:border-slate-50 hover:border-slate-200 hover:shadow-md'
+                    className={`group rounded-2xl md:rounded-[28px] border-2 transition-all cursor-pointer overflow-hidden ${
+                      isToday ? 'bg-teal-50/50 border-teal-300 shadow-lg shadow-teal-100/50 ring-1 ring-teal-200' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-lg'
                     }`}
                   >
                     {/* Day header row */}
-                    <div className="flex items-center justify-between px-3 py-2 md:px-6 md:py-3">
-                      <div className="flex items-center gap-2 md:gap-4">
-                        <div className={`h-9 w-9 md:h-12 md:w-12 rounded-xl md:rounded-2xl flex flex-col items-center justify-center font-black ${isToday ? 'bg-teal-500 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-900 group-hover:text-white'} transition-colors`}>
-                          <span className="text-sm md:text-lg leading-none">{date.getDate()}</span>
-                          <span className="text-[7px] md:text-[9px] uppercase tracking-tight leading-none">{date.toLocaleDateString(undefined, { weekday: 'short' })}</span>
+                    <div className={`flex items-center justify-between px-3 py-3 md:px-6 md:py-4 ${
+                      isToday ? 'bg-teal-500' : 'bg-slate-800'
+                    }`}>
+                      <div className="flex items-center gap-3 md:gap-4">
+                        <div className={`h-11 w-11 md:h-14 md:w-14 rounded-xl md:rounded-2xl flex flex-col items-center justify-center font-black ${
+                          isToday ? 'bg-white/20 text-white' : 'bg-white/10 text-white'
+                        }`}>
+                          <span className="text-base md:text-xl leading-none">{date.getDate()}</span>
+                          <span className="text-[8px] md:text-[10px] uppercase tracking-tight leading-none opacity-80">{date.toLocaleDateString(undefined, { weekday: 'short' })}</span>
                         </div>
                         <div>
-                          <span className="text-xs md:text-sm font-bold text-slate-700">
-                            {date.toLocaleDateString(undefined, { weekday: 'long' })}
-                          </span>
-                          {isToday && <span className="ml-2 text-[9px] md:text-[10px] font-black text-teal-600 uppercase tracking-widest italic">Today</span>}
-                          <p className={`text-[10px] md:text-xs font-medium ${isEmpty ? 'text-slate-300' : 'text-slate-500'}`}>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm md:text-base font-black text-white tracking-tight">
+                              {date.toLocaleDateString(undefined, { weekday: 'long' })}
+                            </span>
+                            {isToday && <span className="text-[9px] md:text-[10px] font-black text-white/70 bg-white/20 px-2 py-0.5 rounded-full uppercase tracking-widest">Today</span>}
+                          </div>
+                          <p className={`text-[10px] md:text-xs font-bold ${isEmpty ? 'text-white/40' : 'text-white/70'}`}>
                             {isEmpty ? 'No bookings' : `${dayEntries.length} job${dayEntries.length > 1 ? 's' : ''}`}
                           </p>
                         </div>
                       </div>
-                      <ArrowRight size={16} className="md:w-5 md:h-5 text-slate-300 group-hover:text-teal-500 group-hover:translate-x-1 transition-all" />
+                      <ArrowRight size={18} className="md:w-5 md:h-5 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all" />
                     </div>
 
                     {/* Job entries list */}
                     {!isEmpty && (
-                      <div className="border-t border-slate-100 divide-y divide-slate-50">
+                      <div className="divide-y divide-slate-100">
                         {dayEntries.slice(0, 3).map(e => {
                           const entryCustomer = customers.find(c => c.id === e.customerId);
                           return (
                             <div
                               key={e.id}
                               onClick={(ev) => { ev.stopPropagation(); handleEdit(e); }}
-                              className="flex items-center gap-2.5 md:gap-4 px-3 py-2 md:px-6 md:py-3 hover:bg-slate-50 transition-colors group/item"
+                              className="flex items-center gap-2.5 md:gap-4 px-3 py-2.5 md:px-6 md:py-3.5 hover:bg-slate-50 transition-colors group/item"
                             >
-                              <div className="w-1 h-8 md:h-10 rounded-full bg-teal-500 shrink-0" />
+                              <div className={`w-1 h-8 md:h-10 rounded-full shrink-0 ${isToday ? 'bg-teal-500' : 'bg-slate-300'}`} />
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs md:text-sm font-bold text-slate-900 truncate">{e.title}</p>
                                 <p className="text-[10px] md:text-xs text-slate-500 truncate">
