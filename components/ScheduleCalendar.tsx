@@ -631,51 +631,69 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                   <div
                     key={idx}
                     onClick={() => { setSelectedDay(date); setViewType('day'); }}
-                    className={`group flex flex-row items-center justify-between gap-2 md:gap-4 px-2 py-1.5 md:p-4 md:px-8 rounded-lg md:rounded-[28px] border md:border-2 transition-all cursor-pointer ${
+                    className={`group rounded-xl md:rounded-[28px] border md:border-2 transition-all cursor-pointer overflow-hidden ${
                       isToday ? 'bg-teal-50 border-teal-200 shadow-md md:shadow-lg' : 'bg-white border-slate-100 md:border-slate-50 hover:border-slate-200 hover:shadow-md'
                     }`}
                   >
-                    <div className="flex items-center gap-2 md:gap-6 md:min-w-[140px] shrink-0">
-                      <div className={`h-7 w-7 md:h-12 md:w-12 rounded-lg md:rounded-2xl flex flex-col items-center justify-center font-black ${isToday ? 'bg-teal-500 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-900 group-hover:text-white'} transition-colors`}>
-                        <span className="text-[9px] md:text-xs leading-none">{date.getDate()}</span>
-                        <span className="text-[6px] md:text-[8px] uppercase tracking-tighter">{date.toLocaleDateString(undefined, { weekday: 'short' })}</span>
+                    {/* Day header row */}
+                    <div className="flex items-center justify-between px-3 py-2 md:px-6 md:py-3">
+                      <div className="flex items-center gap-2 md:gap-4">
+                        <div className={`h-9 w-9 md:h-12 md:w-12 rounded-xl md:rounded-2xl flex flex-col items-center justify-center font-black ${isToday ? 'bg-teal-500 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-900 group-hover:text-white'} transition-colors`}>
+                          <span className="text-sm md:text-lg leading-none">{date.getDate()}</span>
+                          <span className="text-[7px] md:text-[9px] uppercase tracking-tight leading-none">{date.toLocaleDateString(undefined, { weekday: 'short' })}</span>
+                        </div>
+                        <div>
+                          <span className="text-xs md:text-sm font-bold text-slate-700">
+                            {date.toLocaleDateString(undefined, { weekday: 'long' })}
+                          </span>
+                          {isToday && <span className="ml-2 text-[9px] md:text-[10px] font-black text-teal-600 uppercase tracking-widest italic">Today</span>}
+                          <p className={`text-[10px] md:text-xs font-medium ${isEmpty ? 'text-slate-300' : 'text-slate-500'}`}>
+                            {isEmpty ? 'No bookings' : `${dayEntries.length} job${dayEntries.length > 1 ? 's' : ''}`}
+                          </p>
+                        </div>
                       </div>
-                      {isToday && <span className="text-[9px] md:text-[10px] font-black text-teal-600 uppercase tracking-widest italic animate-pulse hidden sm:block">Today</span>}
+                      <ArrowRight size={16} className="md:w-5 md:h-5 text-slate-300 group-hover:text-teal-500 group-hover:translate-x-1 transition-all" />
                     </div>
 
-                    <div className="flex-1 min-w-0">
-                      {isEmpty ? (
-                        <p className="text-[8px] md:text-[11px] font-black text-slate-300 uppercase tracking-wider md:tracking-widest italic truncate">No bookings</p>
-                      ) : (
-                        <div className="flex flex-wrap gap-1 md:gap-2">
-                          {dayEntries.slice(0, 2).map(e => (
+                    {/* Job entries list */}
+                    {!isEmpty && (
+                      <div className="border-t border-slate-100 divide-y divide-slate-50">
+                        {dayEntries.slice(0, 3).map(e => {
+                          const entryCustomer = customers.find(c => c.id === e.customerId);
+                          return (
                             <div
                               key={e.id}
                               onClick={(ev) => { ev.stopPropagation(); handleEdit(e); }}
-                              className="bg-slate-900 text-white px-1.5 md:pl-3 md:pr-4 py-0.5 md:py-2 rounded md:rounded-xl flex items-center gap-1 md:gap-3 shadow hover:bg-black transition-all group/item"
+                              className="flex items-center gap-2.5 md:gap-4 px-3 py-2 md:px-6 md:py-3 hover:bg-slate-50 transition-colors group/item"
                             >
-                              <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-teal-500 hidden md:block"></div>
-                              <span className="text-[8px] md:text-[10px] font-black uppercase tracking-tight truncate max-w-[60px] md:max-w-none">{e.title}</span>
-                              <span className="text-[7px] md:text-[9px] font-black text-slate-500 italic hidden md:inline">{new Date(e.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                              <Pencil size={10} className="md:w-3 md:h-3 text-teal-500 opacity-0 group-hover/item:opacity-100 transition-opacity hidden md:block" />
+                              <div className="w-1 h-8 md:h-10 rounded-full bg-teal-500 shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs md:text-sm font-bold text-slate-900 truncate">{e.title}</p>
+                                <p className="text-[10px] md:text-xs text-slate-500 truncate">
+                                  {entryCustomer?.name && <span>{entryCustomer.name}</span>}
+                                  {e.location && <span>{entryCustomer?.name ? ' · ' : ''}{e.location}</span>}
+                                  {!entryCustomer?.name && !e.location && <span className="italic">No details</span>}
+                                </p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="text-[10px] md:text-xs font-bold text-slate-700">
+                                  {new Date(e.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                                <p className="text-[9px] md:text-[10px] text-slate-400">
+                                  {new Date(e.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
+                              <Pencil size={14} className="md:w-4 md:h-4 text-slate-300 opacity-0 group-hover/item:opacity-100 transition-opacity shrink-0" />
                             </div>
-                          ))}
-                          {dayEntries.length > 2 && (
-                            <span className="text-[8px] md:text-[10px] font-black text-teal-600 self-center">+{dayEntries.length - 2}</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1 md:gap-4 text-slate-300 group-hover:text-teal-500 transition-colors shrink-0">
-                      <div className="text-right hidden sm:block">
-                        <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">Status</p>
-                        <p className={`text-[10px] md:text-[11px] font-bold italic ${isEmpty ? 'text-slate-200' : 'text-teal-600'}`}>
-                          {isEmpty ? 'Available' : `${dayEntries.length} Job${dayEntries.length > 1 ? 's' : ''}`}
-                        </p>
+                          );
+                        })}
+                        {dayEntries.length > 3 && (
+                          <div className="px-3 py-1.5 md:px-6 md:py-2 text-center">
+                            <span className="text-[10px] md:text-xs font-bold text-teal-600">+{dayEntries.length - 3} more</span>
+                          </div>
+                        )}
                       </div>
-                      <ArrowRight size={14} className="md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
-                    </div>
+                    )}
                   </div>
                 );
               })}
