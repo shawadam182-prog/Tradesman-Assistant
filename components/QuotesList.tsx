@@ -342,6 +342,9 @@ export const QuotesList: React.FC<QuotesListProps> = ({
 
                   <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500 mt-0.5">
                     <span className="truncate">{customer?.name || 'Unknown Client'}</span>
+                    {customer?.address && (
+                      <span className="truncate text-slate-400">· {customer.address}</span>
+                    )}
                     <span className={`shrink-0 ${status.text} font-bold`}>· {status.label}</span>
                   </div>
                 </div>

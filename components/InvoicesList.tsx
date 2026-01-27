@@ -382,6 +382,9 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
 
                   <div className="flex items-center gap-2 text-slate-500 text-[11px] font-medium mt-0.5">
                     <span className="truncate">{customer?.name || 'Unknown'}</span>
+                    {customer?.address && (
+                      <span className="truncate text-slate-400">· {customer.address}</span>
+                    )}
                     {invoice.dueDate && !isPaid && (
                       <span className={`shrink-0 ${overdue ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
                         · {overdue ? 'Due' : 'Due'} {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
