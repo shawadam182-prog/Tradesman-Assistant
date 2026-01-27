@@ -221,7 +221,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
       />
 
       {/* Status Filter Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+      <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1">
         {(['all', 'draft', 'unpaid', 'paid', 'overdue', 'cancelled'] as const).map(tab => (
           <button
             key={tab}
@@ -229,19 +229,19 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
               hapticTap();
               setActiveTab(tab);
             }}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2 ${
+            className={`px-2.5 py-2 rounded-lg text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap flex items-center gap-1 ${
               activeTab === tab
                 ? tab === 'overdue'
-                  ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
+                  ? 'bg-red-500 text-white shadow-md shadow-red-500/20'
                   : tab === 'paid'
-                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
-                    : 'bg-slate-900 text-white shadow-lg'
-                : 'bg-white text-slate-600 border-2 border-slate-100 hover:border-slate-200'
+                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                    : 'bg-slate-900 text-white shadow-md'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
             }`}
           >
             {tab}
             {tabCounts[tab] > 0 && (
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+              <span className={`text-[9px] min-w-[16px] text-center px-1 py-px rounded-full ${
                 activeTab === tab
                   ? 'bg-white/20'
                   : tab === 'overdue' && tabCounts.overdue > 0
