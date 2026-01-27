@@ -1421,10 +1421,21 @@ export const Home: React.FC<HomeProps> = ({
 
           <div className="flex flex-col gap-1.5 md:gap-4">
             <textarea
-              className="bg-slate-50 border-2 border-slate-100 rounded-lg md:rounded-[32px] p-3 md:p-8 font-medium text-slate-900 outline-none focus:border-teal-400 transition-all shadow-inner leading-relaxed text-sm md:text-lg resize-none placeholder:text-slate-300 placeholder:italic min-h-[120px] md:min-h-[300px]"
+              ref={(el) => {
+                if (el) {
+                  el.style.height = 'auto';
+                  el.style.height = Math.max(el.scrollHeight, 120) + 'px';
+                }
+              }}
+              className="bg-slate-50 border-2 border-slate-100 rounded-lg md:rounded-[32px] p-3 md:p-8 font-medium text-slate-900 outline-none focus:border-teal-400 transition-all shadow-inner leading-relaxed text-sm md:text-lg resize-none placeholder:text-slate-300 placeholder:italic min-h-[120px] md:min-h-[300px] overflow-hidden"
               placeholder="Jot down site measurements, material shortages, or general notes..."
               value={quickNotes}
-              onChange={e => setQuickNotes(e.target.value)}
+              onChange={e => {
+                setQuickNotes(e.target.value);
+                // Auto-resize
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.max(e.target.scrollHeight, 120) + 'px';
+              }}
             />
             <div className="flex items-center gap-1 md:gap-2 px-1 md:px-2">
               <Sparkles size={10} className="md:w-[14px] md:h-[14px] text-teal-500" />
