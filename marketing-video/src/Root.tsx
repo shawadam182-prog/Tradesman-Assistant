@@ -7,7 +7,7 @@ export const RemotionRoot: React.FC = () => {
             <Composition
                 id="WebsiteDemo"
                 component={WebsiteDemo}
-                durationInFrames={300}
+                durationInFrames={3720} // 124 seconds at 30fps (voiceover ~122s + 2s buffer)
                 fps={30}
                 width={1920}
                 height={1080}

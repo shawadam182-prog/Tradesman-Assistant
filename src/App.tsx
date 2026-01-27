@@ -10,8 +10,10 @@ import { PWAPrompt, OfflineIndicator as PWAOfflineIndicator } from './components
 import { OfflineIndicator } from '../components/OfflineIndicator';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import MainApp from './components/MainApp';
+import { PublicQuoteView } from './pages/PublicQuoteView';
 import { Loader2 } from 'lucide-react';
 import { useReferralCapture } from './hooks/useReferralCapture';
+import { ScreenRecorder } from './components/ScreenRecorder';
 
 // Loading screen component
 const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Loading...' }) => (
@@ -56,21 +58,27 @@ const DataAwareApp: React.FC = () => {
   );
 };
 
+// Helper to extract share token from URL
+const getShareTokenFromUrl = (): string | null => {
+  const path = window.location.pathname;
+  const match = path.match(/^\/quote\/view\/([a-f0-9-]+)$/i);
+  return match ? match[1] : null;
+};
+
 // Main view router - handles landing, login, and app views
-type ViewState = 'landing' | 'login' | 'signup' | 'app' | 'privacy';
+type ViewState = 'landing' | 'login' | 'signup' | 'app' | 'privacy' | 'public-quote';
 
 const ViewRouter: React.FC = () => {
   const { user, loading } = useAuth();
-  const [view, setView] = useState<ViewState>('landing');
-  const [hasVisitedBefore, setHasVisitedBefore] = useState<boolean | null>(null);
 
-  // Check URL path for direct navigation (e.g., /privacy)
-  useEffect(() => {
-    const path = window.location.pathname;
-    if (path === '/privacy') {
-      setView('privacy');
-    }
-  }, []);
+  // Check URL immediately for share token (before any state)
+  const initialToken = getShareTokenFromUrl();
+  const initialView: ViewState = initialToken ? 'public-quote' :
+    (window.location.pathname === '/privacy' ? 'privacy' : 'landing');
+
+  const [view, setView] = useState<ViewState>(initialView);
+  const [hasVisitedBefore, setHasVisitedBefore] = useState<boolean | null>(null);
+  const [shareToken, setShareToken] = useState<string | null>(initialToken);
 
   // Capture referral codes from QR code URLs
   useReferralCapture();
@@ -94,15 +102,24 @@ const ViewRouter: React.FC = () => {
     }
   };
 
-  // Handle auth state changes
+  // Handle auth state changes - but don't override public quote view
   useEffect(() => {
-    if (user) {
+    if (user && view !== 'public-quote') {
       setView('app');
     }
-  }, [user]);
+  }, [user, view]);
 
   if (loading || hasVisitedBefore === null) {
     return <LoadingScreen />;
+  }
+
+  // Public quote view - accessible without authentication
+  if (view === 'public-quote' && shareToken) {
+    return (
+      <ErrorBoundary>
+        <PublicQuoteView shareToken={shareToken} />
+      </ErrorBoundary>
+    );
   }
 
   // If logged in, show the app
@@ -154,12 +171,15 @@ const ViewRouter: React.FC = () => {
 };
 
 // Main App with providers
+
+
 const App: React.FC = () => {
   return (
     <AuthProvider>
       <ToastProvider>
         <PWAOfflineIndicator />
         <ViewRouter />
+        <ScreenRecorder />
         <PWAPrompt />
       </ToastProvider>
     </AuthProvider>

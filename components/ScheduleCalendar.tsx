@@ -632,33 +632,33 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                     key={idx}
                     onClick={() => { setSelectedDay(date); setViewType('day'); }}
                     className={`group rounded-2xl md:rounded-[28px] border-2 transition-all cursor-pointer overflow-hidden ${
-                      isToday ? 'bg-teal-50/50 border-teal-300 shadow-lg shadow-teal-100/50 ring-1 ring-teal-200' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-lg'
+                      isToday ? 'bg-teal-50/50 border-teal-300 shadow-lg shadow-teal-100/50 ring-1 ring-teal-200' : 'bg-white border-slate-300 hover:border-slate-400 hover:shadow-lg'
                     }`}
                   >
                     {/* Day header row */}
                     <div className={`flex items-center justify-between px-3 py-3 md:px-6 md:py-4 ${
-                      isToday ? 'bg-teal-500' : 'bg-slate-800'
+                      isToday ? 'bg-teal-500' : 'bg-slate-50'
                     }`}>
                       <div className="flex items-center gap-3 md:gap-4">
                         <div className={`h-11 w-11 md:h-14 md:w-14 rounded-xl md:rounded-2xl flex flex-col items-center justify-center font-black ${
-                          isToday ? 'bg-white/20 text-white' : 'bg-white/10 text-white'
+                          isToday ? 'bg-white/20 text-white' : 'bg-slate-900 text-white'
                         }`}>
                           <span className="text-base md:text-xl leading-none">{date.getDate()}</span>
                           <span className="text-[8px] md:text-[10px] uppercase tracking-tight leading-none opacity-80">{date.toLocaleDateString(undefined, { weekday: 'short' })}</span>
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm md:text-base font-black text-white tracking-tight">
+                            <span className={`text-sm md:text-base font-black tracking-tight ${isToday ? 'text-white' : 'text-slate-900'}`}>
                               {date.toLocaleDateString(undefined, { weekday: 'long' })}
                             </span>
                             {isToday && <span className="text-[9px] md:text-[10px] font-black text-white/70 bg-white/20 px-2 py-0.5 rounded-full uppercase tracking-widest">Today</span>}
                           </div>
-                          <p className={`text-[10px] md:text-xs font-bold ${isEmpty ? 'text-white/40' : 'text-white/70'}`}>
+                          <p className={`text-[10px] md:text-xs font-bold ${isToday ? (isEmpty ? 'text-white/40' : 'text-white/70') : (isEmpty ? 'text-slate-400' : 'text-slate-500')}`}>
                             {isEmpty ? 'No bookings' : `${dayEntries.length} job${dayEntries.length > 1 ? 's' : ''}`}
                           </p>
                         </div>
                       </div>
-                      <ArrowRight size={18} className="md:w-5 md:h-5 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                      <ArrowRight size={18} className={`md:w-5 md:h-5 group-hover:translate-x-1 transition-all ${isToday ? 'text-white/40 group-hover:text-white' : 'text-slate-300 group-hover:text-slate-600'}`} />
                     </div>
 
                     {/* Job entries list */}

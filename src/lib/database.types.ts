@@ -529,11 +529,15 @@ export type Database = {
       }
       quotes: {
         Row: {
+          accepted_at: string | null
           amount_paid: number | null
           cis_percent: number | null
           created_at: string | null
           customer_id: string | null
+          customer_response_ip: string | null
+          customer_response_user_agent: string | null
           date: string | null
+          declined_at: string | null
           discount_description: string | null
           discount_type: string | null
           discount_value: number | null
@@ -554,6 +558,7 @@ export type Database = {
           payment_method: string | null
           reference_number: number | null
           sections: Json | null
+          share_token: string | null
           status: string | null
           tax_percent: number | null
           title: string
@@ -562,11 +567,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          accepted_at?: string | null
           amount_paid?: number | null
           cis_percent?: number | null
           created_at?: string | null
           customer_id?: string | null
+          customer_response_ip?: string | null
+          customer_response_user_agent?: string | null
           date?: string | null
+          declined_at?: string | null
           discount_description?: string | null
           discount_type?: string | null
           discount_value?: number | null
@@ -587,6 +596,7 @@ export type Database = {
           payment_method?: string | null
           reference_number?: number | null
           sections?: Json | null
+          share_token?: string | null
           status?: string | null
           tax_percent?: number | null
           title: string
@@ -595,11 +605,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          accepted_at?: string | null
           amount_paid?: number | null
           cis_percent?: number | null
           created_at?: string | null
           customer_id?: string | null
+          customer_response_ip?: string | null
+          customer_response_user_agent?: string | null
           date?: string | null
+          declined_at?: string | null
           discount_description?: string | null
           discount_type?: string | null
           discount_value?: number | null
@@ -620,6 +634,7 @@ export type Database = {
           payment_method?: string | null
           reference_number?: number | null
           sections?: Json | null
+          share_token?: string | null
           status?: string | null
           tax_percent?: number | null
           title?: string

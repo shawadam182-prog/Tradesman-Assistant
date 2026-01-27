@@ -1,0 +1,23 @@
+Scene 1: The Homepage
+"Stop paying for five different apps when you only need one. Welcome to TradeSync—the all-in-one management tool built by a tradesman, for tradespeople. From your Daily Brief to a financial snapshot, your entire business is now just one click away."
+
+Scene 2: Job Initiation
+"Setting up a new job takes seconds. Assign a client, start the pack, and you’re running. On-site? Put the pen down. Use the Dictate feature to instantly log site notes and daily logs using AI support—hands-free and hassle-free."
+
+Scene 3: Photos & Materials
+"Capture progress instantly by snapping photos straight into the job pack. Need to track materials? Don't type it out. Just use the Quick Add buttons for common items like timber and plasterboard, or dictate your custom list right then and there."
+
+Scene 4: Invoicing
+"Turn that work into cash effortlessly. Whether it's an Estimate, Quote, or Invoice, create professional documents in moments. Select your client, set your due dates, and hit save."
+
+Scene 5: The Filing Cabinet
+"Forget the shoebox of receipts. The Filing Cabinet automatically organizes your receipts, invoices, contracts, and insurance documents into a secure system, keeping everything searchable and safe."
+
+Scene 6: Financial Health
+"Know exactly where you stand. Check your real-time Profit & Loss statement to see your revenue versus costs instantly. And with Aged Receivables, you can track who owes you money and chase outstanding invoices with a tap."
+
+Scene 7: Tax & Accountant Export
+"Tax time doesn't have to be a headache. Track your VAT position live, and when year-end comes, generate a full Accountant Export with sales, expenses, and bank transactions ready for reconciliation."
+
+Scene 8: Logo/Homepage
+"Site management, document storage, and powerful accounting—all for a fraction of the cost of multiple subscriptions. This is TradeSync. Get your time back."

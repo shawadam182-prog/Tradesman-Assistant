@@ -1,74 +1,157 @@
 import puppeteer from 'puppeteer';
 import path from 'path';
-import fs from 'fs';
 
 async function capture() {
     console.log('Launching browser...');
     const browser = await puppeteer.launch({
-        headless: true, // Use headless for now, can perform interactions
+        headless: false,
         defaultViewport: { width: 1920, height: 1080 }
     });
     const page = await browser.newPage();
 
-    console.log('Navigating to TradeSync...');
-    await page.goto('https://tradesync.info', { waitUntil: 'networkidle2', timeout: 60000 });
+    // Helper to take screenshots
+    const takeScreenshot = async (name: string) => {
+        const filePath = path.join(__dirname, `../public/${name}`);
+        await page.screenshot({ path: filePath, fullPage: true });
+        console.log(`Captured: ${name}`);
+    };
 
-    // Login Flow
-    console.log('Attempting login...');
-    // Click "Login" button on landing page if it exists, or directly input if on login page
-    // The landing page usually has a Login button. Let's look for a button with text "Sign In" or "Login"
-    // Based on LandingPage.tsx (implied structure), there's likely a login button.
-    // However, simpler to go directly to /login handled by ViewRouter if we can, but it's client-side routing.
-    // Let's assume we land on LandingPage and click a login button.
-
-    // Wait for any button that might be "Sign In"
-    // Puppeteer supports xpath selectors with `xpath/` prefix in standard selectors or using `$$`
-    const loginButton = await page.$$("xpath/.//button[contains(., 'Sign In')]");
-    if (loginButton.length > 0) {
-        await loginButton[0].click();
-    }
-
-    // Wait for email input
-    await page.waitForSelector('input[type="email"]');
-    await page.type('input[type="email"]', 'demo@tradesync.info'); // Use valid demo credentials if known, or these as placeholder
-    await page.type('input[type="password"]', 'demo1234'); // Placeholder password
-
-    // Submit login
-    const submitButton = await page.waitForSelector('button[type="submit"]');
-    await submitButton?.click();
-
-    // Wait for MainApp to load (check for "Add Customer" button or similar dashboard element)
-    console.log('Waiting for dashboard...');
     try {
-        await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 10000 });
-    } catch (e) {
-        console.log('Navigation timeout or already loaded');
+        console.log('Navigating to TradeSync...');
+        await page.goto('https://tradesync.info', { waitUntil: 'networkidle2', timeout: 60000 });
+
+        // 1. Login Flow
+        console.log('Checking for login...');
+
+        // Check if we are already logged in (look for a dashboard element) or need to login
+        // Try to find the specific login button or inputs
+        const signinButton = await page.$("xpath/.//button[contains(., 'Sign In')]");
+        const loginLink = await page.$("a[href='/login']");
+
+        if (signinButton) {
+            console.log('Clicking Sign In button...');
+            await signinButton.click();
+            try { await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }); } catch (e) { console.log('Sign In Nav wait skipped'); }
+        } else if (loginLink) {
+            console.log('Clicking Login link...');
+            await loginLink.click();
+            try { await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }); } catch (e) { console.log('Login Link Nav wait skipped'); }
+        }
+
+        // Wait for email input to be sure we are on login page
+        try {
+            await page.waitForSelector('input[type="email"]', { timeout: 5000 });
+            console.log('Filling credentials...');
+            await page.type('input[type="email"]', 'demo@tradesync.info');
+            await page.type('input[type="password"]', 'demo1234');
+
+            const submitButton = await page.$('button[type="submit"]');
+            if (submitButton) {
+                await submitButton.click();
+                try { await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }); } catch (e) { console.log('Submit Nav wait skipped'); }
+            }
+        } catch (e) {
+            console.log('Login inputs not found, possibly already logged in or on dashboard.');
+        }
+
+        // 2. Dashboard
+        console.log('Waiting for Dashboard...');
+        // Wait for a common element like "Total Revenue" or a sidebar item
+        await page.waitForSelector('main', { timeout: 15000 });
+        // Give it a moment for charts to animate
+        await new Promise(r => setTimeout(r, 2000));
+        await takeScreenshot('dashboard.png');
+
+        // 3. Customers List
+        console.log('Navigating to Customers...');
+        const customerLinks = await page.$$("xpath/.//a[contains(., 'Customers')] | .//button[contains(., 'Customers')] | .//span[contains(., 'Customers')]");
+
+        let navClicked = false;
+        if (customerLinks.length > 0) {
+            for (const link of customerLinks) {
+                if (await link.boundingBox()) {
+                    await link.click();
+                    navClicked = true;
+                    break;
+                }
+            }
+        }
+
+        if (!navClicked) {
+            await page.goto('https://tradesync.info/customers', { waitUntil: 'domcontentloaded' });
+        }
+
+        try {
+            // Wait for unique element on customer page (e.g. New Contact button)
+            await page.waitForFunction(() => {
+                return document.body.innerText.includes('New Contact') || document.body.innerText.includes('Add');
+            }, { timeout: 10000 });
+        } catch (e) { console.log('Wait for customers page content failed'); }
+
+        await new Promise(r => setTimeout(r, 1000));
+        await takeScreenshot('customers_list.png');
+
+        // 4. Add Customer Modal
+        console.log('Opening Add Customer modal...');
+        const addCustomerBtns = await page.$$("xpath/.//button[contains(., 'Add Customer')] | .//button[contains(., 'New Contact')] | .//button[contains(., 'Add')]");
+
+        let worked = false;
+        if (addCustomerBtns.length > 0) {
+            for (const btn of addCustomerBtns) {
+                if (await btn.boundingBox()) {
+                    await btn.hover();
+                    await btn.click();
+                    worked = true;
+                    break;
+                }
+            }
+        }
+
+        if (worked) {
+            await new Promise(r => setTimeout(r, 1000)); // Animation
+            await takeScreenshot('add_customer_empty.png');
+
+            // Type into form
+            console.log('Filling Customer Form...');
+            // Attempt to find inputs by name or simple selector
+            const nameInput = await page.$('input[name="name"]') || await page.$('input[autocomplete="name"]');
+            if (nameInput) await nameInput.type('John Doe');
+
+            const emailInput = await page.$('input[name="email"]') || await page.$('input[autocomplete="email"]');
+            if (emailInput) await emailInput.type('john.doe@example.com');
+
+            const companyInput = await page.$('input[name="company"]') || await page.$('input[autocomplete="organization"]');
+            if (companyInput) await companyInput.type('Doe Constructions');
+
+            await new Promise(r => setTimeout(r, 500));
+            await takeScreenshot('add_customer_filled.png');
+
+            // Escape/Close modal
+            await page.keyboard.press('Escape');
+            await new Promise(r => setTimeout(r, 1000));
+        } else {
+            console.log('Could not find Add Customer button');
+        }
+
+        // 5. Quotes
+        console.log('Navigating to Quotes...');
+        await page.goto('https://tradesync.info/quotes', { waitUntil: 'domcontentloaded' });
+
+        try {
+            // Wait for unique element on quotes page
+            await page.waitForFunction(() => {
+                return document.body.innerText.includes('New Quote') || document.body.innerText.includes('Create Quote');
+            }, { timeout: 10000 });
+        } catch (e) { console.log('Wait for quotes page content failed'); }
+
+        await takeScreenshot('quotes_list.png');
+
+    } catch (error) {
+        console.error('Capture failed:', error);
+    } finally {
+        await browser.close();
+        console.log('Done!');
     }
-
-    // Take screenshot of Dashboard
-    const dashboardPath = path.join(__dirname, '../public/dashboard.png');
-    await page.screenshot({ path: dashboardPath, fullPage: true });
-    console.log('Dashboard captured');
-
-    // Navigate to Customers tab
-    console.log('Navigating to Customers...');
-    // Find button with text "Customers" or icon
-    // In MainApp.tsx, activeTab is managed by state. We need to click the navigation item.
-    // Assuming a navigation bar exists (Layout component).
-    // Let's click on a text "Customers" if available in the layout sidebar/bottom bar.
-    const customersLink = await page.$$("xpath/.//span[contains(., 'Customers')]");
-    if (customersLink.length > 0) {
-        await customersLink[0].click();
-        await new Promise(r => setTimeout(r, 2000)); // Wait for transition
-    }
-
-    // Take screenshot of Customers List
-    const customersPath = path.join(__dirname, '../public/customers.png');
-    await page.screenshot({ path: customersPath, fullPage: true });
-    console.log('Customers list captured');
-
-    await browser.close();
-    console.log('Done!');
 }
 
-capture().catch(console.error);
+capture();

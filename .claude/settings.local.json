@@ -16,7 +16,19 @@
       "Bash(supabase functions deploy:*)",
       "Bash(npx supabase:*)",
       "Bash(curl:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp enable:*)",
+      "Bash(claude mcp --help:*)",
+      "Bash(claude mcp list:*)",
+      "mcp__notebooklm__get_health",
+      "mcp__notebooklm__list_notebooks",
+      "mcp__notebooklm__setup_auth",
+      "mcp__notebooklm__add_notebook",
+      "Bash(timeout 10 npm run dev)",
+      "Bash(timeout 8 npm run dev)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)"
     ]
   }
 }
