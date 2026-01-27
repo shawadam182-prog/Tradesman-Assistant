@@ -181,38 +181,43 @@ export const QuotesList: React.FC<QuotesListProps> = ({
       />
 
       {/* Status Filter Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-        {(['all', 'draft', 'pending', 'accepted', 'declined'] as const).map(tab => (
+      <div className="flex gap-1 pb-2">
+        {(['all', 'draft', 'pending', 'accepted', 'declined'] as const).map(tab => {
+          const label: Record<QuoteFilterTab, string> = {
+            all: 'All', draft: 'Draft', pending: 'Pending', accepted: 'Accepted', declined: "Dec'd"
+          };
+          return (
           <button
             key={tab}
             onClick={() => {
               hapticTap();
               setActiveTab(tab);
             }}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === tab
+            className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap flex items-center justify-center gap-1 ${activeTab === tab
                 ? tab === 'declined'
-                  ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
+                  ? 'bg-red-500 text-white shadow-md shadow-red-500/20'
                   : tab === 'accepted'
-                    ? 'bg-green-500 text-white shadow-lg shadow-green-500/20'
-                    : 'bg-slate-900 text-white shadow-lg'
-                : 'bg-white text-slate-600 border-2 border-slate-100 hover:border-slate-200'
+                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                    : 'bg-slate-900 text-white shadow-md'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
               }`}
           >
-            {tab}
+            {label[tab]}
             {tabCounts[tab] > 0 && (
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab
+              <span className={`text-[9px] min-w-[14px] text-center px-0.5 py-px rounded-full leading-none ${activeTab === tab
                   ? 'bg-white/20'
                   : tab === 'declined' && tabCounts.declined > 0
                     ? 'bg-red-100 text-red-600'
                     : tab === 'accepted' && tabCounts.accepted > 0
-                      ? 'bg-green-100 text-green-600'
+                      ? 'bg-emerald-100 text-emerald-600'
                       : 'bg-slate-100'
                 }`}>
                 {tabCounts[tab]}
               </span>
             )}
           </button>
-        ))}
+          );
+        })}
       </div>
 
       {/* Search and Sort Row */}
