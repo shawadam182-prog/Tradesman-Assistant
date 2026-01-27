@@ -160,6 +160,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
 
   const [formData, setFormData] = useState<Partial<Quote>>(getInitialData());
   const [draftRestored, setDraftRestored] = useState<boolean>(() => getSavedDraft() !== null);
+  const [showDraftBanner, setShowDraftBanner] = useState<boolean>(() => getSavedDraft() !== null && !existingQuote);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -215,13 +216,41 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     }
   }, [formData.customerId, customers]);
 
-  // Show toast when draft is restored on mount
+  // Show toast when draft is restored on mount (only for edits, not new — new shows banner)
   useEffect(() => {
-    if (draftRestored) {
+    if (draftRestored && existingQuote) {
       toast.success('Draft Restored', 'Your unsaved changes have been recovered');
       setDraftRestored(false);
     }
-  }, [draftRestored, toast]);
+  }, [draftRestored, existingQuote, toast]);
+
+  // Discard draft and start fresh
+  const discardDraft = useCallback(() => {
+    clearDraft();
+    setShowDraftBanner(false);
+    const defaultDueDate = initialType === 'invoice'
+      ? (() => { const d = new Date(); d.setDate(d.getDate() + 14); return d.toISOString().split('T')[0]; })()
+      : undefined;
+    setFormData({
+      id: Math.random().toString(36).substr(2, 9),
+      projectId,
+      date: new Date().toISOString().split('T')[0],
+      updatedAt: new Date().toISOString(),
+      title: projectTitle || '',
+      customerId: '',
+      sections: [{ id: Math.random().toString(36).substr(2, 9), title: 'Work Section 1', items: [], labourHours: 0 }],
+      labourRate: settings.defaultLabourRate,
+      markupPercent: settings.defaultMarkupPercent ?? 0,
+      taxPercent: settings.enableVat ? settings.defaultTaxRate : 0,
+      cisPercent: settings.enableCis ? settings.defaultCisRate : 0,
+      status: 'draft',
+      type: initialType,
+      notes: initialType === 'invoice' ? settings.defaultInvoiceNotes : settings.defaultQuoteNotes,
+      displayOptions: { ...settings.defaultDisplayOptions },
+      dueDate: defaultDueDate
+    });
+    toast.success('Draft Discarded', 'Starting fresh');
+  }, [clearDraft, initialType, projectId, projectTitle, settings, toast]);
 
   // Helper function to save draft immediately
   const saveDraftNow = useCallback(() => {
@@ -714,6 +743,35 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       </div>
 
       <div className="p-4 space-y-6">
+        {/* Draft Restored Banner */}
+        {showDraftBanner && (
+          <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-3 animate-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-10 w-10 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
+                <FileText size={18} className="text-amber-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-black text-amber-900">Previous draft restored</p>
+                <p className="text-xs text-amber-600 truncate">Unsaved changes from your last session</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setShowDraftBanner(false)}
+                className="px-3 py-2 text-xs font-black text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-xl transition-all uppercase tracking-wider"
+              >
+                Keep
+              </button>
+              <button
+                onClick={() => { hapticTap(); discardDraft(); }}
+                className="px-3 py-2 text-xs font-black text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all uppercase tracking-wider shadow-sm"
+              >
+                Discard
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Document Info Card */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
