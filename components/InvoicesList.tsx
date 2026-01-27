@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Quote, Customer, AppSettings, TIER_LIMITS } from '../types';
 import { ReceiptText, Eye, Search, CheckCircle2, AlertCircle, Plus, Hash, User, ChevronRight, Trash2, Clock, AlertTriangle, MapPin, ArrowUpDown } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
@@ -8,6 +8,7 @@ import { useSubscription } from '../src/hooks/useFeatureAccess';
 import { UpgradePrompt } from './UpgradePrompt';
 import { useData } from '../src/contexts/DataContext';
 import { PageHeader } from './common/PageHeader';
+import { ConfirmDialog } from './ConfirmDialog';
 
 // Helper functions for overdue detection
 const isOverdue = (invoice: Quote): boolean => {
@@ -65,6 +66,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
   const [showUpgradePrompt, setShowUpgradePrompt] = React.useState(false);
   const [sortBy, setSortBy] = React.useState<SortOption>('updated_desc');
   const [showSortDropdown, setShowSortDropdown] = React.useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string; customerName: string } | null>(null);
   const toast = useToast();
 
   // Get all invoices for limit checking
@@ -75,18 +77,22 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
   const currentInvoiceCount = allQuotes.filter(q => q.type === 'invoice').length;
   const canCreateInvoice = invoiceLimit === null || currentInvoiceCount < invoiceLimit;
 
-  const handleDelete = async (e: React.MouseEvent, invoice: Quote) => {
+  const handleDelete = (e: React.MouseEvent, invoice: Quote) => {
     e.stopPropagation();
     hapticTap();
-
     const customer = customers.find(c => c.id === invoice.customerId);
-    if (window.confirm(`Delete invoice "${invoice.title}" for ${customer?.name || 'Unknown'}? This cannot be undone.`)) {
-      try {
-        await onDeleteInvoice?.(invoice.id);
-        toast.success('Invoice Deleted', `"${invoice.title}" has been removed`);
-      } catch (err) {
-        toast.error('Delete Failed', 'Could not delete invoice');
-      }
+    setConfirmDelete({ id: invoice.id, title: invoice.title, customerName: customer?.name || 'Unknown' });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDelete) return;
+    const { id, title } = confirmDelete;
+    setConfirmDelete(null);
+    try {
+      await onDeleteInvoice?.(id);
+      toast.success('Invoice Deleted', `"${title}" has been removed`);
+    } catch (err) {
+      toast.error('Delete Failed', 'Could not delete invoice');
     }
   };
 
@@ -445,6 +451,15 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
           onClose={() => setShowUpgradePrompt(false)}
         />
       )}
+      <ConfirmDialog
+        open={!!confirmDelete}
+        title="Delete Invoice"
+        message={`Delete invoice "${confirmDelete?.title}" for ${confirmDelete?.customerName}? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

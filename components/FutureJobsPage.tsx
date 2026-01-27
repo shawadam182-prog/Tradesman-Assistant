@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft, Plus, CheckCircle2, ArrowRightCircle,
   Trash2, ClipboardList, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
+import { futureJobsService } from '../src/services/dataService';
 
 interface FutureJob {
   id: string;
@@ -26,26 +27,48 @@ export const FutureJobsPage: React.FC<FutureJobsPageProps> = ({
   const [newFutureJobName, setNewFutureJobName] = useState('');
   const [newFutureJobNotes, setNewFutureJobNotes] = useState('');
   const [showCompleted, setShowCompleted] = useState(false);
+  const loaded = useRef(false);
 
-  // Load from localStorage
+  // Load from Supabase (fallback to localStorage)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('bq_future_jobs');
-      if (saved) setFutureJobs(JSON.parse(saved));
-    } catch (e) {
-      console.error('Failed to load future jobs:', e);
-    }
+    const loadData = async () => {
+      try {
+        const dbJobs = await futureJobsService.getAll();
+        const mapped: FutureJob[] = dbJobs.map((j: any) => ({
+          id: j.id,
+          name: j.name,
+          notes: j.notes || '',
+          createdAt: j.created_at,
+          isCompleted: j.is_completed || false,
+        }));
+        setFutureJobs(mapped);
+        localStorage.setItem('bq_future_jobs', JSON.stringify(mapped));
+      } catch (e) {
+        console.warn('Supabase load failed, using localStorage:', e);
+        try {
+          const saved = localStorage.getItem('bq_future_jobs');
+          if (saved) setFutureJobs(JSON.parse(saved));
+        } catch (e2) {
+          console.error('Failed to load future jobs:', e2);
+        }
+      }
+      loaded.current = true;
+    };
+    loadData();
   }, []);
 
-  // Save to localStorage
+  // Save to localStorage as offline cache
   useEffect(() => {
-    localStorage.setItem('bq_future_jobs', JSON.stringify(futureJobs));
+    if (loaded.current) {
+      localStorage.setItem('bq_future_jobs', JSON.stringify(futureJobs));
+    }
   }, [futureJobs]);
 
-  const addFutureJob = () => {
+  const addFutureJob = async () => {
     if (!newFutureJobName.trim()) return;
+    const tempId = Math.random().toString(36).substr(2, 9);
     const job: FutureJob = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: tempId,
       name: newFutureJobName.trim(),
       notes: newFutureJobNotes.trim(),
       createdAt: new Date().toISOString(),
@@ -55,17 +78,29 @@ export const FutureJobsPage: React.FC<FutureJobsPageProps> = ({
     setNewFutureJobName('');
     setNewFutureJobNotes('');
     hapticSuccess();
+
+    try {
+      const dbJob = await futureJobsService.create({ name: job.name, notes: job.notes });
+      setFutureJobs(prev => prev.map(j => j.id === tempId ? { ...j, id: dbJob.id, createdAt: dbJob.created_at } : j));
+    } catch (e) {
+      console.warn("Failed to save future job to Supabase:", e);
+    }
   };
 
   const toggleFutureJobComplete = (id: string) => {
-    setFutureJobs(prev => prev.map(job =>
-      job.id === id ? { ...job, isCompleted: !job.isCompleted } : job
-    ));
+    setFutureJobs(prev => {
+      const job = prev.find(j => j.id === id);
+      if (!job) return prev;
+      const newCompleted = !job.isCompleted;
+      futureJobsService.update(id, { is_completed: newCompleted }).catch(e => console.warn("Failed to update:", e));
+      return prev.map(j => j.id === id ? { ...j, isCompleted: newCompleted } : j);
+    });
     hapticTap();
   };
 
   const deleteFutureJob = (id: string) => {
     setFutureJobs(prev => prev.filter(job => job.id !== id));
+    futureJobsService.delete(id).catch(e => console.warn("Failed to delete:", e));
     hapticTap();
   };
 

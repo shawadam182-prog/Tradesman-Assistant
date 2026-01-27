@@ -9,7 +9,8 @@ import {
   Plus, Eye, EyeOff, HardHat, Package, Landmark, ShieldCheck, Hash, Loader2,
   Calendar, Layout, FileSpreadsheet, FileEdit, List, ArrowLeft,
   Crown, Zap, Clock, Users, Briefcase, Camera, FileBox, ExternalLink,
-  HelpCircle, MessageSquare, Send, Hammer, Minus, Minimize2, LayoutGrid, Check, Type, Trash2
+  HelpCircle, MessageSquare, Send, Hammer, Minus, Minimize2, LayoutGrid, Check, Type, Trash2,
+  Moon, Sun
 } from 'lucide-react';
 import { TEMPLATE_METADATA, TEMPLATE_DESCRIPTIONS, COLOR_SCHEMES, getTemplateConfig } from '../src/lib/invoiceTemplates';
 import { useToast } from '../src/contexts/ToastContext';
@@ -21,6 +22,7 @@ import { redirectToCheckout, redirectToPortal } from '../src/lib/stripe';
 import { useData } from '../src/contexts/DataContext';
 import { useAuth } from '../src/contexts/AuthContext';
 import { supabase } from '../src/lib/supabase';
+import { useDarkMode } from '../src/hooks/useDarkMode';
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -36,6 +38,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const subscription = useSubscription();
   const { quotes, projects, customers } = useData();
   const { user } = useAuth();
+  const { isDark, toggle: toggleDarkMode } = useDarkMode();
   const [activeCategory, setActiveCategory] = useState<SettingsCategory>('subscription');
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -290,6 +293,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
             <CategoryButton id="invoices" label="Invoice Preferences" icon={ReceiptText} color="bg-emerald-500 text-white" />
             <CategoryButton id="materials" label="Materials Library" icon={Package} color="bg-amber-500 text-white" />
             <CategoryButton id="help" label="Help & Contact" icon={HelpCircle} color="bg-teal-500 text-white" />
+          </div>
+
+          {/* Dark Mode Toggle */}
+          <div className="pt-4 md:pt-6">
+            <button
+              onClick={toggleDarkMode}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            >
+              <div className={`p-2 rounded-lg ${isDark ? 'bg-amber-100 text-amber-600' : 'bg-slate-300 text-slate-600'}`}>
+                {isDark ? <Sun size={18} /> : <Moon size={18} />}
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-bold text-slate-900 dark:text-white">{isDark ? 'Light Mode' : 'Dark Mode'}</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">Switch appearance</p>
+              </div>
+              <div className={`w-10 h-6 rounded-full flex items-center transition-colors ${isDark ? 'bg-teal-500 justify-end' : 'bg-slate-300 justify-start'}`}>
+                <div className="w-5 h-5 bg-white rounded-full shadow-sm mx-0.5" />
+              </div>
+            </button>
           </div>
 
           <div className="pt-4 md:pt-10 border-t border-slate-100">

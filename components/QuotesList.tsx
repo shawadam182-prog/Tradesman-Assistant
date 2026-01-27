@@ -9,6 +9,7 @@ import { UpgradePrompt } from './UpgradePrompt';
 import { useData } from '../src/contexts/DataContext';
 import { PageHeader } from './common/PageHeader';
 import { getQuoteGrandTotal } from '../src/utils/quoteCalculations';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface QuotesListProps {
   quotes: Quote[];
@@ -48,6 +49,7 @@ export const QuotesList: React.FC<QuotesListProps> = ({
   const [sortBy, setSortBy] = useState<SortOption>('updated_desc');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string; customerName: string } | null>(null);
   const toast = useToast();
 
   // Get all quotes (estimates + quotations) for limit checking
@@ -58,18 +60,22 @@ export const QuotesList: React.FC<QuotesListProps> = ({
   const currentQuoteCount = allQuotes.filter(q => q.type === 'estimate' || q.type === 'quotation').length;
   const canCreateQuote = quoteLimit === null || currentQuoteCount < quoteLimit;
 
-  const handleDelete = async (e: React.MouseEvent, quote: Quote) => {
-    e.stopPropagation(); // Don't trigger row click
+  const handleDelete = (e: React.MouseEvent, quote: Quote) => {
+    e.stopPropagation();
     hapticTap();
-
     const customer = customers.find(c => c.id === quote.customerId);
-    if (window.confirm(`Delete quote "${quote.title}" for ${customer?.name || 'Unknown'}? This cannot be undone.`)) {
-      try {
-        await onDeleteQuote?.(quote.id);
-        toast.success('Quote Deleted', `"${quote.title}" has been removed`);
-      } catch (err) {
-        toast.error('Delete Failed', 'Could not delete quote');
-      }
+    setConfirmDelete({ id: quote.id, title: quote.title, customerName: customer?.name || 'Unknown' });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDelete) return;
+    const { id, title } = confirmDelete;
+    setConfirmDelete(null);
+    try {
+      await onDeleteQuote?.(id);
+      toast.success('Quote Deleted', `"${title}" has been removed`);
+    } catch (err) {
+      toast.error('Delete Failed', 'Could not delete quote');
     }
   };
 
@@ -386,6 +392,15 @@ export const QuotesList: React.FC<QuotesListProps> = ({
           onClose={() => setShowUpgradePrompt(false)}
         />
       )}
+      <ConfirmDialog
+        open={!!confirmDelete}
+        title="Delete Quote"
+        message={`Delete quote "${confirmDelete?.title}" for ${confirmDelete?.customerName}? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

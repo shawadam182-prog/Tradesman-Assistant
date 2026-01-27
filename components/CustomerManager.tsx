@@ -8,6 +8,7 @@ import {
 import { parseCustomerVoiceInput } from '../src/services/geminiService';
 import { useToast } from '../src/contexts/ToastContext';
 import { validateCustomerData } from '../src/utils/inputValidation';
+import { ConfirmDialog } from './ConfirmDialog';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { PageHeader } from './common/PageHeader';
@@ -44,6 +45,7 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
   const [interimTranscript, setInterimTranscript] = useState('');
   const [expandedCustomers, setExpandedCustomers] = useState<Set<string>>(new Set());
   const [showLiveVoiceFill, setShowLiveVoiceFill] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
 
   // Field configuration for LiveVoiceFill
   const voiceFields: VoiceFieldConfig[] = [
@@ -274,15 +276,20 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const deleteCustomer = async (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete ${name}?`)) {
-      try {
-        await deleteCustomerProp(id);
-        toast.success('Contact Deleted', `${name} removed from directory`);
-      } catch (error) {
-        console.error('Failed to delete customer:', error);
-        toast.error('Delete Failed', `Could not remove ${name}`);
-      }
+  const deleteCustomer = (id: string, name: string) => {
+    setConfirmDelete({ id, name });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDelete) return;
+    const { id, name } = confirmDelete;
+    setConfirmDelete(null);
+    try {
+      await deleteCustomerProp(id);
+      toast.success('Contact Deleted', `${name} removed from directory`);
+    } catch (error) {
+      console.error('Failed to delete customer:', error);
+      toast.error('Delete Failed', `Could not remove ${name}`);
     }
   };
 
@@ -604,6 +611,15 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
           title="Voice Fill Customer"
         />
       )}
+      <ConfirmDialog
+        open={!!confirmDelete}
+        title="Delete Customer"
+        message={`Are you sure you want to delete ${confirmDelete?.name}? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 };

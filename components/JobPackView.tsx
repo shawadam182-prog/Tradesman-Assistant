@@ -13,6 +13,7 @@ import { JobProfitSummary } from './JobProfitSummary';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { sitePhotosService } from '../src/services/dataService';
+import { ConfirmDialog } from './ConfirmDialog';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
 
 // Detect iOS for voice input fallback
@@ -61,18 +62,22 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   // Title editing state
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempTitle, setTempTitle] = useState(project.title);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Delete entire job pack
-  const handleDeleteProject = async () => {
+  const handleDeleteProject = () => {
     hapticTap();
-    if (window.confirm(`Delete job pack "${project.title}"? This will remove all photos, drawings, notes, and materials. This cannot be undone.`)) {
-      try {
-        await onDeleteProject?.(project.id);
-        toast.success('Job Pack Deleted', `"${project.title}" has been removed`);
-        onBack();
-      } catch (err) {
-        toast.error('Delete Failed', 'Could not delete job pack');
-      }
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDeleteProject = async () => {
+    setShowDeleteConfirm(false);
+    try {
+      await onDeleteProject?.(project.id);
+      toast.success('Job Pack Deleted', `"${project.title}" has been removed`);
+      onBack();
+    } catch (err) {
+      toast.error('Delete Failed', 'Could not delete job pack');
     }
   };
 
@@ -682,6 +687,15 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
       </div>
     )
   }
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Delete Job Pack"
+        message={`Delete job pack "${project.title}"? This will remove all photos, drawings, notes, and materials. This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={handleConfirmDeleteProject}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 };

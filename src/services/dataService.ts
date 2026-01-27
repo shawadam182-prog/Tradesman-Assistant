@@ -410,6 +410,79 @@ export const quotesService = {
     if (error) throw error;
     return data as number;
   },
+
+  // Generate share URL for a quote
+  getShareUrl(shareToken: string) {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/quote/view/${shareToken}`;
+  },
+
+  // Get quote by share token (public access - no auth required)
+  async getByShareToken(shareToken: string) {
+    const { data, error } = await supabase
+      .rpc('get_quote_by_share_token', {
+        p_share_token: shareToken,
+      });
+    if (error) throw error;
+    return data as {
+      success: boolean;
+      error?: string;
+      quote?: any;
+      customer?: { id: string; name: string; company?: string } | null;
+      company?: {
+        name: string;
+        address: string;
+        logo_path: string;
+        phone: string;
+        email: string;
+        footer_logos: string[];
+      } | null;
+    };
+  },
+
+  // Respond to quote (accept or decline) - public access
+  async respondToQuote(shareToken: string, response: 'accepted' | 'declined') {
+    const { data, error } = await supabase
+      .rpc('respond_to_quote', {
+        p_share_token: shareToken,
+        p_response: response,
+        p_ip: null, // Could capture if needed
+        p_user_agent: navigator.userAgent,
+      });
+    if (error) throw error;
+    return data as {
+      success: boolean;
+      error?: string;
+      quote_id?: string;
+      new_status?: string;
+      responded_at?: string;
+    };
+  },
+
+  // Copy share link to clipboard
+  async copyShareLink(quote: { id: string; shareToken?: string | null }) {
+    if (!quote.shareToken) {
+      throw new Error('Quote does not have a share token. Mark it as "Sent" first.');
+    }
+    const url = this.getShareUrl(quote.shareToken);
+    await navigator.clipboard.writeText(url);
+    return url;
+  },
+
+  // Generate share token for quotes that are already sent but don't have one
+  async generateShareToken(quoteId: string) {
+    const { data, error } = await supabase
+      .rpc('generate_share_token', {
+        p_quote_id: quoteId,
+      });
+    if (error) throw error;
+    return data as {
+      success: boolean;
+      error?: string;
+      share_token?: string;
+      message?: string;
+    };
+  },
 };
 
 // ============================================
@@ -1610,6 +1683,100 @@ export const materialsLibraryService = {
       categories: categories.size,
       favourites,
     };
+  },
+};
+
+// ============================================
+// REMINDERS
+// ============================================
+
+export const remindersService = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('reminders')
+      .select('*')
+      .order('time');
+    if (error) throw error;
+    return data;
+  },
+
+  async create(reminder: { text: string; time: string; is_completed?: boolean }) {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('reminders')
+      .insert({ ...reminder, user_id: user.id })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async update(id: string, updates: { text?: string; time?: string; is_completed?: boolean }) {
+    const { data, error } = await supabase
+      .from('reminders')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('reminders')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+};
+
+// ============================================
+// FUTURE JOBS
+// ============================================
+
+export const futureJobsService = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('future_jobs')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  async create(futureJob: { name: string; notes?: string; is_completed?: boolean }) {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('future_jobs')
+      .insert({ ...futureJob, user_id: user.id })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async update(id: string, updates: { name?: string; notes?: string; is_completed?: boolean }) {
+    const { data, error } = await supabase
+      .from('future_jobs')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('future_jobs')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
   },
 };
 

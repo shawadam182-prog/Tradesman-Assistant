@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode (toggle via .dark class on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ================================================
    DESKTOP HOVER STATES & TRANSITIONS
    ================================================ */

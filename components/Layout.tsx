@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, FileText, Settings, Briefcase, ReceiptText, CalendarDays, Home, LogOut, Receipt, Landmark, Link2, Calculator, CreditCard, FolderOpen, ChevronDown, ChevronRight, Package, MoreHorizontal, X, QrCode, Shield, MessageSquare, TrendingUp, Activity, Download, Clock } from 'lucide-react';
+import { Users, FileText, Settings, Briefcase, ReceiptText, CalendarDays, Home, LogOut, Receipt, Landmark, Link2, Calculator, CreditCard, FolderOpen, ChevronDown, ChevronRight, Package, MoreHorizontal, X, QrCode, Shield, MessageSquare, TrendingUp, Activity, Download, Clock, Moon, Sun } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useAuth } from '../src/contexts/AuthContext';
 import { useData } from '../src/contexts/DataContext';
 import { isAdminUser } from '../src/lib/constants';
+import { useDarkMode } from '../src/hooks/useDarkMode';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -30,7 +31,8 @@ interface NavGroup {
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onSignOut }) => {
   const { user } = useAuth();
   const { settings } = useData();
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const { isDark, toggle: toggleDarkMode } = useDarkMode();
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['work']));
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [moreMenuGroup, setMoreMenuGroup] = useState<string | null>(null);
 
@@ -38,7 +40,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
 
   // Reset expanded groups when user changes (login/logout/app return)
   useEffect(() => {
-    setExpandedGroups(new Set());
+    setExpandedGroups(new Set(['work']));
   }, [user?.id]);
 
   // Get display tier name
@@ -121,6 +123,19 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
     }] : []),
   ];
 
+  // Auto-expand the group containing the active tab
+  useEffect(() => {
+    if (!activeTab) return;
+    const activeGroup = navGroups.find(g => g.items.some(item => item.id === activeTab));
+    if (activeGroup && !expandedGroups.has(activeGroup.id)) {
+      setExpandedGroups(prev => {
+        const next = new Set(prev);
+        next.add(activeGroup.id);
+        return next;
+      });
+    }
+  }, [activeTab]);
+
   // Flat list for mobile nav
   const navItems = navGroups.flatMap(g => g.items);
 
@@ -162,7 +177,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   const isActiveInGroup = (group: NavGroup) => group.items.some(item => item.id === activeTab);
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50">
+    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 dark:bg-slate-950 transition-colors">
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-64 bg-slate-900 text-white flex-col h-screen sticky top-0">
         <button
@@ -214,11 +229,21 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             </div>
           ))}
         </nav>
-        <div className="p-4 border-t border-slate-800">{onSignOut && (<button onClick={onSignOut} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"><LogOut size={20} /><span className="font-bold text-sm">Sign Out</span></button>)}
+        <div className="p-4 border-t border-slate-800">
+          <button
+            onClick={toggleDarkMode}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors mb-1"
+          >
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            <span className="font-bold text-sm">{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+          </button>
+          {onSignOut && (<button onClick={onSignOut} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"><LogOut size={20} /><span className="font-bold text-sm">Sign Out</span></button>)}
           <div className="flex items-center gap-3 px-2">
-            <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center font-black text-slate-900 text-xs">JS</div>
-            <div className="text-sm">
-              <p className="font-bold text-white">Main Contractor</p>
+            <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center font-black text-slate-900 text-xs">
+              {(settings.companyName?.[0] || user?.email?.[0] || 'U').toUpperCase()}
+            </div>
+            <div className="text-sm min-w-0">
+              <p className="font-bold text-white truncate">{settings.companyName || 'Your Business'}</p>
               <p className="text-slate-500 text-[10px] font-black uppercase">{getTierDisplay()} Tier</p>
             </div>
           </div>
@@ -226,7 +251,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       </aside>
 
       {/* Mobile Nav - Modern Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200 z-[100] safe-area-bottom pb-1">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 z-[100] safe-area-bottom pb-1">
         <div className="flex justify-around items-end h-[50px] px-1">
           {primaryNavItems.map((item) => {
             const isActive = activeTab === item.id;
@@ -241,7 +266,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                     setActiveTab(item.id);
                   }
                 }}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 h-full active:scale-95 transition-all relative ${isActive ? 'text-teal-500' : 'text-slate-400'
+                className={`flex-1 flex flex-col items-center justify-center gap-1 h-full active:scale-95 transition-all relative ${isActive ? 'text-teal-500' : 'text-slate-400 dark:text-slate-500'
                   }`}
               >
                 {isActive && (
@@ -260,9 +285,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       {/* More Menu Overlay - Categorized */}
       {showMoreMenu && (
         <div className="md:hidden fixed inset-0 z-[150] bg-black/50 backdrop-blur-sm" onClick={() => setShowMoreMenu(false)}>
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl max-h-[70vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-3 py-2 flex items-center justify-between">
-              <h3 className="font-black text-base text-slate-900">More Options</h3>
+          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 rounded-t-2xl shadow-2xl max-h-[70vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-3 py-2 flex items-center justify-between">
+              <h3 className="font-black text-base text-slate-900 dark:text-white">More Options</h3>
               <button onClick={() => setShowMoreMenu(false)} className="p-1.5 rounded-lg hover:bg-slate-100 active:scale-95">
                 <X size={18} className="text-slate-500" />
               </button>
@@ -323,7 +348,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       )}
 
       {/* Main Content */}
-      <main className="flex-1 pb-24 md:pb-0 overflow-y-auto">
+      <main className="flex-1 pb-24 md:pb-0 overflow-y-auto dark:text-slate-100">
         <header className="md:hidden bg-slate-900 text-white p-4 flex items-center justify-between sticky top-0 z-[50] shadow-md">
           <button
             onClick={onSignOut}
@@ -334,7 +359,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             <span className="font-black text-lg tracking-tight">Trade<span className="text-teal-500">Sync</span></span>
           </button>
         </header>
-        <div className="px-4 py-4 md:p-8 max-w-7xl mx-auto">
+        <div className="px-4 py-4 md:p-8 max-w-7xl mx-auto dark:bg-slate-950">
           {children}
         </div>
       </main>

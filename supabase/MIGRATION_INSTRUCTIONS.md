@@ -28,6 +28,14 @@ supabase db push
 
 ## Latest Migration
 
+**File:** `20260127_reminders_and_future_jobs.sql`
+
+**Purpose:** Adds `reminders` and `future_jobs` tables to persist data that was previously stored only in localStorage. This enables cross-device sync.
+
+**Required:** Yes - Without this migration, reminders and future jobs will continue to work via localStorage fallback but won't sync across devices.
+
+---
+
 **File:** `20260120_fix_document_template_constraint.sql`
 
 **Purpose:** Fixes the "Save Failed" error when saving invoice preferences

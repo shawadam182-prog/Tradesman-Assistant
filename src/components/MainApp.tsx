@@ -1,8 +1,9 @@
-import React, { useState, useMemo, Suspense, lazy, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, Suspense, lazy, useCallback } from 'react';
 import { Layout } from '../../components/Layout';
 import { Home } from '../../components/Home';
 import { JobPackList } from '../../components/JobPackList';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
+import { OnboardingWizard } from '../../components/OnboardingWizard';
 
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -121,6 +122,17 @@ const App: React.FC = () => {
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [viewingQuoteId, setViewingQuoteId] = useState<string | null>(null);
   const [activeProjectIdState, setActiveProjectIdState] = useState<string | null>(getInitialProjectId);
+
+  // Onboarding state
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  useEffect(() => {
+    const completed = localStorage.getItem('bq_onboarding_completed');
+    if (!completed) {
+      // Delay slightly so the app loads first
+      const timer = setTimeout(() => setShowOnboarding(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Wrapper to persist project ID changes (handles iOS PWA state loss when camera opens)
   const setActiveProjectId = (projectId: string | null) => {
@@ -371,6 +383,23 @@ const App: React.FC = () => {
       </Suspense>
       </ErrorBoundary>
 
+      {/* Onboarding Wizard */}
+      <OnboardingWizard
+        open={showOnboarding}
+        companyName={settings.companyName || ''}
+        onUpdateCompanyName={(name) => {
+          updateSettings({ companyName: name });
+        }}
+        onAddCustomer={handleAddCustomer}
+        onComplete={() => {
+          setShowOnboarding(false);
+          localStorage.setItem('bq_onboarding_completed', 'true');
+        }}
+        onSkip={() => {
+          setShowOnboarding(false);
+          localStorage.setItem('bq_onboarding_completed', 'true');
+        }}
+      />
     </Layout>
   );
 };

@@ -6,13 +6,13 @@ import {
   Landmark, Package, HardHat, FileDown, Loader2, Navigation, PoundSterling,
   Settings2, Eye, EyeOff, ChevronDown, ChevronUp, LayoutGrid, List,
   Image as ImageIcon, AlignLeft, ReceiptText, ShieldCheck, ListChecks, FileDigit,
-  Box, Circle, Share2, Copy, MessageCircle, MapPin, Mail, Banknote, Check, X, Clock, Tag, Type
+  Box, Circle, Share2, Copy, MessageCircle, MapPin, Mail, Banknote, Check, X, Clock, Tag, Type, Link2, ExternalLink
 } from 'lucide-react';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
 import { PaymentRecorder } from './PaymentRecorder';
 import { hapticSuccess } from '../src/hooks/useHaptic';
-import { filingService } from '../src/services/dataService';
+import { filingService, quotesService } from '../src/services/dataService';
 import {
   calculateSectionLabour,
   calculateQuoteTotals,
@@ -50,12 +50,54 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
     copied: boolean;
   } | null>(null);
   const [showMarkAsSentPrompt, setShowMarkAsSentPrompt] = useState(false);
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const documentRef = useRef<HTMLDivElement>(null);
 
   // Show prompt to mark as sent after sharing (only if status is draft)
   const promptMarkAsSent = () => {
     if (activeQuote.status === 'draft') {
       setShowMarkAsSentPrompt(true);
+    }
+  };
+
+  // Handle generating share token for quotes that don't have one
+  const handleGenerateShareLink = async () => {
+    try {
+      const result = await quotesService.generateShareToken(activeQuote.id);
+      if (result.success && result.share_token) {
+        // Update the quote with the new share token
+        onUpdateQuote({ ...activeQuote, shareToken: result.share_token });
+        hapticSuccess();
+        // Copy the link immediately
+        const url = quotesService.getShareUrl(result.share_token);
+        await navigator.clipboard.writeText(url);
+        setShareLinkCopied(true);
+        setTimeout(() => setShareLinkCopied(false), 3000);
+      } else {
+        alert(result.error || 'Failed to generate share link');
+      }
+    } catch (err) {
+      console.error('Failed to generate share link:', err);
+      alert('Failed to generate share link. Please try again.');
+    }
+  };
+
+  // Handle copying the share link for customer acceptance
+  const handleCopyShareLink = async () => {
+    if (!activeQuote.shareToken) {
+      // Try to generate one first
+      await handleGenerateShareLink();
+      return;
+    }
+    try {
+      const url = quotesService.getShareUrl(activeQuote.shareToken);
+      await navigator.clipboard.writeText(url);
+      setShareLinkCopied(true);
+      hapticSuccess();
+      setTimeout(() => setShareLinkCopied(false), 3000);
+    } catch (err) {
+      console.error('Failed to copy share link:', err);
+      alert('Failed to copy link. Please try again.');
     }
   };
 
@@ -805,12 +847,22 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
             )}
             {activeQuote.status === 'accepted' && !activeQuote.status.includes('invoiced') && (
               <div className="flex items-center gap-2 px-2 py-1 rounded-xl bg-green-100 text-green-700 text-xs font-bold">
-                <Check size={14} /> Accepted - Ready to Invoice
+                <Check size={14} />
+                {activeQuote.acceptedAt ? (
+                  <span>Accepted Online - {new Date(activeQuote.acceptedAt).toLocaleDateString('en-GB')}</span>
+                ) : (
+                  <span>Accepted - Ready to Invoice</span>
+                )}
               </div>
             )}
             {activeQuote.status === 'declined' && (
               <div className="flex items-center gap-2 px-2 py-1 rounded-xl bg-red-100 text-red-700 text-xs font-bold">
-                <X size={14} /> Quote Declined
+                <X size={14} />
+                {activeQuote.declinedAt ? (
+                  <span>Declined Online - {new Date(activeQuote.declinedAt).toLocaleDateString('en-GB')}</span>
+                ) : (
+                  <span>Quote Declined</span>
+                )}
               </div>
             )}
           </div>
@@ -858,6 +910,27 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           {onDuplicate && (
             <button onClick={onDuplicate} className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-white border border-slate-100 text-slate-600 text-xs font-bold shadow-sm">
               <Copy size={14} /> Duplicate
+            </button>
+          )}
+          {/* Share Link Button - only for quotes (not invoices) that have been sent */}
+          {activeQuote.type !== 'invoice' && activeQuote.status === 'sent' && (
+            <button
+              onClick={handleCopyShareLink}
+              className={`flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg text-xs font-bold shadow-sm transition-all ${
+                shareLinkCopied
+                  ? 'bg-green-500 text-white border-green-500'
+                  : 'bg-violet-50 text-violet-600 border border-violet-100 hover:bg-violet-100'
+              }`}
+            >
+              {shareLinkCopied ? (
+                <>
+                  <Check size={14} /> Link Copied!
+                </>
+              ) : (
+                <>
+                  <Link2 size={14} /> {activeQuote.shareToken ? 'Share Link' : 'Get Share Link'}
+                </>
+              )}
             </button>
           )}
           {activeQuote.type !== 'invoice' && onConvertToInvoice && ['draft', 'sent', 'accepted'].includes(activeQuote.status) && (
@@ -946,7 +1019,32 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
         )}
       </div>
 
-      <div ref={documentRef} className={`bg-white ${templateStyle.container} shadow-xl border ${templateStyle.borderStyle} overflow-hidden print:border-none print:shadow-none print:rounded-none max-w-[750px] mx-auto`} style={{ width: '750px' }}>
+      {/* Responsive document preview wrapper - scales 750px doc to fit mobile viewports */}
+      <div className="w-full overflow-hidden md:overflow-visible print:overflow-visible" ref={(el) => {
+        if (!el) return;
+        const updateScale = () => {
+          const docEl = el.querySelector('[data-document]') as HTMLElement;
+          if (!docEl) return;
+          const containerWidth = el.clientWidth;
+          if (containerWidth < 750) {
+            const scale = containerWidth / 750;
+            docEl.style.transform = `scale(${scale})`;
+            docEl.style.transformOrigin = 'top left';
+            el.style.height = `${docEl.scrollHeight * scale}px`;
+          } else {
+            docEl.style.transform = '';
+            docEl.style.transformOrigin = '';
+            el.style.height = '';
+          }
+        };
+        // Run on mount and on resize
+        updateScale();
+        const observer = new ResizeObserver(updateScale);
+        observer.observe(el);
+        // Cleanup on unmount via MutationObserver trick isn't clean here,
+        // but ResizeObserver will be GC'd when element is removed
+      }}>
+      <div data-document ref={documentRef} className={`bg-white ${templateStyle.container} shadow-xl border ${templateStyle.borderStyle} overflow-hidden print:border-none print:shadow-none print:rounded-none print:!transform-none mx-auto`} style={{ width: '750px' }}>
         {/* Use ClassicTemplate component for classic template */}
         {activeTemplate === 'classic' ? (
           <ClassicTemplate
@@ -1703,6 +1801,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           </>
         )}
       </div>
+      </div>{/* end responsive document preview wrapper */}
       <div className="flex justify-center pt-4 print:hidden">
         <div className={`px-6 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm flex items-center gap-2.5 ${statusColors[activeQuote.status || 'draft']}`}>Status: {activeQuote.status || 'draft'}</div>
       </div>

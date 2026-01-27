@@ -8,12 +8,12 @@ import {
   Loader2, MicOff, StickyNote, Eraser,
   Briefcase, FileText, Receipt, UserPlus,
   PoundSterling, FileWarning, AlertTriangle,
-  ChevronDown, ChevronUp, BarChart3,
+  ChevronDown, ChevronUp, ChevronRight, BarChart3,
   TrendingUp, Camera, Eye, Phone, Plus,
   ClipboardList, ArrowRightCircle, X, FolderPlus
 } from 'lucide-react';
 import { parseReminderVoiceInput } from '../src/services/geminiService';
-import { sitePhotosService } from '../src/services/dataService';
+import { sitePhotosService, remindersService, futureJobsService } from '../src/services/dataService';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { BusinessDashboard } from './BusinessDashboard';
@@ -120,6 +120,14 @@ export const Home: React.FC<HomeProps> = ({
     return saved !== 'false'; // Default to true
   });
 
+  // Collapsible sections state
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem('bq_home_collapsed_sections');
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
+
   const [newReminderText, setNewReminderText] = useState('');
   const [newReminderTime, setNewReminderTime] = useState('');
   const [newFutureJobName, setNewFutureJobName] = useState('');
@@ -129,32 +137,96 @@ export const Home: React.FC<HomeProps> = ({
   const noteRecognitionRef = useRef<any>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  // Track whether initial load from Supabase is done (to avoid saving back localStorage defaults)
+  const remindersLoaded = useRef(false);
+  const futureJobsLoaded = useRef(false);
+
+  // Load data: try Supabase first, fallback to localStorage
   useEffect(() => {
-    try {
-      const savedReminders = localStorage.getItem('bq_home_reminders');
-      const savedNotes = localStorage.getItem('bq_home_quick_notes');
-      const savedFutureJobs = localStorage.getItem('bq_future_jobs');
-      if (savedReminders) setReminders(JSON.parse(savedReminders));
-      if (savedNotes) setQuickNotes(savedNotes);
-      if (savedFutureJobs) setFutureJobs(JSON.parse(savedFutureJobs));
-    } catch (e) { console.error("Failed to parse localStorage data:", e); }
+    const loadData = async () => {
+      // Load quick notes from localStorage (always local-only)
+      try {
+        const savedNotes = localStorage.getItem('bq_home_quick_notes');
+        if (savedNotes) setQuickNotes(savedNotes);
+      } catch (e) { console.error("Failed to parse localStorage notes:", e); }
+
+      // Load reminders from Supabase
+      try {
+        const dbReminders = await remindersService.getAll();
+        const mapped: Reminder[] = dbReminders.map((r: any) => ({
+          id: r.id,
+          text: r.text,
+          time: r.time,
+          isCompleted: r.is_completed || false,
+        }));
+        setReminders(mapped);
+        // Also update localStorage cache
+        localStorage.setItem('bq_home_reminders', JSON.stringify(mapped));
+      } catch (e) {
+        console.warn("Supabase reminders load failed, using localStorage:", e);
+        try {
+          const savedReminders = localStorage.getItem('bq_home_reminders');
+          if (savedReminders) setReminders(JSON.parse(savedReminders));
+        } catch (e2) { console.error("Failed to parse localStorage reminders:", e2); }
+      }
+      remindersLoaded.current = true;
+
+      // Load future jobs from Supabase
+      try {
+        const dbFutureJobs = await futureJobsService.getAll();
+        const mapped: FutureJob[] = dbFutureJobs.map((j: any) => ({
+          id: j.id,
+          name: j.name,
+          notes: j.notes || '',
+          createdAt: j.created_at,
+          isCompleted: j.is_completed || false,
+        }));
+        setFutureJobs(mapped);
+        localStorage.setItem('bq_future_jobs', JSON.stringify(mapped));
+      } catch (e) {
+        console.warn("Supabase future jobs load failed, using localStorage:", e);
+        try {
+          const savedFutureJobs = localStorage.getItem('bq_future_jobs');
+          if (savedFutureJobs) setFutureJobs(JSON.parse(savedFutureJobs));
+        } catch (e2) { console.error("Failed to parse localStorage future jobs:", e2); }
+      }
+      futureJobsLoaded.current = true;
+    };
+
+    loadData();
   }, []);
 
+  // Save reminders to localStorage as offline cache
   useEffect(() => {
-    localStorage.setItem('bq_home_reminders', JSON.stringify(reminders));
+    if (remindersLoaded.current) {
+      localStorage.setItem('bq_home_reminders', JSON.stringify(reminders));
+    }
   }, [reminders]);
 
   useEffect(() => {
     localStorage.setItem('bq_home_quick_notes', quickNotes);
   }, [quickNotes]);
 
+  // Save future jobs to localStorage as offline cache
   useEffect(() => {
-    localStorage.setItem('bq_future_jobs', JSON.stringify(futureJobs));
+    if (futureJobsLoaded.current) {
+      localStorage.setItem('bq_future_jobs', JSON.stringify(futureJobs));
+    }
   }, [futureJobs]);
 
   useEffect(() => {
     localStorage.setItem('bq_show_dashboard', showDashboard.toString());
   }, [showDashboard]);
+
+  useEffect(() => {
+    localStorage.setItem('bq_home_collapsed_sections', JSON.stringify(collapsedSections));
+  }, [collapsedSections]);
+
+  const toggleSection = (section: string) => {
+    setCollapsedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const isSectionOpen = (section: string) => !collapsedSections[section];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -271,13 +343,21 @@ export const Home: React.FC<HomeProps> = ({
     try {
       const parsed = await parseReminderVoiceInput(transcript);
       if (parsed.text && parsed.time) {
+        const tempId = Math.random().toString(36).substr(2, 9);
         const reminder: Reminder = {
-          id: Math.random().toString(36).substr(2, 9),
+          id: tempId,
           text: parsed.text,
           time: parsed.time,
           isCompleted: false
         };
         setReminders(prev => [...prev, reminder].sort((a, b) => a.time.localeCompare(b.time)));
+        // Save to Supabase
+        try {
+          const dbReminder = await remindersService.create({ text: reminder.text, time: reminder.time });
+          setReminders(prev => prev.map(r => r.id === tempId ? { ...r, id: dbReminder.id } : r));
+        } catch (e) {
+          console.warn("Failed to save voice reminder to Supabase:", e);
+        }
       }
     } catch (err) {
       console.error("AI Reminder Error", err);
@@ -286,10 +366,12 @@ export const Home: React.FC<HomeProps> = ({
     }
   };
 
-  const addReminder = () => {
+  const addReminder = async () => {
     if (!newReminderText || !newReminderTime) return;
+    // Optimistic local update with temp ID
+    const tempId = Math.random().toString(36).substr(2, 9);
     const reminder: Reminder = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: tempId,
       text: newReminderText,
       time: newReminderTime,
       isCompleted: false
@@ -297,6 +379,15 @@ export const Home: React.FC<HomeProps> = ({
     setReminders(prev => [...prev, reminder].sort((a, b) => a.time.localeCompare(b.time)));
     setNewReminderText('');
     setNewReminderTime('');
+
+    // Save to Supabase
+    try {
+      const dbReminder = await remindersService.create({ text: reminder.text, time: reminder.time });
+      // Replace temp ID with real DB ID
+      setReminders(prev => prev.map(r => r.id === tempId ? { ...r, id: dbReminder.id } : r));
+    } catch (e) {
+      console.warn("Failed to save reminder to Supabase:", e);
+    }
   };
 
   // Photo capture and upload handlers - NEW FLOW: Select job FIRST, then take photo
@@ -414,10 +505,11 @@ export const Home: React.FC<HomeProps> = ({
   };
 
   // Future Jobs helpers
-  const addFutureJob = () => {
+  const addFutureJob = async () => {
     if (!newFutureJobName.trim()) return;
+    const tempId = Math.random().toString(36).substr(2, 9);
     const job: FutureJob = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: tempId,
       name: newFutureJobName.trim(),
       notes: newFutureJobNotes.trim(),
       createdAt: new Date().toISOString(),
@@ -427,16 +519,29 @@ export const Home: React.FC<HomeProps> = ({
     setNewFutureJobName('');
     setNewFutureJobNotes('');
     hapticSuccess();
+
+    // Save to Supabase
+    try {
+      const dbJob = await futureJobsService.create({ name: job.name, notes: job.notes });
+      setFutureJobs(prev => prev.map(j => j.id === tempId ? { ...j, id: dbJob.id, createdAt: dbJob.created_at } : j));
+    } catch (e) {
+      console.warn("Failed to save future job to Supabase:", e);
+    }
   };
 
   const toggleFutureJobComplete = (id: string) => {
-    setFutureJobs(prev => prev.map(job =>
-      job.id === id ? { ...job, isCompleted: !job.isCompleted } : job
-    ));
+    setFutureJobs(prev => {
+      const job = prev.find(j => j.id === id);
+      if (!job) return prev;
+      const newCompleted = !job.isCompleted;
+      futureJobsService.update(id, { is_completed: newCompleted }).catch(e => console.warn("Failed to update future job:", e));
+      return prev.map(j => j.id === id ? { ...j, isCompleted: newCompleted } : j);
+    });
   };
 
   const deleteFutureJob = (id: string) => {
     setFutureJobs(prev => prev.filter(job => job.id !== id));
+    futureJobsService.delete(id).catch(e => console.warn("Failed to delete future job:", e));
   };
 
   const convertToJobPack = (job: FutureJob) => {
@@ -632,10 +737,10 @@ export const Home: React.FC<HomeProps> = ({
     <div className="space-y-4 md:space-y-8 pb-10 max-w-5xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 md:gap-4">
         <div>
-          <h2 className="text-xl md:text-4xl font-black text-slate-900 tracking-tight">Daily Brief</h2>
-          <p className="text-xs md:text-base text-slate-500 font-medium italic mt-0.5 md:mt-1">Ready for the site. Your immediate priorities at a glance.</p>
+          <h2 className="text-xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Daily Brief</h2>
+          <p className="text-xs md:text-base text-slate-500 dark:text-slate-400 font-medium italic mt-0.5 md:mt-1">Ready for the site. Your immediate priorities at a glance.</p>
         </div>
-        <div className="bg-white border-2 border-slate-100 rounded-xl md:rounded-2xl px-3 py-1.5 md:px-5 md:py-3 shadow-sm flex items-center gap-2 md:gap-3">
+        <div className="bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl md:rounded-2xl px-3 py-1.5 md:px-5 md:py-3 shadow-sm flex items-center gap-2 md:gap-3">
           <Clock size={14} className="md:w-5 md:h-5 text-teal-500" />
           <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
             <span className="font-black text-slate-900 text-sm md:text-lg">
@@ -841,10 +946,39 @@ export const Home: React.FC<HomeProps> = ({
         document.body
       )}
 
+      {/* Empty state CTAs for new users */}
+      {projects.length === 0 && quotes.length === 0 && (
+        <div className="bg-gradient-to-br from-teal-50 to-blue-50 rounded-2xl md:rounded-[32px] border border-teal-200 p-5 md:p-8">
+          <div className="text-center mb-4">
+            <Sparkles size={28} className="text-teal-500 mx-auto mb-2" />
+            <h3 className="text-lg font-black text-slate-900">Get started with TradeSync</h3>
+            <p className="text-sm text-slate-500 mt-1">Create your first job or quote to see your dashboard come alive.</p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <button
+              onClick={() => { hapticTap(); onCreateJob?.(); }}
+              className="flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-bold text-sm transition-colors active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Briefcase size={18} /> Create First Job
+            </button>
+            <button
+              onClick={() => { hapticTap(); onCreateQuote?.(); }}
+              className="flex-1 py-3 bg-white border-2 border-teal-200 text-teal-700 rounded-xl font-bold text-sm transition-colors active:scale-95 hover:bg-teal-50 flex items-center justify-center gap-2"
+            >
+              <FileText size={18} /> Create First Quote
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* FINANCIAL SNAPSHOT Section */}
       <div>
-        <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest mb-2 md:mb-3 px-1">Financial Snapshot</h3>
+        <button onClick={() => toggleSection('financial')} className="flex items-center gap-1.5 mb-2 md:mb-3 px-1 group w-full text-left">
+          {isSectionOpen('financial') ? <ChevronDown size={14} className="text-slate-400 group-hover:text-teal-500 transition-colors" /> : <ChevronRight size={14} className="text-slate-400 group-hover:text-teal-500 transition-colors" />}
+          <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-700 transition-colors">Financial Snapshot</h3>
+        </button>
 
+        {isSectionOpen('financial') && <>
         {/* Revenue Overview with Period Selector */}
         <FinancialOverview quotes={quotes} settings={settings} />
 
@@ -900,14 +1034,19 @@ export const Home: React.FC<HomeProps> = ({
             </div>
           </div>
         )}
+        </>}
       </div>
 
       {/* TODAY'S SCHEDULE Section Header */}
       <div>
-        <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest mb-2 md:mb-3 px-1">Today's Schedule</h3>
+        <button onClick={() => toggleSection('schedule')} className="flex items-center gap-1.5 mb-2 md:mb-3 px-1 group w-full text-left">
+          {isSectionOpen('schedule') ? <ChevronDown size={14} className="text-slate-400 group-hover:text-teal-500 transition-colors" /> : <ChevronRight size={14} className="text-slate-400 group-hover:text-teal-500 transition-colors" />}
+          <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-700 transition-colors">Today's Schedule</h3>
+        </button>
 
+        {isSectionOpen('schedule') && <>
         {/* Today's Stats Card */}
-        <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 p-3 md:p-6 shadow-sm mb-3 md:mb-4">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl md:rounded-[32px] border border-slate-200 dark:border-slate-700 p-3 md:p-6 shadow-sm mb-3 md:mb-4">
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
             <div className="flex flex-col items-center justify-center gap-1 sm:gap-1.5 md:gap-3 p-2 sm:p-3 md:p-4 bg-slate-50 rounded-xl md:rounded-2xl text-center min-h-[80px]">
               <div className="p-1.5 md:p-3 bg-slate-900 text-white rounded-lg md:rounded-xl">
@@ -1024,12 +1163,16 @@ export const Home: React.FC<HomeProps> = ({
             </div>
           )}
         </div>
+        </>}
       </div>
 
       {/* FUTURE JOBS Section - Compact View */}
       <div>
         <div className="flex items-center justify-between mb-2 md:mb-3 px-1">
-          <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest">Future Jobs</h3>
+          <button onClick={() => toggleSection('futureJobs')} className="flex items-center gap-1.5 group">
+            {isSectionOpen('futureJobs') ? <ChevronDown size={14} className="text-slate-400 group-hover:text-teal-500 transition-colors" /> : <ChevronRight size={14} className="text-slate-400 group-hover:text-teal-500 transition-colors" />}
+            <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-700 transition-colors">Future Jobs</h3>
+          </button>
           {futureJobs.filter(j => !j.isCompleted).length > 0 && (
             <button
               onClick={() => { hapticTap(); onNavigateToFutureJobs?.(); }}
@@ -1039,6 +1182,7 @@ export const Home: React.FC<HomeProps> = ({
             </button>
           )}
         </div>
+        {isSectionOpen('futureJobs') && <>
         <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 p-3 md:p-4 shadow-sm">
           {/* Quick Add Form */}
           <div className="flex gap-2 mb-3">
@@ -1098,10 +1242,16 @@ export const Home: React.FC<HomeProps> = ({
             </div>
           )}
         </div>
+        </>}
       </div>
 
       {/* Week Preview */}
       <div>
+        <button onClick={() => toggleSection('weekPreview')} className="flex items-center gap-1.5 mb-2 md:mb-3 px-1 group w-full text-left">
+          {isSectionOpen('weekPreview') ? <ChevronDown size={14} className="text-slate-400 group-hover:text-teal-500 transition-colors" /> : <ChevronRight size={14} className="text-slate-400 group-hover:text-teal-500 transition-colors" />}
+          <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-700 transition-colors">Week Preview</h3>
+        </button>
+        {isSectionOpen('weekPreview') && (
         <div className="bg-white rounded-xl md:rounded-[32px] border border-slate-200 p-3 md:p-6 shadow-sm">
           <h3 className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-tight mb-2 md:mb-4">Week Ahead</h3>
           <div className="flex gap-1.5 md:gap-2 overflow-x-auto no-scrollbar pb-1">
@@ -1121,9 +1271,16 @@ export const Home: React.FC<HomeProps> = ({
             ))}
           </div>
         </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-8">
+      {/* Reminders & Quick Notes */}
+      <button onClick={() => toggleSection('reminders')} className="flex items-center gap-1.5 px-1 group w-full text-left">
+        {isSectionOpen('reminders') ? <ChevronDown size={14} className="text-slate-400 group-hover:text-teal-500 transition-colors" /> : <ChevronRight size={14} className="text-slate-400 group-hover:text-teal-500 transition-colors" />}
+        <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-700 transition-colors">Reminders & Notes</h3>
+      </button>
+      {isSectionOpen('reminders') && (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-8 mt-2 md:mt-3">
         {/* Reminders Section */}
         <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 p-3 md:p-8 shadow-sm flex flex-col md:min-h-[500px]">
           <div className="flex items-center justify-between mb-2 md:mb-8">
@@ -1195,7 +1352,9 @@ export const Home: React.FC<HomeProps> = ({
                   <div className="flex items-center gap-3 md:gap-6 min-w-0">
                     <button
                       onClick={() => {
-                        setReminders(prev => prev.map(r => r.id === reminder.id ? { ...r, isCompleted: !r.isCompleted, isAlarming: false } : r));
+                        const newCompleted = !reminder.isCompleted;
+                        setReminders(prev => prev.map(r => r.id === reminder.id ? { ...r, isCompleted: newCompleted, isAlarming: false } : r));
+                        remindersService.update(reminder.id, { is_completed: newCompleted }).catch(e => console.warn("Failed to update reminder:", e));
                       }}
                       className={`h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-[20px] flex items-center justify-center shrink-0 transition-all ${reminder.isAlarming
                         ? 'bg-slate-900 text-white shadow-2xl'
@@ -1214,7 +1373,10 @@ export const Home: React.FC<HomeProps> = ({
                     </div>
                   </div>
                   <button
-                    onClick={() => setReminders(prev => prev.filter(r => r.id !== reminder.id))}
+                    onClick={() => {
+                      setReminders(prev => prev.filter(r => r.id !== reminder.id));
+                      remindersService.delete(reminder.id).catch(e => console.warn("Failed to delete reminder:", e));
+                    }}
                     className={`p-2 md:p-3 transition-colors ${reminder.isAlarming ? 'text-white' : 'text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100'}`}
                   >
                     <Trash2 size={18} className="md:w-6 md:h-6" />
@@ -1271,6 +1433,7 @@ export const Home: React.FC<HomeProps> = ({
           </div>
         </div>
       </div>
+      )}
 
       {/* Upgrade Prompt for Free Tier Limits */}
       {upgradePromptType === 'jobs' && limits.jobPacks !== null && (

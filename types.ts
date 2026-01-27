@@ -99,6 +99,10 @@ export interface Quote {
   partPaymentType?: 'percentage' | 'fixed';
   partPaymentValue?: number;
   partPaymentLabel?: string;
+  // Share/acceptance fields
+  shareToken?: string;
+  acceptedAt?: string;
+  declinedAt?: string;
 }
 
 export interface ScheduleEntry {
