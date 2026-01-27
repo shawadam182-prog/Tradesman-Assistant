@@ -224,6 +224,16 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     }
   }, [draftRestored, existingQuote, toast]);
 
+  // Clear draft from localStorage
+  const clearDraft = useCallback(() => {
+    try {
+      const key = getDraftStorageKey();
+      localStorage.removeItem(key);
+    } catch (e) {
+      console.error('Failed to clear draft:', e);
+    }
+  }, [getDraftStorageKey]);
+
   // Discard draft and start fresh
   const discardDraft = useCallback(() => {
     clearDraft();
@@ -366,16 +376,6 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       }
     };
   }, [formData, saveQuote]);
-
-  // Clear draft from localStorage
-  const clearDraft = useCallback(() => {
-    try {
-      const key = getDraftStorageKey();
-      localStorage.removeItem(key);
-    } catch (e) {
-      console.error('Failed to clear draft:', e);
-    }
-  }, [getDraftStorageKey]);
 
   const handleTypeChange = (newType: 'estimate' | 'quotation' | 'invoice') => {
     setFormData(prev => {
