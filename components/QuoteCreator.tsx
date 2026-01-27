@@ -137,7 +137,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         customerId: '',
         sections: [{ id: Math.random().toString(36).substr(2, 9), title: 'Work Section 1', items: [], labourHours: 0 }],
         labourRate: settings.defaultLabourRate,
-        markupPercent: settings.defaultMarkupPercent ?? 15,
+        markupPercent: settings.defaultMarkupPercent ?? 0,
         taxPercent: settings.enableVat ? settings.defaultTaxRate : 0,
         cisPercent: settings.enableCis ? settings.defaultCisRate : 0,
         status: 'draft',
@@ -885,7 +885,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><PoundSterling size={12} className="text-teal-500" /> Default Hourly Rate</label><input type="number" className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 text-slate-950 font-black text-sm outline-none focus:border-teal-400 transition-all" value={formData.labourRate || ''} onChange={e => setFormData({ ...formData, labourRate: parseFloat(e.target.value) || 0 })} placeholder="65.00" /></div>
-            <div className="space-y-1"><label className="text-[10px] font-black text-teal-600 uppercase tracking-widest px-1 flex items-center gap-2 italic"><Percent size={12} className="text-teal-500" /> Global Markup %</label><input type="number" className="w-full bg-teal-50 border-2 border-teal-100 rounded-xl p-3 text-teal-900 font-black text-sm outline-none focus:border-teal-400 transition-all" value={formData.markupPercent || ''} onChange={e => setFormData({ ...formData, markupPercent: parseFloat(e.target.value) || 0 })} placeholder="15" /></div>
+            <div className="space-y-1"><label className="text-[10px] font-black text-teal-600 uppercase tracking-widest px-1 flex items-center gap-2 italic"><Percent size={12} className="text-teal-500" /> Global Markup %</label><input type="number" min="0" className="w-full bg-teal-50 border-2 border-teal-100 rounded-xl p-3 text-teal-900 font-black text-sm outline-none focus:border-teal-400 transition-all" value={formData.markupPercent ?? ''} onChange={e => setFormData({ ...formData, markupPercent: e.target.value === '' ? 0 : parseFloat(e.target.value) })} placeholder="0" /></div>
           </div>
           <div className="pt-2 space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><FileText size={14} className="text-teal-500" /> Document Footer / Terms</label><textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] p-3 md:p-4 text-slate-900 font-medium text-sm outline-none focus:border-teal-400 transition-all min-h-[100px]" value={formData.notes || ''} onChange={e => setFormData({ ...formData, notes: e.target.value })} placeholder="Final notes, bank details etc..." /></div>
         </div>
