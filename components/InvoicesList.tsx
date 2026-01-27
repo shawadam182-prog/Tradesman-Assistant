@@ -221,15 +221,19 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
       />
 
       {/* Status Filter Tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1">
-        {(['all', 'draft', 'unpaid', 'paid', 'overdue', 'cancelled'] as const).map(tab => (
+      <div className="flex gap-1 pb-2">
+        {(['all', 'draft', 'unpaid', 'paid', 'overdue', 'cancelled'] as const).map(tab => {
+          const label: Record<InvoiceFilterTab, string> = {
+            all: 'All', draft: 'Draft', unpaid: 'Unpaid', paid: 'Paid', overdue: 'Due', cancelled: "Canc'd"
+          };
+          return (
           <button
             key={tab}
             onClick={() => {
               hapticTap();
               setActiveTab(tab);
             }}
-            className={`px-2.5 py-2 rounded-lg text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap flex items-center gap-1 ${
+            className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
               activeTab === tab
                 ? tab === 'overdue'
                   ? 'bg-red-500 text-white shadow-md shadow-red-500/20'
@@ -239,9 +243,9 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                 : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
             }`}
           >
-            {tab}
+            {label[tab]}
             {tabCounts[tab] > 0 && (
-              <span className={`text-[9px] min-w-[16px] text-center px-1 py-px rounded-full ${
+              <span className={`text-[9px] min-w-[14px] text-center px-0.5 py-px rounded-full leading-none ${
                 activeTab === tab
                   ? 'bg-white/20'
                   : tab === 'overdue' && tabCounts.overdue > 0
@@ -254,7 +258,8 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
               </span>
             )}
           </button>
-        ))}
+          );
+        })}
       </div>
 
       {/* Search and Sort Row */}
