@@ -35,7 +35,7 @@ const DEFAULT_LABOUR_RATE_PRESETS: LabourRatePreset[] = [
 // Default settings
 const DEFAULT_SETTINGS: AppSettings = {
   defaultLabourRate: 65,
-  defaultMarkupPercent: 15,
+  defaultMarkupPercent: 0,
   defaultTaxRate: 20,
   defaultCisRate: 20,
   labourRatePresets: DEFAULT_LABOUR_RATE_PRESETS,
@@ -264,6 +264,10 @@ function dbQuoteToApp(dbQuote: any): Quote {
     partPaymentLabel: dbQuote.part_payment_label || undefined,
     // Job address
     jobAddress: dbQuote.job_address || undefined,
+    // Share/acceptance fields
+    shareToken: dbQuote.share_token || undefined,
+    acceptedAt: dbQuote.accepted_at || undefined,
+    declinedAt: dbQuote.declined_at || undefined,
   };
 }
 
@@ -285,7 +289,7 @@ function dbScheduleToApp(dbEntry: any): ScheduleEntry {
 function dbSettingsToApp(dbSettings: any): AppSettings {
   return {
     defaultLabourRate: Number(dbSettings.default_labour_rate) || 65,
-    defaultMarkupPercent: Number(dbSettings.default_markup_percent) || 15,
+    defaultMarkupPercent: dbSettings.default_markup_percent != null ? Number(dbSettings.default_markup_percent) : 0,
     defaultTaxRate: Number(dbSettings.default_tax_rate) || 20,
     defaultCisRate: Number(dbSettings.default_cis_rate) || 20,
     labourRatePresets: dbSettings.labour_rate_presets || DEFAULT_LABOUR_RATE_PRESETS,
