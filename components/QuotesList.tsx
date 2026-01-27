@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Quote, Customer, AppSettings, TIER_LIMITS } from '../types';
-import { FileText, Plus, Eye, Search, Hash, User, ChevronRight, Trash2, Clock, Send, CheckCircle2, XCircle, ReceiptText, MapPin, ArrowUpDown, ChevronDown } from 'lucide-react';
+import { FileText, Plus, Eye, Search, Hash, ChevronRight, Trash2, Clock, Send, CheckCircle2, XCircle, ReceiptText, ArrowUpDown, ChevronDown } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
@@ -282,7 +282,7 @@ export const QuotesList: React.FC<QuotesListProps> = ({
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-1.5">
         {filtered.length === 0 ? (
           <div className="py-20 text-center bg-white rounded-[32px] border-2 border-dashed border-slate-100 opacity-60">
             <FileText size={48} className="mx-auto text-slate-200 mb-4" />
@@ -315,65 +315,59 @@ export const QuotesList: React.FC<QuotesListProps> = ({
               <div
                 key={quote.id}
                 onClick={() => onViewQuote(quote.id)}
-                className={`bg-white p-5 rounded-[28px] border-2 transition-all group cursor-pointer shadow-sm hover:shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${quote.status === 'declined'
+                className={`bg-white px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl border transition-all group cursor-pointer shadow-sm hover:shadow-md flex items-center gap-3 ${quote.status === 'declined'
                     ? 'border-red-100 hover:border-red-300'
                     : quote.status === 'accepted'
                       ? 'border-green-100 hover:border-green-300'
                       : 'border-slate-100 hover:border-teal-500'
                   }`}
               >
+                {/* Status indicator bar */}
+                <div className={`w-1 self-stretch rounded-full shrink-0 ${
+                  quote.status === 'accepted' || quote.status === 'invoiced' ? 'bg-green-500'
+                    : quote.status === 'sent' ? 'bg-blue-500'
+                    : quote.status === 'declined' ? 'bg-red-400'
+                    : 'bg-slate-200'
+                }`} />
+
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="bg-slate-900 text-teal-500 text-xs font-black px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0">
-                      <Hash size={12} /> {ref}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="bg-slate-900 text-teal-500 text-[10px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5 shrink-0">
+                      <Hash size={10} /> {ref}
                     </span>
-                    <span className={`${status.bg} ${status.text} text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0 uppercase`}>
-                      {status.icon} {status.label}
-                    </span>
-                    <h3 className="font-black text-slate-900 text-lg leading-tight truncate group-hover:text-teal-600 transition-colors">
+                    <h3 className="font-bold text-sm text-slate-900 leading-tight truncate group-hover:text-teal-600 transition-colors">
                       {quote.title}
                     </h3>
                   </div>
 
-                  <div className="flex items-center gap-3 text-slate-500 text-xs font-bold italic flex-wrap">
-                    <div className="flex items-center gap-1.5 truncate">
-                      <User size={14} className="text-slate-300" />
-                      {customer?.name || 'Unknown Client'}
-                    </div>
-                    {(quote.jobAddress || customer?.address) && (
-                      <div className="flex items-center gap-1 text-slate-400 truncate max-w-[200px]">
-                        <MapPin size={12} className="text-slate-300 shrink-0" />
-                        <span className="truncate">{quote.jobAddress || customer?.address}</span>
-                      </div>
-                    )}
+                  <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500 mt-0.5">
+                    <span className="truncate">{customer?.name || 'Unknown Client'}</span>
+                    <span className={`shrink-0 ${status.text} font-bold`}>· {status.label}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between sm:justify-end gap-3 md:gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-50">
-                  <div className="flex flex-col items-start sm:items-end">
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 italic">
-                      Estimate Total
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="text-right">
+                    <p className="font-black text-sm text-slate-900 tracking-tight">
+                      £{getQuoteGrandTotal(quote, settings).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </p>
-                    <p className="font-black text-slate-900 text-sm md:text-xl tracking-tight">
-                      £{getQuoteGrandTotal(quote, settings).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      {new Date(quote.updatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                     </p>
                   </div>
 
-                  <div className="flex gap-2">
-                    <div className="p-3 bg-teal-50 text-teal-600 rounded-xl transition-all border border-teal-100 group-hover:scale-105">
-                      <Eye size={20} />
-                    </div>
+                  <div className="flex gap-1">
                     {onDeleteQuote && (
                       <button
                         onClick={(e) => handleDelete(e, quote)}
-                        className="p-3 bg-white text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        className="p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                         title="Delete quote"
                       >
-                        <Trash2 size={18} />
+                        <Trash2 size={16} />
                       </button>
                     )}
-                    <div className="p-3 bg-white text-slate-300 group-hover:text-teal-500 group-hover:translate-x-1 transition-all">
-                      <ChevronRight size={20} />
+                    <div className="p-2 text-slate-300 group-hover:text-teal-500 transition-all">
+                      <ChevronRight size={18} />
                     </div>
                   </div>
                 </div>

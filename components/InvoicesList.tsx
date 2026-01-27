@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Quote, Customer, AppSettings, TIER_LIMITS } from '../types';
-import { ReceiptText, Eye, Search, CheckCircle2, AlertCircle, Plus, Hash, User, ChevronRight, Trash2, Clock, AlertTriangle, MapPin, ArrowUpDown } from 'lucide-react';
+import { ReceiptText, Search, CheckCircle2, AlertCircle, Plus, Hash, ChevronRight, Trash2, Clock, AlertTriangle, ArrowUpDown } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
@@ -325,7 +325,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-1.5">
         {filtered.length === 0 ? (
           <div className="py-20 text-center bg-white rounded-[32px] border-2 border-dashed border-slate-100 opacity-60">
             <ReceiptText size={48} className="mx-auto text-slate-200 mb-4" />
@@ -352,87 +352,68 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
               <div
                 key={invoice.id}
                 onClick={() => onViewQuote(invoice.id)}
-                className={`bg-white p-5 rounded-[28px] border-2 transition-all group cursor-pointer shadow-sm hover:shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                className={`bg-white px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl border transition-all group cursor-pointer shadow-sm hover:shadow-md flex items-center gap-3 ${
                   overdue
                     ? 'border-red-200 hover:border-red-400 bg-red-50/30'
                     : 'border-slate-100 hover:border-teal-500'
                 }`}
               >
+                {/* Status indicator bar */}
+                <div className={`w-1 self-stretch rounded-full shrink-0 ${
+                  isPaid ? 'bg-teal-500' : overdue ? 'bg-red-500' : 'bg-slate-200'
+                }`} />
+
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="bg-teal-500 text-white text-xs font-black px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0">
-                      <Hash size={12} /> {ref}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="bg-teal-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5 shrink-0">
+                      <Hash size={10} /> {ref}
                     </span>
-                    {overdue && (
-                      <span className="bg-red-500 text-white text-xs font-black px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0 animate-pulse">
-                        <AlertTriangle size={12} /> {daysOverdue} {daysOverdue === 1 ? 'DAY' : 'DAYS'} OVERDUE
-                      </span>
-                    )}
-                    <h3 className={`font-black text-lg leading-tight truncate transition-colors ${
+                    <h3 className={`font-bold text-sm leading-tight truncate transition-colors ${
                       overdue ? 'text-red-700 group-hover:text-red-600' : 'text-slate-900 group-hover:text-teal-600'
                     }`}>
                       {invoice.title}
                     </h3>
+                    {overdue && (
+                      <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5 shrink-0">
+                        <AlertTriangle size={10} /> {daysOverdue}d
+                      </span>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-3 text-slate-500 text-xs font-bold italic flex-wrap">
-                    <div className="flex items-center gap-1.5 truncate">
-                      <User size={14} className="text-slate-300" />
-                      {customer?.name || 'Unknown'}
-                      {customer?.company && <span className="text-teal-600 text-[10px] font-black uppercase not-italic ml-1">({customer.company})</span>}
-                    </div>
-                    {(invoice.jobAddress || customer?.address) && (
-                      <div className="flex items-center gap-1 text-slate-400 truncate max-w-[200px]">
-                        <MapPin size={12} className="text-slate-300 shrink-0" />
-                        <span className="truncate">{invoice.jobAddress || customer?.address}</span>
-                      </div>
-                    )}
+                  <div className="flex items-center gap-2 text-slate-500 text-[11px] font-medium mt-0.5">
+                    <span className="truncate">{customer?.name || 'Unknown'}</span>
                     {invoice.dueDate && !isPaid && (
-                      <div className={`flex items-center gap-1 text-xs font-black uppercase not-italic ${
-                        overdue ? 'text-red-500' : daysUntilDue <= 7 ? 'text-teal-500' : 'text-slate-400'
-                      }`}>
-                        <Clock size={14} />
-                        {overdue
-                          ? `Was due ${new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
-                          : `Due ${new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} (${daysUntilDue}d)`
-                        }
-                      </div>
+                      <span className={`shrink-0 ${overdue ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+                        · {overdue ? 'Due' : 'Due'} {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      </span>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between sm:justify-end gap-3 md:gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-50">
-                  <div className="flex flex-col items-start sm:items-end">
-                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-widest mb-1 ${
-                      isPaid
-                        ? 'bg-teal-100 text-teal-700'
-                        : overdue
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-slate-100 text-slate-700'
-                    }`}>
-                      {isPaid ? <CheckCircle2 size={12}/> : overdue ? <AlertTriangle size={12}/> : <AlertCircle size={12}/>}
-                      {overdue ? 'OVERDUE' : invoice.status}
-                    </div>
-                    <p className={`font-black text-sm md:text-xl tracking-tight ${overdue ? 'text-red-700' : 'text-slate-900'}`}>
-                      £{calculateQuoteTotal(invoice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="text-right">
+                    <p className={`font-black text-sm tracking-tight ${overdue ? 'text-red-700' : 'text-slate-900'}`}>
+                      £{calculateQuoteTotal(invoice).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </p>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <div className="p-3 bg-teal-50 text-teal-600 rounded-xl transition-all border border-teal-100 group-hover:scale-105">
-                      <Eye size={20} />
+                    <div className={`text-[10px] font-bold uppercase ${
+                      isPaid ? 'text-teal-600' : overdue ? 'text-red-500' : 'text-slate-400'
+                    }`}>
+                      {overdue ? 'Overdue' : invoice.status}
                     </div>
+                  </div>
+
+                  <div className="flex gap-1">
                     {onDeleteInvoice && (
                       <button
                         onClick={(e) => handleDelete(e, invoice)}
-                        className="p-3 bg-white text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        className="p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                         title="Delete invoice"
                       >
-                        <Trash2 size={18} />
+                        <Trash2 size={16} />
                       </button>
                     )}
-                    <div className="p-3 bg-white text-slate-300 group-hover:text-teal-500 group-hover:translate-x-1 transition-all">
-                      <ChevronRight size={20} />
+                    <div className="p-2 text-slate-300 group-hover:text-teal-500 transition-all">
+                      <ChevronRight size={18} />
                     </div>
                   </div>
                 </div>
