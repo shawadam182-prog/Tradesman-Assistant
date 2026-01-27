@@ -13,7 +13,7 @@ import MainApp from './components/MainApp';
 import { PublicQuoteView } from './pages/PublicQuoteView';
 import { Loader2 } from 'lucide-react';
 import { useReferralCapture } from './hooks/useReferralCapture';
-import { ScreenRecorder } from './components/ScreenRecorder';
+
 
 // Loading screen component
 const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Loading...' }) => (
@@ -179,7 +179,7 @@ const App: React.FC = () => {
       <ToastProvider>
         <PWAOfflineIndicator />
         <ViewRouter />
-        <ScreenRecorder />
+
         <PWAPrompt />
       </ToastProvider>
     </AuthProvider>
