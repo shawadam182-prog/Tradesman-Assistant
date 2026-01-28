@@ -269,32 +269,22 @@ export const FinancialOverview: React.FC<FinancialOverviewProps> = ({
         </div>
       </div>
 
-      {/* Quick Period Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* Quick Period Pills — Stitch compact style */}
+      <div className="flex gap-2">
         {periodOptions.map(option => {
-          const data = revenueData[option.id];
           const isSelected = selectedPeriod === option.id;
 
           return (
             <button
               key={option.id}
               onClick={() => setSelectedPeriod(option.id)}
-              className={`p-4 rounded-2xl border-2 transition-all text-left ${
+              className={`flex-1 py-1.5 md:py-2 text-[11px] md:text-xs font-bold rounded-lg transition-all ${
                 isSelected
-                  ? 'bg-slate-900 border-slate-900 text-white shadow-lg'
-                  : 'bg-white border-slate-100 hover:border-slate-300 text-slate-900'
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
               }`}
             >
-              <div className={`flex items-center gap-2 mb-2 ${isSelected ? 'text-teal-400' : 'text-slate-400'}`}>
-                {option.icon}
-                <span className="text-[10px] font-black uppercase tracking-wider">{option.shortLabel}</span>
-              </div>
-              <p className={`text-lg md:text-xl font-black ${isSelected ? 'text-white' : 'text-slate-900'}`}>
-                {formatCurrency(data.revenue, true)}
-              </p>
-              <p className={`text-[10px] font-bold ${isSelected ? 'text-white/60' : 'text-slate-400'}`}>
-                {data.count} invoice{data.count !== 1 ? 's' : ''}
-              </p>
+              {option.shortLabel}
             </button>
           );
         })}

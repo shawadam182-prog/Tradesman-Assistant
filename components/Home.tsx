@@ -753,99 +753,77 @@ export const Home: React.FC<HomeProps> = ({
         </div>
       </div>
 
-      {/* QUICK ACTIONS Section */}
+      {/* QUICK ACTIONS Section — Stitch circular icon style */}
       <div>
-        <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest mb-2 md:mb-3 px-1">Quick Actions</h3>
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 md:gap-3">
+        <div className="grid grid-cols-3 gap-y-5 gap-x-4 md:gap-y-6 md:gap-x-6">
           <button
-            onClick={() => {
-              hapticTap();
-              if (canCreateJob) {
-                onCreateJob?.();
-              } else {
-                setUpgradePromptType('jobs');
-              }
-            }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-teal-50 border border-teal-200 text-teal-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-teal-500/10 hover:shadow-md hover:shadow-teal-500/20 group relative"
+            onClick={() => { hapticTap(); if (canCreateJob) { onCreateJob?.(); } else { setUpgradePromptType('jobs'); } }}
+            className="flex flex-col items-center gap-2 group relative"
           >
-            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
-              <Briefcase size={20} className="md:w-7 md:h-7 text-teal-600" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600 group-active:scale-95 transition-all shadow-sm">
+              <Briefcase size={20} className="md:w-6 md:h-6" />
             </div>
-            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">New Job</span>
+            <span className="text-[11px] md:text-xs font-bold text-slate-600 dark:text-slate-300">New Job</span>
             {limits.jobPacks !== null && (
-              <span className="absolute top-1 right-1 text-[8px] bg-white text-teal-700 px-1.5 py-0.5 rounded-full font-bold border border-teal-100">
+              <span className="absolute -top-1 -right-1 text-[7px] bg-white text-teal-700 px-1 py-0.5 rounded-full font-bold border border-teal-100 leading-none">
                 {currentJobCount}/{limits.jobPacks}
               </span>
             )}
           </button>
           <button
-            onClick={() => {
-              hapticTap();
-              if (canCreateQuote) {
-                onCreateQuote?.();
-              } else {
-                setUpgradePromptType('quotes');
-              }
-            }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-blue-50 border border-blue-200 text-blue-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-blue-500/10 hover:shadow-md hover:shadow-blue-500/20 group relative"
+            onClick={() => { hapticTap(); if (canCreateQuote) { onCreateQuote?.(); } else { setUpgradePromptType('quotes'); } }}
+            className="flex flex-col items-center gap-2 group relative"
           >
-            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
-              <FileText size={20} className="md:w-7 md:h-7 text-blue-600" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 group-active:scale-95 transition-all shadow-sm">
+              <FileText size={20} className="md:w-6 md:h-6" />
             </div>
-            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Quote</span>
+            <span className="text-[11px] md:text-xs font-bold text-slate-600 dark:text-slate-300">Quote</span>
             {limits.quotes !== null && (
-              <span className="absolute top-1 right-1 text-[8px] bg-white text-blue-700 px-1.5 py-0.5 rounded-full font-bold border border-blue-100">
+              <span className="absolute -top-1 -right-1 text-[7px] bg-white text-blue-700 px-1 py-0.5 rounded-full font-bold border border-blue-100 leading-none">
                 {currentQuoteCount}/{limits.quotes}
               </span>
             )}
           </button>
           <button
-            onClick={() => {
-              hapticTap();
-              if (canCreateInvoice) {
-                onCreateInvoice?.();
-              } else {
-                setUpgradePromptType('invoices');
-              }
-            }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-emerald-50 border border-emerald-200 text-emerald-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-emerald-500/10 hover:shadow-md hover:shadow-emerald-500/20 group relative"
+            onClick={() => { hapticTap(); if (canCreateInvoice) { onCreateInvoice?.(); } else { setUpgradePromptType('invoices'); } }}
+            className="flex flex-col items-center gap-2 group relative"
           >
-            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
-              <PoundSterling size={20} className="md:w-7 md:h-7 text-emerald-600" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-emerald-600/10 border border-emerald-600/20 flex items-center justify-center text-emerald-600 group-active:scale-95 transition-all shadow-sm">
+              <PoundSterling size={20} className="md:w-6 md:h-6" />
             </div>
-            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Invoice</span>
+            <span className="text-[11px] md:text-xs font-bold text-slate-600 dark:text-slate-300">Invoice</span>
             {limits.invoices !== null && (
-              <span className="absolute top-1 right-1 text-[8px] bg-white text-emerald-700 px-1.5 py-0.5 rounded-full font-bold border border-emerald-100">
+              <span className="absolute -top-1 -right-1 text-[7px] bg-white text-emerald-700 px-1 py-0.5 rounded-full font-bold border border-emerald-100 leading-none">
                 {currentInvoiceCount}/{limits.invoices}
               </span>
             )}
           </button>
           <button
             onClick={() => { hapticTap(); handleOpenPhotoPicker(); }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-violet-50 border border-violet-200 text-violet-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-violet-500/10 hover:shadow-md hover:shadow-violet-500/20 group"
+            className="flex flex-col items-center gap-2 group"
           >
-            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
-              <Camera size={20} className="md:w-7 md:h-7 text-violet-600" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-600 group-active:scale-95 transition-all shadow-sm">
+              <Camera size={20} className="md:w-6 md:h-6" />
             </div>
-            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Photo</span>
+            <span className="text-[11px] md:text-xs font-bold text-slate-600 dark:text-slate-300">Photo</span>
           </button>
           <button
             onClick={() => { hapticTap(); onLogExpense?.(); }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-amber-50 border border-amber-200 text-amber-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-amber-500/10 hover:shadow-md hover:shadow-amber-500/20 group"
+            className="flex flex-col items-center gap-2 group"
           >
-            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
-              <Receipt size={20} className="md:w-7 md:h-7 text-amber-600" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 group-active:scale-95 transition-all shadow-sm">
+              <Receipt size={20} className="md:w-6 md:h-6" />
             </div>
-            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Expense</span>
+            <span className="text-[11px] md:text-xs font-bold text-slate-600 dark:text-slate-300">Expense</span>
           </button>
           <button
             onClick={() => { hapticTap(); onAddCustomer?.(); }}
-            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-rose-50 border border-rose-200 text-rose-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-rose-500/10 hover:shadow-md hover:shadow-rose-500/20 group"
+            className="flex flex-col items-center gap-2 group"
           >
-            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
-              <UserPlus size={20} className="md:w-7 md:h-7 text-rose-600" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-600 group-active:scale-95 transition-all shadow-sm">
+              <UserPlus size={20} className="md:w-6 md:h-6" />
             </div>
-            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Customer</span>
+            <span className="text-[11px] md:text-xs font-bold text-slate-600 dark:text-slate-300">Customer</span>
           </button>
         </div>
       </div>
@@ -1079,86 +1057,69 @@ export const Home: React.FC<HomeProps> = ({
           </div>
         </div>
 
-        <div className="relative group">
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Next Job</h3>
+          </div>
           {!nextJob ? (
-            <div onClick={onNavigateToSchedule} className="bg-white border-4 border-dashed border-slate-100 rounded-2xl md:rounded-[48px] p-8 md:p-16 text-center cursor-pointer hover:border-teal-200 transition-all flex flex-col items-center">
-              <Calendar size={40} className="md:w-[60px] md:h-[60px] text-slate-200 mb-2 md:mb-4" />
-              <p className="text-slate-400 font-black uppercase tracking-widest text-xs md:text-base">No upcoming jobs found</p>
+            <div onClick={onNavigateToSchedule} className="bg-white dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 text-center cursor-pointer hover:border-teal-300 transition-all flex flex-col items-center">
+              <Calendar size={32} className="text-slate-300 mb-2" />
+              <p className="text-slate-400 font-bold text-sm">No upcoming jobs</p>
             </div>
           ) : (
-            <div className="bg-slate-900 rounded-2xl md:rounded-[48px] p-4 md:p-10 lg:p-12 text-white shadow-2xl overflow-hidden relative border-b-4 md:border-b-8 border-teal-500">
-              <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 pointer-events-none">
-                <Navigation size={200} />
-              </div>
+            <div
+              onClick={() => { hapticTap(); onViewJob?.(nextJob.id); }}
+              className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 shadow-xl border-b-[3px] border-teal-500 cursor-pointer group"
+            >
+              {/* Decorative corner */}
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-bl-full z-0 pointer-events-none" />
 
-              <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-10 relative z-10">
-                <div className="space-y-3 md:space-y-6 flex-1">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <div className="px-3 py-1 md:px-4 md:py-2 bg-teal-500 rounded-full text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest animate-pulse">
-                      Next Job
-                    </div>
-                    <div className="text-teal-400 font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1 md:gap-2">
-                      <Timer size={12} className="md:w-[14px] md:h-[14px]" /> {getTimeUntil(nextJob.start)}
-                    </div>
+              <div className="relative z-10 p-5">
+                {/* Header: countdown + title */}
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <span className="inline-block px-2 py-0.5 rounded-md bg-white/10 backdrop-blur text-xs font-bold text-white border border-white/5 mb-2">
+                      <Timer size={12} className="inline mr-1 -mt-0.5" />
+                      {getTimeUntil(nextJob.start)}
+                    </span>
+                    <h3 className="text-white font-bold text-lg leading-tight">{nextJob.title}</h3>
+                    <p className="text-slate-400 text-xs font-medium mt-0.5">
+                      {new Date(nextJob.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — {new Date(nextJob.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
                   </div>
-
-                  <div className="space-y-1 md:space-y-2">
-                    <h3 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight leading-none">{nextJob.title}</h3>
-                    <div className="flex items-center gap-3 md:gap-6">
-                      <div className="flex items-center gap-1.5 md:gap-2 text-slate-400 font-bold text-sm md:text-lg italic">
-                        <Clock size={16} className="md:w-5 md:h-5 text-teal-500" />
-                        {new Date(nextJob.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — {new Date(nextJob.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-4">
-                    {nextJobCustomer && (
-                      <div className="flex items-center gap-3 bg-white/5 p-4 rounded-3xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
-                        <div className="w-10 h-10 bg-teal-500 rounded-2xl flex items-center justify-center text-white font-black">
-                          {nextJobCustomer.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none">Client</p>
-                          <p className="font-bold text-sm text-white mt-1">{nextJobCustomer.name}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {nextJob.location && (
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nextJob.location)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 min-w-[200px] flex flex-col gap-2 bg-teal-500 p-5 rounded-3xl hover:bg-teal-400 transition-all text-white shadow-xl shadow-teal-500/20 group/nav"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-[10px] font-black uppercase tracking-widest opacity-75">Navigate to Site</span>
-                          <div className="h-8 w-8 bg-slate-900 rounded-xl flex items-center justify-center text-teal-500 shrink-0 group-hover/nav:scale-110 transition-transform">
-                            <Navigation size={16} />
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <MapPin size={20} className="shrink-0" />
-                          <span className="font-black text-sm truncate">{nextJob.location}</span>
-                        </div>
-                      </a>
-                    )}
+                  <div className="w-10 h-10 bg-slate-700/50 rounded-full flex items-center justify-center text-white border border-slate-600 shrink-0">
+                    <Briefcase size={20} />
                   </div>
                 </div>
 
-                <button
-                  onClick={() => { hapticTap(); onViewJob?.(nextJob.id); }}
-                  className="w-full md:w-auto h-auto md:h-64 bg-white/5 border border-white/10 rounded-[32px] p-8 flex flex-col justify-between hover:bg-white/10 transition-all group"
-                >
-                  <div className="h-12 w-12 bg-teal-500 rounded-2xl flex items-center justify-center text-white group-hover:scale-110 transition-transform">
-                    <Eye size={24} />
+                {/* Customer + Location row */}
+                <div className="flex items-center gap-3 py-3 border-t border-white/10">
+                  {nextJobCustomer && (
+                    <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-white text-xs font-bold shadow-lg shrink-0">
+                      {nextJobCustomer.name.charAt(0)}{nextJobCustomer.name.split(' ')[1]?.charAt(0) || ''}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-bold truncate">{nextJobCustomer?.name || 'No customer'}</p>
+                    {nextJob.location && (
+                      <div className="flex items-center gap-1 text-slate-400 text-xs mt-0.5">
+                        <MapPin size={14} className="text-teal-500 shrink-0" />
+                        <span className="truncate">{nextJob.location}</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Job Details</p>
-                    <p className="text-xl font-black text-white mt-1">View Job</p>
-                  </div>
-                </button>
+                  {nextJob.location && (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nextJob.location)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-9 h-9 bg-teal-500 rounded-full flex items-center justify-center text-white shrink-0 hover:bg-teal-400 active:scale-95 transition-all shadow-lg shadow-teal-500/20"
+                    >
+                      <Navigation size={16} />
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           )}
