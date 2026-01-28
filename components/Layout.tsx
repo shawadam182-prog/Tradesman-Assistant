@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, FileText, Settings, Briefcase, ReceiptText, CalendarDays, Home, LogOut, Receipt, Landmark, Link2, Calculator, CreditCard, FolderOpen, ChevronDown, ChevronRight, Package, MoreHorizontal, X, QrCode, Shield, MessageSquare, TrendingUp, Activity, Download, Clock, Moon, Sun } from 'lucide-react';
+import { Users, FileText, Settings, Briefcase, ReceiptText, CalendarDays, Home, LogOut, Receipt, Landmark, Link2, Calculator, CreditCard, FolderOpen, ChevronDown, ChevronRight, Package, MoreHorizontal, X, QrCode, Shield, MessageSquare, TrendingUp, Activity, Download, Clock, Moon, Sun, Plus, PoundSterling, Camera } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useAuth } from '../src/contexts/AuthContext';
 import { useData } from '../src/contexts/DataContext';
@@ -12,6 +12,9 @@ interface LayoutProps {
   activeTab: string;
   setActiveTab: (tab: any) => void;
   onSignOut?: () => void;
+  onCreateJob?: () => void;
+  onCreateQuote?: () => void;
+  onCreateInvoice?: () => void;
 }
 
 interface NavGroup {
@@ -28,12 +31,13 @@ interface NavGroup {
   }[];
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onSignOut }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onSignOut, onCreateJob, onCreateQuote, onCreateInvoice }) => {
   const { user } = useAuth();
   const { settings } = useData();
   const { isDark, toggle: toggleDarkMode } = useDarkMode();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['work']));
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showFabMenu, setShowFabMenu] = useState(false);
   const [moreMenuGroup, setMoreMenuGroup] = useState<string | null>(null);
 
   const isAdmin = isAdminUser(user?.id);
@@ -139,13 +143,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   // Flat list for mobile nav
   const navItems = navGroups.flatMap(g => g.items);
 
-  // Primary navigation items for mobile bottom bar
+  // Primary navigation items for mobile bottom bar (4 tabs + center FAB)
   const primaryNavItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'jobpacks', label: 'Jobs', icon: Briefcase },
+    // FAB goes in center (rendered separately)
     { id: 'schedule', label: 'Schedule', icon: CalendarDays },
-    { id: 'quotes', label: 'Quotes', icon: FileText },
-    { id: 'invoices', label: 'Invoices', icon: ReceiptText },
     { id: 'more', label: 'More', icon: MoreHorizontal },
   ];
 
@@ -250,37 +253,77 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         </div>
       </aside>
 
-      {/* Mobile Nav - Modern Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 z-[100] safe-area-bottom pb-1">
-        <div className="flex justify-around items-end h-[50px] px-1">
-          {primaryNavItems.map((item) => {
+      {/* Mobile Nav - Modern Bar with Center FAB */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 z-[100] safe-area-bottom pb-1">
+        <div className="flex justify-around items-end h-[50px] px-1 relative">
+          {/* Left tabs */}
+          {primaryNavItems.slice(0, 2).map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => { hapticTap(); setActiveTab(item.id); }}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 h-full active:scale-95 transition-all relative ${isActive ? 'text-teal-500' : 'text-slate-400 dark:text-slate-500'}`}
+              >
+                {isActive && <div className="absolute top-0 w-8 h-0.5 bg-teal-500 rounded-full shadow-[0_0_8px_rgba(20,184,166,0.6)]" />}
+                <item.icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
+                <span className={`text-[8px] xs:text-[9px] font-medium tracking-tight leading-none ${isActive ? 'opacity-100 font-bold' : 'opacity-70'}`}>{item.label}</span>
+              </button>
+            );
+          })}
+
+          {/* Center FAB */}
+          <div className="flex-1 flex items-center justify-center relative">
+            <button
+              onClick={() => { hapticTap(); setShowFabMenu(!showFabMenu); }}
+              className={`absolute -top-5 w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-teal-500/30 active:scale-90 transition-all ${showFabMenu ? 'bg-slate-800 rotate-45' : 'bg-teal-500 hover:bg-teal-600'}`}
+            >
+              <Plus size={28} strokeWidth={2.5} className="text-white" />
+            </button>
+          </div>
+
+          {/* Right tabs */}
+          {primaryNavItems.slice(2).map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => {
-                  if (item.id === 'more') {
-                    handleMoreClick();
-                  } else {
-                    hapticTap();
-                    setActiveTab(item.id);
-                  }
+                  if (item.id === 'more') { handleMoreClick(); }
+                  else { hapticTap(); setActiveTab(item.id); }
                 }}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 h-full active:scale-95 transition-all relative ${isActive ? 'text-teal-500' : 'text-slate-400 dark:text-slate-500'
-                  }`}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 h-full active:scale-95 transition-all relative ${isActive ? 'text-teal-500' : 'text-slate-400 dark:text-slate-500'}`}
               >
-                {isActive && (
-                  <div className="absolute top-0 w-8 h-0.5 bg-teal-500 rounded-full shadow-[0_0_8px_rgba(20,184,166,0.6)]" />
-                )}
+                {isActive && <div className="absolute top-0 w-8 h-0.5 bg-teal-500 rounded-full shadow-[0_0_8px_rgba(20,184,166,0.6)]" />}
                 <item.icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
-                <span className={`text-[8px] xs:text-[9px] font-medium tracking-tight leading-none truncate max-w-[48px] ${isActive ? 'opacity-100 font-bold' : 'opacity-70'}`}>
-                  {item.label}
-                </span>
+                <span className={`text-[8px] xs:text-[9px] font-medium tracking-tight leading-none ${isActive ? 'opacity-100 font-bold' : 'opacity-70'}`}>{item.label}</span>
               </button>
             );
           })}
         </div>
       </nav>
+
+      {/* FAB Quick Create Menu */}
+      {showFabMenu && (
+        <div className="md:hidden fixed inset-0 z-[99] bg-black/30 backdrop-blur-sm" onClick={() => setShowFabMenu(false)}>
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            {[
+              { label: 'New Job', icon: Briefcase, color: 'bg-teal-500', action: () => { setShowFabMenu(false); onCreateJob?.(); } },
+              { label: 'Quote', icon: FileText, color: 'bg-blue-500', action: () => { setShowFabMenu(false); onCreateQuote?.(); } },
+              { label: 'Invoice', icon: PoundSterling, color: 'bg-emerald-500', action: () => { setShowFabMenu(false); onCreateInvoice?.(); } },
+            ].map((item) => (
+              <button
+                key={item.label}
+                onClick={() => { hapticTap(); item.action(); }}
+                className={`flex items-center gap-3 ${item.color} text-white pl-4 pr-5 py-3 rounded-full shadow-lg active:scale-95 transition-all animate-in slide-in-from-bottom-4 duration-200`}
+              >
+                <item.icon size={20} />
+                <span className="font-bold text-sm">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* More Menu Overlay - Categorized */}
       {showMoreMenu && (
