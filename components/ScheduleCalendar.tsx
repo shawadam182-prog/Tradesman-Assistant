@@ -476,8 +476,8 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
             </button>
           )}
           <div>
-            <h2 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight">Site Diary</h2>
-            <p className="text-slate-500 text-sm font-medium">Professional resource and project site allocation.</p>
+            <h2 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Site Diary</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Professional resource and project site allocation.</p>
           </div>
         </div>
         

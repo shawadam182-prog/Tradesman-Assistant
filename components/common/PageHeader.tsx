@@ -22,8 +22,8 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, actions
           </button>
         )}
         <div>
-          <h2 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight">{title}</h2>
-          {subtitle && <p className="text-xs md:text-base text-slate-500 font-medium italic mt-0.5 md:mt-1">{subtitle}</p>}
+          <h2 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">{title}</h2>
+          {subtitle && <p className="text-xs md:text-base text-slate-500 dark:text-slate-400 font-medium italic mt-0.5 md:mt-1">{subtitle}</p>}
         </div>
       </div>
       {actions && (

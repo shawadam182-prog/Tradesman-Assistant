@@ -45,8 +45,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Job Dashboard</h2>
-          <p className="text-slate-700 font-medium">Manage your active construction estimates</p>
+          <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Job Dashboard</h2>
+          <p className="text-slate-700 dark:text-slate-300 font-medium">Manage your active construction estimates</p>
         </div>
         <button
           onClick={onCreateQuote}

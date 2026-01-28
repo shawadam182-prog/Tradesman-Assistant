@@ -91,13 +91,13 @@ export const PaymentRecorder: React.FC<PaymentRecorderProps> = ({
             Payment Amount
           </label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">£</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl text-slate-400 font-bold">£</span>
             <input
               type="number"
               step="0.01"
               value={amount || ''}
               onChange={e => setAmount(parseFloat(e.target.value) || 0)}
-              className="w-full bg-white border-2 border-slate-200 rounded-xl p-4 pl-8 text-xl font-black text-slate-900 outline-none focus:border-emerald-400 transition-colors"
+              className="w-full bg-white border-2 border-slate-200 rounded-xl p-4 pl-10 text-xl font-black text-slate-900 outline-none focus:border-emerald-400 transition-colors"
               placeholder="0.00"
             />
           </div>

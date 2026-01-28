@@ -280,7 +280,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 </button>
               )}
               <div>
-                <h2 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight">Business Hub</h2>
+                <h2 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Business Hub</h2>
                 <p className="text-slate-500 text-xs md:text-sm font-medium italic hidden md:block">Adjust your trading preferences</p>
               </div>
             </div>

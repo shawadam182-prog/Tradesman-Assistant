@@ -553,8 +553,8 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
             </button>
           )}
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Expenses</h1>
-            <p className="text-slate-500 text-sm font-medium">Track receipts and business costs</p>
+            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Expenses</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Track receipts and business costs</p>
           </div>
         </div>
         <div className="flex gap-2">
