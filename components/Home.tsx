@@ -755,19 +755,25 @@ export const Home: React.FC<HomeProps> = ({
 
       {/* QUICK ACTIONS Section */}
       <div>
-        <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest mb-1.5 md:mb-2 px-1">Quick Actions</h3>
-        <div className="grid grid-cols-6 gap-1 sm:gap-1.5 md:gap-2">
+        <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest mb-2 md:mb-3 px-1">Quick Actions</h3>
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 md:gap-3">
           <button
             onClick={() => {
               hapticTap();
-              if (canCreateJob) { onCreateJob?.(); } else { setUpgradePromptType('jobs'); }
+              if (canCreateJob) {
+                onCreateJob?.();
+              } else {
+                setUpgradePromptType('jobs');
+              }
             }}
-            className="flex flex-col items-center justify-center gap-1 bg-teal-50 border border-teal-200/60 text-teal-700 p-1.5 sm:p-2 md:p-3 rounded-xl md:rounded-2xl active:scale-95 transition-all hover:bg-teal-100 group relative"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-teal-50 border border-teal-200 text-teal-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-teal-500/10 hover:shadow-md hover:shadow-teal-500/20 group relative"
           >
-            <Briefcase size={18} className="md:w-5 md:h-5 text-teal-600 group-active:scale-90 transition-transform" />
-            <span className="font-bold text-[8px] sm:text-[9px] md:text-[11px] leading-none text-center truncate w-full">Job</span>
+            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
+              <Briefcase size={20} className="md:w-7 md:h-7 text-teal-600" />
+            </div>
+            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">New Job</span>
             {limits.jobPacks !== null && (
-              <span className="absolute -top-1 -right-1 text-[7px] bg-white text-teal-700 px-1 py-0.5 rounded-full font-bold border border-teal-100 leading-none">
+              <span className="absolute top-1 right-1 text-[8px] bg-white text-teal-700 px-1.5 py-0.5 rounded-full font-bold border border-teal-100">
                 {currentJobCount}/{limits.jobPacks}
               </span>
             )}
@@ -775,14 +781,20 @@ export const Home: React.FC<HomeProps> = ({
           <button
             onClick={() => {
               hapticTap();
-              if (canCreateQuote) { onCreateQuote?.(); } else { setUpgradePromptType('quotes'); }
+              if (canCreateQuote) {
+                onCreateQuote?.();
+              } else {
+                setUpgradePromptType('quotes');
+              }
             }}
-            className="flex flex-col items-center justify-center gap-1 bg-blue-50 border border-blue-200/60 text-blue-700 p-1.5 sm:p-2 md:p-3 rounded-xl md:rounded-2xl active:scale-95 transition-all hover:bg-blue-100 group relative"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-blue-50 border border-blue-200 text-blue-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-blue-500/10 hover:shadow-md hover:shadow-blue-500/20 group relative"
           >
-            <FileText size={18} className="md:w-5 md:h-5 text-blue-600 group-active:scale-90 transition-transform" />
-            <span className="font-bold text-[8px] sm:text-[9px] md:text-[11px] leading-none text-center truncate w-full">Quote</span>
+            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
+              <FileText size={20} className="md:w-7 md:h-7 text-blue-600" />
+            </div>
+            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Quote</span>
             {limits.quotes !== null && (
-              <span className="absolute -top-1 -right-1 text-[7px] bg-white text-blue-700 px-1 py-0.5 rounded-full font-bold border border-blue-100 leading-none">
+              <span className="absolute top-1 right-1 text-[8px] bg-white text-blue-700 px-1.5 py-0.5 rounded-full font-bold border border-blue-100">
                 {currentQuoteCount}/{limits.quotes}
               </span>
             )}
@@ -790,38 +802,50 @@ export const Home: React.FC<HomeProps> = ({
           <button
             onClick={() => {
               hapticTap();
-              if (canCreateInvoice) { onCreateInvoice?.(); } else { setUpgradePromptType('invoices'); }
+              if (canCreateInvoice) {
+                onCreateInvoice?.();
+              } else {
+                setUpgradePromptType('invoices');
+              }
             }}
-            className="flex flex-col items-center justify-center gap-1 bg-emerald-50 border border-emerald-200/60 text-emerald-700 p-1.5 sm:p-2 md:p-3 rounded-xl md:rounded-2xl active:scale-95 transition-all hover:bg-emerald-100 group relative"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-emerald-50 border border-emerald-200 text-emerald-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-emerald-500/10 hover:shadow-md hover:shadow-emerald-500/20 group relative"
           >
-            <PoundSterling size={18} className="md:w-5 md:h-5 text-emerald-600 group-active:scale-90 transition-transform" />
-            <span className="font-bold text-[8px] sm:text-[9px] md:text-[11px] leading-none text-center truncate w-full">Invoice</span>
+            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
+              <PoundSterling size={20} className="md:w-7 md:h-7 text-emerald-600" />
+            </div>
+            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Invoice</span>
             {limits.invoices !== null && (
-              <span className="absolute -top-1 -right-1 text-[7px] bg-white text-emerald-700 px-1 py-0.5 rounded-full font-bold border border-emerald-100 leading-none">
+              <span className="absolute top-1 right-1 text-[8px] bg-white text-emerald-700 px-1.5 py-0.5 rounded-full font-bold border border-emerald-100">
                 {currentInvoiceCount}/{limits.invoices}
               </span>
             )}
           </button>
           <button
             onClick={() => { hapticTap(); handleOpenPhotoPicker(); }}
-            className="flex flex-col items-center justify-center gap-1 bg-violet-50 border border-violet-200/60 text-violet-700 p-1.5 sm:p-2 md:p-3 rounded-xl md:rounded-2xl active:scale-95 transition-all hover:bg-violet-100 group"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-violet-50 border border-violet-200 text-violet-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-violet-500/10 hover:shadow-md hover:shadow-violet-500/20 group"
           >
-            <Camera size={18} className="md:w-5 md:h-5 text-violet-600 group-active:scale-90 transition-transform" />
-            <span className="font-bold text-[8px] sm:text-[9px] md:text-[11px] leading-none text-center truncate w-full">Photo</span>
+            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
+              <Camera size={20} className="md:w-7 md:h-7 text-violet-600" />
+            </div>
+            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Photo</span>
           </button>
           <button
             onClick={() => { hapticTap(); onLogExpense?.(); }}
-            className="flex flex-col items-center justify-center gap-1 bg-amber-50 border border-amber-200/60 text-amber-700 p-1.5 sm:p-2 md:p-3 rounded-xl md:rounded-2xl active:scale-95 transition-all hover:bg-amber-100 group"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-amber-50 border border-amber-200 text-amber-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-amber-500/10 hover:shadow-md hover:shadow-amber-500/20 group"
           >
-            <Receipt size={18} className="md:w-5 md:h-5 text-amber-600 group-active:scale-90 transition-transform" />
-            <span className="font-bold text-[8px] sm:text-[9px] md:text-[11px] leading-none text-center truncate w-full">Expense</span>
+            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
+              <Receipt size={20} className="md:w-7 md:h-7 text-amber-600" />
+            </div>
+            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Expense</span>
           </button>
           <button
             onClick={() => { hapticTap(); onAddCustomer?.(); }}
-            className="flex flex-col items-center justify-center gap-1 bg-rose-50 border border-rose-200/60 text-rose-700 p-1.5 sm:p-2 md:p-3 rounded-xl md:rounded-2xl active:scale-95 transition-all hover:bg-rose-100 group"
+            className="flex flex-col items-center justify-center gap-1.5 md:gap-3 bg-rose-50 border border-rose-200 text-rose-900 p-2 sm:p-3 md:p-6 min-h-[64px] sm:min-h-[70px] md:min-h-[100px] rounded-2xl md:rounded-[28px] active:scale-95 transition-all shadow-sm shadow-rose-500/10 hover:shadow-md hover:shadow-rose-500/20 group"
           >
-            <UserPlus size={18} className="md:w-5 md:h-5 text-rose-600 group-active:scale-90 transition-transform" />
-            <span className="font-bold text-[8px] sm:text-[9px] md:text-[11px] leading-none text-center truncate w-full">Customer</span>
+            <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl group-active:scale-90 transition-transform shadow-sm">
+              <UserPlus size={20} className="md:w-7 md:h-7 text-rose-600" />
+            </div>
+            <span className="font-black text-[9px] sm:text-[10px] md:text-sm uppercase tracking-wide md:tracking-widest leading-none text-center">Customer</span>
           </button>
         </div>
       </div>
@@ -955,18 +979,61 @@ export const Home: React.FC<HomeProps> = ({
         </button>
 
         {isSectionOpen('financial') && <>
-        {/* Revenue Overview with Period Selector + Owed/Overdue merged in */}
-        <FinancialOverview
-          quotes={quotes}
-          settings={settings}
-          invoiceSummary={{
-            outstandingTotal: todayStats.outstandingTotal,
-            outstandingCount: todayStats.outstandingInvoices,
-            overdueTotal: todayStats.overdueTotal,
-            overdueCount: todayStats.overdueInvoices,
-          }}
-          onNavigateToInvoices={() => { hapticTap(); onNavigateToInvoices?.(); }}
-        />
+        {/* Revenue Overview with Period Selector */}
+        <FinancialOverview quotes={quotes} settings={settings} />
+
+        {/* Invoice Summary Card */}
+        {(todayStats.outstandingInvoices > 0 || todayStats.overdueInvoices > 0) && (
+          <div
+            onClick={() => { hapticTap(); onNavigateToInvoices?.(); }}
+            className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 p-4 md:p-6 shadow-sm mt-3 md:mt-4 cursor-pointer hover:shadow-lg transition-all group"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className={`p-2 md:p-3 rounded-xl md:rounded-2xl ${todayStats.overdueInvoices > 0 ? 'bg-red-500' : 'bg-teal-500'} text-white`}>
+                  {todayStats.overdueInvoices > 0 ? <AlertTriangle size={18} className="md:w-6 md:h-6" /> : <FileText size={18} className="md:w-6 md:h-6" />}
+                </div>
+                <div>
+                  <h4 className="font-black text-slate-900 text-sm md:text-lg">Invoice Summary</h4>
+                  <p className="text-[10px] md:text-xs text-slate-500 font-medium italic">
+                    {todayStats.overdueInvoices > 0 ? 'Action required' : 'Awaiting payment'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-slate-400 group-hover:text-teal-500 transition-colors">
+                <span className="text-xs font-bold hidden sm:inline">View All</span>
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+              <div className="bg-teal-50 rounded-xl md:rounded-2xl p-2 sm:p-3 md:p-4">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                  <Clock size={12} className="sm:w-[14px] sm:h-[14px] md:w-4 md:h-4 text-teal-600 shrink-0" />
+                  <span className="text-[10px] sm:text-[11px] md:text-xs font-black text-teal-600 uppercase truncate">Owed</span>
+                </div>
+                <p className="text-lg sm:text-xl md:text-3xl font-black text-slate-900 truncate">
+                  {todayStats.outstandingTotal.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}
+                </p>
+                <p className="text-[10px] sm:text-[11px] md:text-xs text-slate-500 font-bold mt-1 truncate">
+                  {todayStats.outstandingInvoices} awaiting
+                </p>
+              </div>
+              <div className={`rounded-xl md:rounded-2xl p-2 sm:p-3 md:p-4 ${todayStats.overdueInvoices > 0 ? 'bg-red-50' : 'bg-slate-50'}`}>
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                  <AlertTriangle size={12} className={`sm:w-[14px] sm:h-[14px] md:w-4 md:h-4 shrink-0 ${todayStats.overdueInvoices > 0 ? 'text-red-600' : 'text-slate-400'}`} />
+                  <span className={`text-[10px] sm:text-[11px] md:text-xs font-black uppercase truncate ${todayStats.overdueInvoices > 0 ? 'text-red-600' : 'text-slate-400'}`}>Overdue</span>
+                </div>
+                <p className={`text-lg sm:text-xl md:text-3xl font-black truncate ${todayStats.overdueInvoices > 0 ? 'text-red-600' : 'text-slate-300'}`}>
+                  {todayStats.overdueTotal.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}
+                </p>
+                <p className={`text-[10px] sm:text-[11px] md:text-xs font-bold mt-1 truncate ${todayStats.overdueInvoices > 0 ? 'text-red-500' : 'text-slate-400'}`}>
+                  {todayStats.overdueInvoices > 0 ? `${todayStats.overdueInvoices} past due` : 'None'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         </>}
       </div>
 

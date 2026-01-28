@@ -318,7 +318,7 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <Layout activeTab={activeTab === 'view' || activeTab === 'jobpack_detail' || activeTab === 'quote_edit' ? '' : activeTab} setActiveTab={setActiveTab} onSignOut={signOut} onCreateJob={() => setActiveTab('jobpacks')} onCreateQuote={() => handleCreateQuote()} onCreateInvoice={handleCreateInvoice}>
+    <Layout activeTab={activeTab === 'view' || activeTab === 'jobpack_detail' || activeTab === 'quote_edit' ? '' : activeTab} setActiveTab={setActiveTab} onSignOut={signOut}>
       {/* Page-level error boundary - keeps navigation accessible if a page crashes */}
       <ErrorBoundary key={activeTab} onReset={handleErrorReset}>
       {activeTab === 'home' && <Home

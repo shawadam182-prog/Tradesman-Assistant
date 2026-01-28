@@ -2,23 +2,14 @@ import React, { useMemo, useState } from 'react';
 import { Quote, AppSettings } from '../types';
 import {
   PoundSterling, Calendar, CalendarDays, CalendarRange,
-  TrendingUp, TrendingDown, Clock, ChevronDown, AlertTriangle
+  TrendingUp, TrendingDown, Clock, ChevronDown
 } from 'lucide-react';
 
 type RevenuePeriod = 'all_time' | 'tax_year' | 'month' | 'week';
 
-interface InvoiceSummary {
-  outstandingTotal: number;
-  outstandingCount: number;
-  overdueTotal: number;
-  overdueCount: number;
-}
-
 interface FinancialOverviewProps {
   quotes: Quote[];
   settings: AppSettings;
-  invoiceSummary?: InvoiceSummary;
-  onNavigateToInvoices?: () => void;
 }
 
 interface PeriodOption {
@@ -30,9 +21,7 @@ interface PeriodOption {
 
 export const FinancialOverview: React.FC<FinancialOverviewProps> = ({
   quotes,
-  settings,
-  invoiceSummary,
-  onNavigateToInvoices
+  settings
 }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<RevenuePeriod>('month');
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
@@ -240,71 +229,43 @@ export const FinancialOverview: React.FC<FinancialOverviewProps> = ({
           </div>
 
           {/* Stats Row */}
-          <div className="flex items-center gap-2 md:gap-4 flex-wrap">
-            <div className="bg-white/10 backdrop-blur rounded-xl px-3 md:px-4 py-1.5 md:py-2">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="bg-white/10 backdrop-blur rounded-xl px-4 py-2">
               <span className="text-[10px] md:text-xs font-bold text-white/60 uppercase tracking-wider">
-                Paid
+                Invoices
               </span>
-              <span className="text-base md:text-xl font-black ml-1.5 md:ml-2">{currentData.count}</span>
+              <span className="text-lg md:text-xl font-black ml-2">{currentData.count}</span>
             </div>
 
             {currentData.trend !== null && (
-              <div className={`flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1.5 md:py-2 rounded-xl ${
+              <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl ${
                 currentData.trend >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
               }`}>
                 {currentData.trend >= 0 ? (
-                  <TrendingUp size={14} />
+                  <TrendingUp size={16} />
                 ) : (
-                  <TrendingDown size={14} />
+                  <TrendingDown size={16} />
                 )}
-                <span className="text-xs md:text-sm font-black">
+                <span className="text-sm font-black">
                   {currentData.trend >= 0 ? '+' : ''}{currentData.trend}%
+                </span>
+                <span className="text-xs font-medium opacity-75">
+                  vs last {selectedPeriod === 'week' ? 'week' : 'month'}
                 </span>
               </div>
             )}
 
             {selectedPeriod === 'tax_year' && revenueData.tax_year.label && (
-              <div className="bg-teal-500/20 backdrop-blur rounded-xl px-3 md:px-4 py-1.5 md:py-2">
+              <div className="bg-teal-500/20 backdrop-blur rounded-xl px-4 py-2">
                 <span className="text-[10px] md:text-xs font-bold text-teal-400 uppercase tracking-wider">
                   Year
                 </span>
-                <span className="text-sm md:text-lg font-black ml-1.5 md:ml-2 text-teal-300">
+                <span className="text-base md:text-lg font-black ml-2 text-teal-300">
                   {revenueData.tax_year.label}
                 </span>
               </div>
             )}
           </div>
-
-          {/* Owed / Overdue inline */}
-          {invoiceSummary && (invoiceSummary.outstandingCount > 0 || invoiceSummary.overdueCount > 0) && (
-            <div
-              onClick={() => onNavigateToInvoices?.()}
-              className="mt-4 md:mt-5 pt-4 md:pt-5 border-t border-white/10 grid grid-cols-2 gap-2 md:gap-4 cursor-pointer group"
-            >
-              <div className="bg-white/10 backdrop-blur rounded-xl md:rounded-2xl p-2.5 md:p-4 group-hover:bg-white/15 transition-colors">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Clock size={12} className="md:w-4 md:h-4 text-teal-400" />
-                  <span className="text-[10px] md:text-xs font-black text-teal-400 uppercase">Owed</span>
-                </div>
-                <p className="text-lg md:text-2xl font-black text-white">
-                  {invoiceSummary.outstandingTotal.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}
-                </p>
-                <p className="text-[10px] md:text-xs text-white/50 font-bold">{invoiceSummary.outstandingCount} awaiting</p>
-              </div>
-              <div className={`backdrop-blur rounded-xl md:rounded-2xl p-2.5 md:p-4 group-hover:bg-white/15 transition-colors ${invoiceSummary.overdueCount > 0 ? 'bg-red-500/20' : 'bg-white/10'}`}>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <AlertTriangle size={12} className={`md:w-4 md:h-4 ${invoiceSummary.overdueCount > 0 ? 'text-red-400' : 'text-white/40'}`} />
-                  <span className={`text-[10px] md:text-xs font-black uppercase ${invoiceSummary.overdueCount > 0 ? 'text-red-400' : 'text-white/40'}`}>Overdue</span>
-                </div>
-                <p className={`text-lg md:text-2xl font-black ${invoiceSummary.overdueCount > 0 ? 'text-red-400' : 'text-white/30'}`}>
-                  {invoiceSummary.overdueTotal.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })}
-                </p>
-                <p className={`text-[10px] md:text-xs font-bold ${invoiceSummary.overdueCount > 0 ? 'text-red-400/70' : 'text-white/30'}`}>
-                  {invoiceSummary.overdueCount > 0 ? `${invoiceSummary.overdueCount} past due` : 'None'}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
