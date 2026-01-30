@@ -53,7 +53,7 @@ export const HomeQuickNotes: React.FC<HomeQuickNotesProps> = ({
         value={quickNotes}
         onChange={(e) => onSetQuickNotes(e.target.value)}
         placeholder="Jot down quick notes..."
-        className="w-full h-24 md:h-32 p-3 text-sm md:text-base border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+        className="w-full min-h-[120px] max-h-[50vh] p-3 text-sm md:text-base border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 resize-y overflow-y-auto"
       />
     </div>
   );
