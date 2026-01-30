@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Quote, Customer, AppSettings, TIER_LIMITS } from '../types';
-import { FileText, Plus, Eye, Search, Hash, ChevronRight, Trash2, Clock, Send, CheckCircle2, XCircle, ReceiptText, ArrowUpDown, ChevronDown } from 'lucide-react';
+import { FileText, Plus, Search, Hash, ChevronRight, Trash2, ArrowUpDown, ChevronDown } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
@@ -287,7 +287,7 @@ export const QuotesList: React.FC<QuotesListProps> = ({
         </div>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-3">
         {filtered.length === 0 ? (
           <div className="py-20 text-center bg-white rounded-[32px] border-2 border-dashed border-slate-100 opacity-60">
             <FileText size={48} className="mx-auto text-slate-200 mb-4" />
@@ -307,12 +307,12 @@ export const QuotesList: React.FC<QuotesListProps> = ({
             const ref = `${prefix}${numStr}`;
 
             // Status badge configuration
-            const statusConfig: Record<string, { bg: string; text: string; icon: React.ReactNode; label: string }> = {
-              draft: { bg: 'bg-slate-100', text: 'text-slate-600', icon: <Clock size={10} />, label: 'Draft' },
-              sent: { bg: 'bg-blue-100', text: 'text-blue-600', icon: <Send size={10} />, label: 'Pending' },
-              accepted: { bg: 'bg-green-100', text: 'text-green-600', icon: <CheckCircle2 size={10} />, label: 'Accepted' },
-              declined: { bg: 'bg-red-100', text: 'text-red-600', icon: <XCircle size={10} />, label: 'Declined' },
-              invoiced: { bg: 'bg-emerald-100', text: 'text-emerald-600', icon: <ReceiptText size={10} />, label: 'Invoiced' },
+            const statusConfig: Record<string, { text: string; label: string }> = {
+              draft: { text: 'text-slate-600', label: 'Draft' },
+              sent: { text: 'text-blue-600', label: 'Pending' },
+              accepted: { text: 'text-green-600', label: 'Accepted' },
+              declined: { text: 'text-red-600', label: 'Declined' },
+              invoiced: { text: 'text-emerald-600', label: 'Invoiced' },
             };
             const status = statusConfig[quote.status] || statusConfig.draft;
 
@@ -320,51 +320,32 @@ export const QuotesList: React.FC<QuotesListProps> = ({
               <div
                 key={quote.id}
                 onClick={() => onViewQuote(quote.id)}
-                className={`bg-white px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl border transition-all group cursor-pointer shadow-sm hover:shadow-md flex items-center gap-3 ${quote.status === 'declined'
+                className={`bg-white px-4 py-4 rounded-2xl border-2 transition-all group cursor-pointer shadow-sm hover:shadow-md ${quote.status === 'declined'
                     ? 'border-red-100 hover:border-red-300'
                     : quote.status === 'accepted'
                       ? 'border-green-100 hover:border-green-300'
                       : 'border-slate-100 hover:border-teal-500'
                   }`}
               >
-                {/* Status indicator bar */}
-                <div className={`w-1 self-stretch rounded-full shrink-0 ${
-                  quote.status === 'accepted' || quote.status === 'invoiced' ? 'bg-green-500'
-                    : quote.status === 'sent' ? 'bg-blue-500'
-                    : quote.status === 'declined' ? 'bg-red-400'
-                    : 'bg-slate-200'
-                }`} />
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="bg-slate-900 text-teal-500 text-[10px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5 shrink-0">
+                {/* Top row: Reference badge + Amount + Status */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-slate-900 text-teal-500 text-[10px] font-black px-2 py-1 rounded flex items-center gap-1">
                       <Hash size={10} /> {ref}
                     </span>
-                    <h3 className="font-bold text-sm text-slate-900 leading-tight truncate group-hover:text-teal-600 transition-colors">
-                      {quote.title}
-                    </h3>
+                    <span className={`text-[10px] font-bold uppercase ${status.text}`}>
+                      {status.label}
+                    </span>
                   </div>
-
-                  <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500 mt-0.5">
-                    <span className="truncate">{customer?.name || 'Unknown Client'}</span>
-                    {customer?.address && (
-                      <span className="truncate text-slate-400">· {customer.address}</span>
-                    )}
-                    <span className={`shrink-0 ${status.text} font-bold`}>· {status.label}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="text-right">
-                    <p className="font-black text-sm text-slate-900 tracking-tight">
-                      £{getQuoteGrandTotal(quote, settings).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                    </p>
-                    <p className="text-[10px] text-slate-400 font-medium">
-                      {new Date(quote.updatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                    </p>
-                  </div>
-
-                  <div className="flex gap-1">
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="font-black text-base text-slate-900">
+                        £{getQuoteGrandTotal(quote, settings).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        {new Date(quote.updatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
                     {onDeleteQuote && (
                       <button
                         onClick={(e) => handleDelete(e, quote)}
@@ -374,10 +355,21 @@ export const QuotesList: React.FC<QuotesListProps> = ({
                         <Trash2 size={16} />
                       </button>
                     )}
-                    <div className="p-2 text-slate-300 group-hover:text-teal-500 transition-all">
-                      <ChevronRight size={18} />
-                    </div>
+                    <ChevronRight size={20} className="text-slate-300 group-hover:text-teal-500 transition-all" />
                   </div>
+                </div>
+
+                {/* Title - full width, no truncation */}
+                <h3 className="font-bold text-base mb-2 text-slate-900 group-hover:text-teal-600 transition-colors">
+                  {quote.title}
+                </h3>
+
+                {/* Customer info - stacked for clarity */}
+                <div className="space-y-1 text-sm text-slate-600">
+                  <p className="font-semibold">{customer?.name || 'Unknown Client'}</p>
+                  {customer?.address && (
+                    <p className="text-slate-400">{customer.address}</p>
+                  )}
                 </div>
               </div>
             );
