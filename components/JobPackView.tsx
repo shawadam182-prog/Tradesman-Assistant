@@ -58,6 +58,12 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isEditingCaption, setIsEditingCaption] = useState(false);
   const [tempCaption, setTempCaption] = useState('');
+  
+  // Pan/drag state for image viewer
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const lastPinchDistance = useRef<number | null>(null);
 
   // Title editing state
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -238,10 +244,13 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
     }
   };
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>, isDrawing: boolean = false) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handlePhotoUpload(file, isDrawing);
+  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>, isDrawing: boolean = false) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    // Process all selected files
+    for (let i = 0; i < files.length; i++) {
+      await handlePhotoUpload(files[i], isDrawing);
     }
   };
 
@@ -256,10 +265,13 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   const closeImageViewer = () => {
     setSelectedImage(null);
     setZoomLevel(1);
+    setPanPosition({ x: 0, y: 0 });
+    setRotation(0);
   };
 
   const handleRotate = () => {
     setRotation(prev => (prev + 90) % 360);
+    setPanPosition({ x: 0, y: 0 }); // Reset pan on rotate
   };
 
   const handleZoomIn = () => {
@@ -272,6 +284,71 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
 
   const handleResetZoom = () => {
     setZoomLevel(1);
+    setPanPosition({ x: 0, y: 0 });
+  };
+
+  // Mouse drag handlers for panning
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoomLevel > 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - panPosition.x, y: e.clientY - panPosition.y });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && zoomLevel > 1) {
+      setPanPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Touch handlers for pinch-to-zoom and pan
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      // Pinch start
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      lastPinchDistance.current = distance;
+    } else if (e.touches.length === 1 && zoomLevel > 1) {
+      // Pan start
+      setIsDragging(true);
+      setDragStart({ 
+        x: e.touches[0].clientX - panPosition.x, 
+        y: e.touches[0].clientY - panPosition.y 
+      });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && lastPinchDistance.current !== null) {
+      // Pinch zoom
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const scale = distance / lastPinchDistance.current;
+      setZoomLevel(prev => Math.min(Math.max(prev * scale, 0.5), 4));
+      lastPinchDistance.current = distance;
+    } else if (e.touches.length === 1 && isDragging && zoomLevel > 1) {
+      // Pan
+      setPanPosition({
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    lastPinchDistance.current = null;
+    setIsDragging(false);
   };
 
   const saveAnnotation = () => {
@@ -360,16 +437,31 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           {/* Main Viewport */}
           <div className="flex-1 flex flex-col md:flex-row items-center justify-center p-4 md:p-8 gap-8 overflow-hidden">
             <div
-              className="flex-1 w-full h-full flex items-center justify-center relative overflow-auto bg-slate-950/50 rounded-[40px] border border-white/5 cursor-grab active:cursor-grabbing"
-              onDoubleClick={() => setZoomLevel(prev => prev === 1 ? 2 : 1)}
+              className={`flex-1 w-full h-full flex items-center justify-center relative overflow-hidden bg-slate-950/50 rounded-[40px] border border-white/5 ${zoomLevel > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-zoom-in'}`}
+              onDoubleClick={() => {
+                if (zoomLevel === 1) {
+                  setZoomLevel(2);
+                } else {
+                  setZoomLevel(1);
+                  setPanPosition({ x: 0, y: 0 });
+                }
+              }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
               <img
                 src={selectedImage.item.url}
-                className="object-contain transition-transform duration-300"
+                className="object-contain select-none"
                 style={{
-                  transform: `rotate(${rotation}deg) scale(${zoomLevel})`,
-                  maxWidth: zoomLevel > 1 ? 'none' : '100%',
-                  maxHeight: zoomLevel > 1 ? 'none' : '100%'
+                  transform: `translate(${panPosition.x}px, ${panPosition.y}px) rotate(${rotation}deg) scale(${zoomLevel})`,
+                  transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+                  maxWidth: '100%',
+                  maxHeight: '100%'
                 }}
                 alt="Large View"
                 draggable={false}
@@ -517,17 +609,26 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           </div>
         </div>
 
-        <div className="bg-[#fffdf2] rounded-[24px] border border-amber-100 shadow-xl relative min-h-[400px] overflow-hidden flex flex-col">
+        <div className="bg-[#fffdf2] rounded-[24px] border border-amber-100 shadow-xl relative overflow-hidden mb-20">
           {/* Notepad lines decoration */}
           <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px)', backgroundSize: '100% 2.5rem' }}></div>
 
           <textarea
-            className="w-full flex-1 bg-transparent p-4 md:p-10 text-base md:text-lg font-medium text-slate-800 outline-none resize-none leading-[2.5rem] relative z-10 placeholder:text-amber-200 placeholder:italic"
+            ref={(el) => {
+              if (el) {
+                el.style.height = 'auto';
+                el.style.height = Math.max(el.scrollHeight, 200) + 'px';
+              }
+            }}
+            className="w-full bg-transparent p-4 md:p-10 text-base md:text-lg font-medium text-slate-800 outline-none resize-none leading-[2.5rem] relative z-10 placeholder:text-amber-200 placeholder:italic min-h-[200px] md:min-h-[300px] overflow-hidden"
             placeholder="Start typing your site notes here, or use the mic to dictate..."
             value={notepadContent}
             onChange={(e) => {
               setNotepadContent(e.target.value);
               handleSaveNotepad(e.target.value);
+              // Auto-resize
+              e.target.style.height = 'auto';
+              e.target.style.height = Math.max(e.target.scrollHeight, 200) + 'px';
             }}
           />
 
@@ -553,6 +654,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           ref={photoInputRef}
           type="file"
           accept="image/*"
+          multiple
           className="hidden"
           onChange={(e) => handleFileInputChange(e, false)}
         />
@@ -612,6 +714,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           ref={drawingInputRef}
           type="file"
           accept="image/*"
+          multiple
           className="hidden"
           onChange={(e) => handleFileInputChange(e, true)}
         />
