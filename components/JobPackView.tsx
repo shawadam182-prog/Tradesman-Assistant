@@ -587,7 +587,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
 
       {
     activeTab === 'log' && (
-      <div className="max-w-4xl mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-2">
+      <div className="max-w-4xl mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-2 pb-8">
         <div className="flex justify-between items-center px-2">
           <div className="flex items-center gap-2">
             <StickyNote className="text-amber-500" size={16} />
@@ -610,30 +610,21 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           </div>
         </div>
 
-        <div className="bg-[#fffdf2] rounded-[24px] border border-amber-100 shadow-xl relative overflow-hidden mb-20">
+        <div className="bg-[#fffdf2] rounded-[24px] border border-amber-100 shadow-xl relative">
           {/* Notepad lines decoration */}
-          <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px)', backgroundSize: '100% 2.5rem' }}></div>
+          <div className="absolute inset-0 pointer-events-none opacity-[0.03] rounded-[24px]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px)', backgroundSize: '100% 2.5rem' }}></div>
 
           <textarea
-            ref={(el) => {
-              if (el) {
-                el.style.height = 'auto';
-                el.style.height = Math.max(el.scrollHeight, 200) + 'px';
-              }
-            }}
-            className="w-full bg-transparent p-4 md:p-10 text-base md:text-lg font-medium text-slate-800 outline-none resize-none leading-[2.5rem] relative z-10 placeholder:text-amber-200 placeholder:italic min-h-[200px] md:min-h-[300px] overflow-hidden"
+            className="w-full bg-transparent p-4 md:p-10 text-base md:text-lg font-medium text-slate-800 outline-none resize-y leading-[2.5rem] relative z-10 placeholder:text-amber-200 placeholder:italic min-h-[250px] md:min-h-[400px] max-h-[60vh]"
             placeholder="Start typing your site notes here, or use the mic to dictate..."
             value={notepadContent}
             onChange={(e) => {
               setNotepadContent(e.target.value);
               handleSaveNotepad(e.target.value);
-              // Auto-resize
-              e.target.style.height = 'auto';
-              e.target.style.height = Math.max(e.target.scrollHeight, 200) + 'px';
             }}
           />
 
-          <div className="p-3 border-t border-amber-50 bg-[#fffef7] flex justify-between items-center text-[8px] font-black text-amber-300 uppercase tracking-widest italic relative z-10 px-4 md:px-10">
+          <div className="p-3 border-t border-amber-50 bg-[#fffef7] flex justify-between items-center text-[8px] font-black text-amber-300 uppercase tracking-widest italic relative z-10 px-4 md:px-10 rounded-b-[24px]">
             <span>Ref: {project.id.substr(0, 8)}</span>
             <span>Saved: {new Date(project.updatedAt).toLocaleTimeString()}</span>
           </div>
