@@ -74,8 +74,8 @@ export const JobPackList: React.FC<JobPackListProps> = ({
   const voiceFields: VoiceFieldConfig[] = [
     { key: 'name', label: 'Full Name', icon: <User size={14} /> },
     { key: 'company', label: 'Company', icon: <Hammer size={14} /> },
-    { key: 'email', label: 'Email', icon: <Mail size={14} /> },
-    { key: 'phone', label: 'Phone', icon: <Phone size={14} /> },
+    { key: 'phone', label: 'Phone Number', icon: <Phone size={14} /> },
+    { key: 'email', label: 'Email Address', icon: <Mail size={14} /> },
     { key: 'address', label: 'Address', icon: <MapPin size={14} /> },
   ];
 
