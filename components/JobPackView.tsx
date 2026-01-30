@@ -45,6 +45,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   const [notepadContent, setNotepadContent] = useState(project.notepad || '');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const notepadContentRef = useRef(notepadContent);
+  const isLocalChangeRef = useRef(false);
   notepadContentRef.current = notepadContent;
 
   // File input refs to prevent navigation bugs
@@ -88,8 +89,12 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   };
 
   // Keep internal notepad state in sync with project prop when it changes externally
+  // BUT only if it wasn't a local change (prevents save-loop corruption)
   useEffect(() => {
-    setNotepadContent(project.notepad || '');
+    if (!isLocalChangeRef.current) {
+      setNotepadContent(project.notepad || '');
+    }
+    isLocalChangeRef.current = false;
   }, [project.notepad]);
 
   // Sync temp title when project changes
@@ -105,12 +110,13 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
       clearTimeout(saveTimeoutRef.current);
     }
     saveTimeoutRef.current = setTimeout(() => {
+      isLocalChangeRef.current = true; // Mark as local change to prevent useEffect sync loop
       onSaveProject({
         ...project,
         notepad: content,
         updatedAt: new Date().toISOString()
       });
-    }, 500); // Save after 500ms of no typing
+    }, 800); // Save after 800ms of no typing
   }, [project, onSaveProject]);
 
   // Cleanup timeout on unmount
