@@ -81,7 +81,7 @@ export const QuoteTotals: React.FC<QuoteTotalsProps> = ({
       </div>
 
       {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-[50px] md:bottom-0 left-0 right-0 bg-slate-900 text-white p-4 flex justify-between items-center shadow-2xl z-40 border-t border-slate-800">
+      <div className="fixed bottom-[100px] md:bottom-0 left-0 right-0 bg-slate-900 text-white p-4 flex justify-between items-center shadow-2xl z-40 border-t border-slate-800">
         <div>
           <span className="text-[10px] text-slate-400 uppercase tracking-widest">Document Total</span>
           <p className="text-2xl font-black">
