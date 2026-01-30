@@ -337,7 +337,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
         </div>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-3">
         {filtered.length === 0 ? (
           <div className="py-20 text-center bg-white rounded-[32px] border-2 border-dashed border-slate-100 opacity-60">
             <ReceiptText size={48} className="mx-auto text-slate-200 mb-4" />
@@ -359,66 +359,40 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
             const isPaid = invoice.status === 'paid';
             const overdue = isOverdue(invoice);
             const daysOverdue = getDaysOverdue(invoice);
-            const daysUntilDue = getDaysUntilDue(invoice);
 
             return (
               <div
                 key={invoice.id}
                 onClick={() => onViewQuote(invoice.id)}
-                className={`bg-white px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl border transition-all group cursor-pointer shadow-sm hover:shadow-md flex items-center gap-3 ${
+                className={`bg-white px-4 py-4 rounded-2xl border-2 transition-all group cursor-pointer shadow-sm hover:shadow-md ${
                   overdue
                     ? 'border-red-200 hover:border-red-400 bg-red-50/30'
                     : 'border-slate-100 hover:border-teal-500'
                 }`}
               >
-                {/* Status indicator bar */}
-                <div className={`w-1 self-stretch rounded-full shrink-0 ${
-                  isPaid ? 'bg-emerald-500' : overdue ? 'bg-red-500' : invoice.status === 'sent' || invoice.status === 'accepted' ? 'bg-blue-500' : invoice.status === 'draft' ? 'bg-amber-400' : 'bg-slate-200'
-                }`} />
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-2 flex-wrap">
-                    <span className="bg-teal-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5 shrink-0">
+                {/* Top row: Reference badge + Amount + Status */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-teal-500 text-white text-[10px] font-black px-2 py-1 rounded flex items-center gap-1">
                       <Hash size={10} /> {ref}
                     </span>
-                    <h3 className={`font-bold text-sm leading-tight transition-colors ${
-                      overdue ? 'text-red-700 group-hover:text-red-600' : 'text-slate-900 group-hover:text-teal-600'
-                    }`}>
-                      {invoice.title}
-                    </h3>
                     {overdue && (
-                      <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5 shrink-0">
-                        <AlertTriangle size={10} /> {daysOverdue}d
+                      <span className="bg-red-500 text-white text-[9px] font-black px-2 py-1 rounded flex items-center gap-1">
+                        <AlertTriangle size={10} /> {daysOverdue}d overdue
                       </span>
                     )}
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-slate-500 text-[11px] font-medium mt-1">
-                    <span>{customer?.name || 'Unknown'}</span>
-                    {customer?.address && (
-                      <span className="text-slate-400">· {customer.address}</span>
-                    )}
-                    {invoice.dueDate && !isPaid && (
-                      <span className={`shrink-0 ${overdue ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
-                        · {overdue ? 'Due' : 'Due'} {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="text-right">
-                    <p className={`font-black text-sm tracking-tight ${overdue ? 'text-red-700' : 'text-slate-900'}`}>
-                      £{calculateQuoteTotal(invoice).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                    </p>
-                    <div className={`text-[10px] font-bold uppercase ${
-                      isPaid ? 'text-emerald-600' : overdue ? 'text-red-500' : invoice.status === 'sent' || invoice.status === 'accepted' ? 'text-blue-600' : invoice.status === 'draft' ? 'text-amber-600' : 'text-slate-400'
-                    }`}>
-                      {overdue ? 'Overdue' : invoice.status}
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className={`font-black text-base ${overdue ? 'text-red-700' : 'text-slate-900'}`}>
+                        £{calculateQuoteTotal(invoice).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      </p>
+                      <div className={`text-[10px] font-bold uppercase ${
+                        isPaid ? 'text-emerald-600' : overdue ? 'text-red-500' : invoice.status === 'sent' || invoice.status === 'accepted' ? 'text-blue-600' : invoice.status === 'draft' ? 'text-amber-600' : 'text-slate-400'
+                      }`}>
+                        {overdue ? 'Overdue' : invoice.status}
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex gap-1">
                     {onDeleteInvoice && (
                       <button
                         onClick={(e) => handleDelete(e, invoice)}
@@ -428,10 +402,28 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                         <Trash2 size={16} />
                       </button>
                     )}
-                    <div className="p-2 text-slate-300 group-hover:text-teal-500 transition-all">
-                      <ChevronRight size={18} />
-                    </div>
+                    <ChevronRight size={20} className="text-slate-300 group-hover:text-teal-500 transition-all" />
                   </div>
+                </div>
+
+                {/* Title - full width, no truncation */}
+                <h3 className={`font-bold text-base mb-2 transition-colors ${
+                  overdue ? 'text-red-700 group-hover:text-red-600' : 'text-slate-900 group-hover:text-teal-600'
+                }`}>
+                  {invoice.title}
+                </h3>
+
+                {/* Customer info - stacked for clarity */}
+                <div className="space-y-1 text-sm text-slate-600">
+                  <p className="font-semibold">{customer?.name || 'Unknown'}</p>
+                  {customer?.address && (
+                    <p className="text-slate-400">{customer.address}</p>
+                  )}
+                  {invoice.dueDate && !isPaid && (
+                    <p className={`text-sm ${overdue ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+                      Due {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                    </p>
+                  )}
                 </div>
               </div>
             );
