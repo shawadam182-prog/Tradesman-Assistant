@@ -377,11 +377,11 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                 }`} />
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-start gap-2 flex-wrap">
                     <span className="bg-teal-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5 shrink-0">
                       <Hash size={10} /> {ref}
                     </span>
-                    <h3 className={`font-bold text-sm leading-tight truncate transition-colors ${
+                    <h3 className={`font-bold text-sm leading-tight transition-colors ${
                       overdue ? 'text-red-700 group-hover:text-red-600' : 'text-slate-900 group-hover:text-teal-600'
                     }`}>
                       {invoice.title}
@@ -393,10 +393,10 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 text-slate-500 text-[11px] font-medium mt-0.5">
-                    <span className="truncate">{customer?.name || 'Unknown'}</span>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-slate-500 text-[11px] font-medium mt-1">
+                    <span>{customer?.name || 'Unknown'}</span>
                     {customer?.address && (
-                      <span className="truncate text-slate-400">· {customer.address}</span>
+                      <span className="text-slate-400">· {customer.address}</span>
                     )}
                     {invoice.dueDate && !isPaid && (
                       <span className={`shrink-0 ${overdue ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
