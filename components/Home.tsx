@@ -1382,10 +1382,21 @@ export const Home: React.FC<HomeProps> = ({
 
           <div className="flex flex-col gap-1.5 md:gap-4">
             <textarea
-              className="bg-slate-50 border-2 border-slate-100 rounded-lg md:rounded-[32px] p-3 md:p-8 font-medium text-slate-900 outline-none focus:border-teal-400 transition-all shadow-inner leading-relaxed text-sm md:text-lg resize-y placeholder:text-slate-300 placeholder:italic min-h-[150px] md:min-h-[300px] max-h-[50vh] overflow-y-auto"
+              ref={(el) => {
+                if (el && el.scrollHeight > el.clientHeight) {
+                  el.style.height = Math.min(el.scrollHeight, window.innerHeight * 0.5) + 'px';
+                }
+              }}
+              className="bg-slate-50 border-2 border-slate-100 rounded-lg md:rounded-[32px] p-3 md:p-8 font-medium text-slate-900 outline-none focus:border-teal-400 transition-all shadow-inner leading-relaxed text-sm md:text-lg resize-none placeholder:text-slate-300 placeholder:italic overflow-hidden min-h-[150px] md:min-h-[250px]"
               placeholder="Jot down site measurements, material shortages, or general notes..."
               value={quickNotes}
-              onChange={e => setQuickNotes(e.target.value)}
+              onChange={e => {
+                setQuickNotes(e.target.value);
+                const el = e.target;
+                if (el.scrollHeight > el.clientHeight) {
+                  el.style.height = Math.min(el.scrollHeight, window.innerHeight * 0.5) + 'px';
+                }
+              }}
             />
             <div className="flex items-center gap-1 md:gap-2 px-1 md:px-2">
               <Sparkles size={10} className="md:w-[14px] md:h-[14px] text-teal-500" />
