@@ -26,6 +26,16 @@ const customerVoiceFields: VoiceFieldConfig[] = [
   { key: 'address', label: 'Address', icon: <MapPin size={14} /> },
 ];
 
+// Field configuration for schedule booking voice fill
+const scheduleVoiceFields: VoiceFieldConfig[] = [
+  { key: 'title', label: 'Job Title', icon: <Briefcase size={14} /> },
+  { key: 'date', label: 'Date', icon: <CalendarIcon size={14} /> },
+  { key: 'startTime', label: 'Start Time', icon: <Clock size={14} /> },
+  { key: 'endTime', label: 'End Time', icon: <Clock size={14} /> },
+  { key: 'location', label: 'Location', icon: <MapPin size={14} /> },
+  { key: 'description', label: 'Notes', icon: <Pencil size={14} /> },
+];
+
 // Detect iOS for voice input fallback
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -75,6 +85,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   const [isProcessingCustomer, setIsProcessingCustomer] = useState(false);
   const [customerError, setCustomerError] = useState<string | null>(null);
   const [showCustomerVoiceFill, setShowCustomerVoiceFill] = useState(false);
+  const [showScheduleVoiceFill, setShowScheduleVoiceFill] = useState(false);
 
   // Job Pack Quick Add States
   const [isCreatingJobPack, setIsCreatingJobPack] = useState(false);
@@ -517,14 +528,11 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
           </button>
 
           <button
-            onClick={startBookingVoice}
-            disabled={isProcessing}
-            className={`h-12 px-6 rounded-2xl flex items-center gap-3 font-black uppercase text-[10px] tracking-widest transition-all shadow-lg ${
-              (isListening || isHookListening) ? 'bg-red-500 text-white animate-pulse' : isProcessing ? 'bg-teal-500 text-white' : 'bg-slate-100 text-teal-600 hover:bg-white border-2 border-transparent hover:border-teal-400'
-            }`}
+            onClick={() => { hapticTap(); setShowScheduleVoiceFill(true); }}
+            className="h-12 px-6 rounded-2xl flex items-center gap-3 font-black uppercase text-[10px] tracking-widest transition-all shadow-lg bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:shadow-teal-300 hover:scale-105 active:scale-95"
           >
-            {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Mic size={16} />}
-            {isProcessing ? 'Analysing' : (isListening || isHookListening) ? 'Listening' : 'Voice'}
+            <Mic size={16} />
+            Voice Book
           </button>
         </div>
       </div>
@@ -821,10 +829,10 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                   <button
                     type="button"
                     onClick={() => { hapticTap(); setShowCustomerVoiceFill(true); }}
-                    className="flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full font-black text-[10px] md:text-xs uppercase transition-all bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-200 hover:shadow-teal-300 hover:scale-105 active:scale-95"
+                    className="h-10 md:h-12 px-5 md:px-6 rounded-2xl flex items-center gap-2 md:gap-3 font-black uppercase text-[10px] tracking-widest transition-all shadow-lg bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:shadow-teal-300 hover:scale-105 active:scale-95"
                   >
-                    <Mic size={14} className="md:w-4 md:h-4" />
-                    <span>Voice</span>
+                    <Mic size={16} className="md:w-5 md:h-5" />
+                    <span>Voice Fill</span>
                   </button>
                 </div>
 
@@ -1229,6 +1237,86 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
           }}
           onCancel={() => setShowCustomerVoiceFill(false)}
           title="Voice Fill Customer"
+        />
+      )}
+
+      {/* LiveVoiceFill Modal for Schedule Booking */}
+      {showScheduleVoiceFill && (
+        <LiveVoiceFill
+          fields={scheduleVoiceFields}
+          currentData={{
+            title: draft.title || '',
+            date: draft.start ? new Date(draft.start).toLocaleDateString() : '',
+            startTime: draft.start ? new Date(draft.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+            endTime: draft.end ? new Date(draft.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+            location: draft.location || '',
+            description: draft.description || '',
+          }}
+          parseAction={async (input: string) => {
+            // Parse with AI and convert to our field format
+            const parsed = await parseScheduleVoiceInput(input);
+            const result: Record<string, string> = {};
+            
+            if (parsed.title) result.title = parsed.title;
+            if (parsed.location) result.location = parsed.location;
+            if (parsed.description) result.description = parsed.description;
+            
+            if (parsed.start) {
+              const startDate = new Date(parsed.start);
+              result.date = startDate.toLocaleDateString();
+              result.startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            if (parsed.end) {
+              const endDate = new Date(parsed.end);
+              result.endTime = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            return result;
+          }}
+          onComplete={(data) => {
+            // Convert parsed fields back to draft format
+            let startDate = draft.start ? new Date(draft.start) : new Date();
+            let endDate = draft.end ? new Date(draft.end) : new Date();
+            
+            // Parse date if provided
+            if (data.date) {
+              const parsedDate = new Date(data.date);
+              if (!isNaN(parsedDate.getTime())) {
+                startDate.setFullYear(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
+                endDate.setFullYear(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
+              }
+            }
+            
+            // Parse start time if provided
+            if (data.startTime) {
+              const [hours, minutes] = data.startTime.split(':').map(Number);
+              if (!isNaN(hours)) {
+                startDate.setHours(hours, minutes || 0, 0, 0);
+              }
+            }
+            
+            // Parse end time if provided
+            if (data.endTime) {
+              const [hours, minutes] = data.endTime.split(':').map(Number);
+              if (!isNaN(hours)) {
+                endDate.setHours(hours, minutes || 0, 0, 0);
+              }
+            }
+            
+            setDraft(prev => ({
+              ...prev,
+              ...(data.title && { title: data.title }),
+              ...(data.location && { location: data.location }),
+              ...(data.description && { description: data.description }),
+              start: startDate.toISOString(),
+              end: endDate.toISOString(),
+            }));
+            
+            setShowScheduleVoiceFill(false);
+            setIsReviewingAI(true);
+          }}
+          onCancel={() => setShowScheduleVoiceFill(false)}
+          title="Voice Book Site Visit"
         />
       )}
     </div>

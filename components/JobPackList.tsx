@@ -3,7 +3,7 @@ import { JobPack, Customer, TIER_LIMITS } from '../types';
 import {
   FolderPlus, User, ArrowRight, Clock,
   AlertCircle, Loader2, UserPlus, Mic,
-  MicOff, Sparkles, Mail, Phone, Hammer, Trash2
+  MicOff, Sparkles, Mail, Phone, Hammer, Trash2, MapPin
 } from 'lucide-react';
 import { parseCustomerVoiceInput } from '../src/services/geminiService';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
@@ -13,6 +13,7 @@ import { AddressAutocomplete } from './AddressAutocomplete';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
+import { LiveVoiceFill, VoiceFieldConfig } from './LiveVoiceFill';
 
 // Detect iOS for voice input fallback
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -37,6 +38,18 @@ export const JobPackList: React.FC<JobPackListProps> = ({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [newTitle, setNewTitle] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [siteAddress, setSiteAddress] = useState('');
+  const [useClientAddress, setUseClientAddress] = useState(false);
+
+  // Sync site address with client address when toggle is on
+  useEffect(() => {
+    if (useClientAddress && selectedCustomer) {
+      const customer = customers.find(c => c.id === selectedCustomer);
+      if (customer?.address) {
+        setSiteAddress(customer.address);
+      }
+    }
+  }, [useClientAddress, selectedCustomer, customers]);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -55,6 +68,16 @@ export const JobPackList: React.FC<JobPackListProps> = ({
   const [customerError, setCustomerError] = useState<string | null>(null);
   const [isListeningField, setIsListeningField] = useState<string | null>(null);
   const activeFieldVoiceRef = useRef<string | null>(null);
+  const [showLiveVoiceFill, setShowLiveVoiceFill] = useState(false);
+
+  // Field configuration for LiveVoiceFill
+  const voiceFields: VoiceFieldConfig[] = [
+    { key: 'name', label: 'Full Name', icon: <User size={14} /> },
+    { key: 'company', label: 'Company', icon: <Hammer size={14} /> },
+    { key: 'email', label: 'Email', icon: <Mail size={14} /> },
+    { key: 'phone', label: 'Phone', icon: <Phone size={14} /> },
+    { key: 'address', label: 'Address', icon: <MapPin size={14} /> },
+  ];
 
   const recognitionRef = useRef<any>(null);
 
@@ -202,12 +225,13 @@ export const JobPackList: React.FC<JobPackListProps> = ({
     setIsCreating(true);
 
     // Auto-generate title if none provided
-    const finalTitle = newTitle.trim() || `Job Pack - ${new Date().toLocaleDateString('en-GB')}`;
+    const finalTitle = newTitle.trim() || `Job - ${new Date().toLocaleDateString('en-GB')}`;
 
     const project: JobPack = {
       id: Math.random().toString(36).substr(2, 9),
       title: finalTitle,
       customerId: selectedCustomer,
+      siteAddress: siteAddress.trim() || undefined,
       status: 'active',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -221,6 +245,8 @@ export const JobPackList: React.FC<JobPackListProps> = ({
     setIsAdding(false);
     setNewTitle('');
     setSelectedCustomer('');
+    setSiteAddress('');
+    setUseClientAddress(false);
   };
 
   const handleDeleteProject = async (e: React.MouseEvent, projectId: string) => {
@@ -239,7 +265,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
   return (
     <div className="space-y-3 md:space-y-6">
       <PageHeader
-        title="Job Packs"
+        title="Jobs"
         subtitle="Organize site documentation by project."
         onBack={onBack}
         actions={
@@ -253,7 +279,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
             }}
             className="bg-teal-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-teal-600 transition-all flex items-center gap-2"
           >
-            <FolderPlus size={18} /> New Job Pack
+            <FolderPlus size={18} /> New Job
             {jobPackLimit !== null && (
               <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
                 {currentJobPackCount}/{jobPackLimit}
@@ -272,17 +298,11 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                   <h3 className="font-black text-sm md:text-xl text-slate-900 uppercase tracking-tight">Register Client</h3>
                   <button
                     type="button"
-                    onClick={() => startListening()}
-                    disabled={isProcessing}
-                    className={`flex items-center gap-1 px-3 py-1.5 md:px-6 md:py-3 rounded-xl font-black text-[9px] md:text-[10px] uppercase transition-all border ${isListening && !activeFieldVoiceRef.current
-                      ? 'bg-red-500 text-white border-red-600 animate-pulse'
-                      : isProcessing
-                        ? 'bg-amber-500 text-white border-amber-600'
-                        : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50'
-                      }`}
+                    onClick={() => { hapticTap(); setShowLiveVoiceFill(true); }}
+                    className="h-10 md:h-12 px-5 md:px-6 rounded-2xl flex items-center gap-2 md:gap-3 font-black uppercase text-[10px] tracking-widest transition-all shadow-lg bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:shadow-teal-300 hover:scale-105 active:scale-95"
                   >
-                    {isProcessing ? <Loader2 size={10} className="md:w-3 md:h-3 animate-spin" /> : isListening && !activeFieldVoiceRef.current ? <MicOff size={10} className="md:w-3 md:h-3" /> : <Sparkles size={10} className="md:w-3 md:h-3" />}
-                    <span className="hidden sm:inline">{isProcessing ? 'Analyzing...' : isListening && !activeFieldVoiceRef.current ? 'Stop' : 'Voice'}</span>
+                    <Mic size={16} className="md:w-5 md:h-5" />
+                    <span>Voice Fill</span>
                   </button>
                 </div>
 
@@ -412,7 +432,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
               </div>
             ) : (
               <div className="space-y-8">
-                <h3 className="text-base md:text-2xl font-black text-slate-900 uppercase tracking-tight">Project Setup</h3>
+                <h3 className="text-base md:text-2xl font-black text-slate-900 uppercase tracking-tight">New Job</h3>
                 <div className="space-y-3 md:space-y-6">
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Project Title (Optional)</label>
@@ -428,10 +448,35 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                       <button onClick={() => { setIsAddingCustomer(true); setCustomerError(null); }} className="p-3 sm:p-5 bg-slate-900 text-amber-500 rounded-xl sm:rounded-[24px] hover:bg-black transition-all shadow-lg border-b-4 border-slate-950 active:translate-y-1 active:border-b-0 flex-shrink-0"><UserPlus size={20} className="sm:w-6 sm:h-6" /></button>
                     </div>
                   </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2 px-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Project Site Address</label>
+                      {selectedCustomer && customers.find(c => c.id === selectedCustomer)?.address && (
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={useClientAddress}
+                            onChange={e => setUseClientAddress(e.target.checked)}
+                            className="w-4 h-4 rounded border-slate-300 text-teal-500 focus:ring-teal-500"
+                          />
+                          <span className="text-[9px] font-bold text-slate-500">Use client address</span>
+                        </label>
+                      )}
+                    </div>
+                    <AddressAutocomplete
+                      value={siteAddress}
+                      onChange={(address) => {
+                        setSiteAddress(address);
+                        if (useClientAddress) setUseClientAddress(false);
+                      }}
+                      placeholder="Site address (if different from client)..."
+                      disabled={useClientAddress}
+                    />
+                  </div>
                   <div className="flex flex-col gap-3 pt-4">
                     <button onClick={handleCreateProject} disabled={!selectedCustomer || isCreating} className="w-full bg-teal-500 text-white font-black py-4 sm:py-6 rounded-xl sm:rounded-[32px] hover:bg-teal-600 shadow-2xl shadow-teal-500/30 disabled:opacity-30 transition-all uppercase tracking-widest text-xs sm:text-sm flex items-center justify-center gap-2 sm:gap-3">
                       {isCreating ? <Loader2 className="animate-spin" size={18} /> : <FolderPlus size={18} />}
-                      Start Job Pack
+                      Create Job
                     </button>
                     <button onClick={() => { setIsAdding(false); setNewTitle(''); setSelectedCustomer(''); }} className="w-full bg-slate-50 text-slate-400 font-black py-4 sm:py-6 rounded-xl sm:rounded-[32px] hover:bg-slate-100 transition-all uppercase tracking-widest text-xs">Dismiss</button>
                   </div>
@@ -488,6 +533,32 @@ export const JobPackList: React.FC<JobPackListProps> = ({
           currentCount={currentJobPackCount}
           limit={jobPackLimit}
           onClose={() => setShowUpgradePrompt(false)}
+        />
+      )}
+
+      {/* LiveVoiceFill Modal for Customer */}
+      {showLiveVoiceFill && (
+        <LiveVoiceFill
+          fields={voiceFields}
+          currentData={{
+            name: newCustomer.name || '',
+            company: newCustomer.company || '',
+            email: newCustomer.email || '',
+            phone: newCustomer.phone || '',
+            address: newCustomer.address || '',
+          }}
+          parseAction={parseCustomerVoiceInput}
+          onComplete={(data) => {
+            setNewCustomer(prev => ({
+              ...prev,
+              ...Object.fromEntries(
+                Object.entries(data).filter(([_, v]) => v && v.trim())
+              ),
+            }));
+            setShowLiveVoiceFill(false);
+          }}
+          onCancel={() => setShowLiveVoiceFill(false)}
+          title="Voice Fill Customer"
         />
       )}
     </div>

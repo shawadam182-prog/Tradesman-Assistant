@@ -1,12 +1,14 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Customer } from '../types';
 import {
   Search, UserPlus, Phone, Mail, MapPin, Trash2, Edit2, X,
   AlertCircle, CheckCircle2, Mic, MicOff, Sparkles, Loader2,
-  Building, User as UserIcon, Pencil, Navigation, Briefcase, ChevronDown
+  Building, User as UserIcon, Pencil, Navigation, Briefcase, ChevronDown,
+  FileText, Receipt, FolderOpen, Clock
 } from 'lucide-react';
 import { parseCustomerVoiceInput } from '../src/services/geminiService';
 import { useToast } from '../src/contexts/ToastContext';
+import { useData } from '../src/contexts/DataContext';
 import { validateCustomerData } from '../src/utils/inputValidation';
 import { ConfirmDialog } from './ConfirmDialog';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
@@ -29,9 +31,18 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
 
 export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, addCustomer: addCustomerProp, updateCustomer: updateCustomerProp, deleteCustomer: deleteCustomerProp, onBack }) => {
   const toast = useToast();
+  const { quotes, projects } = useData();
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [editingId, setEditingId] = useState<string | 'new' | null>(null);
   const [customerForm, setCustomerForm] = useState<Partial<Customer>>({});
+
+  // Get customer history (jobs, quotes, invoices)
+  const getCustomerHistory = useCallback((customerId: string) => {
+    const customerJobs = projects.filter(p => p.customerId === customerId);
+    const customerQuotes = quotes.filter(q => q.customerId === customerId && (q.type === 'estimate' || q.type === 'quotation'));
+    const customerInvoices = quotes.filter(q => q.customerId === customerId && q.type === 'invoice');
+    return { jobs: customerJobs, quotes: customerQuotes, invoices: customerInvoices };
+  }, [projects, quotes]);
   const [error, setError] = useState<string | null>(null);
 
   const [isListeningGlobal, setIsListeningGlobal] = useState(false);
@@ -329,10 +340,10 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
               <button
                 type="button"
                 onClick={() => { hapticTap(); setShowLiveVoiceFill(true); }}
-                className="flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full font-black text-[10px] md:text-xs uppercase transition-all bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-200 hover:shadow-teal-300 hover:scale-105 active:scale-95"
+                className="h-10 md:h-12 px-5 md:px-6 rounded-2xl flex items-center gap-2 md:gap-3 font-black uppercase text-[10px] tracking-widest transition-all shadow-lg bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:shadow-teal-300 hover:scale-105 active:scale-95"
               >
-                <Mic size={14} className="md:w-4 md:h-4" />
-                <span>Voice</span>
+                <Mic size={16} className="md:w-5 md:h-5" />
+                <span>Voice Fill</span>
               </button>
             </div>
 
@@ -575,6 +586,61 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
                             </div>
                           )}
                         </div>
+
+                        {/* Customer History Section */}
+                        {(() => {
+                          const history = getCustomerHistory(customer.id);
+                          const hasHistory = history.jobs.length > 0 || history.quotes.length > 0 || history.invoices.length > 0;
+                          if (!hasHistory) return null;
+                          return (
+                            <div className="pt-3 mt-2 border-t border-slate-100">
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">History</p>
+                              <div className="grid grid-cols-3 gap-2">
+                                {history.jobs.length > 0 && (
+                                  <div className="bg-slate-50 rounded-lg p-2 text-center">
+                                    <FolderOpen size={14} className="text-teal-500 mx-auto mb-1" />
+                                    <p className="text-lg font-black text-slate-900">{history.jobs.length}</p>
+                                    <p className="text-[8px] font-bold text-slate-400 uppercase">Jobs</p>
+                                  </div>
+                                )}
+                                {history.quotes.length > 0 && (
+                                  <div className="bg-slate-50 rounded-lg p-2 text-center">
+                                    <FileText size={14} className="text-blue-500 mx-auto mb-1" />
+                                    <p className="text-lg font-black text-slate-900">{history.quotes.length}</p>
+                                    <p className="text-[8px] font-bold text-slate-400 uppercase">Quotes</p>
+                                  </div>
+                                )}
+                                {history.invoices.length > 0 && (
+                                  <div className="bg-slate-50 rounded-lg p-2 text-center">
+                                    <Receipt size={14} className="text-amber-500 mx-auto mb-1" />
+                                    <p className="text-lg font-black text-slate-900">{history.invoices.length}</p>
+                                    <p className="text-[8px] font-bold text-slate-400 uppercase">Invoices</p>
+                                  </div>
+                                )}
+                              </div>
+                              {/* Recent items list */}
+                              <div className="mt-2 space-y-1">
+                                {[...history.jobs.slice(0, 2), ...history.quotes.slice(0, 2), ...history.invoices.slice(0, 2)]
+                                  .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+                                  .slice(0, 3)
+                                  .map((item) => (
+                                    <div key={item.id} className="flex items-center gap-2 text-xs text-slate-500 bg-white rounded-lg px-2 py-1.5 border border-slate-100">
+                                      {'type' in item ? (
+                                        item.type === 'invoice' ? <Receipt size={10} className="text-amber-500" /> : <FileText size={10} className="text-blue-500" />
+                                      ) : (
+                                        <FolderOpen size={10} className="text-teal-500" />
+                                      )}
+                                      <span className="truncate flex-1 font-medium">{item.title}</span>
+                                      <span className="text-[9px] text-slate-400 flex items-center gap-1">
+                                        <Clock size={8} />
+                                        {new Date(item.updatedAt).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
                   </div>
