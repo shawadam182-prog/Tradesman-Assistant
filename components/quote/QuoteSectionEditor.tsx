@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { QuoteSection, MaterialItem, LabourItem, AppSettings, LabourRatePreset } from '../../types';
 import { MaterialItemRow } from './MaterialItemRow';
 import { LabourItemRow } from './LabourItemRow';
-import { Trash2, Plus, Package, Type, HardHat, PoundSterling, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, Plus, Package, HardHat, PoundSterling, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface QuoteSectionEditorProps {
   section: QuoteSection;
@@ -204,13 +204,6 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
             <Package size={12} className="md:hidden" />
             <Package size={18} className="hidden md:block" />
             Price List
-          </button>
-          <button
-            onClick={() => onAddHeading(section.id)}
-            className="flex items-center justify-center gap-0.5 md:gap-1.5 py-1 md:py-3 px-2 md:px-4 bg-slate-50 border border-slate-200 rounded md:rounded-xl text-slate-500 font-bold text-[9px] md:text-sm uppercase tracking-wider shadow-sm hover:bg-slate-100 active:scale-95 transition-all"
-          >
-            <Type size={10} className="md:hidden" />
-            <Type size={16} className="hidden md:block" />
           </button>
         </div>
       </div>
