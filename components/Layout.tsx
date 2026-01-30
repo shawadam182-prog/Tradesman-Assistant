@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, FileText, Settings, Briefcase, ReceiptText, CalendarDays, Home, LogOut, Receipt, Landmark, Link2, Calculator, CreditCard, FolderOpen, ChevronDown, ChevronRight, Package, MoreHorizontal, X, QrCode, Shield, MessageSquare, TrendingUp, Activity, Download, Clock, Moon, Sun, Plus, PoundSterling } from 'lucide-react';
+import { Users, FileText, Settings, Briefcase, ReceiptText, CalendarDays, Home, LogOut, Receipt, Landmark, Link2, Calculator, CreditCard, FolderOpen, ChevronDown, ChevronRight, Package, MoreHorizontal, X, QrCode, Shield, MessageSquare, TrendingUp, Activity, Download, Clock, Moon, Sun } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useAuth } from '../src/contexts/AuthContext';
 import { useData } from '../src/contexts/DataContext';
@@ -37,7 +37,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   const { isDark, toggle: toggleDarkMode } = useDarkMode();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['work']));
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [showFabMenu, setShowFabMenu] = useState(false);
   const [moreMenuGroup, setMoreMenuGroup] = useState<string | null>(null);
 
   const isAdmin = isAdminUser(user?.id);
@@ -143,17 +142,16 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   // Flat list for mobile nav
   const navItems = navGroups.flatMap(g => g.items);
 
-  // Primary navigation items for mobile bottom bar — Stitch FAB layout
-  const leftNavItems = [
+  // Primary navigation items for mobile bottom bar — 5 tabs
+  const mobileNavItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'jobpacks', label: 'Jobs', icon: Briefcase },
-  ];
-  const rightNavItems = [
-    { id: 'schedule', label: 'Schedule', icon: CalendarDays },
+    { id: 'quotes', label: 'Quotes', icon: FileText },
+    { id: 'invoices', label: 'Invoices', icon: ReceiptText },
     { id: 'more', label: 'More', icon: MoreHorizontal },
   ];
   // Keep flat list for More menu filtering
-  const primaryNavItems = [...leftNavItems, ...rightNavItems];
+  const primaryNavItems = mobileNavItems;
 
   const handleMoreClick = () => {
     hapticTap();
@@ -256,38 +254,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         </div>
       </aside>
 
-      {/* Mobile Nav — Stitch style with center FAB */}
+      {/* Mobile Nav — 5 tabs */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] safe-area-bottom px-4 pb-4">
-        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.08)] border border-slate-100 dark:border-slate-800 px-2 py-1 relative">
+        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.08)] border border-slate-100 dark:border-slate-800 px-2 py-1">
           <ul className="flex justify-between items-center h-16">
-            {/* Left tabs */}
-            {leftNavItems.map((item) => {
-              const isActive = activeTab === item.id;
-              return (
-                <li key={item.id} className="flex-1 flex justify-center">
-                  <button
-                    onClick={() => { hapticTap(); setActiveTab(item.id); }}
-                    className={`flex flex-col items-center gap-1 w-full active:scale-95 transition-all ${isActive ? 'text-teal-500' : 'text-slate-400 dark:text-slate-500'}`}
-                  >
-                    <item.icon size={24} strokeWidth={isActive ? 2.5 : 1.5} />
-                    <span className={`text-[10px] font-bold ${isActive ? '' : 'opacity-70'}`}>{item.label}</span>
-                  </button>
-                </li>
-              );
-            })}
-
-            {/* Center FAB */}
-            <li className="relative -top-8 mx-1">
-              <button
-                onClick={() => { hapticTap(); setShowFabMenu(!showFabMenu); }}
-                className={`flex items-center justify-center w-14 h-14 rounded-full shadow-lg shadow-teal-500/30 active:scale-95 transition-all border-[3px] border-slate-50 dark:border-slate-950 ${showFabMenu ? 'bg-slate-800 rotate-45' : 'bg-teal-500'}`}
-              >
-                <Plus size={28} strokeWidth={2.5} className="text-white" />
-              </button>
-            </li>
-
-            {/* Right tabs */}
-            {rightNavItems.map((item) => {
+            {mobileNavItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
                 <li key={item.id} className="flex-1 flex justify-center">
@@ -298,7 +269,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                     }}
                     className={`flex flex-col items-center gap-1 w-full active:scale-95 transition-all ${isActive ? 'text-teal-500' : 'text-slate-400 dark:text-slate-500'}`}
                   >
-                    <item.icon size={24} strokeWidth={isActive ? 2.5 : 1.5} />
+                    <item.icon size={22} strokeWidth={isActive ? 2.5 : 1.5} />
                     <span className={`text-[10px] font-bold ${isActive ? '' : 'opacity-70'}`}>{item.label}</span>
                   </button>
                 </li>
@@ -307,28 +278,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
           </ul>
         </div>
       </nav>
-
-      {/* FAB Quick Create Menu */}
-      {showFabMenu && (
-        <div className="md:hidden fixed inset-0 z-[99] bg-black/30 backdrop-blur-sm" onClick={() => setShowFabMenu(false)}>
-          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            {[
-              { label: 'New Job', icon: Briefcase, color: 'bg-teal-500', action: () => { setShowFabMenu(false); onCreateJob?.(); } },
-              { label: 'Quote', icon: FileText, color: 'bg-blue-500', action: () => { setShowFabMenu(false); onCreateQuote?.(); } },
-              { label: 'Invoice', icon: PoundSterling, color: 'bg-emerald-500', action: () => { setShowFabMenu(false); onCreateInvoice?.(); } },
-            ].map((item) => (
-              <button
-                key={item.label}
-                onClick={() => { hapticTap(); item.action(); }}
-                className={`flex items-center gap-3 ${item.color} text-white pl-4 pr-5 py-3 rounded-full shadow-lg active:scale-95 transition-all`}
-              >
-                <item.icon size={20} />
-                <span className="font-bold text-sm">{item.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* More Menu Overlay - Categorized */}
       {showMoreMenu && (
