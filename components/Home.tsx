@@ -1132,7 +1132,7 @@ export const Home: React.FC<HomeProps> = ({
         <div className="flex items-center justify-between mb-2 md:mb-3 px-1">
           <button onClick={() => toggleSection('futureJobs')} className="flex items-center gap-1.5 group">
             {isSectionOpen('futureJobs') ? <ChevronDown size={14} className="text-slate-400 group-hover:text-teal-500 transition-colors" /> : <ChevronRight size={14} className="text-slate-400 group-hover:text-teal-500 transition-colors" />}
-            <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-700 transition-colors">Future Jobs</h3>
+            <h3 className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-700 transition-colors">Job Enquiries</h3>
           </button>
           {futureJobs.filter(j => !j.isCompleted).length > 0 && (
             <button

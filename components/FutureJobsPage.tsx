@@ -127,7 +127,7 @@ export const FutureJobsPage: React.FC<FutureJobsPageProps> = ({
           <ArrowLeft size={24} className="text-slate-600" />
         </button>
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-slate-900">Future Jobs</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900">Job Enquiries</h1>
           <p className="text-sm text-slate-500">Manage your enquiries and upcoming work</p>
         </div>
       </div>
