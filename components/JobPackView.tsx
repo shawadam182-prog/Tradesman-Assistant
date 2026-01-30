@@ -438,6 +438,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           <div className="flex-1 flex flex-col md:flex-row items-center justify-center p-4 md:p-8 gap-8 overflow-hidden">
             <div
               className={`flex-1 w-full h-full flex items-center justify-center relative overflow-hidden bg-slate-950/50 rounded-[40px] border border-white/5 ${zoomLevel > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-zoom-in'}`}
+              style={{ touchAction: 'none' }}
               onDoubleClick={() => {
                 if (zoomLevel === 1) {
                   setZoomLevel(2);
