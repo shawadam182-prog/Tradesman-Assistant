@@ -142,10 +142,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   // Flat list for mobile nav
   const navItems = navGroups.flatMap(g => g.items);
 
-  // Primary navigation items for mobile bottom bar — 5 tabs
+  // Primary navigation items for mobile bottom bar — 6 tabs
   const mobileNavItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'jobpacks', label: 'Jobs', icon: Briefcase },
+    { id: 'schedule', label: 'Schedule', icon: CalendarDays },
     { id: 'quotes', label: 'Quotes', icon: FileText },
     { id: 'invoices', label: 'Invoices', icon: ReceiptText },
     { id: 'more', label: 'More', icon: MoreHorizontal },
