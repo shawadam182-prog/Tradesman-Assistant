@@ -225,30 +225,34 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             <tbody>
               {items.map((item, idx) => (
                 item.type === 'header' ? (
-                  <tr key={idx} style={{ borderBottom: item.isDescription ? 'none' : '1px solid #e2e8f0' }}>
+                  <tr key={idx} style={{ borderBottom: item.isDescription ? 'none' : 'none' }}>
                     <td colSpan={colSpan} style={{
-                      padding: item.isDescription ? '2px 6px 8px 6px' : '8px 6px 2px 6px',
-                      fontSize: item.isDescription ? '11px' : '13px',
+                      padding: item.isDescription ? '2px 12px 6px 12px' : '12px 6px 4px 6px',
+                      fontSize: item.isDescription ? '9px' : '11px',
                       fontWeight: item.isDescription ? 'normal' : 'bold',
-                      color: item.isDescription ? '#64748b' : '#334155',
+                      color: item.isDescription ? '#64748b' : headerTextColor,
                       whiteSpace: 'pre-line',
                       fontStyle: item.isDescription ? 'italic' : 'normal',
-                      backgroundColor: item.isDescription ? 'transparent' : '#f8fafc'
+                      backgroundColor: item.isDescription ? 'transparent' : headerBgColor,
+                      borderLeft: item.isDescription ? 'none' : `3px solid ${headerTextColor}`,
+                      marginTop: item.isDescription ? '0' : '8px',
+                      textTransform: item.isDescription ? 'none' : 'uppercase',
+                      letterSpacing: item.isDescription ? 'normal' : '0.05em'
                     }}>
                       {item.description}
                     </td>
                   </tr>
                 ) : (
                   <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '4px 6px', fontSize: '9px' }}>{item.description}</td>
+                    <td style={{ padding: '2px 6px 2px 16px', fontSize: '8px', color: '#475569' }}>{item.description}</td>
                     {showQtyColumn && (
-                      <td style={{ padding: '4px 6px', textAlign: 'center', color: '#64748b', fontSize: '9px' }}>{item.qty}</td>
+                      <td style={{ padding: '2px 6px', textAlign: 'center', color: '#94a3b8', fontSize: '8px' }}>{item.qty}</td>
                     )}
                     {showRateColumn && (
-                      <td style={{ padding: '4px 6px', textAlign: 'right', color: '#64748b', fontSize: '9px' }}>£{item.rate.toFixed(2)}</td>
+                      <td style={{ padding: '2px 6px', textAlign: 'right', color: '#94a3b8', fontSize: '8px' }}>£{item.rate.toFixed(2)}</td>
                     )}
                     {showAmountColumn && (
-                      <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: '500', fontSize: '9px' }}>£{item.amount.toFixed(2)}</td>
+                      <td style={{ padding: '2px 6px', textAlign: 'right', fontWeight: '500', fontSize: '8px', color: '#334155' }}>£{item.amount.toFixed(2)}</td>
                     )}
                   </tr>
                 )
