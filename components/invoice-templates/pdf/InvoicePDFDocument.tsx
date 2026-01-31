@@ -494,10 +494,19 @@ const ClassicTemplate: React.FC<InvoicePDFDocumentProps> = ({
         {items.map((item, idx) => (
           item.type === 'header' ? (
             item.isDescription ? (
-              <View key={`desc-${idx}`} style={{ paddingHorizontal: 12, paddingVertical: 2 }}>
-                <Text style={{ fontSize: 8, fontStyle: 'italic', color: COLORS.slate500 }}>{item.description}</Text>
+              /* Description row - WHITE background, clearly separate from title */
+              <View key={`desc-${idx}`} style={{ 
+                paddingHorizontal: 14, 
+                paddingVertical: 6, 
+                backgroundColor: COLORS.white,
+                borderBottomWidth: 1,
+                borderBottomColor: COLORS.slate200,
+                borderBottomStyle: 'solid',
+              }}>
+                <Text style={{ fontSize: 9, fontStyle: 'italic', color: COLORS.slate500, lineHeight: 1.4 }}>{item.description}</Text>
               </View>
             ) : (
+              /* Section title - colored background */
               <View key={`header-${idx}`} style={[classicStyles.sectionHeader, { backgroundColor: colorScheme.headerBg, borderLeftColor: colorScheme.headerText }]}>
                 <Text style={[classicStyles.sectionTitle, { color: colorScheme.headerText }]}>{item.description}</Text>
               </View>
