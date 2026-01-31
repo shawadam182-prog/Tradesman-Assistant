@@ -124,13 +124,87 @@ async function convertImageToPng(imageUrl: string, maxWidth = 200, maxHeight = 1
 }
 
 /**
- * Pre-process settings - just pass URLs directly to react-pdf
- * react-pdf can fetch images itself, which may work better than our conversion
+ * Render logo using html2canvas (hybrid approach)
+ * html2canvas renders the logo correctly, then we pass the data URL to react-pdf
+ */
+async function renderLogoWithHtml2Canvas(logoUrl: string): Promise<string> {
+  return new Promise((resolve) => {
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;padding:8px;';
+    
+    const img = document.createElement('img');
+    img.crossOrigin = 'anonymous';
+    img.style.cssText = 'max-width:180px;max-height:90px;display:block;';
+    
+    const timeout = setTimeout(() => {
+      if (document.body.contains(container)) {
+        document.body.removeChild(container);
+      }
+      resolve('');
+    }, 8000);
+    
+    img.onload = async () => {
+      container.appendChild(img);
+      document.body.appendChild(container);
+      
+      try {
+        const html2canvas = (await import('html2canvas-pro')).default;
+        const canvas = await html2canvas(container, {
+          scale: 3,
+          backgroundColor: '#ffffff',
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+        });
+        
+        clearTimeout(timeout);
+        document.body.removeChild(container);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (err) {
+        clearTimeout(timeout);
+        if (document.body.contains(container)) {
+          document.body.removeChild(container);
+        }
+        console.warn('html2canvas logo failed:', err);
+        resolve('');
+      }
+    };
+    
+    img.onerror = () => {
+      clearTimeout(timeout);
+      resolve('');
+    };
+    
+    img.src = logoUrl;
+  });
+}
+
+/**
+ * Pre-process settings - use html2canvas to render logos
+ * This hybrid approach uses html2canvas (proven) for logo, react-pdf for text
  */
 async function convertLogosForPdf(settings: AppSettings): Promise<AppSettings> {
-  // Don't modify anything - let react-pdf handle the URLs directly
-  // This avoids CORS issues from canvas conversion
-  return settings;
+  const processedSettings = { ...settings };
+  
+  if (settings.companyLogo) {
+    try {
+      const logoDataUrl = await renderLogoWithHtml2Canvas(settings.companyLogo);
+      if (logoDataUrl && logoDataUrl.length > 500) {
+        processedSettings.companyLogo = logoDataUrl;
+      }
+    } catch (err) {
+      console.warn('Logo render failed:', err);
+    }
+  }
+  
+  if (settings.footerLogos && settings.footerLogos.length > 0) {
+    const converted = await Promise.all(
+      settings.footerLogos.map(logo => renderLogoWithHtml2Canvas(logo))
+    );
+    processedSettings.footerLogos = converted.filter(l => l && l.length > 500);
+  }
+  
+  return processedSettings;
 }
 
 // Totals interface matching what QuoteView calculates

@@ -64,11 +64,11 @@ const formatCurrency = (amount: number): string => {
 };
 
 // Helper to check if logo is renderable
-// TEMPORARILY DISABLED - react-pdf has rendering bugs with certain PNGs
-// TODO: Fix logo rendering in react-pdf or use hybrid approach
+// Logo is now pre-rendered with html2canvas in invoicePdfExportV2.ts
 const isRenderableLogo = (logoUrl?: string): boolean => {
-  // Disabled until we fix the react-pdf logo rendering bug
-  return false;
+  if (!logoUrl) return false;
+  if (logoUrl.trim() === '') return false;
+  return true;
 };
 
 // Helper to format date
@@ -227,11 +227,7 @@ const ProfessionalTemplate: React.FC<InvoicePDFDocumentProps> = ({
         {/* Company Info */}
         <View style={professionalStyles.companyInfo}>
           {displayOptions.showLogo && isRenderableLogo(settings.companyLogo) && (
-            <Image 
-              src={{ uri: settings.companyLogo, method: 'GET', headers: {}, body: '' }}
-              cache={false}
-              style={[baseStyles.logo, { marginBottom: 8 }]} 
-            />
+            <Image src={settings.companyLogo} style={[baseStyles.logo, { marginBottom: 8 }]} />
           )}
           <Text style={professionalStyles.companyName}>{settings.companyName}</Text>
           {settings.companyAddress && (
@@ -447,11 +443,7 @@ const ClassicTemplate: React.FC<InvoicePDFDocumentProps> = ({
       <View style={[classicStyles.header, { borderBottomColor: colorScheme.headerBg }]}>
         <View style={classicStyles.companySection}>
           {displayOptions.showLogo && isRenderableLogo(settings.companyLogo) && (
-            <Image 
-              src={{ uri: settings.companyLogo, method: 'GET', headers: {}, body: '' }}
-              cache={false}
-              style={{ height: 35, marginBottom: 4 }} 
-            />
+            <Image src={settings.companyLogo} style={{ height: 35, marginBottom: 4 }} />
           )}
           <Text style={classicStyles.companyName}>{settings.companyName}</Text>
           <Text style={classicStyles.companyDetails}>
@@ -603,11 +595,7 @@ const SpaciousTemplate: React.FC<InvoicePDFDocumentProps> = ({
       <View style={spaciousStyles.header}>
         <View style={spaciousStyles.companyInfo}>
           {displayOptions.showLogo && isRenderableLogo(settings.companyLogo) && (
-            <Image 
-              src={{ uri: settings.companyLogo, method: 'GET', headers: {}, body: '' }}
-              cache={false}
-              style={[baseStyles.logoLarge, { marginBottom: 12 }]} 
-            />
+            <Image src={settings.companyLogo} style={[baseStyles.logoLarge, { marginBottom: 12 }]} />
           )}
           <Text style={spaciousStyles.companyName}>{settings.companyName}</Text>
           {settings.companyAddress && (
