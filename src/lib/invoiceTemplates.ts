@@ -6,7 +6,7 @@ export type InvoiceTemplate =
   | 'classic'       // Traditional compact layout
   | 'spacious';     // Professional with larger text and more spacing
 
-export type ColorScheme = 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal';
+export type ColorScheme = 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal';
 
 export interface ColorSchemeConfig {
   id: ColorScheme;
@@ -101,6 +101,19 @@ export const COLOR_SCHEMES: Record<ColorScheme, ColorSchemeConfig> = {
     headerTextHex: '#111827',
     accentLineHex: '#0d9488',
     sectionBgHex: '#ffffff',
+  },
+  teal: {
+    id: 'teal',
+    name: 'Deep Teal',
+    headerBg: 'bg-[#134e4a]',
+    headerText: 'text-white',
+    accentBg: 'bg-[#f0fdfa]',
+    accentText: 'text-[#134e4a]',
+    isDark: true,
+    headerBgHex: '#134e4a',
+    headerTextHex: '#ffffff',
+    accentLineHex: '#5eead4',
+    sectionBgHex: '#f0fdfa',
   },
 };
 

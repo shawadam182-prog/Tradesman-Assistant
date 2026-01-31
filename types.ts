@@ -98,6 +98,14 @@ export interface Quote {
   partPaymentEnabled?: boolean;
   partPaymentType?: 'percentage' | 'fixed';
   partPaymentValue?: number;
+  
+  // Recurring invoice fields
+  isRecurring?: boolean;
+  recurringFrequency?: 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
+  recurringStartDate?: string;
+  recurringEndDate?: string;
+  recurringNextDate?: string;
+  recurringParentId?: string; // Links generated invoices to the recurring template
   partPaymentLabel?: string;
   // Share/acceptance fields
   shareToken?: string;
@@ -155,6 +163,7 @@ export interface JobPack {
   id: string;
   title: string;
   customerId: string;
+  siteAddress?: string;
   status: 'active' | 'completed' | 'archived';
   createdAt: string;
   updatedAt: string;
@@ -213,8 +222,8 @@ export interface AppSettings {
   showBreakdown: boolean;
   defaultDisplayOptions: QuoteDisplayOptions;
   documentTemplate?: DocumentTemplate;
-  invoiceColorScheme?: 'default' | 'slate' | 'blue' | 'teal' | 'emerald' | 'purple' | 'rose';
-  quoteColorScheme?: 'default' | 'slate' | 'blue' | 'teal' | 'emerald' | 'purple' | 'rose';
+  invoiceColorScheme?: 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal';
+  quoteColorScheme?: 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal';
   // Bank details for payment instructions
   bankAccountName?: string;
   bankAccountNumber?: string;

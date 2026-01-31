@@ -110,6 +110,12 @@ export const PDF_COLOR_SCHEMES: Record<string, PDFColorScheme> = {
     accentBg: '#ffffff',
     accentText: '#374151',
   },
+  teal: {
+    headerBg: '#134e4a',
+    headerText: '#ffffff',
+    accentBg: '#f0fdfa',
+    accentText: '#134e4a',
+  },
 };
 
 // Get color scheme by ID
