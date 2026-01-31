@@ -5,7 +5,7 @@ import {
   Save, Building2, Calculator, MapPin,
   PoundSterling, CheckCircle, FileText,
   Settings2, Info, Palette, ReceiptText,
-  ChevronRight, Building, Upload, X, Image as ImageIcon,
+  ChevronRight, ChevronDown, Building, Upload, X, Image as ImageIcon,
   Plus, Eye, EyeOff, HardHat, Package, Landmark, ShieldCheck, Hash, Loader2,
   Calendar, Layout, FileSpreadsheet, FileEdit, List, ArrowLeft,
   Crown, Zap, Clock, Users, Briefcase, Camera, FileBox, ExternalLink,
@@ -33,6 +33,37 @@ interface SettingsPageProps {
 
 type SettingsCategory = 'company' | 'quotes' | 'invoices' | 'materials' | 'subscription' | 'help';
 
+// Collapsible Section Component for Quote/Invoice Preferences
+const CollapsibleSection: React.FC<{
+  title: string;
+  icon: React.ReactNode;
+  iconBg: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}> = ({ title, icon, iconBg, isExpanded, onToggle, children }) => (
+  <div className="border border-slate-200 rounded-xl overflow-hidden">
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center justify-between p-3 md:p-4 bg-slate-50 hover:bg-slate-100 transition-colors"
+    >
+      <div className="flex items-center gap-2 md:gap-3">
+        <div className={`p-1.5 md:p-2 ${iconBg} rounded-lg md:rounded-xl`}>{icon}</div>
+        <span className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-tight">{title}</span>
+      </div>
+      <ChevronDown 
+        size={18} 
+        className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+      />
+    </button>
+    {isExpanded && (
+      <div className="p-3 md:p-4 bg-white border-t border-slate-100 animate-in slide-in-from-top-2 duration-200">
+        {children}
+      </div>
+    )}
+  </div>
+);
+
 export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSettings, onSave, onBack }) => {
   const toast = useToast();
   const subscription = useSubscription();
@@ -50,6 +81,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const [helpMessage, setHelpMessage] = useState('');
   const [submittingHelp, setSubmittingHelp] = useState(false);
   const [newMaterialInput, setNewMaterialInput] = useState('');
+
+  // Collapsible section states for Quote & Invoice preferences (all collapsed by default)
+  const [expandedQuoteSections, setExpandedQuoteSections] = useState<Record<string, boolean>>({});
+  const [expandedInvoiceSections, setExpandedInvoiceSections] = useState<Record<string, boolean>>({});
+
+  const toggleQuoteSection = (section: string) => {
+    setExpandedQuoteSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+  const toggleInvoiceSection = (section: string) => {
+    setExpandedInvoiceSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   // Calculate current usage for limits display
   const currentInvoiceCount = quotes.filter(q => q.type === 'invoice').length;
@@ -621,16 +663,27 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
           )}
 
           {activeCategory === 'quotes' && (
-            <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
-                <div className="p-4 md:p-10 border-b border-slate-100 bg-slate-50/50">
-                  <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                    <div className="p-2 md:p-3 bg-blue-100 text-blue-600 rounded-xl md:rounded-2xl"><Calculator size={20} className="md:w-6 md:h-6" /></div>
+            <div className="space-y-3 md:space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+              {/* Main Header */}
+              <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 shadow-sm p-4 md:p-6">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-2 md:p-3 bg-blue-100 text-blue-600 rounded-xl md:rounded-2xl"><Calculator size={20} className="md:w-6 md:h-6" /></div>
+                  <div>
                     <h3 className="text-base md:text-xl font-black text-slate-900 uppercase tracking-tight">Quote Preferences</h3>
+                    <p className="text-slate-500 text-[10px] md:text-xs font-medium italic">Standard trade rates and tax settings for new estimates.</p>
                   </div>
-                  <p className="text-slate-500 text-xs md:text-sm font-medium italic hidden md:block">Standard trade rates and tax settings for new estimates.</p>
                 </div>
-                <div className="p-4 md:p-10 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4 md:gap-y-8">
+              </div>
+
+              {/* Default Rates Section */}
+              <CollapsibleSection
+                title="Default Rates & Prefix"
+                icon={<PoundSterling size={16} className="md:w-5 md:h-5" />}
+                iconBg="bg-teal-100 text-teal-600"
+                isExpanded={expandedQuoteSections['rates'] || false}
+                onToggle={() => toggleQuoteSection('rates')}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-1 md:space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Labour Rate (£/hr)</label>
                     <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-teal-400 focus-within:bg-white transition-all">
@@ -684,20 +737,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       />
                     </div>
                   </div>
+                </div>
+              </CollapsibleSection>
 
-                  {/* Labour Rate Presets */}
-                  <div className="col-span-1 md:col-span-2 space-y-2 md:space-y-4 pt-4 md:pt-6 border-t border-slate-100">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 px-1">
-                        <HardHat size={14} className="md:w-4 md:h-4 text-blue-500" />
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Labour Rate Presets</label>
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 italic px-1">
-                      Define quick-select rates for different job types (e.g., Standard, Callout, Overtime).
-                    </p>
-
-                    <div className="space-y-2">
+              {/* Labour Rate Presets Section */}
+              <CollapsibleSection
+                title="Labour Rate Presets"
+                icon={<HardHat size={16} className="md:w-5 md:h-5" />}
+                iconBg="bg-blue-100 text-blue-600"
+                isExpanded={expandedQuoteSections['presets'] || false}
+                onToggle={() => toggleQuoteSection('presets')}
+              >
+                <p className="text-[10px] text-slate-500 italic mb-3">
+                  Define quick-select rates for different job types (e.g., Standard, Callout, Overtime).
+                </p>
+                <div className="space-y-2">
                       {(settings.labourRatePresets || []).map((preset, index) => (
                         <div key={index} className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl p-2 md:p-3">
                           <input
@@ -751,21 +805,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         Add Rate Preset
                       </button>
                     </div>
-                  </div>
-                </div>
-              </div>
+              </CollapsibleSection>
 
-              <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
-                <div className="p-3 md:p-10 border-b border-slate-100 bg-slate-50/50">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <div className="p-1.5 md:p-3 bg-purple-100 text-purple-600 rounded-lg md:rounded-2xl"><Eye size={16} className="md:w-6 md:h-6" /></div>
-                    <div>
-                      <h3 className="text-sm md:text-xl font-black text-slate-900 uppercase tracking-tight">Default Visibility</h3>
-                      <p className="text-slate-500 text-[10px] md:text-sm font-medium italic hidden md:block">Set business-wide standards for what clients see on your quotes.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-3 md:p-10 grid grid-cols-2 gap-x-4 md:gap-x-12 gap-y-2 md:gap-y-10">
+              {/* Default Visibility Section */}
+              <CollapsibleSection
+                title="Default Visibility"
+                icon={<Eye size={16} className="md:w-5 md:h-5" />}
+                iconBg="bg-purple-100 text-purple-600"
+                isExpanded={expandedQuoteSections['visibility'] || false}
+                onToggle={() => toggleQuoteSection('visibility')}
+              >
+                <p className="text-[10px] text-slate-500 italic mb-3 hidden md:block">Set business-wide standards for what clients see on your quotes.</p>
+                <div className="grid grid-cols-2 gap-x-4 md:gap-x-12 gap-y-2 md:gap-y-6">
                   <div className="space-y-1 md:space-y-4">
                     <div className="flex items-center gap-1 md:gap-2 px-1 md:px-2 pb-1 md:pb-2 border-b border-slate-100">
                       <Package size={10} className="md:w-4 md:h-4 text-teal-500" />
@@ -826,51 +877,62 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     ))}
                   </div>
                 </div>
-              </div>
+              </CollapsibleSection>
 
-              <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-sm overflow-hidden p-4 md:p-10 space-y-6 md:space-y-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                  <div className="flex items-center justify-between bg-slate-50 p-3 md:p-7 rounded-xl md:rounded-[32px] border border-slate-100">
-                    <div className="flex gap-2 md:gap-4">
-                      <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><Landmark size={18} className="md:w-5 md:h-5" /></div>
+              {/* Tax Settings Section */}
+              <CollapsibleSection
+                title="VAT & CIS Settings"
+                icon={<Landmark size={16} className="md:w-5 md:h-5" />}
+                iconBg="bg-teal-100 text-teal-600"
+                isExpanded={expandedQuoteSections['tax'] || false}
+                onToggle={() => toggleQuoteSection('tax')}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                  <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div className="flex gap-2 md:gap-3">
+                      <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><Landmark size={16} /></div>
                       <div>
-                        <p className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-tight">Show VAT</p>
-                        <p className="text-[9px] md:text-[10px] font-medium text-slate-500 italic mt-0.5 hidden md:block">Include standard UK tax calculations.</p>
+                        <p className="text-xs font-black text-slate-900 uppercase tracking-tight">Show VAT</p>
+                        <p className="text-[9px] font-medium text-slate-500 italic hidden md:block">Include standard UK tax calculations.</p>
                       </div>
                     </div>
                     <button
                       onClick={() => setSettings({ ...settings, enableVat: !settings.enableVat })}
-                      className={`w-12 md:w-14 h-7 md:h-8 rounded-full relative transition-all duration-300 ${settings.enableVat ? 'bg-teal-500 shadow-lg shadow-teal-200' : 'bg-slate-300'}`}
+                      className={`w-12 h-7 rounded-full relative transition-all duration-300 ${settings.enableVat ? 'bg-teal-500 shadow-lg shadow-teal-200' : 'bg-slate-300'}`}
                     >
-                      <div className={`absolute top-1 left-1 bg-white w-5 md:w-6 h-5 md:h-6 rounded-full transition-transform duration-300 ${settings.enableVat ? 'translate-x-5 md:translate-x-6' : 'translate-x-0'}`} />
+                      <div className={`absolute top-1 left-1 bg-white w-5 h-5 rounded-full transition-transform duration-300 ${settings.enableVat ? 'translate-x-5' : 'translate-x-0'}`} />
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between bg-slate-50 p-3 md:p-7 rounded-xl md:rounded-[32px] border border-slate-100">
-                    <div className="flex gap-2 md:gap-4">
-                      <div className="p-2 md:p-3 bg-white rounded-xl md:rounded-2xl border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><ShieldCheck size={18} className="md:w-5 md:h-5" /></div>
+                  <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div className="flex gap-2 md:gap-3">
+                      <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><ShieldCheck size={16} /></div>
                       <div>
-                        <p className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-tight">Show CIS</p>
-                        <p className="text-[9px] md:text-[10px] font-medium text-slate-500 italic mt-0.5 hidden md:block">Subcontractor tax (Construction Industry Scheme).</p>
+                        <p className="text-xs font-black text-slate-900 uppercase tracking-tight">Show CIS</p>
+                        <p className="text-[9px] font-medium text-slate-500 italic hidden md:block">Subcontractor tax (Construction Industry Scheme).</p>
                       </div>
                     </div>
                     <button
                       onClick={() => setSettings({ ...settings, enableCis: !settings.enableCis })}
-                      className={`w-12 md:w-14 h-7 md:h-8 rounded-full relative transition-all duration-300 ${settings.enableCis ? 'bg-blue-500 shadow-lg shadow-blue-200' : 'bg-slate-300'}`}
+                      className={`w-12 h-7 rounded-full relative transition-all duration-300 ${settings.enableCis ? 'bg-blue-500 shadow-lg shadow-blue-200' : 'bg-slate-300'}`}
                     >
-                      <div className={`absolute top-1 left-1 bg-white w-5 md:w-6 h-5 md:h-6 rounded-full transition-transform duration-300 ${settings.enableCis ? 'translate-x-5 md:translate-x-6' : 'translate-x-0'}`} />
+                      <div className={`absolute top-1 left-1 bg-white w-5 h-5 rounded-full transition-transform duration-300 ${settings.enableCis ? 'translate-x-5' : 'translate-x-0'}`} />
                     </button>
                   </div>
                 </div>
+              </CollapsibleSection>
 
-                <div className="space-y-3 md:space-y-5">
-                  <div className="flex items-center gap-2 px-1">
-                    <Palette size={14} className="md:w-4 md:h-4 text-teal-500" />
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Quote Color Scheme</label>
-                  </div>
-                  <p className="text-[10px] text-slate-500 italic px-1 hidden md:block">
-                    Choose a light, subtle color scheme for your quote headers and accents when exported as PDF.
-                  </p>
+              {/* Color Scheme Section */}
+              <CollapsibleSection
+                title="Color Scheme"
+                icon={<Palette size={16} className="md:w-5 md:h-5" />}
+                iconBg="bg-amber-100 text-amber-600"
+                isExpanded={expandedQuoteSections['color'] || false}
+                onToggle={() => toggleQuoteSection('color')}
+              >
+                <p className="text-[10px] text-slate-500 italic mb-3 hidden md:block">
+                  Choose a color scheme for your quote headers and accents when exported as PDF.
+                </p>
 
                   <div className="grid grid-cols-3 gap-2 md:gap-3">
                     {Object.values(COLOR_SCHEMES).map(scheme => (
@@ -896,20 +958,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       </button>
                     ))}
                   </div>
-                </div>
-
-              </div>
+              </CollapsibleSection>
 
               {/* Materials Quick Picks */}
-              <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
-                <div className="p-4 md:p-10 border-b border-slate-100 bg-amber-50/50">
-                  <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                    <div className="p-2 md:p-3 bg-amber-100 text-amber-600 rounded-xl md:rounded-2xl"><Package size={20} className="md:w-6 md:h-6" /></div>
-                    <h3 className="text-base md:text-xl font-black text-slate-900 uppercase tracking-tight">Materials Quick Picks</h3>
-                  </div>
-                  <p className="text-slate-500 text-xs md:text-sm font-medium italic hidden md:block">Customize one-tap materials for the job tracker.</p>
-                </div>
-                <div className="p-4 md:p-10 space-y-4 md:space-y-6">
+              <CollapsibleSection
+                title="Materials Quick Picks"
+                icon={<Package size={16} className="md:w-5 md:h-5" />}
+                iconBg="bg-amber-100 text-amber-600"
+                isExpanded={expandedQuoteSections['materials'] || false}
+                onToggle={() => toggleQuoteSection('materials')}
+              >
+                <p className="text-[10px] text-slate-500 italic mb-3 hidden md:block">Customize one-tap materials for the job tracker.</p>
+                <div className="space-y-4">
                   {/* Current quick picks as chips */}
                   <div className="flex flex-wrap gap-2">
                     {(settings.quickPickMaterials || []).map((item, index) => (
@@ -978,21 +1038,32 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     These appear as one-tap buttons in the Job Pack materials tracker. Press Enter or click + to add.
                   </p>
                 </div>
-              </div>
+              </CollapsibleSection>
             </div>
           )}
 
           {activeCategory === 'invoices' && (
-            <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
-                <div className="p-4 md:p-10 border-b border-slate-100 bg-slate-50/50">
-                  <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                    <div className="p-2 md:p-3 bg-emerald-100 text-emerald-600 rounded-xl md:rounded-2xl"><ReceiptText size={20} className="md:w-6 md:h-6" /></div>
+            <div className="space-y-3 md:space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+              {/* Main Header */}
+              <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 shadow-sm p-4 md:p-6">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-2 md:p-3 bg-emerald-100 text-emerald-600 rounded-xl md:rounded-2xl"><ReceiptText size={20} className="md:w-6 md:h-6" /></div>
+                  <div>
                     <h3 className="text-base md:text-xl font-black text-slate-900 uppercase tracking-tight">Invoice Preferences</h3>
+                    <p className="text-slate-500 text-[10px] md:text-xs font-medium italic">Configure payment instructions and legal terms for final billing.</p>
                   </div>
-                  <p className="text-slate-500 text-xs md:text-sm font-medium italic hidden md:block">Configure payment instructions and legal terms for final billing.</p>
                 </div>
-                <div className="p-4 md:p-10 space-y-6 md:space-y-10">
+              </div>
+
+              {/* Default Rates Section */}
+              <CollapsibleSection
+                title="Default Rates & Prefix"
+                icon={<PoundSterling size={16} className="md:w-5 md:h-5" />}
+                iconBg="bg-emerald-100 text-emerald-600"
+                isExpanded={expandedInvoiceSections['rates'] || false}
+                onToggle={() => toggleInvoiceSection('rates')}
+              >
+                <div className="space-y-4 md:space-y-6">
                   <div className="space-y-1 md:space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Invoice Reference Prefix</label>
                     <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
@@ -1104,7 +1175,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       </button>
                     </div>
                   </div>
+                </div>
+              </CollapsibleSection>
 
+              {/* Document Settings Section */}
+              <CollapsibleSection
+                title="Document & Tax Settings"
+                icon={<Layout size={16} className="md:w-5 md:h-5" />}
+                iconBg="bg-purple-100 text-purple-600"
+                isExpanded={expandedInvoiceSections['document'] || false}
+                onToggle={() => toggleInvoiceSection('document')}
+              >
+                <div className="space-y-6">
                   <div className="space-y-2 md:space-y-4">
                     <div className="flex items-center gap-2 px-1">
                       <Calendar size={14} className="md:w-4 md:h-4 text-emerald-500" />
@@ -1316,7 +1398,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     />
                   </div>
                 </div>
-              </div>
+              </CollapsibleSection>
             </div>
           )}
 
