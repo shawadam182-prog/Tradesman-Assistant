@@ -6,7 +6,7 @@ export type InvoiceTemplate =
   | 'classic'       // Traditional compact layout
   | 'spacious';     // Professional with larger text and more spacing
 
-export type ColorScheme = 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal';
+export type ColorScheme = 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal' | 'modern';
 
 export interface ColorSchemeConfig {
   id: ColorScheme;
@@ -16,8 +16,9 @@ export interface ColorSchemeConfig {
   accentBg: string;        // Accent background (Tailwind class)
   accentText: string;      // Accent text color (Tailwind class)
   isDark?: boolean;        // Whether this is a dark color scheme
+  isGradient?: boolean;    // Whether header uses gradient
   // Hex values for html2canvas/inline styles
-  headerBgHex: string;
+  headerBgHex: string;     // Can be hex color OR CSS gradient string
   headerTextHex: string;
   accentLineHex: string;
   sectionBgHex: string;
@@ -114,6 +115,20 @@ export const COLOR_SCHEMES: Record<ColorScheme, ColorSchemeConfig> = {
     headerTextHex: '#ffffff',
     accentLineHex: '#5eead4',
     sectionBgHex: '#f0fdfa',
+  },
+  modern: {
+    id: 'modern',
+    name: 'Modern',
+    headerBg: 'bg-gradient-to-r from-[#0f172a] to-[#1e293b]',
+    headerText: 'text-white',
+    accentBg: 'bg-[#f8fafc]',
+    accentText: 'text-[#0f172a]',
+    isDark: true,
+    headerBgHex: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+    headerTextHex: '#ffffff',
+    accentLineHex: '#06b6d4',
+    sectionBgHex: '#f8fafc',
+    isGradient: true,
   },
 };
 

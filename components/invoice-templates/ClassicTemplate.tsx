@@ -29,11 +29,20 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
   const colorSchemeToUse = quote.type === 'invoice' ? settings.invoiceColorScheme : settings.quoteColorScheme;
   const colorScheme = getColorScheme(colorSchemeToUse);
   const isDark = colorScheme.isDark;
+  const isGradient = (colorScheme as any).isGradient;
 
   // Use hex values from color scheme config
-  const headerBgColor = (colorScheme as any).headerBgHex || '#1a1a2e';
+  const headerBgValue = (colorScheme as any).headerBgHex || '#1a1a2e';
   const headerTextColor = (colorScheme as any).headerTextHex || '#ffffff';
   const accentLineColor = (colorScheme as any).accentLineHex || '#c9a962';
+  
+  // For borders and non-gradient uses, extract first color from gradient or use solid
+  const headerBgColor = isGradient ? '#0f172a' : headerBgValue;
+  
+  // For gradients, use 'background' instead of 'backgroundColor'
+  const headerBgStyle = isGradient 
+    ? { background: headerBgValue } 
+    : { backgroundColor: headerBgValue };
 
   // Flatten all items with section headers
   // Respects displayOptions for filtering materials and labour
@@ -230,7 +239,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
                       <tr>
                         <td colSpan={colSpan} style={{
                           padding: '12px 10px',
-                          backgroundColor: headerBgColor,
+                          ...headerBgStyle,
                           borderLeft: `4px solid ${headerTextColor}`,
                         }}>
                           <div style={{

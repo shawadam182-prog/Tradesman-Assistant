@@ -222,8 +222,8 @@ export interface AppSettings {
   showBreakdown: boolean;
   defaultDisplayOptions: QuoteDisplayOptions;
   documentTemplate?: DocumentTemplate;
-  invoiceColorScheme?: 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal';
-  quoteColorScheme?: 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal';
+  invoiceColorScheme?: 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal' | 'modern';
+  quoteColorScheme?: 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal' | 'modern';
   // Bank details for payment instructions
   bankAccountName?: string;
   bankAccountNumber?: string;
