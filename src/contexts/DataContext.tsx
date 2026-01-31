@@ -311,8 +311,8 @@ function dbSettingsToApp(dbSettings: any): AppSettings {
     showBreakdown: dbSettings.show_breakdown ?? true,
     defaultDisplayOptions: dbSettings.default_display_options || DEFAULT_SETTINGS.defaultDisplayOptions,
     documentTemplate: (dbSettings.document_template as DocumentTemplate) || 'professional',
-    invoiceColorScheme: (dbSettings.invoice_color_scheme as 'default' | 'slate' | 'blue' | 'teal' | 'emerald' | 'purple' | 'rose') || 'default',
-    quoteColorScheme: (dbSettings.quote_color_scheme as 'default' | 'slate' | 'blue' | 'teal' | 'emerald' | 'purple' | 'rose') || 'default',
+    invoiceColorScheme: (dbSettings.invoice_color_scheme as 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal' | 'modern') || 'executive',
+    quoteColorScheme: (dbSettings.quote_color_scheme as 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal' | 'modern') || 'executive',
     // Bank details for payment instructions
     bankAccountName: dbSettings.bank_account_name || undefined,
     bankAccountNumber: dbSettings.bank_account_number || undefined,
