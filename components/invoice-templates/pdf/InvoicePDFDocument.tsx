@@ -63,18 +63,11 @@ const formatCurrency = (amount: number): string => {
   return `£${amount.toFixed(2)}`;
 };
 
-// Helper to check if logo is renderable (not SVG, not broken)
-// react-pdf doesn't render SVGs well in Image component
+// Helper to check if logo is renderable
+// SVGs are now converted to PNG in invoicePdfExportV2.ts before reaching this component
 const isRenderableLogo = (logoUrl?: string): boolean => {
   if (!logoUrl) return false;
-  
-  // Skip SVG files - react-pdf Image component doesn't handle them well
-  if (logoUrl.toLowerCase().includes('.svg')) return false;
-  if (logoUrl.startsWith('data:image/svg')) return false;
-  
-  // Skip blob URLs that might be SVGs
-  if (logoUrl.startsWith('blob:')) return false;
-  
+  if (logoUrl.trim() === '') return false;
   return true;
 };
 
