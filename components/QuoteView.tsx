@@ -20,7 +20,7 @@ import {
 } from '../src/utils/quoteCalculations';
 import { getTemplateConfig, getTableHeaderStyle, getColorScheme } from '../src/lib/invoiceTemplates';
 import { ClassicTemplate } from './invoice-templates';
-import { TestPDFExport } from './invoice-templates/pdf/TestPDFExport';
+// import { TestPDFExport } from './invoice-templates/pdf/TestPDFExport'; // DISABLED - logo rendering issues
 
 interface QuoteViewProps {
   quote: Quote;
@@ -1079,13 +1079,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           </div>
         )}
 
-        {/* Test new react-pdf export - REMOVE AFTER TESTING */}
-        <TestPDFExport 
-          quote={activeQuote} 
-          customer={customer} 
-          settings={settings} 
-          totals={totals} 
-        />
+        {/* react-pdf test disabled - logo rendering issues to fix */}
       </div>
 
       {/* Responsive document preview wrapper - scales 750px doc to fit mobile viewports */}
