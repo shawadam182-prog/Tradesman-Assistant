@@ -200,15 +200,15 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
           <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '4mm' }}>
             <thead>
               <tr style={{ background: headerBgColor, color: headerTextColor }}>
-                <th style={{ padding: '6px 8px', textAlign: 'left', fontSize: '10px', fontWeight: 'bold' }}>Description</th>
+                <th style={{ padding: '6px 8px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold' }}>Description</th>
                 {showQtyColumn && (
-                  <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px', fontWeight: 'bold', width: '55px' }}>Qty</th>
+                  <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', width: '55px' }}>Qty</th>
                 )}
                 {showRateColumn && (
-                  <th style={{ padding: '6px 8px', textAlign: 'right', fontSize: '10px', fontWeight: 'bold', width: '65px' }}>Rate</th>
+                  <th style={{ padding: '6px 8px', textAlign: 'right', fontSize: '12px', fontWeight: 'bold', width: '65px' }}>Rate</th>
                 )}
                 {showAmountColumn && (
-                  <th style={{ padding: '6px 8px', textAlign: 'right', fontSize: '10px', fontWeight: 'bold', width: '75px' }}>Amount</th>
+                  <th style={{ padding: '6px 8px', textAlign: 'right', fontSize: '12px', fontWeight: 'bold', width: '75px' }}>Amount</th>
                 )}
               </tr>
             </thead>
@@ -225,7 +225,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
                         borderLeft: `4px solid ${headerTextColor}`,
                       }}>
                         <div style={{
-                          fontSize: '12px',
+                          fontSize: '14px',
                           fontWeight: 'bold',
                           color: headerTextColor,
                           textTransform: 'uppercase',
@@ -244,7 +244,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
                           borderBottom: '1px solid #e2e8f0',
                         }}>
                           <div style={{
-                            fontSize: '10px',
+                            fontSize: '12px',
                             fontWeight: 'normal',
                             color: '#475569',
                             fontStyle: 'italic',
@@ -259,15 +259,15 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
                   </React.Fragment>
                 ) : (
                   <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '4px 8px 4px 20px', fontSize: '10px', color: '#334155' }}>{item.description}</td>
+                    <td style={{ padding: '5px 8px 5px 20px', fontSize: '12px', color: '#334155' }}>{item.description}</td>
                     {showQtyColumn && (
-                      <td style={{ padding: '4px 8px', textAlign: 'center', color: '#64748b', fontSize: '10px' }}>{item.qty}</td>
+                      <td style={{ padding: '5px 8px', textAlign: 'center', color: '#64748b', fontSize: '12px' }}>{item.qty}</td>
                     )}
                     {showRateColumn && (
-                      <td style={{ padding: '4px 8px', textAlign: 'right', color: '#64748b', fontSize: '10px' }}>£{item.rate.toFixed(2)}</td>
+                      <td style={{ padding: '5px 8px', textAlign: 'right', color: '#64748b', fontSize: '12px' }}>£{item.rate.toFixed(2)}</td>
                     )}
                     {showAmountColumn && (
-                      <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: '600', fontSize: '10px', color: '#1e293b' }}>£{item.amount.toFixed(2)}</td>
+                      <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: '600', fontSize: '12px', color: '#1e293b' }}>£{item.amount.toFixed(2)}</td>
                     )}
                   </tr>
                 )
@@ -280,24 +280,24 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
       {/* TOTALS */}
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <div style={{ width: '180px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '10px', color: '#64748b' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '12px', color: '#64748b' }}>
             <span>Subtotal</span>
             <span>£{totals.clientSubtotal.toFixed(2)}</span>
           </div>
           {totals.discountAmount > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '10px', color: '#64748b' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '12px', color: '#64748b' }}>
               <span>Discount</span>
               <span>-£{totals.discountAmount.toFixed(2)}</span>
             </div>
           )}
           {settings.enableVat && displayOptions.showVat && totals.taxAmount > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '10px', color: '#64748b' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '12px', color: '#64748b' }}>
               <span>VAT ({quote.taxPercent}%)</span>
               <span>£{totals.taxAmount.toFixed(2)}</span>
             </div>
           )}
           {settings.enableCis && displayOptions.showCis && totals.cisAmount > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '10px', color: '#64748b' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '12px', color: '#64748b' }}>
               <span>CIS Deduction</span>
               <span>-£{totals.cisAmount.toFixed(2)}</span>
             </div>
@@ -309,7 +309,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             borderTop: `2px solid ${isDark ? '#1e293b' : headerBgColor}`,
             marginTop: '4px',
             fontWeight: 'bold',
-            fontSize: '13px'
+            fontSize: '15px'
           }}>
             <span>Total</span>
             <span>£{totals.grandTotal.toFixed(2)}</span>
