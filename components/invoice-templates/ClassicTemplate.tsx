@@ -215,41 +215,48 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             <tbody>
               {items.map((item, idx) => (
                 item.type === 'header' ? (
-                  /* Section Header - title and description together but visually separated */
-                  <tr key={idx}>
-                    <td colSpan={colSpan} style={{
-                      padding: '12px 10px',
-                      backgroundColor: headerBgColor,
-                      borderLeft: `4px solid ${headerTextColor}`,
-                    }}>
-                      {/* Section Title */}
-                      <div style={{
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        color: headerTextColor,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        marginBottom: item.sectionDescription ? '6px' : '0',
+                  /* Section Header - title row (green) + optional description row (white) */
+                  <React.Fragment key={idx}>
+                    {/* Title Row - Green */}
+                    <tr>
+                      <td colSpan={colSpan} style={{
+                        padding: '12px 10px',
+                        backgroundColor: headerBgColor,
+                        borderLeft: `4px solid ${headerTextColor}`,
                       }}>
-                        {item.description}
-                      </div>
-                      {/* Section Description - if present */}
-                      {item.sectionDescription && (
                         <div style={{
-                          fontSize: '10px',
-                          fontWeight: 'normal',
-                          color: isDark ? '#94a3b8' : '#475569',
-                          fontStyle: 'italic',
-                          whiteSpace: 'pre-line',
-                          lineHeight: '1.4',
-                          paddingTop: '4px',
-                          borderTop: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`,
+                          fontSize: '12px',
+                          fontWeight: 'bold',
+                          color: headerTextColor,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
                         }}>
-                          {item.sectionDescription}
+                          {item.description}
                         </div>
-                      )}
-                    </td>
-                  </tr>
+                      </td>
+                    </tr>
+                    {/* Description Row - White/separate */}
+                    {item.sectionDescription && (
+                      <tr>
+                        <td colSpan={colSpan} style={{
+                          padding: '8px 14px',
+                          backgroundColor: '#ffffff',
+                          borderBottom: '1px solid #e2e8f0',
+                        }}>
+                          <div style={{
+                            fontSize: '10px',
+                            fontWeight: 'normal',
+                            color: '#475569',
+                            fontStyle: 'italic',
+                            whiteSpace: 'pre-line',
+                            lineHeight: '1.4',
+                          }}>
+                            {item.sectionDescription}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ) : (
                   <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <td style={{ padding: '4px 8px 4px 20px', fontSize: '10px', color: '#334155' }}>{item.description}</td>
