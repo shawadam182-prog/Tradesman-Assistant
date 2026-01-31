@@ -473,8 +473,8 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       const cleanTitle = (activeQuote.title || 'estimate').replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const filename = `${prefix}${numStr}_${cleanTitle}.pdf`;
 
-      // 4x scale for crisp 300 DPI output
-      const scale = 4;
+      // 5x scale for maximum crispness
+      const scale = 5;
 
       const canvas = await html2canvas(documentRef.current, {
         scale,
@@ -634,8 +634,8 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
       const customerName = customer?.name || 'there';
       const customerEmail = customer?.email || '';
 
-      // 4x scale for crisp output
-      const scale = 4;
+      // 5x scale for maximum crispness
+      const scale = 5;
 
       const canvas = await html2canvas(documentRef.current, {
         scale,
