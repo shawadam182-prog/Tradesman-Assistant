@@ -6,75 +6,101 @@ export type InvoiceTemplate =
   | 'classic'       // Traditional compact layout
   | 'spacious';     // Professional with larger text and more spacing
 
-export type ColorScheme = 'default' | 'slate' | 'blue' | 'teal' | 'emerald' | 'purple' | 'rose';
+export type ColorScheme = 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal';
 
 export interface ColorSchemeConfig {
   id: ColorScheme;
   name: string;
-  headerBg: string;        // Background for headers
-  headerText: string;      // Text color for headers
-  accentBg: string;        // Accent background
-  accentText: string;      // Accent text color
+  headerBg: string;        // Background for headers (Tailwind class)
+  headerText: string;      // Text color for headers (Tailwind class)
+  accentBg: string;        // Accent background (Tailwind class)
+  accentText: string;      // Accent text color (Tailwind class)
   isDark?: boolean;        // Whether this is a dark color scheme
+  // Hex values for html2canvas/inline styles
+  headerBgHex: string;
+  headerTextHex: string;
+  accentLineHex: string;
+  sectionBgHex: string;
 }
 
 export const COLOR_SCHEMES: Record<ColorScheme, ColorSchemeConfig> = {
-  default: {
-    id: 'default',
-    name: 'No Color (Dark)',
-    headerBg: 'bg-slate-800',
+  executive: {
+    id: 'executive',
+    name: 'Executive',
+    headerBg: 'bg-[#1a1a2e]',
     headerText: 'text-white',
-    accentBg: 'bg-slate-100',
-    accentText: 'text-slate-600',
+    accentBg: 'bg-[#f8f7f4]',
+    accentText: 'text-[#1a1a2e]',
     isDark: true,
+    headerBgHex: '#1a1a2e',
+    headerTextHex: '#ffffff',
+    accentLineHex: '#c9a962',
+    sectionBgHex: '#f8f7f4',
+  },
+  navy: {
+    id: 'navy',
+    name: 'Navy & Brass',
+    headerBg: 'bg-[#1e3a5f]',
+    headerText: 'text-white',
+    accentBg: 'bg-[#f5f5f0]',
+    accentText: 'text-[#1e3a5f]',
+    isDark: true,
+    headerBgHex: '#1e3a5f',
+    headerTextHex: '#ffffff',
+    accentLineHex: '#b08d4f',
+    sectionBgHex: '#f5f5f0',
   },
   slate: {
     id: 'slate',
-    name: 'Classic Slate',
-    headerBg: 'bg-slate-100',
-    headerText: 'text-slate-700',
-    accentBg: 'bg-slate-50',
-    accentText: 'text-slate-600',
+    name: 'Slate Luxe',
+    headerBg: 'bg-[#3d4f5f]',
+    headerText: 'text-white',
+    accentBg: 'bg-[#f9fafb]',
+    accentText: 'text-[#3d4f5f]',
+    isDark: true,
+    headerBgHex: '#3d4f5f',
+    headerTextHex: '#ffffff',
+    accentLineHex: '#b87333',
+    sectionBgHex: '#f9fafb',
   },
-  blue: {
-    id: 'blue',
-    name: 'Ocean Blue',
-    headerBg: 'bg-blue-100',
-    headerText: 'text-blue-700',
-    accentBg: 'bg-blue-50',
-    accentText: 'text-blue-600',
+  stone: {
+    id: 'stone',
+    name: 'Warm Stone',
+    headerBg: 'bg-[#57534e]',
+    headerText: 'text-white',
+    accentBg: 'bg-[#faf9f7]',
+    accentText: 'text-[#44403c]',
+    isDark: true,
+    headerBgHex: '#57534e',
+    headerTextHex: '#ffffff',
+    accentLineHex: '#a16a4a',
+    sectionBgHex: '#faf9f7',
   },
-  teal: {
-    id: 'teal',
-    name: 'Fresh Teal',
-    headerBg: 'bg-teal-100',
-    headerText: 'text-teal-700',
-    accentBg: 'bg-teal-50',
-    accentText: 'text-teal-600',
+  forest: {
+    id: 'forest',
+    name: 'Forest',
+    headerBg: 'bg-[#2d3b36]',
+    headerText: 'text-white',
+    accentBg: 'bg-[#f8faf8]',
+    accentText: 'text-[#2d3b36]',
+    isDark: true,
+    headerBgHex: '#2d3b36',
+    headerTextHex: '#ffffff',
+    accentLineHex: '#6b7c5e',
+    sectionBgHex: '#f8faf8',
   },
-  emerald: {
-    id: 'emerald',
-    name: 'Spring Emerald',
-    headerBg: 'bg-emerald-100',
-    headerText: 'text-emerald-700',
-    accentBg: 'bg-emerald-50',
-    accentText: 'text-emerald-600',
-  },
-  purple: {
-    id: 'purple',
-    name: 'Royal Purple',
-    headerBg: 'bg-purple-100',
-    headerText: 'text-purple-700',
-    accentBg: 'bg-purple-50',
-    accentText: 'text-purple-600',
-  },
-  rose: {
-    id: 'rose',
-    name: 'Soft Rose',
-    headerBg: 'bg-rose-100',
-    headerText: 'text-rose-700',
-    accentBg: 'bg-rose-50',
-    accentText: 'text-rose-600',
+  minimal: {
+    id: 'minimal',
+    name: 'Minimal',
+    headerBg: 'bg-white',
+    headerText: 'text-[#111827]',
+    accentBg: 'bg-white',
+    accentText: 'text-[#374151]',
+    isDark: false,
+    headerBgHex: '#ffffff',
+    headerTextHex: '#111827',
+    accentLineHex: '#0d9488',
+    sectionBgHex: '#ffffff',
   },
 };
 
@@ -152,8 +178,8 @@ export const INVOICE_TEMPLATES: Record<InvoiceTemplate, TemplateConfig> = {
     fontSize: 'text-[10px]',
     headerFontSize: 'text-sm',
     borderRadius: 'rounded-none',
-    supportsColorScheme: true,     // Now supports color schemes
-    defaultColorScheme: 'default',  // Defaults to dark (no color)
+    supportsColorScheme: true,
+    defaultColorScheme: 'executive',
   },
 
   // Template 2: Classic - Traditional compact layout
@@ -182,7 +208,7 @@ export const INVOICE_TEMPLATES: Record<InvoiceTemplate, TemplateConfig> = {
     headerFontSize: 'text-[11px]',
     borderRadius: 'rounded-none',
     supportsColorScheme: true,
-    defaultColorScheme: 'default',
+    defaultColorScheme: 'executive',
   },
 
   // Template 3: Spacious - Professional with larger text and more breathing room
@@ -211,7 +237,7 @@ export const INVOICE_TEMPLATES: Record<InvoiceTemplate, TemplateConfig> = {
     headerFontSize: 'text-xl',     // Much larger header text (14px → 20px)
     borderRadius: 'rounded-none',
     supportsColorScheme: true,
-    defaultColorScheme: 'default',
+    defaultColorScheme: 'executive',
   },
 };
 
@@ -226,7 +252,7 @@ export const getTemplateConfig = (templateId?: InvoiceTemplate | string): Templa
 // Helper to get color scheme config
 export const getColorScheme = (colorSchemeId?: ColorScheme | string): ColorSchemeConfig => {
   if (!colorSchemeId || !(colorSchemeId in COLOR_SCHEMES)) {
-    return COLOR_SCHEMES['default']; // Default to dark (no color)
+    return COLOR_SCHEMES['executive']; // Default to Executive
   }
   return COLOR_SCHEMES[colorSchemeId as ColorScheme];
 };

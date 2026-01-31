@@ -877,7 +877,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       <button
                         key={scheme.id}
                         onClick={() => setSettings({ ...settings, quoteColorScheme: scheme.id })}
-                        className={`flex flex-col items-center gap-1.5 md:gap-3 p-2 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all ${(settings.quoteColorScheme || 'default') === scheme.id
+                        className={`flex flex-col items-center gap-1.5 md:gap-3 p-2 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all ${(settings.quoteColorScheme || 'executive') === scheme.id
                           ? 'border-blue-500 bg-blue-50/30 shadow-lg'
                           : 'border-slate-100 bg-white hover:border-blue-200'
                           }`}
@@ -888,7 +888,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         <div className="text-center">
                           <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest block">{scheme.name}</span>
                           <div className="flex items-center gap-1 justify-center mt-0.5 md:mt-1">
-                            {(settings.quoteColorScheme || 'default') === scheme.id && (
+                            {(settings.quoteColorScheme || 'executive') === scheme.id && (
                               <Check size={10} className="md:w-3 md:h-3 text-blue-500" />
                             )}
                           </div>
@@ -1226,7 +1226,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                             <button
                               key={scheme.id}
                               onClick={() => setSettings({ ...settings, invoiceColorScheme: scheme.id })}
-                              className={`flex flex-col items-center gap-1.5 md:gap-3 p-2 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all ${(settings.invoiceColorScheme || 'default') === scheme.id
+                              className={`flex flex-col items-center gap-1.5 md:gap-3 p-2 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all ${(settings.invoiceColorScheme || 'executive') === scheme.id
                                 ? 'border-emerald-500 bg-emerald-50/30 shadow-lg'
                                 : 'border-slate-100 bg-white hover:border-emerald-200'
                                 }`}
@@ -1237,7 +1237,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                               <div className="text-center">
                                 <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest block">{scheme.name}</span>
                                 <div className="flex items-center gap-1 justify-center mt-0.5 md:mt-1">
-                                  {(settings.invoiceColorScheme || 'default') === scheme.id && (
+                                  {(settings.invoiceColorScheme || 'executive') === scheme.id && (
                                     <Check size={10} className="md:w-3 md:h-3 text-emerald-500" />
                                   )}
                                 </div>

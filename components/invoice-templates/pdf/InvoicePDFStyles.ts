@@ -74,54 +74,48 @@ export interface PDFColorScheme {
 }
 
 export const PDF_COLOR_SCHEMES: Record<string, PDFColorScheme> = {
-  default: {
-    headerBg: COLORS.slate800,
-    headerText: COLORS.white,
-    accentBg: COLORS.slate100,
-    accentText: COLORS.slate600,
+  executive: {
+    headerBg: '#1a1a2e',
+    headerText: '#ffffff',
+    accentBg: '#f8f7f4',
+    accentText: '#1a1a2e',
+  },
+  navy: {
+    headerBg: '#1e3a5f',
+    headerText: '#ffffff',
+    accentBg: '#f5f5f0',
+    accentText: '#1e3a5f',
   },
   slate: {
-    headerBg: COLORS.slate100,
-    headerText: COLORS.slate700,
-    accentBg: COLORS.slate50,
-    accentText: COLORS.slate600,
+    headerBg: '#3d4f5f',
+    headerText: '#ffffff',
+    accentBg: '#f9fafb',
+    accentText: '#3d4f5f',
   },
-  blue: {
-    headerBg: COLORS.blue100,
-    headerText: COLORS.blue700,
-    accentBg: COLORS.blue50,
-    accentText: COLORS.blue600,
+  stone: {
+    headerBg: '#57534e',
+    headerText: '#ffffff',
+    accentBg: '#faf9f7',
+    accentText: '#44403c',
   },
-  teal: {
-    headerBg: COLORS.teal100,
-    headerText: COLORS.teal700,
-    accentBg: COLORS.teal50,
-    accentText: COLORS.teal600,
+  forest: {
+    headerBg: '#2d3b36',
+    headerText: '#ffffff',
+    accentBg: '#f8faf8',
+    accentText: '#2d3b36',
   },
-  emerald: {
-    headerBg: COLORS.emerald100,
-    headerText: COLORS.emerald700,
-    accentBg: COLORS.emerald50,
-    accentText: COLORS.emerald600,
-  },
-  purple: {
-    headerBg: COLORS.purple100,
-    headerText: COLORS.purple700,
-    accentBg: COLORS.purple50,
-    accentText: COLORS.purple600,
-  },
-  rose: {
-    headerBg: COLORS.rose100,
-    headerText: COLORS.rose700,
-    accentBg: COLORS.rose50,
-    accentText: COLORS.rose600,
+  minimal: {
+    headerBg: '#ffffff',
+    headerText: '#111827',
+    accentBg: '#ffffff',
+    accentText: '#374151',
   },
 };
 
 // Get color scheme by ID
 export const getPDFColorScheme = (schemeId?: string): PDFColorScheme => {
   if (!schemeId || !(schemeId in PDF_COLOR_SCHEMES)) {
-    return PDF_COLOR_SCHEMES.default;
+    return PDF_COLOR_SCHEMES.executive;
   }
   return PDF_COLOR_SCHEMES[schemeId];
 };

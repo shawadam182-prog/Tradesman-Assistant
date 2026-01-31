@@ -30,22 +30,10 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
   const colorScheme = getColorScheme(colorSchemeToUse);
   const isDark = colorScheme.isDark;
 
-  // Convert Tailwind classes to inline styles
-  const headerBgColor = isDark ? '#1e293b' :
-    colorScheme.id === 'slate' ? '#f1f5f9' :
-      colorScheme.id === 'blue' ? '#dbeafe' :
-        colorScheme.id === 'teal' ? '#ccfbf1' :
-          colorScheme.id === 'emerald' ? '#d1fae5' :
-            colorScheme.id === 'purple' ? '#e9d5ff' :
-              colorScheme.id === 'rose' ? '#fce7f3' : '#f1f5f9';
-
-  const headerTextColor = isDark ? '#ffffff' :
-    colorScheme.id === 'slate' ? '#334155' :
-      colorScheme.id === 'blue' ? '#1e40af' :
-        colorScheme.id === 'teal' ? '#0f766e' :
-          colorScheme.id === 'emerald' ? '#047857' :
-            colorScheme.id === 'purple' ? '#7c3aed' :
-              colorScheme.id === 'rose' ? '#be123c' : '#334155';
+  // Use hex values from color scheme config
+  const headerBgColor = (colorScheme as any).headerBgHex || '#1a1a2e';
+  const headerTextColor = (colorScheme as any).headerTextHex || '#ffffff';
+  const accentLineColor = (colorScheme as any).accentLineHex || '#c9a962';
 
   // Flatten all items with section headers
   // Respects displayOptions for filtering materials and labour
