@@ -920,8 +920,8 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
             {showCustomiser ? 'Close' : 'Layout'}
           </button>
           {onDuplicate && (
-            <button onClick={onDuplicate} className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-white border border-slate-100 text-slate-600 text-xs font-bold shadow-sm">
-              <Copy size={14} /> Duplicate
+            <button onClick={onDuplicate} title="Duplicate" className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white border border-slate-100 text-slate-600 text-xs font-bold shadow-sm">
+              <Copy size={14} />
             </button>
           )}
           {/* Share Link Button - only for quotes (not invoices) that have been sent */}
@@ -959,8 +959,8 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
             </button>
           )}
           {customer?.address && (
-            <button onClick={handleOpenMaps} className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-blue-50 text-blue-600 text-xs font-bold shadow-sm border border-blue-100">
-              <MapPin size={14} /> Map
+            <button onClick={handleOpenMaps} title="Open Map" className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-50 text-blue-600 text-xs font-bold shadow-sm border border-blue-100">
+              <MapPin size={14} />
             </button>
           )}
           {onDelete && (
@@ -971,9 +971,10 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                   await onDelete();
                 }
               }}
-              className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-red-50 text-red-600 text-xs font-bold shadow-sm border border-red-100 hover:bg-red-100 transition-colors"
+              title="Delete"
+              className="flex-shrink-0 flex items-center px-2 py-1 rounded-lg bg-red-50 text-red-600 text-xs font-bold shadow-sm border border-red-100 hover:bg-red-100 transition-colors"
             >
-              <Trash2 size={14} /> Discard
+              <Trash2 size={14} />
             </button>
           )}
         </div>
