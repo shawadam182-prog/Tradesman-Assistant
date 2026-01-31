@@ -18,122 +18,76 @@ import { InvoicePDFDocument } from '../../components/invoice-templates/pdf/Invoi
 import type { Quote, Customer, AppSettings } from '../../types';
 
 /**
- * Convert logo to PNG data URL for react-pdf compatibility
- * 
- * react-pdf needs raster images - SVGs don't render correctly.
- * This function:
- * 1. Loads the image (handles CORS via crossOrigin)
- * 2. Draws it to canvas at high resolution
- * 3. Returns a PNG data URL
+ * Check if URL is an SVG (react-pdf can't render SVGs properly)
  */
-async function convertLogoToPng(logoUrl: string): Promise<string> {
-  if (!logoUrl || logoUrl.trim() === '') return '';
-  
-  // Already a PNG/JPEG data URL - use directly
-  if (logoUrl.startsWith('data:image/png') || logoUrl.startsWith('data:image/jpeg')) {
-    return logoUrl;
-  }
-  
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    
-    const timeout = setTimeout(() => {
-      console.warn('Logo load timeout, skipping');
-      resolve('');
-    }, 5000);
-    
-    img.onload = () => {
-      clearTimeout(timeout);
-      try {
-        // Get natural dimensions
-        const naturalWidth = img.naturalWidth || img.width;
-        const naturalHeight = img.naturalHeight || img.height;
-        
-        if (!naturalWidth || !naturalHeight) {
-          console.warn('Logo has no dimensions');
-          resolve('');
-          return;
-        }
-        
-        // Create canvas at 2x for crisp rendering
-        const scale = 2;
-        const canvas = document.createElement('canvas');
-        canvas.width = naturalWidth * scale;
-        canvas.height = naturalHeight * scale;
-        
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          console.warn('Could not get canvas context');
-          resolve('');
-          return;
-        }
-        
-        // Transparent background (preserve logo transparency)
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // High quality rendering
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        
-        // Draw at 2x scale
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        
-        // Export as PNG
-        const dataUrl = canvas.toDataURL('image/png');
-        resolve(dataUrl);
-      } catch (err) {
-        console.warn('Logo conversion error:', err);
-        resolve('');
-      }
-    };
-    
-    img.onerror = (err) => {
-      clearTimeout(timeout);
-      console.warn('Logo failed to load:', err);
-      resolve('');
-    };
-    
-    // Handle SVG data URLs - need to convert via fetch first
-    if (logoUrl.startsWith('data:image/svg')) {
-      // SVG data URL - create blob URL and load that
-      fetch(logoUrl)
-        .then(res => res.blob())
-        .then(blob => {
-          const blobUrl = URL.createObjectURL(blob);
-          img.src = blobUrl;
-        })
-        .catch(() => {
-          clearTimeout(timeout);
-          resolve('');
-        });
-    } else {
-      img.src = logoUrl;
-    }
-  });
+function isSvgUrl(url: string): boolean {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  return lower.includes('.svg') || lower.startsWith('data:image/svg');
 }
 
 /**
- * Pre-process settings - convert logos to PNG for react-pdf
+ * Fetch image and convert to base64 data URL
+ * This ensures the image is accessible to react-pdf
+ */
+async function fetchAsDataUrl(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Fetch failed');
+    const blob = await response.blob();
+    
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (err) {
+    console.warn('Failed to fetch logo:', err);
+    return '';
+  }
+}
+
+/**
+ * Pre-process settings - ensure logos are accessible to react-pdf
+ * 
+ * Strategy:
+ * - SVGs: Skip them (react-pdf can't render)
+ * - Remote URLs: Fetch as data URL to avoid CORS
+ * - Data URLs: Pass through
  */
 async function convertLogosForPdf(settings: AppSettings): Promise<AppSettings> {
   const processedSettings = { ...settings };
   
   if (settings.companyLogo) {
-    const converted = await convertLogoToPng(settings.companyLogo);
-    if (converted && converted.length > 100) {
-      processedSettings.companyLogo = converted;
-    } else {
-      // Logo conversion failed - skip logo rather than crash
+    // Skip SVGs entirely - react-pdf can't handle them
+    if (isSvgUrl(settings.companyLogo)) {
+      console.warn('Logo is SVG, skipping for PDF');
       processedSettings.companyLogo = '';
+    } 
+    // Already a data URL - use directly
+    else if (settings.companyLogo.startsWith('data:')) {
+      processedSettings.companyLogo = settings.companyLogo;
+    }
+    // Remote URL - fetch as data URL
+    else {
+      const dataUrl = await fetchAsDataUrl(settings.companyLogo);
+      processedSettings.companyLogo = dataUrl || '';
     }
   }
   
   if (settings.footerLogos && settings.footerLogos.length > 0) {
-    const converted = await Promise.all(
-      settings.footerLogos.map(logo => convertLogoToPng(logo))
-    );
-    processedSettings.footerLogos = converted.filter(l => l && l.length > 100);
+    const processed: string[] = [];
+    for (const logo of settings.footerLogos) {
+      if (isSvgUrl(logo)) continue;
+      if (logo.startsWith('data:')) {
+        processed.push(logo);
+      } else {
+        const dataUrl = await fetchAsDataUrl(logo);
+        if (dataUrl) processed.push(dataUrl);
+      }
+    }
+    processedSettings.footerLogos = processed;
   }
   
   return processedSettings;
