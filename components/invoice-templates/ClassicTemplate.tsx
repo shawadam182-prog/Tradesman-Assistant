@@ -53,6 +53,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
     const items: Array<{
       type?: 'header' | 'item';
       description: string;
+      sectionDescription?: string;
       qty: string;
       rate: number;
       amount: number;
@@ -73,27 +74,16 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
 
       // Only add section header if it has visible content
       if (sectionHasMaterials || sectionHasLabour) {
-        // Add section title
+        // Add section header with title and optional description
         items.push({
           type: 'header',
           description: section.title || 'Work Section',
+          sectionDescription: section.description || '',
           qty: '',
           rate: 0,
           amount: 0,
           isDescription: false,
         });
-
-        // Add section description if present
-        if (section.description) {
-          items.push({
-            type: 'header',
-            description: section.description,
-            qty: '',
-            rate: 0,
-            amount: 0,
-            isDescription: true,
-          });
-        }
       }
 
       // Add material items (only if showMaterials is enabled)
@@ -225,39 +215,41 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             <tbody>
               {items.map((item, idx) => (
                 item.type === 'header' ? (
-                  item.isDescription ? (
-                    /* Section Description - separate row with distinct styling */
-                    <tr key={idx}>
-                      <td colSpan={colSpan} style={{
-                        padding: '6px 16px 10px 16px',
-                        fontSize: '10px',
-                        fontWeight: 'normal',
-                        color: '#475569',
-                        whiteSpace: 'pre-line',
-                        fontStyle: 'italic',
-                        backgroundColor: '#f8fafc',
-                        borderLeft: '2px solid #cbd5e1',
-                      }}>
-                        {item.description}
-                      </td>
-                    </tr>
-                  ) : (
-                    /* Section Title - prominent header */
-                    <tr key={idx}>
-                      <td colSpan={colSpan} style={{
-                        padding: '14px 8px 6px 8px',
+                  /* Section Header - title and description together but visually separated */
+                  <tr key={idx}>
+                    <td colSpan={colSpan} style={{
+                      padding: '12px 10px',
+                      backgroundColor: headerBgColor,
+                      borderLeft: `4px solid ${headerTextColor}`,
+                    }}>
+                      {/* Section Title */}
+                      <div style={{
                         fontSize: '12px',
                         fontWeight: 'bold',
                         color: headerTextColor,
-                        backgroundColor: headerBgColor,
-                        borderLeft: `4px solid ${headerTextColor}`,
                         textTransform: 'uppercase',
-                        letterSpacing: '0.05em'
+                        letterSpacing: '0.05em',
+                        marginBottom: item.sectionDescription ? '6px' : '0',
                       }}>
                         {item.description}
-                      </td>
-                    </tr>
-                  )
+                      </div>
+                      {/* Section Description - if present */}
+                      {item.sectionDescription && (
+                        <div style={{
+                          fontSize: '10px',
+                          fontWeight: 'normal',
+                          color: isDark ? '#94a3b8' : '#475569',
+                          fontStyle: 'italic',
+                          whiteSpace: 'pre-line',
+                          lineHeight: '1.4',
+                          paddingTop: '4px',
+                          borderTop: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`,
+                        }}>
+                          {item.sectionDescription}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
                 ) : (
                   <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <td style={{ padding: '4px 8px 4px 20px', fontSize: '10px', color: '#334155' }}>{item.description}</td>
