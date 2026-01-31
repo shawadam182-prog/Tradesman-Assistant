@@ -90,14 +90,14 @@ export const PaymentRecorder: React.FC<PaymentRecorderProps> = ({
             <PoundSterling size={12} className="inline mr-1" />
             Payment Amount
           </label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400 font-bold">£</span>
+          <div className="relative flex items-center bg-white border-2 border-slate-200 rounded-xl focus-within:border-emerald-400 transition-colors">
+            <span className="pl-4 text-xl text-slate-400 font-bold">£</span>
             <input
               type="number"
               step="0.01"
               value={amount ? parseFloat(amount.toFixed(2)) : ''}
               onChange={e => setAmount(parseFloat(e.target.value) || 0)}
-              className="w-full bg-white border-2 border-slate-200 rounded-xl p-4 pl-11 text-xl font-black text-slate-900 outline-none focus:border-emerald-400 transition-colors"
+              className="w-full bg-transparent border-none p-4 pl-2 text-xl font-black text-slate-900 outline-none"
               placeholder="0.00"
             />
           </div>
