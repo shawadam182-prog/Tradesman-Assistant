@@ -18,94 +18,111 @@ import { InvoicePDFDocument } from '../../components/invoice-templates/pdf/Invoi
 import type { Quote, Customer, AppSettings } from '../../types';
 
 /**
- * Convert an SVG image to PNG data URL
- * react-pdf doesn't handle SVGs well, so we rasterize them first
+ * Convert ANY image to a clean PNG data URL
+ * This ensures react-pdf gets a format it can handle reliably
  */
-async function svgToPng(svgUrl: string, maxWidth = 200, maxHeight = 100): Promise<string> {
-  return new Promise((resolve, reject) => {
+async function convertImageToPng(imageUrl: string, maxWidth = 200, maxHeight = 100): Promise<string> {
+  return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     
+    const timeoutId = setTimeout(() => {
+      console.warn('Logo load timeout:', imageUrl?.substring(0, 50));
+      resolve('');
+    }, 5000);
+    
     img.onload = () => {
-      // Calculate dimensions maintaining aspect ratio
-      let width = img.width;
-      let height = img.height;
-      
-      if (width > maxWidth) {
-        height = (maxWidth / width) * height;
-        width = maxWidth;
+      clearTimeout(timeoutId);
+      try {
+        // Calculate dimensions maintaining aspect ratio
+        let width = img.naturalWidth || img.width;
+        let height = img.naturalHeight || img.height;
+        
+        if (width === 0 || height === 0) {
+          width = maxWidth;
+          height = maxHeight;
+        }
+        
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        width = Math.floor(width * ratio);
+        height = Math.floor(height * ratio);
+        
+        // Use higher resolution for crisp output
+        const scale = 3;
+        const canvas = document.createElement('canvas');
+        canvas.width = width * scale;
+        canvas.height = height * scale;
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          console.warn('Could not get canvas context');
+          resolve('');
+          return;
+        }
+        
+        // White background for transparency
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.scale(scale, scale);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const pngDataUrl = canvas.toDataURL('image/png', 1.0);
+        console.log('Logo converted successfully, size:', pngDataUrl.length);
+        resolve(pngDataUrl);
+      } catch (err) {
+        console.warn('Logo conversion error:', err);
+        resolve('');
       }
-      if (height > maxHeight) {
-        width = (maxHeight / height) * width;
-        height = maxHeight;
-      }
-      
-      // Use higher resolution for crisp output
-      const scale = 3;
-      const canvas = document.createElement('canvas');
-      canvas.width = width * scale;
-      canvas.height = height * scale;
-      
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Could not get canvas context'));
-        return;
-      }
-      
-      ctx.scale(scale, scale);
-      ctx.drawImage(img, 0, 0, width, height);
-      
-      resolve(canvas.toDataURL('image/png'));
     };
     
-    img.onerror = () => {
-      // If loading fails, resolve with empty string (logo will be skipped)
-      console.warn('Failed to load logo for conversion:', svgUrl);
+    img.onerror = (err) => {
+      clearTimeout(timeoutId);
+      console.warn('Failed to load logo:', err);
       resolve('');
     };
     
-    img.src = svgUrl;
+    // Handle data URLs and regular URLs
+    img.src = imageUrl;
   });
 }
 
 /**
- * Check if a URL points to an SVG
- */
-function isSvgUrl(url?: string): boolean {
-  if (!url) return false;
-  return url.toLowerCase().includes('.svg') || url.startsWith('data:image/svg');
-}
-
-/**
- * Pre-process settings to convert SVG logos to PNG
+ * Pre-process settings to convert ALL logos to PNG
+ * This ensures react-pdf gets clean PNG data URLs it can render
  */
 async function convertLogosForPdf(settings: AppSettings): Promise<AppSettings> {
   const processedSettings = { ...settings };
   
-  // Convert main company logo if it's SVG
-  if (settings.companyLogo && isSvgUrl(settings.companyLogo)) {
+  // Convert main company logo (always convert to ensure clean PNG)
+  if (settings.companyLogo) {
     try {
-      const pngDataUrl = await svgToPng(settings.companyLogo, 200, 100);
-      if (pngDataUrl) {
+      console.log('Converting company logo...');
+      const pngDataUrl = await convertImageToPng(settings.companyLogo, 200, 100);
+      if (pngDataUrl && pngDataUrl.length > 100) {
         processedSettings.companyLogo = pngDataUrl;
+      } else {
+        console.warn('Logo conversion produced empty result');
+        processedSettings.companyLogo = undefined;
       }
     } catch (err) {
       console.warn('Failed to convert company logo:', err);
+      processedSettings.companyLogo = undefined;
     }
   }
   
-  // Convert footer logos if any are SVG
+  // Convert footer logos
   if (settings.footerLogos && settings.footerLogos.length > 0) {
     const convertedFooterLogos = await Promise.all(
       settings.footerLogos.map(async (logo) => {
-        if (isSvgUrl(logo)) {
-          try {
-            return await svgToPng(logo, 100, 50);
-          } catch {
-            return logo;
-          }
+        try {
+          const converted = await convertImageToPng(logo, 100, 50);
+          return converted && converted.length > 100 ? converted : '';
+        } catch {
+          return '';
         }
-        return logo;
       })
     );
     processedSettings.footerLogos = convertedFooterLogos.filter(Boolean);
