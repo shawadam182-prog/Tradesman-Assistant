@@ -6,7 +6,7 @@ import {
   Landmark, Package, HardHat, FileDown, Loader2, Navigation, PoundSterling,
   Settings2, Eye, EyeOff, ChevronDown, ChevronUp, LayoutGrid, List,
   Image as ImageIcon, AlignLeft, ReceiptText, ShieldCheck, ListChecks, FileDigit,
-  Box, Circle, Share2, Copy, MessageCircle, MapPin, Mail, Banknote, Check, X, Clock, Tag, Type, Link2, ExternalLink
+  Box, Circle, Share2, Copy, MessageCircle, MapPin, Mail, Banknote, Check, X, Clock, Tag, Type, Link2, ExternalLink, Phone
 } from 'lucide-react';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
@@ -20,6 +20,7 @@ import {
 } from '../src/utils/quoteCalculations';
 import { getTemplateConfig, getTableHeaderStyle, getColorScheme } from '../src/lib/invoiceTemplates';
 import { ClassicTemplate } from './invoice-templates';
+import { TestPDFExport } from './invoice-templates/pdf/TestPDFExport';
 
 interface QuoteViewProps {
   quote: Quote;
@@ -41,6 +42,9 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   const [isDownloading, setIsDownloading] = useState(false);
   const [showCustomiser, setShowCustomiser] = useState(false);
   const [showPaymentRecorder, setShowPaymentRecorder] = useState(false);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [emailHelper, setEmailHelper] = useState<{
     show: boolean;
     subject: string;
@@ -366,6 +370,37 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
     }
   };
 
+  // Generate PDF preview
+  const handlePdfPreview = async () => {
+    setIsGeneratingPreview(true);
+    try {
+      const result = await generatePDFBlob();
+      if (result) {
+        // Revoke previous URL if exists
+        if (pdfPreviewUrl) {
+          URL.revokeObjectURL(pdfPreviewUrl);
+        }
+        const url = URL.createObjectURL(result.blob);
+        setPdfPreviewUrl(url);
+        setShowPdfPreview(true);
+      }
+    } catch (err) {
+      console.error('PDF preview failed:', err);
+      alert('Failed to generate preview. Please try again.');
+    } finally {
+      setIsGeneratingPreview(false);
+    }
+  };
+
+  // Cleanup preview URL on unmount
+  React.useEffect(() => {
+    return () => {
+      if (pdfPreviewUrl) {
+        URL.revokeObjectURL(pdfPreviewUrl);
+      }
+    };
+  }, [pdfPreviewUrl]);
+
   // File paid invoice to Filing Cabinet
   const filePaidInvoice = async () => {
     const pdfResult = await generatePDFBlob();
@@ -596,6 +631,26 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
     promptMarkAsSent();
   };
 
+  const handleSmsShare = () => {
+    const prefix = activeQuote.type === 'invoice' ? (settings.invoicePrefix || 'INV-') : (settings.quotePrefix || 'EST-');
+    const numStr = (activeQuote.referenceNumber || 1).toString().padStart(4, '0');
+    const docType = activeQuote.type === 'invoice' ? 'Invoice' : 'Quote';
+
+    // Build a concise SMS message (SMS has character limits)
+    const shareUrl = activeQuote.shareToken ? quotesService.getShareUrl(activeQuote.shareToken) : '';
+    
+    const message = `Hi ${customer?.name?.split(' ')[0] || 'there'}, your ${docType} (${prefix}${numStr}) for "${activeQuote.title}" is ready. Total: £${totals.grandTotal.toFixed(2)}${shareUrl ? `\n\nView online: ${shareUrl}` : ''}\n\n- ${settings?.companyName || 'TradeSync'}`;
+
+    const phoneNumber = customer?.phone?.replace(/\D/g, '') || '';
+    // sms: protocol works on both iOS and Android
+    const url = phoneNumber
+      ? `sms:${phoneNumber}?body=${encodeURIComponent(message)}`
+      : `sms:?body=${encodeURIComponent(message)}`;
+
+    window.location.href = url;
+    promptMarkAsSent();
+  };
+
   const handleEmailShare = async () => {
     if (!documentRef.current) return;
 
@@ -802,6 +857,12 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
             {isDownloading ? <Loader2 size={18} className="animate-spin" /> : <Mail size={18} />}
           </button>
           <button onClick={handleWhatsAppShare} className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100" title="Share via WhatsApp"><MessageCircle size={18} /></button>
+          <button onClick={handleSmsShare} className="p-2 bg-sky-50 text-sky-600 rounded-lg hover:bg-sky-100" title="Send SMS">
+            <Phone size={18} />
+          </button>
+          <button onClick={handlePdfPreview} disabled={isGeneratingPreview} className="p-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100" title="Preview PDF">
+            {isGeneratingPreview ? <Loader2 size={18} className="animate-spin" /> : <Eye size={18} />}
+          </button>
           <button onClick={handleDownloadPDF} disabled={isDownloading} className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100" title="Download PDF">
             {isDownloading ? <Loader2 size={18} className="animate-spin" /> : <FileDown size={18} />}
           </button>
@@ -1017,6 +1078,14 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
             </div>
           </div>
         )}
+
+        {/* Test new react-pdf export - REMOVE AFTER TESTING */}
+        <TestPDFExport 
+          quote={activeQuote} 
+          customer={customer} 
+          settings={settings} 
+          totals={totals} 
+        />
       </div>
 
       {/* Responsive document preview wrapper - scales 750px doc to fit mobile viewports */}
@@ -1938,6 +2007,44 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Preview Modal */}
+      {showPdfPreview && pdfPreviewUrl && (
+        <div className="fixed inset-0 bg-black/80 flex flex-col z-[100]">
+          <div className="flex items-center justify-between p-4 bg-slate-900">
+            <h3 className="text-white font-bold">PDF Preview</h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleDownloadPDF}
+                disabled={isDownloading}
+                className="px-4 py-2 bg-amber-500 text-white rounded-lg font-bold text-sm hover:bg-amber-600 transition-colors flex items-center gap-2"
+              >
+                {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />}
+                Download
+              </button>
+              <button
+                onClick={() => {
+                  setShowPdfPreview(false);
+                  if (pdfPreviewUrl) {
+                    URL.revokeObjectURL(pdfPreviewUrl);
+                    setPdfPreviewUrl(null);
+                  }
+                }}
+                className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <iframe
+              src={pdfPreviewUrl}
+              className="w-full h-full border-0"
+              title="PDF Preview"
+            />
           </div>
         </div>
       )}
