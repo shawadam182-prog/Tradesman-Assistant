@@ -63,6 +63,21 @@ const formatCurrency = (amount: number): string => {
   return `£${amount.toFixed(2)}`;
 };
 
+// Helper to check if logo is renderable (not SVG, not broken)
+// react-pdf doesn't render SVGs well in Image component
+const isRenderableLogo = (logoUrl?: string): boolean => {
+  if (!logoUrl) return false;
+  
+  // Skip SVG files - react-pdf Image component doesn't handle them well
+  if (logoUrl.toLowerCase().includes('.svg')) return false;
+  if (logoUrl.startsWith('data:image/svg')) return false;
+  
+  // Skip blob URLs that might be SVGs
+  if (logoUrl.startsWith('blob:')) return false;
+  
+  return true;
+};
+
 // Helper to format date
 const formatDate = (dateString?: string): string => {
   if (!dateString) return '';
@@ -218,7 +233,7 @@ const ProfessionalTemplate: React.FC<InvoicePDFDocumentProps> = ({
       <View style={professionalStyles.header}>
         {/* Company Info */}
         <View style={professionalStyles.companyInfo}>
-          {displayOptions.showLogo && settings.companyLogo && (
+          {displayOptions.showLogo && isRenderableLogo(settings.companyLogo) && (
             <Image src={settings.companyLogo} style={[baseStyles.logo, { marginBottom: 8 }]} />
           )}
           <Text style={professionalStyles.companyName}>{settings.companyName}</Text>
@@ -396,9 +411,9 @@ const ProfessionalTemplate: React.FC<InvoicePDFDocumentProps> = ({
       )}
 
       {/* Footer Logos */}
-      {displayOptions.showLogo && settings.footerLogos && settings.footerLogos.length > 0 && (
+      {displayOptions.showLogo && settings.footerLogos && settings.footerLogos.filter(isRenderableLogo).length > 0 && (
         <View style={professionalStyles.footerLogos}>
-          {settings.footerLogos.map((logo, idx) => (
+          {settings.footerLogos.filter(isRenderableLogo).map((logo, idx) => (
             <Image key={idx} src={logo} style={professionalStyles.footerLogo} />
           ))}
         </View>
@@ -434,7 +449,7 @@ const ClassicTemplate: React.FC<InvoicePDFDocumentProps> = ({
       {/* Header */}
       <View style={[classicStyles.header, { borderBottomColor: colorScheme.headerBg }]}>
         <View style={classicStyles.companySection}>
-          {displayOptions.showLogo && settings.companyLogo && (
+          {displayOptions.showLogo && isRenderableLogo(settings.companyLogo) && (
             <Image src={settings.companyLogo} style={{ height: 35, marginBottom: 4 }} />
           )}
           <Text style={classicStyles.companyName}>{settings.companyName}</Text>
@@ -586,7 +601,7 @@ const SpaciousTemplate: React.FC<InvoicePDFDocumentProps> = ({
       {/* Header */}
       <View style={spaciousStyles.header}>
         <View style={spaciousStyles.companyInfo}>
-          {displayOptions.showLogo && settings.companyLogo && (
+          {displayOptions.showLogo && isRenderableLogo(settings.companyLogo) && (
             <Image src={settings.companyLogo} style={[baseStyles.logoLarge, { marginBottom: 12 }]} />
           )}
           <Text style={spaciousStyles.companyName}>{settings.companyName}</Text>
