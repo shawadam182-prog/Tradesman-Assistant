@@ -14,6 +14,7 @@
 
 import { pdf } from '@react-pdf/renderer';
 import React from 'react';
+import html2canvas from 'html2canvas-pro';
 import { InvoicePDFDocument } from '../../components/invoice-templates/pdf/InvoicePDFDocument';
 import type { Quote, Customer, AppSettings } from '../../types';
 
@@ -148,7 +149,6 @@ async function renderLogoWithHtml2Canvas(logoUrl: string): Promise<string> {
       document.body.appendChild(container);
       
       try {
-        const html2canvas = (await import('html2canvas-pro')).default;
         const canvas = await html2canvas(container, {
           scale: 3,
           backgroundColor: '#ffffff',
@@ -159,7 +159,9 @@ async function renderLogoWithHtml2Canvas(logoUrl: string): Promise<string> {
         
         clearTimeout(timeout);
         document.body.removeChild(container);
-        resolve(canvas.toDataURL('image/png'));
+        const dataUrl = canvas.toDataURL('image/png');
+        console.log('Logo rendered, length:', dataUrl.length);
+        resolve(dataUrl);
       } catch (err) {
         clearTimeout(timeout);
         if (document.body.contains(container)) {
