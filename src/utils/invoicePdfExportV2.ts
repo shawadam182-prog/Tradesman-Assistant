@@ -58,10 +58,12 @@ async function convertImageToPng(imageUrl: string, maxWidth = 200, maxHeight = 1
   
   return new Promise((resolve) => {
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     
     const timeoutId = setTimeout(() => {
       console.warn('Logo load timeout');
-      resolve('');
+      // On timeout, try to use original URL as fallback
+      resolve(imageUrl.startsWith('data:') ? imageUrl : '');
     }, 5000);
     
     img.onload = () => {
@@ -71,43 +73,50 @@ async function convertImageToPng(imageUrl: string, maxWidth = 200, maxHeight = 1
         let width = img.naturalWidth || img.width || maxWidth;
         let height = img.naturalHeight || img.height || maxHeight;
         
-        // Scale to fit
+        // Scale to fit within bounds
         const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
-        width = Math.round(width * ratio);
-        height = Math.round(height * ratio);
+        const finalWidth = Math.round(width * ratio);
+        const finalHeight = Math.round(height * ratio);
         
-        // Create canvas at exact size (no scaling - cleaner output)
+        // Create high-res canvas
+        const scale = 2;
         const canvas = document.createElement('canvas');
-        canvas.width = width * 2; // 2x for retina
-        canvas.height = height * 2;
+        canvas.width = finalWidth * scale;
+        canvas.height = finalHeight * scale;
         
         const ctx = canvas.getContext('2d', { alpha: false });
         if (!ctx) {
-          resolve('');
+          // Fallback to original if canvas fails
+          resolve(srcUrl);
           return;
         }
         
-        // Solid white background
+        // White background
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Draw image scaled up 2x
+        // High quality scaling
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
+        // Draw the image
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
-        // Export as PNG
+        // Export as PNG (full quality)
         const pngDataUrl = canvas.toDataURL('image/png');
-        console.log('Logo converted, length:', pngDataUrl.length);
         resolve(pngDataUrl);
       } catch (err) {
         console.warn('Canvas error:', err);
-        resolve('');
+        // Return original data URL if conversion fails
+        resolve(srcUrl.startsWith('data:') ? srcUrl : '');
       }
     };
     
     img.onerror = () => {
       clearTimeout(timeoutId);
       console.warn('Image load failed');
-      resolve('');
+      // Return original data URL if it was a data URL
+      resolve(srcUrl.startsWith('data:') ? srcUrl : '');
     };
     
     img.src = srcUrl;
