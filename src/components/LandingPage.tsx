@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowRight, Check, ChevronRight, Star, Shield, Zap, Clock,
   FileText, Camera, Calendar, Receipt, PoundSterling, Users,
@@ -11,47 +11,6 @@ interface LandingPageProps {
   onLogin: () => void;
   onSignUp: () => void;
 }
-
-// Animated counter hook
-const useCountUp = (end: number, duration: number = 2000, start: number = 0) => {
-  const [count, setCount] = useState(start);
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!isVisible) return;
-
-    let startTime: number;
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      setCount(Math.floor(progress * (end - start) + start));
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-    requestAnimationFrame(animate);
-  }, [isVisible, end, duration, start]);
-
-  return { count, ref };
-};
 
 // Feature showcase data
 const features = [
@@ -138,11 +97,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onSignUp }) =
   const [showDemo, setShowDemo] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
-
-  // Stats counters
-  const quotesCreated = useCountUp(12500, 2000);
-  const hourssSaved = useCountUp(8400, 2000);
-  const activeUsers = useCountUp(850, 2000);
 
   // Auto-rotate features
   useEffect(() => {
@@ -405,27 +359,36 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onSignUp }) =
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Trust Badges Section */}
       <section className="py-16 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-3 gap-8 text-center">
-            <div ref={quotesCreated.ref}>
-              <p className="text-4xl md:text-5xl font-black text-white mb-2">
-                {quotesCreated.count.toLocaleString()}+
+            <div>
+              <div className="flex justify-center mb-3">
+                <Shield className="text-teal-400" size={40} />
+              </div>
+              <p className="text-xl md:text-2xl font-bold text-white mb-2">
+                Built for UK Trades
               </p>
-              <p className="text-slate-400 font-medium">Quotes Created</p>
+              <p className="text-slate-400 font-medium">VAT, CIS & HMRC Ready</p>
             </div>
-            <div ref={hourssSaved.ref}>
-              <p className="text-4xl md:text-5xl font-black text-white mb-2">
-                {hourssSaved.count.toLocaleString()}+
+            <div>
+              <div className="flex justify-center mb-3">
+                <WifiOff className="text-teal-400" size={40} />
+              </div>
+              <p className="text-xl md:text-2xl font-bold text-white mb-2">
+                Works Offline
               </p>
-              <p className="text-slate-400 font-medium">Hours Saved</p>
+              <p className="text-slate-400 font-medium">No Signal? No Problem</p>
             </div>
-            <div ref={activeUsers.ref}>
-              <p className="text-4xl md:text-5xl font-black text-white mb-2">
-                {activeUsers.count.toLocaleString()}+
+            <div>
+              <div className="flex justify-center mb-3">
+                <Zap className="text-teal-400" size={40} />
+              </div>
+              <p className="text-xl md:text-2xl font-bold text-white mb-2">
+                Lightning Fast
               </p>
-              <p className="text-slate-400 font-medium">Active Tradespeople</p>
+              <p className="text-slate-400 font-medium">Quotes in Minutes</p>
             </div>
           </div>
         </div>
@@ -704,7 +667,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onSignUp }) =
             Ready to Sync Your Trade Business?
           </h2>
           <p className="text-lg text-slate-600 mb-8">
-            Join hundreds of UK tradespeople who've already made the switch.
+            Join UK tradespeople who've already made the switch.
             Start your free trial today — no card required.
           </p>
           <button
