@@ -18,74 +18,99 @@ import { InvoicePDFDocument } from '../../components/invoice-templates/pdf/Invoi
 import type { Quote, Customer, AppSettings } from '../../types';
 
 /**
+ * Fetch image as blob and convert to base64
+ * This avoids CORS and encoding issues
+ */
+async function fetchImageAsBase64(url: string): Promise<string> {
+  try {
+    // For data URLs, extract the base64 directly
+    if (url.startsWith('data:')) {
+      return url;
+    }
+    
+    const response = await fetch(url, { mode: 'cors' });
+    if (!response.ok) throw new Error('Failed to fetch');
+    
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (err) {
+    console.warn('fetchImageAsBase64 failed:', err);
+    return '';
+  }
+}
+
+/**
  * Convert ANY image to a clean PNG data URL
- * This ensures react-pdf gets a format it can handle reliably
+ * Uses canvas to re-render, ensuring react-pdf compatibility
  */
 async function convertImageToPng(imageUrl: string, maxWidth = 200, maxHeight = 100): Promise<string> {
+  // First try to fetch as base64 to avoid CORS issues
+  let srcUrl = imageUrl;
+  if (!imageUrl.startsWith('data:')) {
+    const fetched = await fetchImageAsBase64(imageUrl);
+    if (fetched) srcUrl = fetched;
+  }
+  
   return new Promise((resolve) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
     
     const timeoutId = setTimeout(() => {
-      console.warn('Logo load timeout:', imageUrl?.substring(0, 50));
+      console.warn('Logo load timeout');
       resolve('');
     }, 5000);
     
     img.onload = () => {
       clearTimeout(timeoutId);
       try {
-        // Calculate dimensions maintaining aspect ratio
-        let width = img.naturalWidth || img.width;
-        let height = img.naturalHeight || img.height;
+        // Get actual dimensions
+        let width = img.naturalWidth || img.width || maxWidth;
+        let height = img.naturalHeight || img.height || maxHeight;
         
-        if (width === 0 || height === 0) {
-          width = maxWidth;
-          height = maxHeight;
-        }
+        // Scale to fit
+        const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
         
-        const ratio = Math.min(maxWidth / width, maxHeight / height);
-        width = Math.floor(width * ratio);
-        height = Math.floor(height * ratio);
-        
-        // Use higher resolution for crisp output
-        const scale = 3;
+        // Create canvas at exact size (no scaling - cleaner output)
         const canvas = document.createElement('canvas');
-        canvas.width = width * scale;
-        canvas.height = height * scale;
+        canvas.width = width * 2; // 2x for retina
+        canvas.height = height * 2;
         
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false });
         if (!ctx) {
-          console.warn('Could not get canvas context');
           resolve('');
           return;
         }
         
-        // White background for transparency
+        // Solid white background
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        ctx.scale(scale, scale);
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, 0, 0, width, height);
+        // Draw image scaled up 2x
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
-        const pngDataUrl = canvas.toDataURL('image/png', 1.0);
-        console.log('Logo converted successfully, size:', pngDataUrl.length);
+        // Export as PNG
+        const pngDataUrl = canvas.toDataURL('image/png');
+        console.log('Logo converted, length:', pngDataUrl.length);
         resolve(pngDataUrl);
       } catch (err) {
-        console.warn('Logo conversion error:', err);
+        console.warn('Canvas error:', err);
         resolve('');
       }
     };
     
-    img.onerror = (err) => {
+    img.onerror = () => {
       clearTimeout(timeoutId);
-      console.warn('Failed to load logo:', err);
+      console.warn('Image load failed');
       resolve('');
     };
     
-    // Handle data URLs and regular URLs
-    img.src = imageUrl;
+    img.src = srcUrl;
   });
 }
 
