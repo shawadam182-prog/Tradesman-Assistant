@@ -64,11 +64,11 @@ const formatCurrency = (amount: number): string => {
 };
 
 // Helper to check if logo is renderable
-// SVGs are now converted to PNG in invoicePdfExportV2.ts before reaching this component
+// TEMPORARILY DISABLED - react-pdf has rendering bugs with certain PNGs
+// TODO: Fix logo rendering in react-pdf or use hybrid approach
 const isRenderableLogo = (logoUrl?: string): boolean => {
-  if (!logoUrl) return false;
-  if (logoUrl.trim() === '') return false;
-  return true;
+  // Disabled until we fix the react-pdf logo rendering bug
+  return false;
 };
 
 // Helper to format date
