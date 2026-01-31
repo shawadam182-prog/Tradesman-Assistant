@@ -124,45 +124,13 @@ async function convertImageToPng(imageUrl: string, maxWidth = 200, maxHeight = 1
 }
 
 /**
- * Pre-process settings to convert ALL logos to PNG
- * This ensures react-pdf gets clean PNG data URLs it can render
+ * Pre-process settings - just pass URLs directly to react-pdf
+ * react-pdf can fetch images itself, which may work better than our conversion
  */
 async function convertLogosForPdf(settings: AppSettings): Promise<AppSettings> {
-  const processedSettings = { ...settings };
-  
-  // Convert main company logo (always convert to ensure clean PNG)
-  if (settings.companyLogo) {
-    try {
-      console.log('Converting company logo...');
-      const pngDataUrl = await convertImageToPng(settings.companyLogo, 200, 100);
-      if (pngDataUrl && pngDataUrl.length > 100) {
-        processedSettings.companyLogo = pngDataUrl;
-      } else {
-        console.warn('Logo conversion produced empty result');
-        processedSettings.companyLogo = undefined;
-      }
-    } catch (err) {
-      console.warn('Failed to convert company logo:', err);
-      processedSettings.companyLogo = undefined;
-    }
-  }
-  
-  // Convert footer logos
-  if (settings.footerLogos && settings.footerLogos.length > 0) {
-    const convertedFooterLogos = await Promise.all(
-      settings.footerLogos.map(async (logo) => {
-        try {
-          const converted = await convertImageToPng(logo, 100, 50);
-          return converted && converted.length > 100 ? converted : '';
-        } catch {
-          return '';
-        }
-      })
-    );
-    processedSettings.footerLogos = convertedFooterLogos.filter(Boolean);
-  }
-  
-  return processedSettings;
+  // Don't modify anything - let react-pdf handle the URLs directly
+  // This avoids CORS issues from canvas conversion
+  return settings;
 }
 
 // Totals interface matching what QuoteView calculates
