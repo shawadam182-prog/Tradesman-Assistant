@@ -20,7 +20,6 @@ import {
 } from '../src/utils/quoteCalculations';
 import { getTemplateConfig, getTableHeaderStyle, getColorScheme } from '../src/lib/invoiceTemplates';
 import { ClassicTemplate } from './invoice-templates';
-import { generateInvoicePDF, createInvoicePDFFile, getInvoiceReference } from '../src/utils/invoicePdfExportV2';
 
 interface QuoteViewProps {
   quote: Quote;
@@ -465,35 +464,54 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   };
 
   const handleDownloadPDF = async () => {
+    if (!documentRef.current) return;
+
     setIsDownloading(true);
     try {
-      // Use react-pdf for crisp vector text
-      const pdfTotals = {
-        clientSubtotal: totals.clientSubtotal,
-        taxAmount: totals.taxAmount,
-        cisAmount: totals.cisAmount,
-        discountAmount: totals.discountAmount || 0,
-        grandTotal: totals.grandTotal,
-      };
-      
-      const { blob, filename } = await generateInvoicePDF(
-        activeQuote,
-        customer,
-        settings,
-        pdfTotals,
-        reference
-      );
+      const prefix = activeQuote.type === 'invoice' ? (settings.invoicePrefix || 'INV-') : (settings.quotePrefix || 'EST-');
+      const numStr = (activeQuote.referenceNumber || 1).toString().padStart(4, '0');
+      const cleanTitle = (activeQuote.title || 'estimate').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const filename = `${prefix}${numStr}_${cleanTitle}.pdf`;
 
-      // Download the PDF
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
+      // 4x scale for crisp 300 DPI output
+      const scale = 4;
+
+      const canvas = await html2canvas(documentRef.current, {
+        scale,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: documentRef.current.scrollWidth,
+        windowHeight: documentRef.current.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      let heightLeft = scaledHeight;
+      let position = 0;
+      let pageNum = 0;
+
+      while (heightLeft > 0) {
+        if (pageNum > 0) {
+          pdf.addPage();
+        }
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
+        heightLeft -= pdfHeight;
+        position -= pdfHeight;
+        pageNum++;
+      }
+
+      pdf.save(filename);
       promptMarkAsSent();
     } catch (err) {
       console.error('PDF generation failed:', err);
@@ -604,6 +622,8 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
   };
 
   const handleEmailShare = async () => {
+    if (!documentRef.current) return;
+
     setIsDownloading(true);
     try {
       const prefix = activeQuote.type === 'invoice' ? (settings.invoicePrefix || 'INV-') : (settings.quotePrefix || 'EST-');
@@ -614,22 +634,43 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
       const customerName = customer?.name || 'there';
       const customerEmail = customer?.email || '';
 
-      // Use react-pdf for crisp vector text
-      const pdfTotals = {
-        clientSubtotal: totals.clientSubtotal,
-        taxAmount: totals.taxAmount,
-        cisAmount: totals.cisAmount,
-        discountAmount: totals.discountAmount || 0,
-        grandTotal: totals.grandTotal,
-      };
+      // 4x scale for crisp output
+      const scale = 4;
 
-      const pdfFile = await createInvoicePDFFile(
-        activeQuote,
-        customer,
-        settings,
-        pdfTotals,
-        reference
-      );
+      const canvas = await html2canvas(documentRef.current, {
+        scale,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: documentRef.current.scrollWidth,
+        windowHeight: documentRef.current.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      let heightLeft = scaledHeight;
+      let position = 0;
+      let pageNum = 0;
+
+      while (heightLeft > 0) {
+        if (pageNum > 0) {
+          pdf.addPage();
+        }
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
+        heightLeft -= pdfHeight;
+        position -= pdfHeight;
+        pageNum++;
+      }
 
       // Build email content
       let partPaymentLine = '';
@@ -648,10 +689,13 @@ Please find attached ${docType} as discussed.${partPaymentLine}
 Thanks,
 ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${settings?.email ? `\n${settings.email}` : ''}`;
 
-      // MOBILE: Use Web Share API to attach PDF directly to email
+      // MOBILE: Use Web Share API
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       if (isMobile && navigator.share && navigator.canShare) {
         try {
+          const pdfBlob = pdf.output('blob');
+          const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+
           const shareData = {
             files: [pdfFile],
             title: subject,
@@ -661,27 +705,16 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           if (navigator.canShare(shareData)) {
             await navigator.share(shareData);
             promptMarkAsSent();
-            return; // Success - email app opened with PDF attached
+            return;
           }
         } catch (shareErr) {
-          if ((shareErr as Error).name === 'AbortError') {
-            return; // User cancelled
-          }
+          if ((shareErr as Error).name === 'AbortError') return;
           console.log('Web Share failed:', shareErr);
-          // Fall through to download approach
         }
       }
 
       // DESKTOP/FALLBACK: Download PDF and open mailto
-      const url = URL.createObjectURL(pdfFile);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
+      pdf.save(filename);
       const mailtoLink = `mailto:${customerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       await new Promise(resolve => setTimeout(resolve, 300));
       window.location.href = mailtoLink;
