@@ -51,7 +51,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
   // Respects displayOptions for filtering materials and labour
   const getAllItems = () => {
     const items: Array<{
-      type?: 'header' | 'item';
+      type?: 'header' | 'item' | 'subheading';
       description: string;
       sectionDescription?: string;
       qty: string;
@@ -87,7 +87,17 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
       }
 
       // Add material items (only if showMaterials is enabled)
-      if (hasMaterialsToShow) {
+      if (hasMaterialsToShow && sectionHasMaterials) {
+        // Add "Materials" sub-heading
+        items.push({
+          type: 'subheading' as any,
+          description: 'Materials',
+          qty: '',
+          rate: 0,
+          amount: 0,
+          itemType: 'material',
+        });
+        
         (section.items || []).filter(i => !i.isHeading).forEach(item => {
           items.push({
             type: 'item',
@@ -101,13 +111,23 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
       }
 
       // Add labour items (only if showLabour is enabled)
-      if (hasLabourToShow) {
+      if (hasLabourToShow && sectionHasLabour) {
+        // Add "Labour" sub-heading
+        items.push({
+          type: 'subheading' as any,
+          description: 'Labour',
+          qty: '',
+          rate: 0,
+          amount: 0,
+          itemType: 'labour',
+        });
+        
         if (section.labourItems?.length) {
           section.labourItems.forEach(labour => {
             const rate = labour.rate || section.labourRate || quote.labourRate || settings.defaultLabourRate;
             items.push({
               type: 'item',
-              description: labour.description || 'Labour',
+              description: labour.description || 'Labour work',
               qty: `${labour.hours} hrs`,
               rate: rate * markupMultiplier,
               amount: labour.hours * rate * markupMultiplier,
@@ -118,7 +138,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
           const rate = section.labourRate || quote.labourRate || settings.defaultLabourRate;
           items.push({
             type: 'item',
-            description: 'Labour',
+            description: 'Labour work',
             qty: `${section.labourHours} hrs`,
             rate: rate * markupMultiplier,
             amount: (section.labourHours || 0) * rate * markupMultiplier,
@@ -199,79 +219,105 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
         return (
           <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '4mm' }}>
             <thead>
-              <tr style={{ background: headerBgColor, color: headerTextColor }}>
-                <th style={{ padding: '6px 8px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold' }}>Description</th>
+              <tr style={{ background: '#ffffff', borderBottom: '2px solid #e2e8f0' }}>
+                <th style={{ padding: '8px 8px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#334155' }}>Description</th>
                 {showQtyColumn && (
-                  <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', width: '55px' }}>Qty</th>
+                  <th style={{ padding: '8px 8px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', color: '#334155', width: '55px' }}>Qty</th>
                 )}
                 {showRateColumn && (
-                  <th style={{ padding: '6px 8px', textAlign: 'right', fontSize: '12px', fontWeight: 'bold', width: '65px' }}>Rate</th>
+                  <th style={{ padding: '8px 8px', textAlign: 'right', fontSize: '12px', fontWeight: 'bold', color: '#334155', width: '65px' }}>Rate</th>
                 )}
                 {showAmountColumn && (
-                  <th style={{ padding: '6px 8px', textAlign: 'right', fontSize: '12px', fontWeight: 'bold', width: '75px' }}>Amount</th>
+                  <th style={{ padding: '8px 8px', textAlign: 'right', fontSize: '12px', fontWeight: 'bold', color: '#334155', width: '75px' }}>Amount</th>
                 )}
               </tr>
             </thead>
             <tbody>
-              {items.map((item, idx) => (
-                item.type === 'header' ? (
+              {items.map((item, idx) => {
+                if (item.type === 'header') {
                   /* Section Header - title row (green) + optional description row (white) */
-                  <React.Fragment key={idx}>
-                    {/* Title Row - Green */}
-                    <tr>
+                  return (
+                    <React.Fragment key={idx}>
+                      {/* Title Row - Green */}
+                      <tr>
+                        <td colSpan={colSpan} style={{
+                          padding: '12px 10px',
+                          backgroundColor: headerBgColor,
+                          borderLeft: `4px solid ${headerTextColor}`,
+                        }}>
+                          <div style={{
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            color: headerTextColor,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                          }}>
+                            {item.description}
+                          </div>
+                        </td>
+                      </tr>
+                      {/* Description Row - White/separate */}
+                      {item.sectionDescription && (
+                        <tr>
+                          <td colSpan={colSpan} style={{
+                            padding: '8px 14px',
+                            backgroundColor: '#ffffff',
+                            borderBottom: '1px solid #e2e8f0',
+                          }}>
+                            <div style={{
+                              fontSize: '12px',
+                              fontWeight: 'normal',
+                              color: '#475569',
+                              fontStyle: 'italic',
+                              whiteSpace: 'pre-line',
+                              lineHeight: '1.4',
+                            }}>
+                              {item.sectionDescription}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                } else if (item.type === 'subheading') {
+                  /* Materials / Labour sub-heading */
+                  return (
+                    <tr key={idx}>
                       <td colSpan={colSpan} style={{
-                        padding: '12px 10px',
-                        backgroundColor: headerBgColor,
-                        borderLeft: `4px solid ${headerTextColor}`,
+                        padding: '8px 12px',
+                        backgroundColor: '#f8fafc',
+                        borderBottom: '1px solid #e2e8f0',
                       }}>
                         <div style={{
-                          fontSize: '14px',
+                          fontSize: '11px',
                           fontWeight: 'bold',
-                          color: headerTextColor,
+                          color: '#64748b',
                           textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
+                          letterSpacing: '0.03em',
                         }}>
                           {item.description}
                         </div>
                       </td>
                     </tr>
-                    {/* Description Row - White/separate */}
-                    {item.sectionDescription && (
-                      <tr>
-                        <td colSpan={colSpan} style={{
-                          padding: '8px 14px',
-                          backgroundColor: '#ffffff',
-                          borderBottom: '1px solid #e2e8f0',
-                        }}>
-                          <div style={{
-                            fontSize: '12px',
-                            fontWeight: 'normal',
-                            color: '#475569',
-                            fontStyle: 'italic',
-                            whiteSpace: 'pre-line',
-                            lineHeight: '1.4',
-                          }}>
-                            {item.sectionDescription}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ) : (
-                  <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '5px 8px 5px 20px', fontSize: '12px', color: '#334155' }}>{item.description}</td>
-                    {showQtyColumn && (
-                      <td style={{ padding: '5px 8px', textAlign: 'center', color: '#64748b', fontSize: '12px' }}>{item.qty}</td>
-                    )}
-                    {showRateColumn && (
-                      <td style={{ padding: '5px 8px', textAlign: 'right', color: '#64748b', fontSize: '12px' }}>£{item.rate.toFixed(2)}</td>
-                    )}
-                    {showAmountColumn && (
-                      <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: '600', fontSize: '12px', color: '#1e293b' }}>£{item.amount.toFixed(2)}</td>
-                    )}
-                  </tr>
-                )
-              ))}
+                  );
+                } else {
+                  /* Regular item row */
+                  return (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '5px 8px 5px 24px', fontSize: '12px', color: '#334155' }}>{item.description}</td>
+                      {showQtyColumn && (
+                        <td style={{ padding: '5px 8px', textAlign: 'center', color: '#64748b', fontSize: '12px' }}>{item.qty}</td>
+                      )}
+                      {showRateColumn && (
+                        <td style={{ padding: '5px 8px', textAlign: 'right', color: '#64748b', fontSize: '12px' }}>£{item.rate.toFixed(2)}</td>
+                      )}
+                      {showAmountColumn && (
+                        <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: '600', fontSize: '12px', color: '#1e293b' }}>£{item.amount.toFixed(2)}</td>
+                      )}
+                    </tr>
+                  );
+                }
+              })}
             </tbody>
           </table>
         );
