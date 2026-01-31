@@ -14,196 +14,126 @@
 
 import { pdf } from '@react-pdf/renderer';
 import React from 'react';
-import html2canvas from 'html2canvas-pro';
 import { InvoicePDFDocument } from '../../components/invoice-templates/pdf/InvoicePDFDocument';
 import type { Quote, Customer, AppSettings } from '../../types';
 
 /**
- * Fetch image as blob and convert to base64
- * This avoids CORS and encoding issues
+ * Convert logo to PNG data URL for react-pdf compatibility
+ * 
+ * react-pdf needs raster images - SVGs don't render correctly.
+ * This function:
+ * 1. Loads the image (handles CORS via crossOrigin)
+ * 2. Draws it to canvas at high resolution
+ * 3. Returns a PNG data URL
  */
-async function fetchImageAsBase64(url: string): Promise<string> {
-  try {
-    // For data URLs, extract the base64 directly
-    if (url.startsWith('data:')) {
-      return url;
-    }
-    
-    const response = await fetch(url, { mode: 'cors' });
-    if (!response.ok) throw new Error('Failed to fetch');
-    
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (err) {
-    console.warn('fetchImageAsBase64 failed:', err);
-    return '';
-  }
-}
-
-/**
- * Convert ANY image to a clean PNG data URL
- * Uses canvas to re-render, ensuring react-pdf compatibility
- */
-async function convertImageToPng(imageUrl: string, maxWidth = 200, maxHeight = 100): Promise<string> {
-  // First try to fetch as base64 to avoid CORS issues
-  let srcUrl = imageUrl;
-  if (!imageUrl.startsWith('data:')) {
-    const fetched = await fetchImageAsBase64(imageUrl);
-    if (fetched) srcUrl = fetched;
+async function convertLogoToPng(logoUrl: string): Promise<string> {
+  if (!logoUrl || logoUrl.trim() === '') return '';
+  
+  // Already a PNG/JPEG data URL - use directly
+  if (logoUrl.startsWith('data:image/png') || logoUrl.startsWith('data:image/jpeg')) {
+    return logoUrl;
   }
   
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     
-    const timeoutId = setTimeout(() => {
-      console.warn('Logo load timeout');
-      // On timeout, try to use original URL as fallback
-      resolve(imageUrl.startsWith('data:') ? imageUrl : '');
+    const timeout = setTimeout(() => {
+      console.warn('Logo load timeout, skipping');
+      resolve('');
     }, 5000);
     
     img.onload = () => {
-      clearTimeout(timeoutId);
+      clearTimeout(timeout);
       try {
-        // Get actual dimensions
-        let width = img.naturalWidth || img.width || maxWidth;
-        let height = img.naturalHeight || img.height || maxHeight;
+        // Get natural dimensions
+        const naturalWidth = img.naturalWidth || img.width;
+        const naturalHeight = img.naturalHeight || img.height;
         
-        // Scale to fit within bounds
-        const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
-        const finalWidth = Math.round(width * ratio);
-        const finalHeight = Math.round(height * ratio);
-        
-        // Create high-res canvas
-        const scale = 2;
-        const canvas = document.createElement('canvas');
-        canvas.width = finalWidth * scale;
-        canvas.height = finalHeight * scale;
-        
-        const ctx = canvas.getContext('2d', { alpha: false });
-        if (!ctx) {
-          // Fallback to original if canvas fails
-          resolve(srcUrl);
+        if (!naturalWidth || !naturalHeight) {
+          console.warn('Logo has no dimensions');
+          resolve('');
           return;
         }
         
-        // White background
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Create canvas at 2x for crisp rendering
+        const scale = 2;
+        const canvas = document.createElement('canvas');
+        canvas.width = naturalWidth * scale;
+        canvas.height = naturalHeight * scale;
         
-        // High quality scaling
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          console.warn('Could not get canvas context');
+          resolve('');
+          return;
+        }
+        
+        // Transparent background (preserve logo transparency)
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // High quality rendering
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         
-        // Draw the image
+        // Draw at 2x scale
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
-        // Export as PNG (full quality)
-        const pngDataUrl = canvas.toDataURL('image/png');
-        resolve(pngDataUrl);
-      } catch (err) {
-        console.warn('Canvas error:', err);
-        // Return original data URL if conversion fails
-        resolve(srcUrl.startsWith('data:') ? srcUrl : '');
-      }
-    };
-    
-    img.onerror = () => {
-      clearTimeout(timeoutId);
-      console.warn('Image load failed');
-      // Return original data URL if it was a data URL
-      resolve(srcUrl.startsWith('data:') ? srcUrl : '');
-    };
-    
-    img.src = srcUrl;
-  });
-}
-
-/**
- * Render logo using html2canvas (hybrid approach)
- * html2canvas renders the logo correctly, then we pass the data URL to react-pdf
- */
-async function renderLogoWithHtml2Canvas(logoUrl: string): Promise<string> {
-  return new Promise((resolve) => {
-    const container = document.createElement('div');
-    container.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;padding:8px;';
-    
-    const img = document.createElement('img');
-    img.crossOrigin = 'anonymous';
-    img.style.cssText = 'max-width:180px;max-height:90px;display:block;';
-    
-    const timeout = setTimeout(() => {
-      if (document.body.contains(container)) {
-        document.body.removeChild(container);
-      }
-      resolve('');
-    }, 8000);
-    
-    img.onload = async () => {
-      container.appendChild(img);
-      document.body.appendChild(container);
-      
-      try {
-        const canvas = await html2canvas(container, {
-          scale: 3,
-          backgroundColor: '#ffffff',
-          logging: false,
-          useCORS: true,
-          allowTaint: true,
-        });
-        
-        clearTimeout(timeout);
-        document.body.removeChild(container);
+        // Export as PNG
         const dataUrl = canvas.toDataURL('image/png');
-        console.log('Logo rendered, length:', dataUrl.length);
         resolve(dataUrl);
       } catch (err) {
-        clearTimeout(timeout);
-        if (document.body.contains(container)) {
-          document.body.removeChild(container);
-        }
-        console.warn('html2canvas logo failed:', err);
+        console.warn('Logo conversion error:', err);
         resolve('');
       }
     };
     
-    img.onerror = () => {
+    img.onerror = (err) => {
       clearTimeout(timeout);
+      console.warn('Logo failed to load:', err);
       resolve('');
     };
     
-    img.src = logoUrl;
+    // Handle SVG data URLs - need to convert via fetch first
+    if (logoUrl.startsWith('data:image/svg')) {
+      // SVG data URL - create blob URL and load that
+      fetch(logoUrl)
+        .then(res => res.blob())
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          img.src = blobUrl;
+        })
+        .catch(() => {
+          clearTimeout(timeout);
+          resolve('');
+        });
+    } else {
+      img.src = logoUrl;
+    }
   });
 }
 
 /**
- * Pre-process settings - use html2canvas to render logos
- * This hybrid approach uses html2canvas (proven) for logo, react-pdf for text
+ * Pre-process settings - convert logos to PNG for react-pdf
  */
 async function convertLogosForPdf(settings: AppSettings): Promise<AppSettings> {
   const processedSettings = { ...settings };
   
   if (settings.companyLogo) {
-    try {
-      const logoDataUrl = await renderLogoWithHtml2Canvas(settings.companyLogo);
-      if (logoDataUrl && logoDataUrl.length > 500) {
-        processedSettings.companyLogo = logoDataUrl;
-      }
-    } catch (err) {
-      console.warn('Logo render failed:', err);
+    const converted = await convertLogoToPng(settings.companyLogo);
+    if (converted && converted.length > 100) {
+      processedSettings.companyLogo = converted;
+    } else {
+      // Logo conversion failed - skip logo rather than crash
+      processedSettings.companyLogo = '';
     }
   }
   
   if (settings.footerLogos && settings.footerLogos.length > 0) {
     const converted = await Promise.all(
-      settings.footerLogos.map(logo => renderLogoWithHtml2Canvas(logo))
+      settings.footerLogos.map(logo => convertLogoToPng(logo))
     );
-    processedSettings.footerLogos = converted.filter(l => l && l.length > 500);
+    processedSettings.footerLogos = converted.filter(l => l && l.length > 100);
   }
   
   return processedSettings;

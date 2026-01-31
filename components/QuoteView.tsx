@@ -20,7 +20,7 @@ import {
 } from '../src/utils/quoteCalculations';
 import { getTemplateConfig, getTableHeaderStyle, getColorScheme } from '../src/lib/invoiceTemplates';
 import { ClassicTemplate } from './invoice-templates';
-// import { TestPDFExport } from './invoice-templates/pdf/TestPDFExport'; // DISABLED - logo rendering issues
+import { generateInvoicePDF, createInvoicePDFFile, getInvoiceReference } from '../src/utils/invoicePdfExportV2';
 
 interface QuoteViewProps {
   quote: Quote;
@@ -465,87 +465,39 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   };
 
   const handleDownloadPDF = async () => {
-    if (!documentRef.current) return;
-
     setIsDownloading(true);
     try {
-      const prefix = activeQuote.type === 'invoice' ? (settings.invoicePrefix || 'INV-') : (settings.quotePrefix || 'EST-');
-      const numStr = (activeQuote.referenceNumber || 1).toString().padStart(4, '0');
-      const cleanTitle = (activeQuote.title || 'estimate').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const filename = `${prefix}${numStr}_${cleanTitle}.pdf`;
+      // Use react-pdf for crisp vector text
+      const pdfTotals = {
+        clientSubtotal: totals.clientSubtotal,
+        taxAmount: totals.taxAmount,
+        cisAmount: totals.cisAmount,
+        discountAmount: totals.discountAmount || 0,
+        grandTotal: totals.grandTotal,
+      };
+      
+      const { blob, filename } = await generateInvoicePDF(
+        activeQuote,
+        customer,
+        settings,
+        pdfTotals,
+        reference
+      );
 
-      // Higher scale for crisp 300 DPI output
-      const isMobile = window.innerWidth < 768;
-      const scale = isMobile ? 2.5 : 4;
-
-      // Capture the document as canvas
-      // Note: html2canvas doesn't support oklch colors (Tailwind v4), so we convert them in onclone
-      const canvas = await html2canvas(documentRef.current, {
-        scale,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: documentRef.current.scrollWidth,
-        windowHeight: documentRef.current.scrollHeight,
-        onclone: (clonedDoc) => {
-          // Convert any oklch colors to rgb for html2canvas compatibility
-          const allElements = clonedDoc.querySelectorAll('*');
-          allElements.forEach((el) => {
-            const computed = window.getComputedStyle(el);
-            const htmlEl = el as HTMLElement;
-            // Get computed colors and apply as inline styles
-            if (computed.color) {
-              htmlEl.style.color = computed.color;
-            }
-            if (computed.backgroundColor && computed.backgroundColor !== 'rgba(0, 0, 0, 0)') {
-              htmlEl.style.backgroundColor = computed.backgroundColor;
-            }
-            if (computed.borderColor) {
-              htmlEl.style.borderColor = computed.borderColor;
-            }
-          });
-        },
-      });
-
-      // Use PNG for better compatibility, with fallback to JPEG
-      let imgData: string;
-      try {
-        imgData = canvas.toDataURL('image/png');
-      } catch {
-        // Fallback to JPEG if PNG fails (memory constraints)
-        imgData = canvas.toDataURL('image/jpeg', 0.8);
-      }
-
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      // Handle multi-page if content is tall
-      let heightLeft = scaledHeight;
-      let position = 0;
-      let pageNum = 0;
-
-      while (heightLeft > 0) {
-        if (pageNum > 0) {
-          pdf.addPage();
-        }
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
-        heightLeft -= pdfHeight;
-        position -= pdfHeight;
-        pageNum++;
-      }
-
-      pdf.save(filename);
+      // Download the PDF
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
       promptMarkAsSent();
     } catch (err) {
       console.error('PDF generation failed:', err);
-      alert('PDF generation failed. Please try again or use screenshot instead.');
+      alert('PDF generation failed. Please try again.');
     } finally {
       setIsDownloading(false);
     }
@@ -652,8 +604,6 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
   };
 
   const handleEmailShare = async () => {
-    if (!documentRef.current) return;
-
     setIsDownloading(true);
     try {
       const prefix = activeQuote.type === 'invoice' ? (settings.invoicePrefix || 'INV-') : (settings.quotePrefix || 'EST-');
@@ -664,47 +614,22 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
       const customerName = customer?.name || 'there';
       const customerEmail = customer?.email || '';
 
-      // Higher scale for crisp output
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const scale = isMobile ? 2.5 : 4;
+      // Use react-pdf for crisp vector text
+      const pdfTotals = {
+        clientSubtotal: totals.clientSubtotal,
+        taxAmount: totals.taxAmount,
+        cisAmount: totals.cisAmount,
+        discountAmount: totals.discountAmount || 0,
+        grandTotal: totals.grandTotal,
+      };
 
-      // Generate canvas from the document
-      const canvas = await html2canvas(documentRef.current, {
-        scale,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: documentRef.current.scrollWidth,
-        windowHeight: documentRef.current.scrollHeight,
-      });
-
-      // Always use PNG for crispest text
-      const imgData = canvas.toDataURL('image/png');
-
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      // Handle multi-page
-      let heightLeft = scaledHeight;
-      let position = 0;
-      let pageNum = 0;
-
-      while (heightLeft > 0) {
-        if (pageNum > 0) {
-          pdf.addPage();
-        }
-        pdf.addImage(imgData, isMobile ? 'JPEG' : 'PNG', 0, position, pdfWidth, scaledHeight);
-        heightLeft -= pdfHeight;
-        position -= pdfHeight;
-        pageNum++;
-      }
+      const pdfFile = await createInvoicePDFFile(
+        activeQuote,
+        customer,
+        settings,
+        pdfTotals,
+        reference
+      );
 
       // Build email content
       let partPaymentLine = '';
@@ -724,22 +649,9 @@ Thanks,
 ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${settings?.email ? `\n${settings.email}` : ''}`;
 
       // MOBILE: Use Web Share API to attach PDF directly to email
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       if (isMobile && navigator.share && navigator.canShare) {
         try {
-          // Use blob output directly - more reliable than arraybuffer on mobile
-          const pdfBlob = pdf.output('blob');
-
-          // Validate the blob has content
-          if (!pdfBlob || pdfBlob.size < 1000) {
-            console.warn('PDF blob too small, falling back to download');
-            throw new Error('PDF generation produced invalid output');
-          }
-
-          const pdfFile = new File([pdfBlob], filename, {
-            type: 'application/pdf',
-            lastModified: Date.now()
-          });
-
           const shareData = {
             files: [pdfFile],
             title: subject,
@@ -761,7 +673,15 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
       }
 
       // DESKTOP/FALLBACK: Download PDF and open mailto
-      pdf.save(filename);
+      const url = URL.createObjectURL(pdfFile);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
       const mailtoLink = `mailto:${customerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       await new Promise(resolve => setTimeout(resolve, 300));
       window.location.href = mailtoLink;
