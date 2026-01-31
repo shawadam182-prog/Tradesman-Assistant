@@ -303,7 +303,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       const filename = `${prefix}${numStr}_${cleanTitle}.pdf`;
 
       const isMobile = window.innerWidth < 768;
-      const scale = isMobile ? 1.5 : 2;
+      const scale = isMobile ? 2.5 : 4; // Higher scale for crisp 300 DPI output
 
       const canvas = await html2canvas(documentRef.current, {
         scale,
@@ -474,9 +474,9 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       const cleanTitle = (activeQuote.title || 'estimate').replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const filename = `${prefix}${numStr}_${cleanTitle}.pdf`;
 
-      // Use lower scale on mobile to prevent memory issues
+      // Higher scale for crisp 300 DPI output
       const isMobile = window.innerWidth < 768;
-      const scale = isMobile ? 1.5 : 2;
+      const scale = isMobile ? 2.5 : 4;
 
       // Capture the document as canvas
       // Note: html2canvas doesn't support oklch colors (Tailwind v4), so we convert them in onclone
@@ -664,9 +664,9 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
       const customerName = customer?.name || 'there';
       const customerEmail = customer?.email || '';
 
-      // MOBILE: Use very low scale to prevent memory corruption
+      // Higher scale for crisp output
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const scale = isMobile ? 1 : 2;
+      const scale = isMobile ? 2.5 : 4;
 
       // Generate canvas from the document
       const canvas = await html2canvas(documentRef.current, {
@@ -678,10 +678,8 @@ ${settings?.email ? `📧 ${settings.email}` : ''}`;
         windowHeight: documentRef.current.scrollHeight,
       });
 
-      // Use JPEG on mobile for smaller file size and better compatibility
-      const imgData = isMobile
-        ? canvas.toDataURL('image/jpeg', 0.85)
-        : canvas.toDataURL('image/png');
+      // Always use PNG for crispest text
+      const imgData = canvas.toDataURL('image/png');
 
       const pdf = new jsPDF({
         orientation: 'portrait',
