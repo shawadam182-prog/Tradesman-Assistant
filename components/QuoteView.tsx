@@ -54,7 +54,25 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   } | null>(null);
   const [showMarkAsSentPrompt, setShowMarkAsSentPrompt] = useState(false);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const documentRef = useRef<HTMLDivElement>(null);
+  const shareMenuRef = useRef<HTMLDivElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close menus when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(event.target as Node)) {
+        setShowShareMenu(false);
+      }
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+        setShowMoreMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Show prompt to mark as sent after sharing (only if status is draft)
   const promptMarkAsSent = () => {
@@ -804,16 +822,58 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
         </div>
         <div className="flex gap-2">
           <button onClick={onEdit} className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100"><Edit3 size={18} /></button>
-          <button onClick={handleEmailShare} disabled={isDownloading} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="Email with PDF">
-            {isDownloading ? <Loader2 size={18} className="animate-spin" /> : <Mail size={18} />}
-          </button>
-          <button onClick={handleWhatsAppShare} className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100" title="Share via WhatsApp"><MessageCircle size={18} /></button>
-          <button onClick={handleSmsShare} className="p-2 bg-sky-50 text-sky-600 rounded-lg hover:bg-sky-100" title="Send SMS">
-            <Phone size={18} />
-          </button>
-          <button onClick={handlePdfPreview} disabled={isGeneratingPreview} className="p-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100" title="Preview PDF">
-            {isGeneratingPreview ? <Loader2 size={18} className="animate-spin" /> : <Eye size={18} />}
-          </button>
+          
+          {/* Share Dropdown */}
+          <div className="relative" ref={shareMenuRef}>
+            <button 
+              onClick={() => setShowShareMenu(!showShareMenu)}
+              className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 flex items-center gap-1"
+              title="Share"
+            >
+              <Share2 size={18} />
+              <ChevronDown size={14} className={`transition-transform ${showShareMenu ? 'rotate-180' : ''}`} />
+            </button>
+            {showShareMenu && (
+              <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-100 py-1 min-w-[160px] z-50">
+                <button 
+                  onClick={() => { handleEmailShare(); setShowShareMenu(false); }}
+                  disabled={isDownloading}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                >
+                  <Mail size={16} className="text-blue-500" /> Email with PDF
+                </button>
+                <button 
+                  onClick={() => { handleWhatsAppShare(); setShowShareMenu(false); }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                >
+                  <MessageCircle size={16} className="text-green-500" /> WhatsApp
+                </button>
+                <button 
+                  onClick={() => { handleSmsShare(); setShowShareMenu(false); }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                >
+                  <Phone size={16} className="text-sky-500" /> SMS
+                </button>
+                {activeQuote.type !== 'invoice' && (
+                  <button 
+                    onClick={() => { handleCopyShareLink(); setShowShareMenu(false); }}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                  >
+                    <Link2 size={16} className="text-violet-500" /> {activeQuote.shareToken ? 'Copy Link' : 'Get Share Link'}
+                  </button>
+                )}
+                <div className="border-t border-slate-100 my-1" />
+                <button 
+                  onClick={() => { handlePdfPreview(); setShowShareMenu(false); }}
+                  disabled={isGeneratingPreview}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                >
+                  <Eye size={16} className="text-purple-500" /> Preview PDF
+                </button>
+              </div>
+            )}
+          </div>
+
           <button onClick={handleDownloadPDF} disabled={isDownloading} className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100" title="Download PDF">
             {isDownloading ? <Loader2 size={18} className="animate-spin" /> : <FileDown size={18} />}
           </button>
@@ -821,6 +881,94 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
       </div>
 
       <div className="flex flex-col gap-2 print:hidden">
+        {/* Visual Status Stepper */}
+        <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
+          <div className="flex items-center justify-between">
+            {activeQuote.type !== 'invoice' ? (
+              // Quote lifecycle: Draft → Sent → Accepted/Declined → Invoiced
+              <>
+                <div className="flex items-center gap-1 flex-1">
+                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
+                    activeQuote.status === 'draft' 
+                      ? 'bg-slate-900 text-white' 
+                      : 'bg-slate-100 text-slate-400'
+                  }`}>
+                    <FileText size={12} />
+                    <span>Draft</span>
+                  </div>
+                  <div className={`w-4 h-0.5 ${['sent', 'accepted', 'declined', 'invoiced'].includes(activeQuote.status) ? 'bg-blue-400' : 'bg-slate-200'}`} />
+                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
+                    activeQuote.status === 'sent' 
+                      ? 'bg-blue-500 text-white' 
+                      : ['accepted', 'declined', 'invoiced'].includes(activeQuote.status)
+                        ? 'bg-blue-100 text-blue-600'
+                        : 'bg-slate-100 text-slate-400'
+                  }`}>
+                    <Share2 size={12} />
+                    <span>Sent</span>
+                  </div>
+                  <div className={`w-4 h-0.5 ${['accepted', 'declined', 'invoiced'].includes(activeQuote.status) ? 'bg-green-400' : 'bg-slate-200'}`} />
+                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
+                    activeQuote.status === 'accepted' 
+                      ? 'bg-green-500 text-white' 
+                      : activeQuote.status === 'declined'
+                        ? 'bg-red-500 text-white'
+                        : activeQuote.status === 'invoiced'
+                          ? 'bg-green-100 text-green-600'
+                          : 'bg-slate-100 text-slate-400'
+                  }`}>
+                    {activeQuote.status === 'declined' ? <X size={12} /> : <Check size={12} />}
+                    <span>{activeQuote.status === 'declined' ? 'Declined' : 'Accepted'}</span>
+                  </div>
+                  <div className={`w-4 h-0.5 ${activeQuote.status === 'invoiced' ? 'bg-emerald-400' : 'bg-slate-200'}`} />
+                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
+                    activeQuote.status === 'invoiced' 
+                      ? 'bg-emerald-500 text-white' 
+                      : 'bg-slate-100 text-slate-400'
+                  }`}>
+                    <ReceiptText size={12} />
+                    <span>Invoiced</span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              // Invoice lifecycle: Draft → Sent → Paid
+              <>
+                <div className="flex items-center gap-1 flex-1">
+                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
+                    activeQuote.status === 'draft' 
+                      ? 'bg-slate-900 text-white' 
+                      : 'bg-slate-100 text-slate-400'
+                  }`}>
+                    <FileText size={12} />
+                    <span>Draft</span>
+                  </div>
+                  <div className={`w-6 h-0.5 ${['sent', 'paid'].includes(activeQuote.status) ? 'bg-blue-400' : 'bg-slate-200'}`} />
+                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
+                    activeQuote.status === 'sent' 
+                      ? 'bg-blue-500 text-white' 
+                      : activeQuote.status === 'paid'
+                        ? 'bg-blue-100 text-blue-600'
+                        : 'bg-slate-100 text-slate-400'
+                  }`}>
+                    <Share2 size={12} />
+                    <span>Sent</span>
+                  </div>
+                  <div className={`w-6 h-0.5 ${activeQuote.status === 'paid' ? 'bg-emerald-400' : 'bg-slate-200'}`} />
+                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
+                    activeQuote.status === 'paid' 
+                      ? 'bg-emerald-500 text-white' 
+                      : 'bg-slate-100 text-slate-400'
+                  }`}>
+                    <Banknote size={12} />
+                    <span>Paid</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
         {/* Status Action Buttons for Quotes */}
         {activeQuote.type !== 'invoice' && (
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
@@ -832,7 +980,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                 }}
                 className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-xl bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-colors"
               >
-                <Share2 size={14} /> Mark as Sent
+                <Check size={14} /> Confirm Sent ✓
               </button>
             )}
             {activeQuote.status === 'sent' && (
@@ -891,7 +1039,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                 }}
                 className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-xl bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-colors"
               >
-                <Share2 size={14} /> Mark as Sent
+                <Check size={14} /> Confirm Sent ✓
               </button>
             )}
             {activeQuote.status === 'sent' && (
@@ -909,21 +1057,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
 
         {/* Secondary Actions Row */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-          <button
-            onClick={() => setShowCustomiser(!showCustomiser)}
-            className={`flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg text-xs font-bold shadow-sm transition-all ${showCustomiser
-              ? 'bg-slate-900 text-white border-slate-900 ring-2 ring-slate-900/20'
-              : 'bg-white border border-slate-100 text-slate-600 hover:bg-slate-50'
-              }`}
-          >
-            {showCustomiser ? <X size={14} /> : <Settings2 size={14} />}
-            {showCustomiser ? 'Close' : 'Layout'}
-          </button>
-          {onDuplicate && (
-            <button onClick={onDuplicate} title="Duplicate" className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white border border-slate-100 text-slate-600 text-xs font-bold shadow-sm">
-              <Copy size={14} />
-            </button>
-          )}
+          {/* Primary actions - always visible */}
           {/* Share Link Button - only for quotes (not invoices) that have been sent */}
           {activeQuote.type !== 'invoice' && activeQuote.status === 'sent' && (
             <button
@@ -958,25 +1092,65 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
               <Banknote size={14} /> Record Payment
             </button>
           )}
-          {customer?.address && (
-            <button onClick={handleOpenMaps} title="Open Map" className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-50 text-blue-600 text-xs font-bold shadow-sm border border-blue-100">
-              <MapPin size={14} />
-            </button>
-          )}
-          {onDelete && (
-            <button
-              onClick={async () => {
-                const docType = activeQuote.type === 'invoice' ? 'invoice' : 'quote';
-                if (confirm(`Are you sure you want to delete this ${docType}? This cannot be undone.`)) {
-                  await onDelete();
-                }
-              }}
-              title="Delete"
-              className="flex-shrink-0 flex items-center px-2 py-1 rounded-lg bg-red-50 text-red-600 text-xs font-bold shadow-sm border border-red-100 hover:bg-red-100 transition-colors"
+
+          {/* More Menu - secondary actions */}
+          <div className="relative" ref={moreMenuRef}>
+            <button 
+              onClick={() => setShowMoreMenu(!showMoreMenu)}
+              className={`flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold shadow-sm transition-all ${
+                showMoreMenu || showCustomiser
+                  ? 'bg-slate-900 text-white border-slate-900'
+                  : 'bg-white border border-slate-100 text-slate-600 hover:bg-slate-50'
+              }`}
             >
-              <Trash2 size={14} />
+              <List size={14} />
+              <span>More</span>
+              <ChevronDown size={12} className={`transition-transform ${showMoreMenu ? 'rotate-180' : ''}`} />
             </button>
-          )}
+            {showMoreMenu && (
+              <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-100 py-1 min-w-[140px] z-50">
+                <button 
+                  onClick={() => { setShowCustomiser(!showCustomiser); setShowMoreMenu(false); }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                >
+                  <Settings2 size={16} className="text-slate-500" /> Layout Options
+                </button>
+                {onDuplicate && (
+                  <button 
+                    onClick={() => { onDuplicate(); setShowMoreMenu(false); }}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                  >
+                    <Copy size={16} className="text-slate-500" /> Duplicate
+                  </button>
+                )}
+                {customer?.address && (
+                  <button 
+                    onClick={() => { handleOpenMaps(); setShowMoreMenu(false); }}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                  >
+                    <MapPin size={16} className="text-blue-500" /> Open Map
+                  </button>
+                )}
+                {onDelete && (
+                  <>
+                    <div className="border-t border-slate-100 my-1" />
+                    <button 
+                      onClick={async () => {
+                        const docType = activeQuote.type === 'invoice' ? 'invoice' : 'quote';
+                        if (confirm(`Are you sure you want to delete this ${docType}? This cannot be undone.`)) {
+                          setShowMoreMenu(false);
+                          await onDelete();
+                        }
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-red-50 flex items-center gap-2 text-red-600"
+                    >
+                      <Trash2 size={16} /> Delete
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {showCustomiser && (
@@ -1949,7 +2123,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                   }}
                   className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/30"
                 >
-                  Yes, Mark Sent
+                  Yes, Confirm Sent ✓
                 </button>
               </div>
             </div>
