@@ -882,49 +882,82 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
       </div>
 
       <div className="flex flex-col gap-2 print:hidden">
-        {/* Visual Status Stepper */}
+        {/* Interactive Status Stepper - Tap to change status */}
         <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
           <div className="flex items-center justify-between">
             {activeQuote.type !== 'invoice' ? (
               // Quote lifecycle: Draft → Sent → Accepted/Declined → Invoiced
               <>
                 <div className="flex items-center gap-1 flex-1">
-                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
-                    activeQuote.status === 'draft' 
-                      ? 'bg-slate-900 text-white' 
-                      : 'bg-slate-100 text-slate-400'
-                  }`}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeQuote.status !== 'draft' && confirm('Revert to Draft?')) {
+                        onUpdateStatus('draft');
+                        hapticSuccess();
+                      }
+                    }}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                      activeQuote.status === 'draft' 
+                        ? 'bg-slate-900 text-white ring-2 ring-slate-900 ring-offset-1' 
+                        : 'bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-pointer'
+                    }`}
+                  >
                     <FileText size={12} />
                     <span>Draft</span>
-                  </div>
+                  </button>
                   <div className={`w-4 h-0.5 ${['sent', 'accepted', 'declined', 'invoiced'].includes(activeQuote.status) ? 'bg-blue-400' : 'bg-slate-200'}`} />
-                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
-                    activeQuote.status === 'sent' 
-                      ? 'bg-blue-500 text-white' 
-                      : ['accepted', 'declined', 'invoiced'].includes(activeQuote.status)
-                        ? 'bg-blue-100 text-blue-600'
-                        : 'bg-slate-100 text-slate-400'
-                  }`}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeQuote.status === 'draft' && confirm('Mark as Sent?')) {
+                        onUpdateStatus('sent');
+                        hapticSuccess();
+                      } else if (activeQuote.status !== 'sent' && activeQuote.status !== 'draft' && confirm('Revert to Sent?')) {
+                        onUpdateStatus('sent');
+                        hapticSuccess();
+                      }
+                    }}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                      activeQuote.status === 'sent' 
+                        ? 'bg-blue-500 text-white ring-2 ring-blue-500 ring-offset-1' 
+                        : ['accepted', 'declined', 'invoiced'].includes(activeQuote.status)
+                          ? 'bg-blue-100 text-blue-600 hover:bg-blue-200 cursor-pointer'
+                          : 'bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-pointer'
+                    }`}
+                  >
                     <Share2 size={12} />
                     <span>Sent</span>
-                  </div>
+                  </button>
                   <div className={`w-4 h-0.5 ${['accepted', 'declined', 'invoiced'].includes(activeQuote.status) ? 'bg-green-400' : 'bg-slate-200'}`} />
-                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
-                    activeQuote.status === 'accepted' 
-                      ? 'bg-green-500 text-white' 
-                      : activeQuote.status === 'declined'
-                        ? 'bg-red-500 text-white'
-                        : activeQuote.status === 'invoiced'
-                          ? 'bg-green-100 text-green-600'
-                          : 'bg-slate-100 text-slate-400'
-                  }`}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (['draft', 'sent'].includes(activeQuote.status) && confirm('Mark as Accepted?')) {
+                        onUpdateStatus('accepted');
+                        hapticSuccess();
+                      } else if (activeQuote.status === 'invoiced' && confirm('Revert to Accepted?')) {
+                        onUpdateStatus('accepted');
+                        hapticSuccess();
+                      }
+                    }}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                      activeQuote.status === 'accepted' 
+                        ? 'bg-green-500 text-white ring-2 ring-green-500 ring-offset-1' 
+                        : activeQuote.status === 'declined'
+                          ? 'bg-red-500 text-white'
+                          : activeQuote.status === 'invoiced'
+                            ? 'bg-green-100 text-green-600 hover:bg-green-200 cursor-pointer'
+                            : 'bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-pointer'
+                    }`}
+                  >
                     {activeQuote.status === 'declined' ? <X size={12} /> : <Check size={12} />}
                     <span>{activeQuote.status === 'declined' ? 'Declined' : 'Accepted'}</span>
-                  </div>
+                  </button>
                   <div className={`w-4 h-0.5 ${activeQuote.status === 'invoiced' ? 'bg-emerald-400' : 'bg-slate-200'}`} />
                   <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
                     activeQuote.status === 'invoiced' 
-                      ? 'bg-emerald-500 text-white' 
+                      ? 'bg-emerald-500 text-white ring-2 ring-emerald-500 ring-offset-1' 
                       : 'bg-slate-100 text-slate-400'
                   }`}>
                     <ReceiptText size={12} />
@@ -936,29 +969,50 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
               // Invoice lifecycle: Draft → Sent → Paid
               <>
                 <div className="flex items-center gap-1 flex-1">
-                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
-                    activeQuote.status === 'draft' 
-                      ? 'bg-slate-900 text-white' 
-                      : 'bg-slate-100 text-slate-400'
-                  }`}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeQuote.status !== 'draft' && confirm('Revert to Draft?')) {
+                        onUpdateStatus('draft');
+                        hapticSuccess();
+                      }
+                    }}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                      activeQuote.status === 'draft' 
+                        ? 'bg-slate-900 text-white ring-2 ring-slate-900 ring-offset-1' 
+                        : 'bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-pointer'
+                    }`}
+                  >
                     <FileText size={12} />
                     <span>Draft</span>
-                  </div>
+                  </button>
                   <div className={`w-6 h-0.5 ${['sent', 'paid'].includes(activeQuote.status) ? 'bg-blue-400' : 'bg-slate-200'}`} />
-                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
-                    activeQuote.status === 'sent' 
-                      ? 'bg-blue-500 text-white' 
-                      : activeQuote.status === 'paid'
-                        ? 'bg-blue-100 text-blue-600'
-                        : 'bg-slate-100 text-slate-400'
-                  }`}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeQuote.status === 'draft' && confirm('Mark as Sent?')) {
+                        onUpdateStatus('sent');
+                        hapticSuccess();
+                      } else if (activeQuote.status === 'paid' && confirm('Revert to Sent (Awaiting Payment)?')) {
+                        onUpdateStatus('sent');
+                        hapticSuccess();
+                      }
+                    }}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                      activeQuote.status === 'sent' 
+                        ? 'bg-blue-500 text-white ring-2 ring-blue-500 ring-offset-1' 
+                        : activeQuote.status === 'paid'
+                          ? 'bg-blue-100 text-blue-600 hover:bg-blue-200 cursor-pointer'
+                          : 'bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-pointer'
+                    }`}
+                  >
                     <Share2 size={12} />
                     <span>Sent</span>
-                  </div>
+                  </button>
                   <div className={`w-6 h-0.5 ${activeQuote.status === 'paid' ? 'bg-emerald-400' : 'bg-slate-200'}`} />
                   <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold ${
                     activeQuote.status === 'paid' 
-                      ? 'bg-emerald-500 text-white' 
+                      ? 'bg-emerald-500 text-white ring-2 ring-emerald-500 ring-offset-1' 
                       : 'bg-slate-100 text-slate-400'
                   }`}>
                     <Banknote size={12} />
@@ -968,6 +1022,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
               </>
             )}
           </div>
+          <p className="text-[9px] text-slate-400 mt-2 text-center">Tap any status to change</p>
         </div>
 
         {/* Status Action Buttons for Quotes */}
