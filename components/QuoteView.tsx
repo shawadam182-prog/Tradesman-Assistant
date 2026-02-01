@@ -826,6 +826,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           {/* Share Dropdown */}
           <div className="relative" ref={shareMenuRef}>
             <button 
+              type="button"
               onClick={() => setShowShareMenu(!showShareMenu)}
               className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 flex items-center gap-1"
               title="Share"
@@ -1096,6 +1097,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           {/* More Menu - secondary actions */}
           <div className="relative" ref={moreMenuRef}>
             <button 
+              type="button"
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               className={`flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold shadow-sm transition-all ${
                 showMoreMenu || showCustomiser
