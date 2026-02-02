@@ -310,7 +310,7 @@ function dbSettingsToApp(dbSettings: any): AppSettings {
     costBoxColor: (dbSettings.cost_box_color as 'slate' | 'amber' | 'blue') || 'slate',
     showBreakdown: dbSettings.show_breakdown ?? true,
     defaultDisplayOptions: dbSettings.default_display_options || DEFAULT_SETTINGS.defaultDisplayOptions,
-    documentTemplate: (dbSettings.document_template as DocumentTemplate) || 'professional',
+    documentTemplate: (dbSettings.document_template as DocumentTemplate) || 'classic',
     invoiceColorScheme: (dbSettings.invoice_color_scheme as 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal' | 'modern') || 'executive',
     quoteColorScheme: (dbSettings.quote_color_scheme as 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal' | 'modern') || 'executive',
     // Bank details for payment instructions
