@@ -73,7 +73,7 @@ export const JobProfitSummary: React.FC<JobProfitSummaryProps> = ({
     let totalMaterialsCost = 0;
 
     linkedQuotes.forEach(quote => {
-      const displayOptions = quote.displayOptions || {
+      const defaultDisplayOptions = {
         showMaterials: true,
         showMaterialItems: true,
         showMaterialQty: true,
@@ -92,6 +92,7 @@ export const JobProfitSummary: React.FC<JobProfitSummaryProps> = ({
         showLogo: true,
         showTotalsBreakdown: true,
       };
+      const displayOptions = { ...defaultDisplayOptions, ...quote.displayOptions };
 
       const totals = calculateQuoteTotals(quote, calcOptions, displayOptions);
       totalQuoted += totals.grandTotal;

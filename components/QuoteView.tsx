@@ -150,7 +150,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
     );
   }
 
-  const displayOptions = activeQuote.displayOptions || settings.defaultDisplayOptions;
+  const displayOptions = { ...settings.defaultDisplayOptions, ...activeQuote.displayOptions };
 
   const toggleOption = (optionKey: keyof QuoteDisplayOptions) => {
     const updatedOptions = { ...displayOptions, [optionKey]: !displayOptions[optionKey] };
