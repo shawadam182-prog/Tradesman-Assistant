@@ -63,10 +63,15 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   // Close menus when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      console.log('Click outside handler triggered', {
+        target: event.target,
+        moreMenuContains: moreMenuRef.current?.contains(event.target as Node)
+      });
       if (shareMenuRef.current && !shareMenuRef.current.contains(event.target as Node)) {
         setShowShareMenu(false);
       }
       if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+        console.log('Closing More menu because click was outside');
         setShowMoreMenu(false);
       }
     };
@@ -1156,7 +1161,10 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           <div className="relative" ref={moreMenuRef}>
             <button 
               type="button"
-              onClick={() => setShowMoreMenu(!showMoreMenu)}
+              onClick={() => {
+                console.log('More button clicked! Current showMoreMenu:', showMoreMenu, '-> toggling to:', !showMoreMenu);
+                setShowMoreMenu(!showMoreMenu);
+              }}
               className={`flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold shadow-sm transition-all ${
                 showMoreMenu || showCustomiser
                   ? 'bg-slate-900 text-white border-slate-900'
