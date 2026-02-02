@@ -101,7 +101,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
     return getQuoteGrandTotal(quote, {
       enableVat: settings.enableVat ?? false,
       enableCis: settings.enableCis ?? false,
-      defaultLabourRate: settings.labourRate ?? 0,
+      defaultLabourRate: settings.defaultLabourRate ?? 0,
     });
   };
 
