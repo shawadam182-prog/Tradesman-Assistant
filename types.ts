@@ -224,15 +224,6 @@ export interface AppSettings {
   documentTemplate?: DocumentTemplate;
   invoiceColorScheme?: 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal' | 'modern';
   quoteColorScheme?: 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal' | 'modern';
-  // Quote-specific settings (optional - falls back to defaults if not set)
-  quoteLabourRate?: number;
-  quoteMarkupPercent?: number;
-  quoteDisplayOptions?: QuoteDisplayOptions;
-  // Invoice-specific settings (optional - falls back to defaults if not set)
-  invoiceLabourRate?: number;
-  invoiceMarkupPercent?: number;
-  invoiceDisplayOptions?: QuoteDisplayOptions;
-  defaultPaymentTermsDays?: number; // e.g., 14 or 30 days
   // Bank details for payment instructions
   bankAccountName?: string;
   bankAccountNumber?: string;
