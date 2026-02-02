@@ -63,15 +63,10 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   // Close menus when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      console.log('Click outside handler triggered', {
-        target: event.target,
-        moreMenuContains: moreMenuRef.current?.contains(event.target as Node)
-      });
       if (shareMenuRef.current && !shareMenuRef.current.contains(event.target as Node)) {
         setShowShareMenu(false);
       }
       if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
-        console.log('Closing More menu because click was outside');
         setShowMoreMenu(false);
       }
     };
@@ -1117,7 +1112,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
         )}
 
         {/* Secondary Actions Row */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+        <div className="flex gap-2 overflow-visible pb-2 flex-wrap">
           {/* Primary actions - always visible */}
           {/* Share Link Button - only for quotes (not invoices) that have been sent */}
           {activeQuote.type !== 'invoice' && activeQuote.status === 'sent' && (
@@ -1147,10 +1142,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           )}
           {activeQuote.type === 'invoice' && activeQuote.status !== 'paid' && (
             <button
-              onClick={() => {
-                console.log('Record Payment clicked! showPaymentRecorder will be set to true');
-                setShowPaymentRecorder(true);
-              }}
+              onClick={() => setShowPaymentRecorder(true)}
               className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-colors"
             >
               <Banknote size={14} /> Record Payment
@@ -1161,10 +1153,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           <div className="relative" ref={moreMenuRef}>
             <button 
               type="button"
-              onClick={() => {
-                console.log('More button clicked! Current showMoreMenu:', showMoreMenu, '-> toggling to:', !showMoreMenu);
-                setShowMoreMenu(!showMoreMenu);
-              }}
+              onClick={() => setShowMoreMenu(!showMoreMenu)}
               className={`flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold shadow-sm transition-all ${
                 showMoreMenu || showCustomiser
                   ? 'bg-slate-900 text-white border-slate-900'
