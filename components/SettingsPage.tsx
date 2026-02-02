@@ -685,31 +685,49 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-1 md:space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Labour Rate (£/hr)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Quote Labour Rate (£/hr)</label>
                     <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-teal-400 focus-within:bg-white transition-all">
                       <PoundSterling size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
                       <input
                         type="number"
                         className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
-                        value={settings.defaultLabourRate || ''}
-                        onChange={e => handleNumericChange('defaultLabourRate', e.target.value)}
-                        placeholder="65.00"
+                        value={settings.quoteLabourRate ?? ''}
+                        onChange={e => {
+                          const val = e.target.value;
+                          if (val === '') {
+                            setSettings({ ...settings, quoteLabourRate: undefined });
+                          } else {
+                            const num = parseFloat(val);
+                            if (!isNaN(num)) setSettings({ ...settings, quoteLabourRate: num });
+                          }
+                        }}
+                        placeholder={`${settings.defaultLabourRate || 65} (default)`}
                       />
                     </div>
+                    <p className="text-[9px] text-slate-400 italic px-1">Leave blank to use shared default</p>
                   </div>
                   <div className="space-y-1 md:space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Markup (%)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Quote Markup (%)</label>
                     <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-teal-400 focus-within:bg-white transition-all">
                       <Calculator size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
                       <input
                         type="number"
                         min="0"
                         className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
-                        value={settings.defaultMarkupPercent ?? ''}
-                        onChange={e => handleNumericChange('defaultMarkupPercent', e.target.value)}
-                        placeholder="0"
+                        value={settings.quoteMarkupPercent ?? ''}
+                        onChange={e => {
+                          const val = e.target.value;
+                          if (val === '') {
+                            setSettings({ ...settings, quoteMarkupPercent: undefined });
+                          } else {
+                            const num = parseFloat(val);
+                            if (!isNaN(num)) setSettings({ ...settings, quoteMarkupPercent: num });
+                          }
+                        }}
+                        placeholder={`${settings.defaultMarkupPercent ?? 0} (default)`}
                       />
                     </div>
+                    <p className="text-[9px] text-slate-400 italic px-1">Leave blank to use shared default</p>
                   </div>
                   <div className="space-y-1 md:space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Standard VAT Rate (%)</label>
@@ -1080,33 +1098,67 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div className="space-y-1 md:space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Labour Rate (£/hr)</label>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Invoice Labour Rate (£/hr)</label>
                       <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
                         <PoundSterling size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
                         <input
                           type="number"
                           className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
-                          value={settings.defaultLabourRate || ''}
-                          onChange={e => handleNumericChange('defaultLabourRate', e.target.value)}
-                          placeholder="65.00"
+                          value={settings.invoiceLabourRate ?? ''}
+                          onChange={e => {
+                            const val = e.target.value;
+                            if (val === '') {
+                              setSettings({ ...settings, invoiceLabourRate: undefined });
+                            } else {
+                              const num = parseFloat(val);
+                              if (!isNaN(num)) setSettings({ ...settings, invoiceLabourRate: num });
+                            }
+                          }}
+                          placeholder={`${settings.defaultLabourRate || 65} (default)`}
                         />
                       </div>
-                      <p className="text-[9px] text-slate-400 italic px-1">Applied when creating new invoices</p>
+                      <p className="text-[9px] text-slate-400 italic px-1">Leave blank to use shared default</p>
                     </div>
                     <div className="space-y-1 md:space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Markup (%)</label>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Invoice Markup (%)</label>
                       <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
                         <Calculator size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
                         <input
                           type="number"
                           min="0"
                           className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
-                          value={settings.defaultMarkupPercent ?? ''}
-                          onChange={e => handleNumericChange('defaultMarkupPercent', e.target.value)}
-                          placeholder="0"
+                          value={settings.invoiceMarkupPercent ?? ''}
+                          onChange={e => {
+                            const val = e.target.value;
+                            if (val === '') {
+                              setSettings({ ...settings, invoiceMarkupPercent: undefined });
+                            } else {
+                              const num = parseFloat(val);
+                              if (!isNaN(num)) setSettings({ ...settings, invoiceMarkupPercent: num });
+                            }
+                          }}
+                          placeholder={`${settings.defaultMarkupPercent ?? 0} (default)`}
                         />
                       </div>
-                      <p className="text-[9px] text-slate-400 italic px-1">Applied when creating new invoices</p>
+                      <p className="text-[9px] text-slate-400 italic px-1">Leave blank to use shared default</p>
+                    </div>
+                    <div className="space-y-1 md:space-y-2 md:col-span-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Payment Terms (Days)</label>
+                      <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
+                        <Clock size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
+                        <input
+                          type="number"
+                          min="0"
+                          className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
+                          value={settings.defaultPaymentTermsDays ?? 14}
+                          onChange={e => {
+                            const num = parseInt(e.target.value);
+                            setSettings({ ...settings, defaultPaymentTermsDays: isNaN(num) ? 14 : num });
+                          }}
+                          placeholder="14"
+                        />
+                      </div>
+                      <p className="text-[9px] text-slate-400 italic px-1">Due date calculated from invoice date (e.g., 14 = Net 14)</p>
                     </div>
                   </div>
 
