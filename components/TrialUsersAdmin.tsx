@@ -20,6 +20,8 @@ import {
   Smartphone,
   Monitor,
   Tablet,
+  RotateCcw,
+  Plus,
 } from 'lucide-react';
 import {
   adminAnalyticsService,
@@ -47,6 +49,8 @@ export const TrialUsersAdmin: React.FC<TrialUsersAdminProps> = ({ onBack }) => {
     pages: { page: string; count: number }[];
   } | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -137,6 +141,48 @@ export const TrialUsersAdmin: React.FC<TrialUsersAdminProps> = ({ onBack }) => {
       console.error('Failed to load user details:', err);
     } finally {
       setLoadingDetails(false);
+    }
+  };
+
+  // Reset trial to 14 days
+  const handleResetTrial = async (userId: string, userEmail: string | null, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Reset trial for ${userEmail || userId} to 14 days?`)) return;
+    
+    setActionLoading(userId);
+    setActionSuccess(null);
+    try {
+      await adminAnalyticsService.resetUserTrial(userId, 14);
+      setActionSuccess(userId);
+      // Refresh data
+      await loadData();
+      setTimeout(() => setActionSuccess(null), 3000);
+    } catch (err) {
+      console.error('Failed to reset trial:', err);
+      alert(`Failed to reset trial: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Extend trial by days
+  const handleExtendTrial = async (userId: string, userEmail: string | null, days: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Extend trial for ${userEmail || userId} by ${days} days?`)) return;
+    
+    setActionLoading(userId);
+    setActionSuccess(null);
+    try {
+      await adminAnalyticsService.extendUserTrial(userId, days);
+      setActionSuccess(userId);
+      // Refresh data
+      await loadData();
+      setTimeout(() => setActionSuccess(null), 3000);
+    } catch (err) {
+      console.error('Failed to extend trial:', err);
+      alert(`Failed to extend trial: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -422,6 +468,7 @@ export const TrialUsersAdmin: React.FC<TrialUsersAdminProps> = ({ onBack }) => {
                               <Loader2 className="w-6 h-6 text-teal-500 animate-spin" />
                             </div>
                           ) : userDetails ? (
+                            <>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                               {/* Session Stats */}
                               <div className="bg-white rounded-lg p-4 border border-slate-200">
@@ -516,6 +563,73 @@ export const TrialUsersAdmin: React.FC<TrialUsersAdminProps> = ({ onBack }) => {
                                 </div>
                               </div>
                             </div>
+
+                            {/* Admin Actions */}
+                            <div className="mt-4 pt-4 border-t border-slate-200">
+                              <div className="flex flex-wrap items-center gap-3">
+                                <span className="text-sm font-medium text-slate-700">Trial Actions:</span>
+                                
+                                <button
+                                  onClick={(e) => handleResetTrial(user.user_id, user.user_email, e)}
+                                  disabled={actionLoading === user.user_id}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                  {actionLoading === user.user_id ? (
+                                    <Loader2 size={14} className="animate-spin" />
+                                  ) : (
+                                    <RotateCcw size={14} />
+                                  )}
+                                  Reset Trial (14 days)
+                                </button>
+
+                                <button
+                                  onClick={(e) => handleExtendTrial(user.user_id, user.user_email, 7, e)}
+                                  disabled={actionLoading === user.user_id}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                  {actionLoading === user.user_id ? (
+                                    <Loader2 size={14} className="animate-spin" />
+                                  ) : (
+                                    <Plus size={14} />
+                                  )}
+                                  +7 Days
+                                </button>
+
+                                <button
+                                  onClick={(e) => handleExtendTrial(user.user_id, user.user_email, 14, e)}
+                                  disabled={actionLoading === user.user_id}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                  {actionLoading === user.user_id ? (
+                                    <Loader2 size={14} className="animate-spin" />
+                                  ) : (
+                                    <Plus size={14} />
+                                  )}
+                                  +14 Days
+                                </button>
+
+                                <button
+                                  onClick={(e) => handleExtendTrial(user.user_id, user.user_email, 30, e)}
+                                  disabled={actionLoading === user.user_id}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                  {actionLoading === user.user_id ? (
+                                    <Loader2 size={14} className="animate-spin" />
+                                  ) : (
+                                    <Plus size={14} />
+                                  )}
+                                  +30 Days
+                                </button>
+
+                                {actionSuccess === user.user_id && (
+                                  <span className="inline-flex items-center gap-1 text-green-600 text-sm font-medium">
+                                    <CheckCircle size={14} />
+                                    Updated!
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            </>
                           ) : null}
                         </td>
                       </tr>

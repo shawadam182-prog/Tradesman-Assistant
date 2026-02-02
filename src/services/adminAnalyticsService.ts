@@ -233,4 +233,43 @@ export const adminAnalyticsService = {
       .map(([page, count]) => ({ page, count }))
       .sort((a, b) => b.count - a.count);
   },
+
+  /**
+   * Reset a user's trial period (admin only)
+   * @param userId - The user ID to reset
+   * @param days - Number of days for the new trial (default 14)
+   */
+  async resetUserTrial(userId: string, days: number = 14): Promise<void> {
+    if (!await this.isAdmin()) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + days);
+
+    const { error } = await supabase.rpc('admin_reset_trial', {
+      target_user_id: userId,
+      new_trial_end: trialEnd.toISOString(),
+    });
+
+    if (error) throw error;
+  },
+
+  /**
+   * Extend a user's trial by additional days (admin only)
+   * @param userId - The user ID to extend
+   * @param additionalDays - Number of days to add
+   */
+  async extendUserTrial(userId: string, additionalDays: number): Promise<void> {
+    if (!await this.isAdmin()) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
+    const { error } = await supabase.rpc('admin_extend_trial', {
+      target_user_id: userId,
+      extra_days: additionalDays,
+    });
+
+    if (error) throw error;
+  },
 };
