@@ -1142,7 +1142,10 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           )}
           {activeQuote.type === 'invoice' && activeQuote.status !== 'paid' && (
             <button
-              onClick={() => setShowPaymentRecorder(true)}
+              onClick={() => {
+                console.log('Record Payment clicked! showPaymentRecorder will be set to true');
+                setShowPaymentRecorder(true);
+              }}
               className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-colors"
             >
               <Banknote size={14} /> Record Payment
