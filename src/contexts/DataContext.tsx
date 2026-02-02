@@ -334,6 +334,15 @@ function dbSettingsToApp(dbSettings: any): AppSettings {
     referralCode: dbSettings.referral_code || undefined,
     usageLimits: dbSettings.usage_limits || undefined,
     quickPickMaterials: dbSettings.quick_pick_materials || DEFAULT_SETTINGS.quickPickMaterials,
+    // Quote-specific settings (optional - falls back to shared defaults)
+    quoteLabourRate: dbSettings.quote_labour_rate ?? undefined,
+    quoteMarkupPercent: dbSettings.quote_markup_percent ?? undefined,
+    quoteDisplayOptions: dbSettings.quote_display_options ?? undefined,
+    // Invoice-specific settings (optional - falls back to shared defaults)
+    invoiceLabourRate: dbSettings.invoice_labour_rate ?? undefined,
+    invoiceMarkupPercent: dbSettings.invoice_markup_percent ?? undefined,
+    invoiceDisplayOptions: dbSettings.invoice_display_options ?? undefined,
+    defaultPaymentTermsDays: dbSettings.default_payment_terms_days ?? 14,
   };
 }
 
@@ -963,6 +972,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       tax_year_start_month: updates.taxYearStartMonth,
       tax_year_start_day: updates.taxYearStartDay,
       quick_pick_materials: updates.quickPickMaterials || null,
+      // Quote-specific settings
+      quote_labour_rate: updates.quoteLabourRate ?? null,
+      quote_markup_percent: updates.quoteMarkupPercent ?? null,
+      quote_display_options: updates.quoteDisplayOptions ?? null,
+      // Invoice-specific settings
+      invoice_labour_rate: updates.invoiceLabourRate ?? null,
+      invoice_markup_percent: updates.invoiceMarkupPercent ?? null,
+      invoice_display_options: updates.invoiceDisplayOptions ?? null,
+      default_payment_terms_days: updates.defaultPaymentTermsDays ?? null,
     });
 
     setSettings(prev => ({ ...prev, ...updates }));
