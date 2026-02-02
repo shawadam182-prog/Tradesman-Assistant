@@ -9,6 +9,7 @@ import { UpgradePrompt } from './UpgradePrompt';
 import { useData } from '../src/contexts/DataContext';
 import { PageHeader } from './common/PageHeader';
 import { ConfirmDialog } from './ConfirmDialog';
+import { getQuoteGrandTotal } from '../src/utils/quoteCalculations';
 
 // Helper functions for overdue detection
 const isOverdue = (invoice: Quote): boolean => {
@@ -97,17 +98,11 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
   };
 
   const calculateQuoteTotal = (quote: Quote) => {
-    // Fix: Aggregate totals from all sections instead of accessing items directly on the quote
-    const sections = quote.sections || [];
-    const materialsTotal = sections.reduce((sum, section) => 
-      sum + (section.items || []).reduce((itemSum, item) => itemSum + (item.totalPrice || 0), 0), 0);
-    const labourHoursTotal = sections.reduce((sum, section) => sum + (section.labourHours || 0), 0);
-    const labourTotal = labourHoursTotal * (quote.labourRate || 0);
-    
-    const subtotal = materialsTotal + labourTotal;
-    const markup = subtotal * (quote.markupPercent / 100);
-    const tax = (subtotal + markup) * (quote.taxPercent / 100);
-    return subtotal + markup + tax;
+    return getQuoteGrandTotal(quote, {
+      enableVat: settings.enableVat ?? false,
+      enableCis: settings.enableCis ?? false,
+      defaultLabourRate: settings.labourRate ?? 0,
+    });
   };
 
   // Sort function
