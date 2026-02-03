@@ -33,31 +33,44 @@ export const FutureJobsPage: React.FC<FutureJobsPageProps> = ({
   const loaded = useRef(false);
 
   // Load from Supabase (fallback to localStorage)
-  useEffect(() => {
-    const loadData = async () => {
+  const loadData = async () => {
+    try {
+      const dbJobs = await futureJobsService.getAll();
+      const mapped: FutureJob[] = dbJobs.map((j: any) => ({
+        id: j.id,
+        name: j.name,
+        notes: j.notes || '',
+        createdAt: j.created_at,
+        isCompleted: j.is_completed || false,
+      }));
+      setFutureJobs(mapped);
+      localStorage.setItem('bq_future_jobs', JSON.stringify(mapped));
+    } catch (e) {
+      console.warn('Supabase load failed, using localStorage:', e);
       try {
-        const dbJobs = await futureJobsService.getAll();
-        const mapped: FutureJob[] = dbJobs.map((j: any) => ({
-          id: j.id,
-          name: j.name,
-          notes: j.notes || '',
-          createdAt: j.created_at,
-          isCompleted: j.is_completed || false,
-        }));
-        setFutureJobs(mapped);
-        localStorage.setItem('bq_future_jobs', JSON.stringify(mapped));
-      } catch (e) {
-        console.warn('Supabase load failed, using localStorage:', e);
-        try {
-          const saved = localStorage.getItem('bq_future_jobs');
-          if (saved) setFutureJobs(JSON.parse(saved));
-        } catch (e2) {
-          console.error('Failed to load future jobs:', e2);
-        }
+        const saved = localStorage.getItem('bq_future_jobs');
+        if (saved) setFutureJobs(JSON.parse(saved));
+      } catch (e2) {
+        console.error('Failed to load future jobs:', e2);
       }
-      loaded.current = true;
-    };
+    }
+    loaded.current = true;
+  };
+
+  // Initial load
+  useEffect(() => {
     loadData();
+  }, []);
+
+  // Refresh on tab focus (cross-device sync)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && loaded.current) {
+        loadData();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   // Save to localStorage as offline cache

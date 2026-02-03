@@ -199,6 +199,35 @@ export const Home: React.FC<HomeProps> = ({
     loadData();
   }, []);
 
+  // Reload future jobs from Supabase (for cross-device sync)
+  const reloadFutureJobs = async () => {
+    try {
+      const dbFutureJobs = await futureJobsService.getAll();
+      const mapped: FutureJob[] = dbFutureJobs.map((j: any) => ({
+        id: j.id,
+        name: j.name,
+        notes: j.notes || '',
+        createdAt: j.created_at,
+        isCompleted: j.is_completed || false,
+      }));
+      setFutureJobs(mapped);
+      localStorage.setItem('bq_future_jobs', JSON.stringify(mapped));
+    } catch (e) {
+      console.warn("Failed to reload future jobs:", e);
+    }
+  };
+
+  // Refresh on tab focus (cross-device sync)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && futureJobsLoaded.current) {
+        reloadFutureJobs();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   // Save reminders to localStorage as offline cache
   useEffect(() => {
     if (remindersLoaded.current) {
@@ -1274,6 +1303,13 @@ export const Home: React.FC<HomeProps> = ({
                         title="Convert to Job Pack"
                       >
                         <ArrowRightCircle size={14} />
+                      </button>
+                      <button
+                        onClick={() => { hapticTap(); deleteFutureJob(job.id); }}
+                        className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                        title="Delete"
+                      >
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   )}
