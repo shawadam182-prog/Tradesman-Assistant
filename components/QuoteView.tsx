@@ -248,35 +248,44 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       // Add materials (only if showMaterials is enabled)
       let sectionMaterialsTotal = 0;
       if (hasMaterialsToShow) {
+        // Calculate total regardless of whether we show items
         (section.items || []).forEach(item => {
-          if (item.isHeading) {
-            items.push({
-              type: 'item',
-              lineNum: 0,
-              name: item.name || 'Section',
-              description: item.name || 'Section',
-              qty: '',
-              amount: 0,
-              isHeading: true,
-              itemType: 'material',
-            });
-          } else {
-            const unitPrice = (item.unitPrice || 0) * markupMultiplier;
-            const lineTotal = (item.totalPrice || 0) * markupMultiplier;
-            sectionMaterialsTotal += lineTotal;
-            items.push({
-              type: 'item',
-              lineNum: lineNum++,
-              name: item.name || '',
-              description: [item.name, item.description].filter(Boolean).join(' '),
-              subtext: item.description || undefined,
-              qty: `${item.quantity}`,
-              rate: unitPrice,
-              amount: lineTotal,
-              itemType: 'material',
-            });
+          if (!item.isHeading) {
+            sectionMaterialsTotal += (item.totalPrice || 0) * markupMultiplier;
           }
         });
+        
+        // Only add individual line items if showMaterialItems is true
+        if (displayOptions.showMaterialItems) {
+          (section.items || []).forEach(item => {
+            if (item.isHeading) {
+              items.push({
+                type: 'item',
+                lineNum: 0,
+                name: item.name || 'Section',
+                description: item.name || 'Section',
+                qty: '',
+                amount: 0,
+                isHeading: true,
+                itemType: 'material',
+              });
+            } else {
+              const unitPrice = (item.unitPrice || 0) * markupMultiplier;
+              const lineTotal = (item.totalPrice || 0) * markupMultiplier;
+              items.push({
+                type: 'item',
+                lineNum: lineNum++,
+                name: item.name || '',
+                description: [item.name, item.description].filter(Boolean).join(' '),
+                subtext: item.description || undefined,
+                qty: `${item.quantity}`,
+                rate: unitPrice,
+                amount: lineTotal,
+                itemType: 'material',
+              });
+            }
+          });
+        }
         
         // Add Materials Total row if enabled and has materials
         if (displayOptions.showMaterialSectionTotal && sectionMaterialsTotal > 0) {
@@ -297,36 +306,48 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       // Add labour items (only if showLabour is enabled)
       let sectionLabourTotal = 0;
       if (hasLabourToShow) {
+        // Calculate total regardless of whether we show items
         if (section.labourItems && section.labourItems.length > 0) {
           section.labourItems.forEach(labour => {
             const rate = (labour.rate || section.labourRate || activeQuote.labourRate || settings.defaultLabourRate) * markupMultiplier;
-            const lineTotal = labour.hours * rate;
-            sectionLabourTotal += lineTotal;
+            sectionLabourTotal += labour.hours * rate;
+          });
+        } else if ((section.labourHours || 0) > 0) {
+          const rate = (section.labourRate || activeQuote.labourRate || settings.defaultLabourRate) * markupMultiplier;
+          sectionLabourTotal += (section.labourHours || 0) * rate;
+        }
+        
+        // Only add individual line items if showLabourItems is true
+        if (displayOptions.showLabourItems) {
+          if (section.labourItems && section.labourItems.length > 0) {
+            section.labourItems.forEach(labour => {
+              const rate = (labour.rate || section.labourRate || activeQuote.labourRate || settings.defaultLabourRate) * markupMultiplier;
+              const lineTotal = labour.hours * rate;
+              items.push({
+                type: 'item',
+                lineNum: lineNum++,
+                name: labour.description || 'Labour',
+                description: labour.description || 'Labour',
+                qty: `${labour.hours}`,
+                rate: rate,
+                amount: lineTotal,
+                itemType: 'labour',
+              });
+            });
+          } else if ((section.labourHours || 0) > 0) {
+            const rate = (section.labourRate || activeQuote.labourRate || settings.defaultLabourRate) * markupMultiplier;
+            const lineTotal = (section.labourHours || 0) * rate;
             items.push({
               type: 'item',
               lineNum: lineNum++,
-              name: labour.description || 'Labour',
-              description: labour.description || 'Labour',
-              qty: `${labour.hours}`,
+              name: 'Labour',
+              description: 'Labour',
+              qty: `${section.labourHours}`,
               rate: rate,
               amount: lineTotal,
               itemType: 'labour',
             });
-          });
-        } else if ((section.labourHours || 0) > 0) {
-          const rate = (section.labourRate || activeQuote.labourRate || settings.defaultLabourRate) * markupMultiplier;
-          const lineTotal = (section.labourHours || 0) * rate;
-          sectionLabourTotal += lineTotal;
-          items.push({
-            type: 'item',
-            lineNum: lineNum++,
-            name: 'Labour',
-            description: 'Labour',
-            qty: `${section.labourHours}`,
-            rate: rate,
-            amount: lineTotal,
-            itemType: 'labour',
-          });
+          }
         }
         
         // Add Labour Total row if enabled and has labour
@@ -1261,11 +1282,11 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                 <div className={`space-y-1 pl-2 border-l border-slate-100 transition-all ${displayOptions.showMaterials ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
                   <CustomiseToggle label="Detailed List" optionKey="showMaterialItems" activeColor="bg-slate-900 text-amber-500" />
                   <div className={`space-y-1 transition-all ${displayOptions.showMaterialItems ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-                    <CustomiseToggle label="Show Quantities" optionKey="showMaterialQty" activeColor="bg-slate-800 text-white" />
-                    <CustomiseToggle label="Show Unit Prices" optionKey="showMaterialUnitPrice" activeColor="bg-slate-800 text-white" />
-                    <CustomiseToggle label="Show Line Totals" optionKey="showMaterialLineTotals" activeColor="bg-slate-800 text-white" />
+                    <CustomiseToggle label="Quantities" optionKey="showMaterialQty" activeColor="bg-slate-800 text-white" />
+                    <CustomiseToggle label="Unit Prices" optionKey="showMaterialUnitPrice" activeColor="bg-slate-800 text-white" />
+                    <CustomiseToggle label="Line Totals" optionKey="showMaterialLineTotals" activeColor="bg-slate-800 text-white" />
                   </div>
-                  <CustomiseToggle label="Section Total" optionKey="showMaterialSectionTotal" activeColor="bg-slate-800 text-white" />
+                  <CustomiseToggle label="Materials Total" optionKey="showMaterialSectionTotal" activeColor="bg-amber-600 text-white" />
                 </div>
               </div>
 
@@ -1275,11 +1296,11 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                 <div className={`space-y-1 pl-2 border-l border-slate-100 transition-all ${displayOptions.showLabour ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
                   <CustomiseToggle label="Detailed Info" optionKey="showLabourItems" activeColor="bg-slate-900 text-blue-500" />
                   <div className={`space-y-1 transition-all ${displayOptions.showLabourItems ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-                    <CustomiseToggle label="Show Hours" optionKey="showLabourQty" activeColor="bg-slate-800 text-white" />
-                    <CustomiseToggle label="Show Hourly Rate" optionKey="showLabourUnitPrice" activeColor="bg-slate-800 text-white" />
-                    <CustomiseToggle label="Show Subtotals" optionKey="showLabourLineTotals" activeColor="bg-slate-800 text-white" />
+                    <CustomiseToggle label="Hours" optionKey="showLabourQty" activeColor="bg-slate-800 text-white" />
+                    <CustomiseToggle label="Hourly Rate" optionKey="showLabourUnitPrice" activeColor="bg-slate-800 text-white" />
+                    <CustomiseToggle label="Line Totals" optionKey="showLabourLineTotals" activeColor="bg-slate-800 text-white" />
                   </div>
-                  <CustomiseToggle label="Section Total" optionKey="showLabourSectionTotal" activeColor="bg-slate-800 text-white" />
+                  <CustomiseToggle label="Labour Total" optionKey="showLabourSectionTotal" activeColor="bg-blue-600 text-white" />
                 </div>
               </div>
 
