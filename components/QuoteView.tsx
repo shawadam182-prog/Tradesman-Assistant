@@ -1307,6 +1307,13 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
 
         {showCustomiser && (
           <div className="bg-white p-5 rounded-[28px] border border-slate-200 shadow-2xl animate-in slide-in-from-top-4">
+            {/* DEBUG: Show actual values */}
+            <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded-lg text-[8px] font-mono">
+              <div className="font-bold text-red-600 mb-1">DEBUG VALUES:</div>
+              <div>showMaterialItems: <span className={displayOptions.showMaterialItems ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{String(displayOptions.showMaterialItems)}</span></div>
+              <div>showMaterialSectionTotal: <span className={displayOptions.showMaterialSectionTotal ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{String(displayOptions.showMaterialSectionTotal)}</span></div>
+              <div>localDisplayOptions set: <span className={localDisplayOptions ? 'text-green-600' : 'text-red-600'}>{String(!!localDisplayOptions)}</span></div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div className="space-y-1 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100"><Package size={12} className="text-amber-500" /><span className="text-[9px] font-black uppercase tracking-widest text-slate-700">Materials</span></div>
