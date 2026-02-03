@@ -152,20 +152,42 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   }
 
   // Use local state for immediate UI feedback, fall back to quote/settings
-  const displayOptions = localDisplayOptions || { ...settings.defaultDisplayOptions, ...activeQuote.displayOptions };
+  // Hardcoded defaults as ultimate fallback
+  const FALLBACK_DISPLAY_OPTIONS: QuoteDisplayOptions = {
+    showMaterials: true,
+    showMaterialItems: true,
+    showMaterialQty: true,
+    showMaterialUnitPrice: true,
+    showMaterialLineTotals: true,
+    showMaterialSectionTotal: true,
+    showLabour: true,
+    showLabourItems: true,
+    showLabourQty: true,
+    showLabourUnitPrice: true,
+    showLabourLineTotals: true,
+    showLabourSectionTotal: true,
+    showVat: true,
+    showCis: false,
+    showNotes: true,
+    showLogo: true,
+    showTotalsBreakdown: true,
+    showWorkSectionTotal: true,
+  };
 
-  // Debug: log display options on every render
-  console.log('[QuoteView] displayOptions:', {
-    showMaterialItems: displayOptions.showMaterialItems,
-    showMaterialSectionTotal: displayOptions.showMaterialSectionTotal,
-    localDisplayOptions: !!localDisplayOptions,
-    quoteHasOptions: !!activeQuote.displayOptions,
-  });
+  // Merge: fallback -> settings defaults -> quote saved -> local changes
+  const baseOptions: QuoteDisplayOptions = { 
+    ...FALLBACK_DISPLAY_OPTIONS,
+    ...settings.defaultDisplayOptions, 
+    ...activeQuote.displayOptions 
+  };
+  const displayOptions: QuoteDisplayOptions = localDisplayOptions 
+    ? { ...baseOptions, ...localDisplayOptions }
+    : baseOptions;
 
   const toggleOption = (optionKey: keyof QuoteDisplayOptions) => {
     const newValue = !displayOptions[optionKey];
-    console.log(`[QuoteView] Toggle ${optionKey}: ${displayOptions[optionKey]} -> ${newValue}`);
-    const updatedOptions = { ...displayOptions, [optionKey]: newValue };
+    // Create full options object with the toggle change
+    const updatedOptions: QuoteDisplayOptions = { ...displayOptions, [optionKey]: newValue };
     setLocalDisplayOptions(updatedOptions); // Immediate UI update
     onUpdateQuote({ ...activeQuote, displayOptions: updatedOptions }); // Persist to quote
   };
