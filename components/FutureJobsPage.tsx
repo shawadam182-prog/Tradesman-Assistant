@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft, Plus, CheckCircle2, ArrowRightCircle,
-  Trash2, ClipboardList, ChevronDown, ChevronUp
+  Trash2, ClipboardList, ChevronDown, ChevronUp, X, Check
 } from 'lucide-react';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 import { futureJobsService } from '../src/services/dataService';
@@ -27,6 +27,9 @@ export const FutureJobsPage: React.FC<FutureJobsPageProps> = ({
   const [newFutureJobName, setNewFutureJobName] = useState('');
   const [newFutureJobNotes, setNewFutureJobNotes] = useState('');
   const [showCompleted, setShowCompleted] = useState(false);
+  const [editingJobId, setEditingJobId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editNotes, setEditNotes] = useState('');
   const loaded = useRef(false);
 
   // Load from Supabase (fallback to localStorage)
@@ -113,6 +116,43 @@ export const FutureJobsPage: React.FC<FutureJobsPageProps> = ({
     onCreateJob?.();
   };
 
+  const startEdit = (job: FutureJob) => {
+    setEditingJobId(job.id);
+    setEditName(job.name);
+    setEditNotes(job.notes);
+    hapticTap();
+  };
+
+  const cancelEdit = () => {
+    setEditingJobId(null);
+    setEditName('');
+    setEditNotes('');
+    hapticTap();
+  };
+
+  const saveEdit = async () => {
+    if (!editingJobId || !editName.trim()) return;
+    
+    const updates = { name: editName.trim(), notes: editNotes.trim() };
+    
+    // Update local state immediately
+    setFutureJobs(prev => prev.map(j => 
+      j.id === editingJobId ? { ...j, name: updates.name, notes: updates.notes } : j
+    ));
+    
+    // Sync to Supabase
+    try {
+      await futureJobsService.update(editingJobId, updates);
+    } catch (e) {
+      console.warn("Failed to update enquiry:", e);
+    }
+    
+    setEditingJobId(null);
+    setEditName('');
+    setEditNotes('');
+    hapticSuccess();
+  };
+
   const activeJobs = futureJobs.filter(j => !j.isCompleted);
   const completedJobs = futureJobs.filter(j => j.isCompleted);
 
@@ -183,46 +223,89 @@ export const FutureJobsPage: React.FC<FutureJobsPageProps> = ({
             {activeJobs.map(job => (
               <div
                 key={job.id}
-                className="bg-slate-50 rounded-xl p-4 border border-slate-100 group hover:border-amber-200 transition-all"
+                className={`bg-slate-50 rounded-xl p-4 border transition-all ${
+                  editingJobId === job.id 
+                    ? 'border-amber-400 ring-2 ring-amber-100' 
+                    : 'border-slate-100 group hover:border-amber-200'
+                }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-slate-900 text-base">{job.name}</p>
-                    {job.notes && (
-                      <p className="text-sm text-slate-500 mt-1">{job.notes}</p>
-                    )}
-                    <p className="text-[10px] text-slate-400 mt-2 font-medium">
-                      Added {new Date(job.createdAt).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
-                    </p>
+                {editingJobId === job.id ? (
+                  /* Edit Mode */
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={e => setEditName(e.target.value)}
+                      className="w-full bg-white border-2 border-slate-200 rounded-xl p-3 font-bold text-sm text-slate-900 outline-none focus:border-amber-400 transition-all"
+                      placeholder="Customer / Job name..."
+                      autoFocus
+                    />
+                    <textarea
+                      value={editNotes}
+                      onChange={e => setEditNotes(e.target.value)}
+                      className="w-full bg-white border-2 border-slate-200 rounded-xl p-3 font-medium text-sm text-slate-900 outline-none focus:border-amber-400 transition-all resize-none min-h-[80px]"
+                      placeholder="Notes (optional)..."
+                    />
+                    <div className="flex gap-2 justify-end">
+                      <button
+                        onClick={cancelEdit}
+                        className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2"
+                      >
+                        <X size={16} /> Cancel
+                      </button>
+                      <button
+                        onClick={saveEdit}
+                        disabled={!editName.trim()}
+                        className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2 disabled:opacity-30"
+                      >
+                        <Check size={16} /> Save
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button
-                      onClick={() => convertToJobPack(job)}
-                      className="p-2.5 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors"
-                      title="Convert to Job Pack"
+                ) : (
+                  /* View Mode */
+                  <div className="flex items-start justify-between gap-3">
+                    <div 
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={() => startEdit(job)}
                     >
-                      <ArrowRightCircle size={18} />
-                    </button>
-                    <button
-                      onClick={() => toggleFutureJobComplete(job.id)}
-                      className="p-2.5 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-200 transition-colors"
-                      title="Mark as done"
-                    >
-                      <CheckCircle2 size={18} />
-                    </button>
-                    <button
-                      onClick={() => deleteFutureJob(job.id)}
-                      className="p-2.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100"
-                      title="Delete"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                      <p className="font-black text-slate-900 text-base">{job.name}</p>
+                      {job.notes && (
+                        <p className="text-sm text-slate-500 mt-1">{job.notes}</p>
+                      )}
+                      <p className="text-[10px] text-slate-400 mt-2 font-medium">
+                        Added {new Date(job.createdAt).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => convertToJobPack(job)}
+                        className="p-2.5 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors"
+                        title="Convert to Job Pack"
+                      >
+                        <ArrowRightCircle size={18} />
+                      </button>
+                      <button
+                        onClick={() => toggleFutureJobComplete(job.id)}
+                        className="p-2.5 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-200 transition-colors"
+                        title="Mark as done"
+                      >
+                        <CheckCircle2 size={18} />
+                      </button>
+                      <button
+                        onClick={() => deleteFutureJob(job.id)}
+                        className="p-2.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             ))}
           </div>
