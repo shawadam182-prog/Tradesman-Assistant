@@ -510,7 +510,10 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         sections: prev.sections?.map(s =>
           s.id === (targetSectionId || prev.sections?.[0].id)
             ? {
-              ...s, title: s.title === 'Work Section 1' ? (result.suggestedTitle || s.title) : s.title,
+              ...s, 
+              title: (!s.title || s.title.startsWith('Work Section')) 
+                ? (result.suggestedTitle || s.title) 
+                : s.title,
               labourHours: s.labourHours + (result.laborHoursEstimate || 0), items: [...s.items, ...newItems]
             } : s
         )
