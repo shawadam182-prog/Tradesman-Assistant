@@ -1180,7 +1180,16 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                       <input
                         type="datetime-local"
                         className="w-full bg-white border-2 border-slate-100 rounded-2xl md:rounded-3xl p-3 md:p-6 font-black text-sm md:text-lg text-slate-950 outline-none focus:border-teal-400 transition-all"
-                        value={draft.start ? new Date(draft.start).toISOString().slice(0, 16) : ''}
+                        value={draft.start ? (() => {
+                          const d = new Date(draft.start);
+                          // Format as local datetime (not UTC) for datetime-local input
+                          const year = d.getFullYear();
+                          const month = String(d.getMonth() + 1).padStart(2, '0');
+                          const day = String(d.getDate()).padStart(2, '0');
+                          const hours = String(d.getHours()).padStart(2, '0');
+                          const minutes = String(d.getMinutes()).padStart(2, '0');
+                          return `${year}-${month}-${day}T${hours}:${minutes}`;
+                        })() : ''}
                         onChange={e => setDraft({...draft, start: new Date(e.target.value).toISOString()})}
                       />
                     </div>
@@ -1189,7 +1198,16 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                       <input
                         type="datetime-local"
                         className="w-full bg-white border-2 border-slate-100 rounded-2xl md:rounded-3xl p-3 md:p-6 font-black text-sm md:text-lg text-slate-950 outline-none focus:border-teal-400 transition-all"
-                        value={draft.end ? new Date(draft.end).toISOString().slice(0, 16) : ''}
+                        value={draft.end ? (() => {
+                          const d = new Date(draft.end);
+                          // Format as local datetime (not UTC) for datetime-local input
+                          const year = d.getFullYear();
+                          const month = String(d.getMonth() + 1).padStart(2, '0');
+                          const day = String(d.getDate()).padStart(2, '0');
+                          const hours = String(d.getHours()).padStart(2, '0');
+                          const minutes = String(d.getMinutes()).padStart(2, '0');
+                          return `${year}-${month}-${day}T${hours}:${minutes}`;
+                        })() : ''}
                         onChange={e => setDraft({...draft, end: new Date(e.target.value).toISOString()})}
                       />
                     </div>
@@ -1278,10 +1296,21 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
             let startDate = draft.start ? new Date(draft.start) : new Date();
             let endDate = draft.end ? new Date(draft.end) : new Date();
             
-            // Parse date if provided
+            // Parse date if provided - handle UK format DD/MM/YYYY
             if (data.date) {
-              const parsedDate = new Date(data.date);
-              if (!isNaN(parsedDate.getTime())) {
+              let parsedDate: Date | null = null;
+              
+              // Try UK format DD/MM/YYYY first
+              const ukMatch = data.date.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+              if (ukMatch) {
+                const [_, day, month, year] = ukMatch;
+                parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+              } else {
+                // Fall back to standard parsing for ISO or other formats
+                parsedDate = new Date(data.date);
+              }
+              
+              if (parsedDate && !isNaN(parsedDate.getTime())) {
                 startDate.setFullYear(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
                 endDate.setFullYear(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
               }

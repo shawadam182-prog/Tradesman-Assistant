@@ -165,17 +165,25 @@ const actions: Record<string, (data: any) => Promise<any>> = {
   // Parse schedule voice input
   async parseSchedule({ input }: { input: string }) {
     const now = new Date();
-    const today = now.toISOString();
+    // Format date explicitly in UK format for context
+    const todayUK = now.toLocaleDateString('en-GB'); // DD/MM/YYYY
+    const todayISO = now.toISOString();
     const dayOfWeek = now.toLocaleDateString('en-GB', { weekday: 'long' });
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
 
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.0-flash',
       systemInstruction: `You are an expert at parsing messy voice-to-text for UK tradesman scheduling.
         The input may have speech recognition errors and informal language.
 
+        CRITICAL: All dates in the input are UK format: DD/MM/YYYY (day first, then month).
+        For example: "05/02/2026" means 5th February 2026, NOT May 2nd.
+        "The 5th of February" = 05/02/2026 in UK format.
+
         Extract a calendar event:
         - title: Short description of the job/task (required)
-        - start: Start date/time as ISO string (required)
+        - start: Start date/time as ISO string (required) - MUST preserve the exact date from input
         - end: End date/time as ISO string (default to start + 2 hours for jobs, +1 hour for meetings)
         - location: Address or job site name (empty string if not mentioned)
         - description: Any extra notes (empty string if none)
@@ -188,11 +196,14 @@ const actions: Record<string, (data: any) => Promise<any>> = {
         - "couple of hours" = 2 hours
         - "all day" = 8am to 5pm
 
+        IMPORTANT: Return times in LOCAL UK time (do NOT convert to UTC).
+        If input says "8am", the ISO string should have T08:00:00, not adjusted for timezone.
+        
         Always return valid JSON with ISO date strings.`,
     });
 
     const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: `Today is ${dayOfWeek}, ${today}. Parse this scheduling request: "${input}"` }] }],
+      contents: [{ role: 'user', parts: [{ text: `Today is ${dayOfWeek}, ${todayUK} (UK format DD/MM/YYYY). Current time: ${currentHour}:${currentMinute.toString().padStart(2, '0')}. Current ISO: ${todayISO}. Parse this scheduling request (remember: dates are UK DD/MM/YYYY format): "${input}"` }] }],
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: {
