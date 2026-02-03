@@ -1,7 +1,7 @@
 // ClassicTemplate.tsx - Ultra-compact traditional invoice layout with inline styles
 
 import React from 'react';
-import { Quote, Customer, AppSettings } from '../../types';
+import { Quote, Customer, AppSettings, QuoteDisplayOptions } from '../../types';
 import { getColorScheme } from '../../src/lib/invoiceTemplates';
 import type { ColorScheme } from '../../src/lib/invoiceTemplates';
 
@@ -17,13 +17,15 @@ interface TemplateProps {
     grandTotal: number;
   };
   reference: string;
+  displayOptions?: QuoteDisplayOptions; // Optional - use parent's computed displayOptions if provided
 }
 
 export const ClassicTemplate: React.FC<TemplateProps> = ({
-  quote, customer, settings, totals, reference
+  quote, customer, settings, totals, reference, displayOptions: passedDisplayOptions
 }) => {
   const markupMultiplier = 1 + ((quote.markupPercent || 0) / 100);
-  const displayOptions = quote.displayOptions || settings.defaultDisplayOptions;
+  // Use passed displayOptions if provided (for live toggle updates), otherwise fall back to quote/settings
+  const displayOptions = passedDisplayOptions || quote.displayOptions || settings.defaultDisplayOptions;
 
   // Get color scheme based on document type
   const colorSchemeToUse = quote.type === 'invoice' ? settings.invoiceColorScheme : settings.quoteColorScheme;

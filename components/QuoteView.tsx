@@ -1412,6 +1412,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
             settings={settings}
             totals={totals}
             reference={reference}
+            displayOptions={displayOptions}
           />
         ) : (
           <>
