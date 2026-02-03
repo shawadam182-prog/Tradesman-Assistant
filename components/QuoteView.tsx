@@ -1312,11 +1312,11 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100"><Package size={12} className="text-amber-500" /><span className="text-[9px] font-black uppercase tracking-widest text-slate-700">Materials</span></div>
                 <CustomiseToggle label="Show Section" optionKey="showMaterials" activeColor="bg-amber-500 text-white" />
                 <div className={`space-y-1 pl-2 border-l border-slate-100 transition-all ${displayOptions.showMaterials ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-                  <CustomiseToggle label="Detailed List" optionKey="showMaterialItems" activeColor="bg-slate-900 text-amber-500" />
+                  <CustomiseToggle label="Detailed List" optionKey="showMaterialItems" activeColor="bg-amber-400 text-slate-900" />
                   <div className={`space-y-1 transition-all ${displayOptions.showMaterialItems ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-                    <CustomiseToggle label="Quantities" optionKey="showMaterialQty" activeColor="bg-slate-800 text-white" />
-                    <CustomiseToggle label="Unit Prices" optionKey="showMaterialUnitPrice" activeColor="bg-slate-800 text-white" />
-                    <CustomiseToggle label="Line Totals" optionKey="showMaterialLineTotals" activeColor="bg-slate-800 text-white" />
+                    <CustomiseToggle label="Quantities" optionKey="showMaterialQty" activeColor="bg-amber-300 text-slate-900" />
+                    <CustomiseToggle label="Unit Prices" optionKey="showMaterialUnitPrice" activeColor="bg-amber-300 text-slate-900" />
+                    <CustomiseToggle label="Line Totals" optionKey="showMaterialLineTotals" activeColor="bg-amber-300 text-slate-900" />
                   </div>
                   <CustomiseToggle label="Materials Total" optionKey="showMaterialSectionTotal" activeColor="bg-amber-600 text-white" />
                 </div>
@@ -1326,11 +1326,11 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100"><HardHat size={12} className="text-blue-500" /><span className="text-[9px] font-black uppercase tracking-widest text-slate-700">Labour</span></div>
                 <CustomiseToggle label="Show Section" optionKey="showLabour" activeColor="bg-blue-600 text-white" />
                 <div className={`space-y-1 pl-2 border-l border-slate-100 transition-all ${displayOptions.showLabour ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-                  <CustomiseToggle label="Detailed Info" optionKey="showLabourItems" activeColor="bg-slate-900 text-blue-500" />
+                  <CustomiseToggle label="Detailed Info" optionKey="showLabourItems" activeColor="bg-blue-400 text-slate-900" />
                   <div className={`space-y-1 transition-all ${displayOptions.showLabourItems ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-                    <CustomiseToggle label="Hours" optionKey="showLabourQty" activeColor="bg-slate-800 text-white" />
-                    <CustomiseToggle label="Hourly Rate" optionKey="showLabourUnitPrice" activeColor="bg-slate-800 text-white" />
-                    <CustomiseToggle label="Line Totals" optionKey="showLabourLineTotals" activeColor="bg-slate-800 text-white" />
+                    <CustomiseToggle label="Hours" optionKey="showLabourQty" activeColor="bg-blue-300 text-slate-900" />
+                    <CustomiseToggle label="Hourly Rate" optionKey="showLabourUnitPrice" activeColor="bg-blue-300 text-slate-900" />
+                    <CustomiseToggle label="Line Totals" optionKey="showLabourLineTotals" activeColor="bg-blue-300 text-slate-900" />
                   </div>
                   <CustomiseToggle label="Labour Total" optionKey="showLabourSectionTotal" activeColor="bg-blue-600 text-white" />
                 </div>
@@ -1338,12 +1338,12 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
 
               <div className="space-y-1 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100"><Landmark size={12} className="text-emerald-500" /><span className="text-[9px] font-black uppercase tracking-widest text-slate-700">Tax & Branding</span></div>
-                <CustomiseToggle label="VAT Breakdown" optionKey="showVat" activeColor="bg-emerald-600 text-white" />
-                <CustomiseToggle label="CIS Deductions" optionKey="showCis" activeColor="bg-emerald-600 text-white" />
-                <CustomiseToggle label="Totals Summary" optionKey="showTotalsBreakdown" activeColor="bg-slate-900 text-white" />
-                <CustomiseToggle label="Section Totals" optionKey="showWorkSectionTotal" activeColor="bg-slate-900 text-white" />
-                <CustomiseToggle label="Business Logo" optionKey="showLogo" activeColor="bg-slate-900 text-white" />
-                <CustomiseToggle label="Terms/Notes" optionKey="showNotes" activeColor="bg-slate-900 text-white" />
+                <CustomiseToggle label="VAT Breakdown" optionKey="showVat" activeColor="bg-emerald-500 text-white" />
+                <CustomiseToggle label="CIS Deductions" optionKey="showCis" activeColor="bg-emerald-500 text-white" />
+                <CustomiseToggle label="Totals Summary" optionKey="showTotalsBreakdown" activeColor="bg-emerald-400 text-slate-900" />
+                <CustomiseToggle label="Section Totals" optionKey="showWorkSectionTotal" activeColor="bg-emerald-400 text-slate-900" />
+                <CustomiseToggle label="Business Logo" optionKey="showLogo" activeColor="bg-emerald-400 text-slate-900" />
+                <CustomiseToggle label="Terms/Notes" optionKey="showNotes" activeColor="bg-emerald-400 text-slate-900" />
               </div>
             </div>
             {/* Done button */}
