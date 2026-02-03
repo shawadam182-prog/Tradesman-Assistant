@@ -154,8 +154,18 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   // Use local state for immediate UI feedback, fall back to quote/settings
   const displayOptions = localDisplayOptions || { ...settings.defaultDisplayOptions, ...activeQuote.displayOptions };
 
+  // Debug: log display options on every render
+  console.log('[QuoteView] displayOptions:', {
+    showMaterialItems: displayOptions.showMaterialItems,
+    showMaterialSectionTotal: displayOptions.showMaterialSectionTotal,
+    localDisplayOptions: !!localDisplayOptions,
+    quoteHasOptions: !!activeQuote.displayOptions,
+  });
+
   const toggleOption = (optionKey: keyof QuoteDisplayOptions) => {
-    const updatedOptions = { ...displayOptions, [optionKey]: !displayOptions[optionKey] };
+    const newValue = !displayOptions[optionKey];
+    console.log(`[QuoteView] Toggle ${optionKey}: ${displayOptions[optionKey]} -> ${newValue}`);
+    const updatedOptions = { ...displayOptions, [optionKey]: newValue };
     setLocalDisplayOptions(updatedOptions); // Immediate UI update
     onUpdateQuote({ ...activeQuote, displayOptions: updatedOptions }); // Persist to quote
   };
