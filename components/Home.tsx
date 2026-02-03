@@ -21,6 +21,7 @@ import { FinancialOverview } from './FinancialOverview';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
 import { UpgradePrompt } from './UpgradePrompt';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
+import { ConfirmDialog } from './ConfirmDialog';
 
 // Detect iOS for voice input fallback
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -108,6 +109,7 @@ export const Home: React.FC<HomeProps> = ({
   const [futureJobs, setFutureJobs] = useState<FutureJob[]>([]);
   const [isListeningReminder, setIsListeningReminder] = useState(false);
   const [isListeningNote, setIsListeningNote] = useState(false);
+  const [showClearNotesConfirm, setShowClearNotesConfirm] = useState(false);
   const [isProcessingReminder, setIsProcessingReminder] = useState(false);
   const [showPhotoJobPicker, setShowPhotoJobPicker] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<File | null>(null);
@@ -1485,9 +1487,14 @@ export const Home: React.FC<HomeProps> = ({
             </div>
             <div className="flex gap-1 md:gap-2">
               <button
-                onClick={() => setQuickNotes('')}
-                className="h-9 w-9 md:h-16 md:w-16 rounded-lg md:rounded-[24px] flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all shadow-sm"
+                onClick={() => quickNotes.trim() && setShowClearNotesConfirm(true)}
+                className={`h-9 w-9 md:h-16 md:w-16 rounded-lg md:rounded-[24px] flex items-center justify-center transition-all shadow-sm ${
+                  quickNotes.trim() 
+                    ? 'bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500' 
+                    : 'bg-slate-50 text-slate-200 cursor-not-allowed'
+                }`}
                 title="Clear Notes"
+                disabled={!quickNotes.trim()}
               >
                 <Eraser size={16} className="md:w-6 md:h-6" />
               </button>
@@ -1555,6 +1562,22 @@ export const Home: React.FC<HomeProps> = ({
           onClose={() => setUpgradePromptType(null)}
         />
       )}
+
+      {/* Clear Quick Notes Confirmation */}
+      <ConfirmDialog
+        open={showClearNotesConfirm}
+        title="Clear Quick Notes?"
+        message="This will delete all your quick notes. This cannot be undone."
+        confirmLabel="Clear"
+        cancelLabel="Keep"
+        variant="danger"
+        onConfirm={() => {
+          setQuickNotes('');
+          setShowClearNotesConfirm(false);
+          hapticSuccess();
+        }}
+        onCancel={() => setShowClearNotesConfirm(false)}
+      />
     </div>
   );
 };
