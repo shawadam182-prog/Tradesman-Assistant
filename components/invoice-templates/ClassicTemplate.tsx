@@ -87,62 +87,72 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
 
       // Add material items (only if showMaterials is enabled)
       if (hasMaterialsToShow && sectionHasMaterials) {
-        // Add "Materials" sub-heading
-        items.push({
-          type: 'subheading' as any,
-          description: 'Materials',
-          qty: '',
-          rate: 0,
-          amount: 0,
-          itemType: 'material',
-        });
-        
-        (section.items || []).filter(i => !i.isHeading).forEach(item => {
+        // Add "Materials" sub-heading (only if showing items or totals)
+        if (displayOptions.showMaterialItems || displayOptions.showMaterialSectionTotal) {
           items.push({
-            type: 'item',
-            description: [item.name, item.description].filter(Boolean).join(' - '),
-            qty: `${item.quantity} ${item.unit}`,
-            rate: item.unitPrice * markupMultiplier,
-            amount: (item.totalPrice || 0) * markupMultiplier,
+            type: 'subheading' as any,
+            description: 'Materials',
+            qty: '',
+            rate: 0,
+            amount: 0,
             itemType: 'material',
           });
-        });
+        }
+        
+        // Only add individual items if showMaterialItems is true
+        if (displayOptions.showMaterialItems) {
+          (section.items || []).filter(i => !i.isHeading).forEach(item => {
+            items.push({
+              type: 'item',
+              description: [item.name, item.description].filter(Boolean).join(' - '),
+              qty: `${item.quantity} ${item.unit}`,
+              rate: item.unitPrice * markupMultiplier,
+              amount: (item.totalPrice || 0) * markupMultiplier,
+              itemType: 'material',
+            });
+          });
+        }
       }
 
       // Add labour items (only if showLabour is enabled)
       if (hasLabourToShow && sectionHasLabour) {
-        // Add "Labour" sub-heading
-        items.push({
-          type: 'subheading' as any,
-          description: 'Labour',
-          qty: '',
-          rate: 0,
-          amount: 0,
-          itemType: 'labour',
-        });
-        
-        if (section.labourItems?.length) {
-          section.labourItems.forEach(labour => {
-            const rate = labour.rate || section.labourRate || quote.labourRate || settings.defaultLabourRate;
-            items.push({
-              type: 'item',
-              description: labour.description || 'Labour work',
-              qty: `${labour.hours} hrs`,
-              rate: rate * markupMultiplier,
-              amount: labour.hours * rate * markupMultiplier,
-              itemType: 'labour',
-            });
-          });
-        } else if ((section.labourHours || 0) > 0) {
-          const rate = section.labourRate || quote.labourRate || settings.defaultLabourRate;
+        // Add "Labour" sub-heading (only if showing items or totals)
+        if (displayOptions.showLabourItems || displayOptions.showLabourSectionTotal) {
           items.push({
-            type: 'item',
-            description: 'Labour work',
-            qty: `${section.labourHours} hrs`,
-            rate: rate * markupMultiplier,
-            amount: (section.labourHours || 0) * rate * markupMultiplier,
+            type: 'subheading' as any,
+            description: 'Labour',
+            qty: '',
+            rate: 0,
+            amount: 0,
             itemType: 'labour',
           });
+        }
+        
+        // Only add individual items if showLabourItems is true
+        if (displayOptions.showLabourItems) {
+          if (section.labourItems?.length) {
+            section.labourItems.forEach(labour => {
+              const rate = labour.rate || section.labourRate || quote.labourRate || settings.defaultLabourRate;
+              items.push({
+                type: 'item',
+                description: labour.description || 'Labour work',
+                qty: `${labour.hours} hrs`,
+                rate: rate * markupMultiplier,
+                amount: labour.hours * rate * markupMultiplier,
+                itemType: 'labour',
+              });
+            });
+          } else if ((section.labourHours || 0) > 0) {
+            const rate = section.labourRate || quote.labourRate || settings.defaultLabourRate;
+            items.push({
+              type: 'item',
+              description: 'Labour work',
+              qty: `${section.labourHours} hrs`,
+              rate: rate * markupMultiplier,
+              amount: (section.labourHours || 0) * rate * markupMultiplier,
+              itemType: 'labour',
+            });
+          }
         }
       }
     });
