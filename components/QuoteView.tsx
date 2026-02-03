@@ -1288,6 +1288,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                 <CustomiseToggle label="VAT Breakdown" optionKey="showVat" activeColor="bg-emerald-600 text-white" />
                 <CustomiseToggle label="CIS Deductions" optionKey="showCis" activeColor="bg-emerald-600 text-white" />
                 <CustomiseToggle label="Totals Summary" optionKey="showTotalsBreakdown" activeColor="bg-slate-900 text-white" />
+                <CustomiseToggle label="Section Totals" optionKey="showWorkSectionTotal" activeColor="bg-slate-900 text-white" />
                 <CustomiseToggle label="Business Logo" optionKey="showLogo" activeColor="bg-slate-900 text-white" />
                 <CustomiseToggle label="Terms/Notes" optionKey="showNotes" activeColor="bg-slate-900 text-white" />
               </div>
@@ -1835,10 +1836,12 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                       </div>
                     )}
 
-                    <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-                      <span className="text-[8px] font-medium text-slate-400 uppercase tracking-wider">Section {idx + 1}</span>
-                      <p className="text-[10px] font-bold text-slate-600">Section Total: <span className="text-slate-900 ml-1">£{(sectionTotal * markupMultiplier).toFixed(2)}</span></p>
-                    </div>
+                    {displayOptions.showWorkSectionTotal && (
+                      <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+                        <span className="text-[8px] font-medium text-slate-400 uppercase tracking-wider">Section {idx + 1}</span>
+                        <p className="text-[10px] font-bold text-slate-600">Section Total: <span className="text-slate-900 ml-1">£{(sectionTotal * markupMultiplier).toFixed(2)}</span></p>
+                      </div>
+                    )}
                   </div>
                 );
               })

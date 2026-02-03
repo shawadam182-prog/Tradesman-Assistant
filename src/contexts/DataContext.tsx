@@ -72,6 +72,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     showNotes: true,
     showLogo: true,
     showTotalsBreakdown: true,
+    showWorkSectionTotal: true,
   },
   // Subscription defaults - trialing users get free tier limits
   subscriptionTier: 'free',

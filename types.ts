@@ -63,6 +63,7 @@ export interface QuoteDisplayOptions {
   showNotes: boolean;
   showLogo: boolean;
   showTotalsBreakdown: boolean;
+  showWorkSectionTotal: boolean; // Show/hide the work section total line
 }
 
 export interface Quote {
