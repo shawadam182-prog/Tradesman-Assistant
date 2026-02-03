@@ -26,6 +26,10 @@ async function callGemini<T>(action: string, data: Record<string, any>): Promise
 export interface AnalyzeJobResult {
   suggestedTitle: string;
   laborHoursEstimate: number;
+  labourItems?: {
+    description: string;
+    hours: number;
+  }[];
   materials: {
     name: string;
     description?: string;

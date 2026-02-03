@@ -505,6 +505,16 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         totalPrice: m.quantity * m.estimatedUnitPrice, isAIProposed: true
       }));
 
+      // Create labour items from AI result
+      const newLabourItems = (result.labourItems || []).map((l: any) => ({
+        id: Math.random().toString(36).substr(2, 9),
+        description: l.description,
+        hours: l.hours
+      }));
+
+      // Calculate total labour hours from items
+      const totalLabourHours = newLabourItems.reduce((sum: number, l: any) => sum + l.hours, 0) || result.laborHoursEstimate || 0;
+
       setFormData(prev => ({
         ...prev,
         sections: prev.sections?.map(s =>
@@ -514,7 +524,9 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               title: (!s.title || s.title.startsWith('Work Section')) 
                 ? (result.suggestedTitle || s.title) 
                 : s.title,
-              labourHours: s.labourHours + (result.laborHoursEstimate || 0), items: [...s.items, ...newItems]
+              labourHours: s.labourHours + totalLabourHours,
+              labourItems: [...(s.labourItems || []), ...newLabourItems],
+              items: [...s.items, ...newItems]
             } : s
         )
       }));

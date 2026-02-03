@@ -16,10 +16,17 @@ const actions: Record<string, (data: any) => Promise<any>> = {
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.0-flash',
       systemInstruction: `You are a professional UK construction quantity surveyor.
-        Analyze the text and image provided to generate a list of materials and estimated labour hours.
+        Analyze the text and image provided to generate:
+        1. A suggested title for this work section
+        2. A list of materials with quantities and UK trade prices
+        3. A list of labour items with descriptions and estimated hours
+        
         Use UK market prices in Sterling (£) for 2024-2025.
         Standard UK units: metres (m), square metres (m2), packs, or each.
-        Focus on providing realistic trade unit prices in GBP.`,
+        
+        For labourItems, break down the work into specific tasks that a tradesman would do.
+        For example: "Install double socket" (0.5 hours), "First fix wiring" (1 hour), etc.
+        Be realistic with time estimates based on UK trade standards.`,
     });
 
     const parts: any[] = [{ text: prompt }];
@@ -42,6 +49,17 @@ const actions: Record<string, (data: any) => Promise<any>> = {
           properties: {
             suggestedTitle: { type: SchemaType.STRING },
             laborHoursEstimate: { type: SchemaType.NUMBER },
+            labourItems: {
+              type: SchemaType.ARRAY,
+              items: {
+                type: SchemaType.OBJECT,
+                properties: {
+                  description: { type: SchemaType.STRING },
+                  hours: { type: SchemaType.NUMBER },
+                },
+                required: ['description', 'hours'],
+              },
+            },
             materials: {
               type: SchemaType.ARRAY,
               items: {
@@ -58,7 +76,7 @@ const actions: Record<string, (data: any) => Promise<any>> = {
             },
             notes: { type: SchemaType.STRING },
           },
-          required: ['suggestedTitle', 'laborHoursEstimate', 'materials'],
+          required: ['suggestedTitle', 'laborHoursEstimate', 'labourItems', 'materials'],
         },
       },
     });
