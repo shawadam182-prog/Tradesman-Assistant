@@ -40,6 +40,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [showCustomiser, setShowCustomiser] = useState(false);
+  const [localDisplayOptions, setLocalDisplayOptions] = useState<QuoteDisplayOptions | null>(null);
   const [showPaymentRecorder, setShowPaymentRecorder] = useState(false);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
@@ -150,11 +151,13 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
     );
   }
 
-  const displayOptions = { ...settings.defaultDisplayOptions, ...activeQuote.displayOptions };
+  // Use local state for immediate UI feedback, fall back to quote/settings
+  const displayOptions = localDisplayOptions || { ...settings.defaultDisplayOptions, ...activeQuote.displayOptions };
 
   const toggleOption = (optionKey: keyof QuoteDisplayOptions) => {
     const updatedOptions = { ...displayOptions, [optionKey]: !displayOptions[optionKey] };
-    onUpdateQuote({ ...activeQuote, displayOptions: updatedOptions });
+    setLocalDisplayOptions(updatedOptions); // Immediate UI update
+    onUpdateQuote({ ...activeQuote, displayOptions: updatedOptions }); // Persist to quote
   };
 
   // Use extracted calculation functions for testability
@@ -795,14 +798,15 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
 
   const CustomiseToggle = ({ label, optionKey, activeColor }: { label: string, optionKey: keyof QuoteDisplayOptions, activeColor: string }) => (
     <button
+      type="button"
       onClick={() => toggleOption(optionKey)}
-      className={`flex items-center justify-between w-full px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${displayOptions[optionKey]
+      className={`flex items-center justify-between w-full px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border transition-all active:scale-95 ${displayOptions[optionKey]
         ? `${activeColor} border-transparent shadow-sm`
         : 'bg-white text-slate-300 border-slate-100 italic opacity-60'
         }`}
     >
-      <span className="truncate mr-2">{label}</span>
-      {displayOptions[optionKey] ? <Eye size={10} /> : <EyeOff size={10} />}
+      <span className="truncate mr-1">{label}</span>
+      {displayOptions[optionKey] ? <Eye size={8} /> : <EyeOff size={8} />}
     </button>
   );
 
