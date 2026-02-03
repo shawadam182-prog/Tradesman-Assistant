@@ -1755,6 +1755,10 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                           </div>
                         )}
 
+                        {/* DEBUG: This div only renders if showMaterialItems is TRUE */}
+                        <div className="text-[8px] bg-purple-100 text-purple-800 px-1 rounded mb-1">
+                          DEBUG: showMaterialItems={String(displayOptions.showMaterialItems)} | items={section.items?.length || 0}
+                        </div>
                         {displayOptions.showMaterialItems && (section.items || []).length > 0 && (
                           <div className="w-full">
                             {/* Desktop Table */}
@@ -1818,6 +1822,10 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
                           </div>
                         )}
 
+                        {/* DEBUG: Materials Total visibility */}
+                        <div className="text-[8px] bg-green-100 text-green-800 px-1 rounded mb-1">
+                          DEBUG: showMaterialSectionTotal={String(displayOptions.showMaterialSectionTotal)} | total=£{(rawMaterialsTotal * (1 + ((activeQuote.markupPercent || 0) / 100))).toFixed(2)}
+                        </div>
                         {displayOptions.showMaterialSectionTotal && (
                           <div className={`flex justify-between items-center py-1 ${templateConfig.showBackgrounds ? 'bg-slate-50 px-2 rounded-lg border border-slate-100/50' : 'border-t border-slate-100 px-1'}`}>
                             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Materials Total</span>
