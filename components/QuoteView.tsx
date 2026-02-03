@@ -246,6 +246,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       }
 
       // Add materials (only if showMaterials is enabled)
+      let sectionMaterialsTotal = 0;
       if (hasMaterialsToShow) {
         (section.items || []).forEach(item => {
           if (item.isHeading) {
@@ -261,6 +262,8 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
             });
           } else {
             const unitPrice = (item.unitPrice || 0) * markupMultiplier;
+            const lineTotal = (item.totalPrice || 0) * markupMultiplier;
+            sectionMaterialsTotal += lineTotal;
             items.push({
               type: 'item',
               lineNum: lineNum++,
@@ -269,18 +272,36 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
               subtext: item.description || undefined,
               qty: `${item.quantity}`,
               rate: unitPrice,
-              amount: (item.totalPrice || 0) * markupMultiplier,
+              amount: lineTotal,
               itemType: 'material',
             });
           }
         });
+        
+        // Add Materials Total row if enabled and has materials
+        if (displayOptions.showMaterialSectionTotal && sectionMaterialsTotal > 0) {
+          items.push({
+            type: 'item',
+            lineNum: 0,
+            name: 'Materials Total',
+            description: 'Materials Total',
+            qty: '',
+            amount: sectionMaterialsTotal,
+            isHeading: false,
+            itemType: 'material',
+            isSubtotal: true,
+          } as any);
+        }
       }
 
       // Add labour items (only if showLabour is enabled)
+      let sectionLabourTotal = 0;
       if (hasLabourToShow) {
         if (section.labourItems && section.labourItems.length > 0) {
           section.labourItems.forEach(labour => {
             const rate = (labour.rate || section.labourRate || activeQuote.labourRate || settings.defaultLabourRate) * markupMultiplier;
+            const lineTotal = labour.hours * rate;
+            sectionLabourTotal += lineTotal;
             items.push({
               type: 'item',
               lineNum: lineNum++,
@@ -288,12 +309,14 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
               description: labour.description || 'Labour',
               qty: `${labour.hours}`,
               rate: rate,
-              amount: labour.hours * rate,
+              amount: lineTotal,
               itemType: 'labour',
             });
           });
         } else if ((section.labourHours || 0) > 0) {
           const rate = (section.labourRate || activeQuote.labourRate || settings.defaultLabourRate) * markupMultiplier;
+          const lineTotal = (section.labourHours || 0) * rate;
+          sectionLabourTotal += lineTotal;
           items.push({
             type: 'item',
             lineNum: lineNum++,
@@ -301,9 +324,24 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
             description: 'Labour',
             qty: `${section.labourHours}`,
             rate: rate,
-            amount: (section.labourHours || 0) * rate,
+            amount: lineTotal,
             itemType: 'labour',
           });
+        }
+        
+        // Add Labour Total row if enabled and has labour
+        if (displayOptions.showLabourSectionTotal && sectionLabourTotal > 0) {
+          items.push({
+            type: 'item',
+            lineNum: 0,
+            name: 'Labour Total',
+            description: 'Labour Total',
+            qty: '',
+            amount: sectionLabourTotal,
+            isHeading: false,
+            itemType: 'labour',
+            isSubtotal: true,
+          } as any);
         }
       }
     });
@@ -1536,7 +1574,24 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
 
                       <tbody>
                         {getAllLineItems().map((item, idx) => (
-                          item.type === 'header' ? (
+                          (item as any).isSubtotal ? (
+                            // Section subtotal row (Materials Total / Labour Total)
+                            <tr key={`subtotal-${idx}`} className="bg-slate-50 border-t border-slate-200">
+                              {templateConfig.showLineNumbers && <td className="py-1.5 px-2"></td>}
+                              <td className="py-1.5 px-2">
+                                <span className={`text-[10px] font-bold uppercase tracking-wider ${item.itemType === 'labour' ? 'text-blue-600' : 'text-amber-600'}`}>
+                                  {item.description}
+                                </span>
+                              </td>
+                              {showQtyColumn && <td className="py-1.5 px-2"></td>}
+                              {showRateColumn && (activeTemplate === 'professional' || activeTemplate === 'spacious') && <td className="py-1.5 px-2"></td>}
+                              {showAmountColumn && (
+                                <td className={`py-1.5 px-2 text-right font-bold text-[11px] ${item.itemType === 'labour' ? 'text-blue-600' : 'text-amber-600'}`}>
+                                  £{item.amount.toFixed(2)}
+                                </td>
+                              )}
+                            </tr>
+                          ) : item.type === 'header' ? (
                             // Section Title or Section Description
                             <tr key={`header-${idx}`} style={{ borderBottom: item.isDescription ? 'none' : '1px solid #e2e8f0' }}>
                               <td colSpan={colSpan} style={{
