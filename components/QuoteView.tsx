@@ -220,12 +220,12 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   // Respects displayOptions for filtering materials and labour
   const getAllLineItems = () => {
     // DEBUG: Log what displayOptions we're using
-    console.log('getAllLineItems called with displayOptions:', {
+    console.log('🔍 getAllLineItems called with displayOptions:', JSON.stringify({
       showMaterials: displayOptions.showMaterials,
       showMaterialItems: displayOptions.showMaterialItems,
       showLabour: displayOptions.showLabour,
       showLabourItems: displayOptions.showLabourItems,
-    });
+    }));
     
     const items: Array<{
       type?: 'header' | 'item';
@@ -405,6 +405,16 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
           } as any);
         }
       }
+    });
+
+    // DEBUG: Log item counts by type
+    const materialItems = items.filter(i => i.itemType === 'material' && !i.isHeading && !(i as any).isSubtotal);
+    const labourItems = items.filter(i => i.itemType === 'labour' && !i.isHeading && !(i as any).isSubtotal);
+    console.log('📊 getAllLineItems result:', {
+      totalItems: items.length,
+      materialItems: materialItems.length,
+      labourItems: labourItems.length,
+      headers: items.filter(i => i.type === 'header' || i.isHeading).length,
     });
 
     return items;
@@ -1609,6 +1619,11 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
               </>
             )}
 
+            {/* DEBUG: Show which render path is active */}
+            <div className="text-[8px] bg-yellow-100 text-yellow-800 px-2 py-1 mb-2 rounded">
+              DEBUG: template={activeTemplate} | combineLineItems={String(templateConfig.combineLineItems)} | path={templateConfig.combineLineItems ? 'COMBINED' : 'SEPARATE'}
+            </div>
+            
             {/* COMBINED LINE ITEMS TABLE - For templates that combine materials + labour */}
             {templateConfig.combineLineItems ? (
               <div className="px-4 pb-2">
