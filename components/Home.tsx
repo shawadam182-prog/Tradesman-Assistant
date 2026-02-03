@@ -10,7 +10,7 @@ import {
   PoundSterling, FileWarning, AlertTriangle,
   ChevronDown, ChevronUp, ChevronRight, BarChart3,
   TrendingUp, Camera, Eye, Phone, Plus,
-  ClipboardList, ArrowRightCircle, X, FolderPlus
+  ClipboardList, ArrowRightCircle, X, FolderPlus, Check
 } from 'lucide-react';
 import { parseReminderVoiceInput } from '../src/services/geminiService';
 import { sitePhotosService, remindersService, futureJobsService } from '../src/services/dataService';
@@ -132,6 +132,9 @@ export const Home: React.FC<HomeProps> = ({
   const [newReminderTime, setNewReminderTime] = useState('');
   const [newFutureJobName, setNewFutureJobName] = useState('');
   const [newFutureJobNotes, setNewFutureJobNotes] = useState('');
+  const [editingEnquiryId, setEditingEnquiryId] = useState<string | null>(null);
+  const [editEnquiryName, setEditEnquiryName] = useState('');
+  const [editEnquiryNotes, setEditEnquiryNotes] = useState('');
 
   const recognitionRef = useRef<any>(null);
   const noteRecognitionRef = useRef<any>(null);
@@ -552,6 +555,43 @@ export const Home: React.FC<HomeProps> = ({
     }));
     deleteFutureJob(job.id);
     onCreateJob?.();
+  };
+
+  const startEnquiryEdit = (job: FutureJob) => {
+    setEditingEnquiryId(job.id);
+    setEditEnquiryName(job.name);
+    setEditEnquiryNotes(job.notes);
+    hapticTap();
+  };
+
+  const cancelEnquiryEdit = () => {
+    setEditingEnquiryId(null);
+    setEditEnquiryName('');
+    setEditEnquiryNotes('');
+    hapticTap();
+  };
+
+  const saveEnquiryEdit = async () => {
+    if (!editingEnquiryId || !editEnquiryName.trim()) return;
+    
+    const updates = { name: editEnquiryName.trim(), notes: editEnquiryNotes.trim() };
+    
+    // Update local state immediately
+    setFutureJobs(prev => prev.map(j => 
+      j.id === editingEnquiryId ? { ...j, name: updates.name, notes: updates.notes } : j
+    ));
+    
+    // Sync to Supabase
+    try {
+      await futureJobsService.update(editingEnquiryId, updates);
+    } catch (e) {
+      console.warn("Failed to update enquiry:", e);
+    }
+    
+    setEditingEnquiryId(null);
+    setEditEnquiryName('');
+    setEditEnquiryNotes('');
+    hapticSuccess();
   };
 
   // Calculate quote total helper
@@ -1164,7 +1204,7 @@ export const Home: React.FC<HomeProps> = ({
             </button>
           </div>
 
-          {/* Compact Jobs List - Show first 4 only */}
+          {/* Compact Jobs List - Show first 3 only */}
           {futureJobs.filter(j => !j.isCompleted).length === 0 ? (
             <div className="py-6 text-center opacity-40">
               <ClipboardList size={24} className="mx-auto text-slate-300 mb-1" />
@@ -1175,21 +1215,68 @@ export const Home: React.FC<HomeProps> = ({
               {futureJobs.filter(j => !j.isCompleted).slice(0, 3).map(job => (
                 <div
                   key={job.id}
-                  className="flex items-center justify-between gap-2 bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 hover:border-teal-200 transition-all"
+                  className={`rounded-lg px-3 py-2 border transition-all ${
+                    editingEnquiryId === job.id 
+                      ? 'bg-white border-teal-400 ring-2 ring-teal-100' 
+                      : 'bg-slate-50 border-slate-100 hover:border-teal-200'
+                  }`}
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 text-sm truncate">{job.name}</p>
-                    <p className="text-[9px] text-slate-400 font-medium">
-                      {new Date(job.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => { hapticTap(); convertToJobPack(job); }}
-                    className="p-1.5 bg-teal-100 text-teal-600 rounded-lg hover:bg-teal-200 transition-colors shrink-0"
-                    title="Convert to Job Pack"
-                  >
-                    <ArrowRightCircle size={14} />
-                  </button>
+                  {editingEnquiryId === job.id ? (
+                    /* Edit Mode */
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={editEnquiryName}
+                        onChange={e => setEditEnquiryName(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 font-bold text-sm text-slate-900 outline-none focus:border-teal-400"
+                        placeholder="Customer / Job name..."
+                        autoFocus
+                      />
+                      <input
+                        type="text"
+                        value={editEnquiryNotes}
+                        onChange={e => setEditEnquiryNotes(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-sm text-slate-700 outline-none focus:border-teal-400"
+                        placeholder="Notes (optional)..."
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={cancelEnquiryEdit}
+                          className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-1 text-xs"
+                        >
+                          <X size={12} /> Cancel
+                        </button>
+                        <button
+                          onClick={saveEnquiryEdit}
+                          disabled={!editEnquiryName.trim()}
+                          className="px-2 py-1 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors flex items-center gap-1 text-xs disabled:opacity-30"
+                        >
+                          <Check size={12} /> Save
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* View Mode */
+                    <div className="flex items-center justify-between gap-2">
+                      <div 
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => startEnquiryEdit(job)}
+                      >
+                        <p className="font-bold text-slate-900 text-sm truncate">{job.name}</p>
+                        <p className="text-[9px] text-slate-400 font-medium">
+                          {new Date(job.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                          {job.notes && ` • ${job.notes}`}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => { hapticTap(); convertToJobPack(job); }}
+                        className="p-1.5 bg-teal-100 text-teal-600 rounded-lg hover:bg-teal-200 transition-colors shrink-0"
+                        title="Convert to Job Pack"
+                      >
+                        <ArrowRightCircle size={14} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
               {futureJobs.filter(j => !j.isCompleted).length > 3 && (
