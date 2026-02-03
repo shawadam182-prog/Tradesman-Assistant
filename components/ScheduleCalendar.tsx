@@ -811,6 +811,21 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                       </div>
                     );
                   })}
+                  
+                  {/* Quick Add Button for Day View */}
+                  <button
+                    onClick={() => {
+                      hapticTap();
+                      const defaultDate = new Date(selectedDay);
+                      defaultDate.setHours(8, 0, 0, 0);
+                      setDraft({ start: defaultDate.toISOString() });
+                      setIsAddingManual(true);
+                    }}
+                    className="w-full py-4 md:py-5 bg-slate-50 hover:bg-slate-900 border-2 border-dashed border-slate-200 hover:border-slate-900 rounded-xl md:rounded-2xl text-slate-400 hover:text-teal-500 font-black text-[10px] md:text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-[0.98] group"
+                  >
+                    <Plus size={16} className="md:w-5 md:h-5 group-hover:rotate-90 transition-transform" />
+                    Add Another Booking
+                  </button>
                 </div>
               )}
             </div>
