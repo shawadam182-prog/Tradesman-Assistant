@@ -219,6 +219,14 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   // Helper to flatten all items (materials + labour) into a single table
   // Respects displayOptions for filtering materials and labour
   const getAllLineItems = () => {
+    // DEBUG: Log what displayOptions we're using
+    console.log('getAllLineItems called with displayOptions:', {
+      showMaterials: displayOptions.showMaterials,
+      showMaterialItems: displayOptions.showMaterialItems,
+      showLabour: displayOptions.showLabour,
+      showLabourItems: displayOptions.showLabourItems,
+    });
+    
     const items: Array<{
       type?: 'header' | 'item';
       lineNum: number;
@@ -1310,8 +1318,10 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
             {/* DEBUG: Show actual values */}
             <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded-lg text-[8px] font-mono">
               <div className="font-bold text-red-600 mb-1">DEBUG VALUES:</div>
+              <div>showMaterials: <span className={displayOptions.showMaterials ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{String(displayOptions.showMaterials)}</span></div>
               <div>showMaterialItems: <span className={displayOptions.showMaterialItems ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{String(displayOptions.showMaterialItems)}</span></div>
-              <div>showMaterialSectionTotal: <span className={displayOptions.showMaterialSectionTotal ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{String(displayOptions.showMaterialSectionTotal)}</span></div>
+              <div>showLabour: <span className={displayOptions.showLabour ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{String(displayOptions.showLabour)}</span></div>
+              <div>showLabourItems: <span className={displayOptions.showLabourItems ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{String(displayOptions.showLabourItems)}</span></div>
               <div>localDisplayOptions set: <span className={localDisplayOptions ? 'text-green-600' : 'text-red-600'}>{String(!!localDisplayOptions)}</span></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
