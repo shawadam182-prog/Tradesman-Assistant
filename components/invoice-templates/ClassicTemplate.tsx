@@ -219,8 +219,9 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
       }
       const jobSectionTotal = sectionMaterialsSum + sectionLabourSum;
       
-      // Show section total if section has content (regardless of toggle settings)
-      if (jobSectionTotal > 0 && (sectionHasMaterialContent || sectionHasLabourContent)) {
+      // Show section total only when showWorkSectionTotal toggle is enabled
+      // This is independent of materials/labour visibility toggles
+      if (displayOptions.showWorkSectionTotal && jobSectionTotal > 0 && (sectionHasMaterialContent || sectionHasLabourContent)) {
         items.push({
           type: 'sectiontotal' as any,
           description: `${section.title || 'Section'} Total`,
