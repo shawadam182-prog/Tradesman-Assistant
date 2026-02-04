@@ -64,15 +64,21 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
     const hasLabourToShow = displayOptions.showLabour;
 
     (quote.sections || []).forEach(section => {
-      // Determine if this section has visible content
-      const sectionHasMaterials = hasMaterialsToShow && (section.items || []).filter(i => !i.isHeading).length > 0;
-      const sectionHasLabour = hasLabourToShow && (
+      // Check if section has actual content (regardless of toggle settings)
+      // Section headers should ALWAYS show if section has any data
+      const sectionHasMaterialContent = (section.items || []).filter(i => !i.isHeading).length > 0;
+      const sectionHasLabourContent = (
         (section.labourItems && section.labourItems.length > 0) ||
         (section.labourHours || 0) > 0
       );
 
-      // Only add section header if it has visible content
-      if (sectionHasMaterials || sectionHasLabour) {
+      // Toggle-based checks for showing materials/labour details
+      const sectionHasMaterials = hasMaterialsToShow && sectionHasMaterialContent;
+      const sectionHasLabour = hasLabourToShow && sectionHasLabourContent;
+
+      // Always show section header if section has ANY content (regardless of toggles)
+      // The green banner and description should always be visible
+      if (sectionHasMaterialContent || sectionHasLabourContent) {
         // Add section header with title and optional description
         items.push({
           type: 'header',
@@ -86,7 +92,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
       }
 
       // Add material items (only if showMaterials is enabled)
-      if (hasMaterialsToShow && sectionHasMaterials) {
+      if (sectionHasMaterials) {
         // Add "Materials" sub-heading (only if showing items or totals)
         if (displayOptions.showMaterialItems || displayOptions.showMaterialSectionTotal) {
           items.push({
@@ -132,7 +138,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
       }
 
       // Add labour items (only if showLabour is enabled)
-      if (hasLabourToShow && sectionHasLabour) {
+      if (sectionHasLabour) {
         // Add "Labour" sub-heading (only if showing items or totals)
         if (displayOptions.showLabourItems || displayOptions.showLabourSectionTotal) {
           items.push({
@@ -213,7 +219,8 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
       }
       const jobSectionTotal = sectionMaterialsSum + sectionLabourSum;
       
-      if (jobSectionTotal > 0 && (sectionHasMaterials || sectionHasLabour)) {
+      // Show section total if section has content (regardless of toggle settings)
+      if (jobSectionTotal > 0 && (sectionHasMaterialContent || sectionHasLabourContent)) {
         items.push({
           type: 'sectiontotal' as any,
           description: `${section.title || 'Section'} Total`,
