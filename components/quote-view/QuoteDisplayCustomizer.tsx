@@ -154,6 +154,12 @@ export const QuoteDisplayCustomizer: React.FC<QuoteDisplayCustomizerProps> = ({
             onClick={() => onToggleOption('showTotalsBreakdown')}
           />
           <CustomiseToggle
+            label="Section Totals"
+            isActive={displayOptions.showWorkSectionTotal}
+            activeColor="bg-emerald-400 text-slate-900"
+            onClick={() => onToggleOption('showWorkSectionTotal')}
+          />
+          <CustomiseToggle
             label="Business Logo"
             isActive={displayOptions.showLogo}
             activeColor="bg-slate-900 text-white"
