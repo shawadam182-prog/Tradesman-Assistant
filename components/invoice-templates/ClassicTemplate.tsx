@@ -71,14 +71,16 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
         (section.labourItems && section.labourItems.length > 0) ||
         (section.labourHours || 0) > 0
       );
+      // Check for direct price entry (section with price but no materials/labour)
+      const sectionHasDirectPrice = section.subsectionPrice !== undefined && section.subsectionPrice > 0;
 
       // Toggle-based checks for showing materials/labour details
       const sectionHasMaterials = hasMaterialsToShow && sectionHasMaterialContent;
       const sectionHasLabour = hasLabourToShow && sectionHasLabourContent;
 
-      // Always show section header if section has ANY content (regardless of toggles)
+      // Always show section header if section has ANY content (materials, labour, or direct price)
       // The green banner and description should always be visible
-      if (sectionHasMaterialContent || sectionHasLabourContent) {
+      if (sectionHasMaterialContent || sectionHasLabourContent || sectionHasDirectPrice) {
         // Add section header with title and optional description
         items.push({
           type: 'header',
@@ -203,7 +205,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
         }
       }
       
-      // Add job section total (materials + labour for this section)
+      // Add job section total (materials + labour for this section, or direct price if set)
       const sectionMaterialsSum = (section.items || [])
         .filter(i => !i.isHeading)
         .reduce((sum, item) => sum + ((item.totalPrice || 0) * markupMultiplier), 0);
@@ -217,11 +219,14 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
         const rate = section.labourRate || quote.labourRate || settings.defaultLabourRate;
         sectionLabourSum = (section.labourHours || 0) * rate * markupMultiplier;
       }
-      const jobSectionTotal = sectionMaterialsSum + sectionLabourSum;
-      
+      // Use subsectionPrice if set (direct price entry), otherwise calculate from materials + labour
+      const jobSectionTotal = section.subsectionPrice !== undefined
+        ? section.subsectionPrice * markupMultiplier
+        : sectionMaterialsSum + sectionLabourSum;
+
       // Show section total only when showWorkSectionTotal toggle is enabled
       // This is independent of materials/labour visibility toggles
-      if (displayOptions.showWorkSectionTotal && jobSectionTotal > 0 && (sectionHasMaterialContent || sectionHasLabourContent)) {
+      if (displayOptions.showWorkSectionTotal && jobSectionTotal > 0 && (sectionHasMaterialContent || sectionHasLabourContent || sectionHasDirectPrice)) {
         items.push({
           type: 'sectiontotal' as any,
           description: `${section.title || 'Section'} Total`,
