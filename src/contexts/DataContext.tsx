@@ -533,6 +533,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchData();
   }, [fetchData]);
 
+  // Cross-device sync: Refresh data when tab regains focus
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !loading && user) {
+        console.log('[DataContext] Tab visible - refreshing data for cross-device sync');
+        fetchData();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [fetchData, loading, user]);
+
   // Customer actions
   const addCustomer = async (customer: Omit<Customer, 'id'>): Promise<Customer> => {
     if (!user) throw new Error('Not authenticated');
