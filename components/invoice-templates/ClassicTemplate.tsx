@@ -99,6 +99,11 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
           });
         }
         
+        // Calculate materials total for this section
+        const sectionMaterialsTotal = (section.items || [])
+          .filter(i => !i.isHeading)
+          .reduce((sum, item) => sum + ((item.totalPrice || 0) * markupMultiplier), 0);
+        
         // Only add individual items if showMaterialItems is true
         if (displayOptions.showMaterialItems) {
           (section.items || []).filter(i => !i.isHeading).forEach(item => {
@@ -110,6 +115,18 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
               amount: (item.totalPrice || 0) * markupMultiplier,
               itemType: 'material',
             });
+          });
+        }
+        
+        // Add materials section total
+        if (displayOptions.showMaterialSectionTotal && sectionMaterialsTotal > 0) {
+          items.push({
+            type: 'subtotal' as any,
+            description: 'Materials Total',
+            qty: '',
+            rate: 0,
+            amount: sectionMaterialsTotal,
+            itemType: 'material',
           });
         }
       }
@@ -126,6 +143,18 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             amount: 0,
             itemType: 'labour',
           });
+        }
+        
+        // Calculate labour total for this section
+        let sectionLabourTotal = 0;
+        if (section.labourItems?.length) {
+          sectionLabourTotal = section.labourItems.reduce((sum, labour) => {
+            const rate = labour.rate || section.labourRate || quote.labourRate || settings.defaultLabourRate;
+            return sum + (labour.hours * rate * markupMultiplier);
+          }, 0);
+        } else if ((section.labourHours || 0) > 0) {
+          const rate = section.labourRate || quote.labourRate || settings.defaultLabourRate;
+          sectionLabourTotal = (section.labourHours || 0) * rate * markupMultiplier;
         }
         
         // Only add individual items if showLabourItems is true
@@ -154,6 +183,44 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             });
           }
         }
+        
+        // Add labour section total
+        if (displayOptions.showLabourSectionTotal && sectionLabourTotal > 0) {
+          items.push({
+            type: 'subtotal' as any,
+            description: 'Labour Total',
+            qty: '',
+            rate: 0,
+            amount: sectionLabourTotal,
+            itemType: 'labour',
+          });
+        }
+      }
+      
+      // Add job section total (materials + labour for this section)
+      const sectionMaterialsSum = (section.items || [])
+        .filter(i => !i.isHeading)
+        .reduce((sum, item) => sum + ((item.totalPrice || 0) * markupMultiplier), 0);
+      let sectionLabourSum = 0;
+      if (section.labourItems?.length) {
+        sectionLabourSum = section.labourItems.reduce((sum, labour) => {
+          const rate = labour.rate || section.labourRate || quote.labourRate || settings.defaultLabourRate;
+          return sum + (labour.hours * rate * markupMultiplier);
+        }, 0);
+      } else if ((section.labourHours || 0) > 0) {
+        const rate = section.labourRate || quote.labourRate || settings.defaultLabourRate;
+        sectionLabourSum = (section.labourHours || 0) * rate * markupMultiplier;
+      }
+      const jobSectionTotal = sectionMaterialsSum + sectionLabourSum;
+      
+      if (jobSectionTotal > 0 && (sectionHasMaterials || sectionHasLabour)) {
+        items.push({
+          type: 'sectiontotal' as any,
+          description: `${section.title || 'Section'} Total`,
+          qty: '',
+          rate: 0,
+          amount: jobSectionTotal,
+        });
       }
     });
 
@@ -307,6 +374,36 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
                           {item.description}
                         </div>
                       </td>
+                    </tr>
+                  );
+                } else if (item.type === 'subtotal') {
+                  /* Subtotal row for materials/labour */
+                  return (
+                    <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                      <td 
+                        colSpan={showQtyColumn && showRateColumn ? 3 : (showQtyColumn || showRateColumn ? 2 : 1)} 
+                        style={{ padding: '6px 8px 6px 24px', fontSize: '12px', fontWeight: '600', color: '#475569', textAlign: 'right' }}
+                      >
+                        {item.description}
+                      </td>
+                      {showAmountColumn && (
+                        <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '700', fontSize: '12px', color: '#334155' }}>£{item.amount.toFixed(2)}</td>
+                      )}
+                    </tr>
+                  );
+                } else if (item.type === 'sectiontotal') {
+                  /* Section total row */
+                  return (
+                    <tr key={idx} style={{ borderBottom: '2px solid #cbd5e1', backgroundColor: '#f1f5f9' }}>
+                      <td 
+                        colSpan={showQtyColumn && showRateColumn ? 3 : (showQtyColumn || showRateColumn ? 2 : 1)} 
+                        style={{ padding: '8px 8px 8px 12px', fontSize: '13px', fontWeight: '700', color: '#1e293b', textAlign: 'right' }}
+                      >
+                        {item.description}
+                      </td>
+                      {showAmountColumn && (
+                        <td style={{ padding: '8px', textAlign: 'right', fontWeight: '800', fontSize: '14px', color: '#0f172a' }}>£{item.amount.toFixed(2)}</td>
+                      )}
                     </tr>
                   );
                 } else {
