@@ -1228,7 +1228,16 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                           const minutes = String(d.getMinutes()).padStart(2, '0');
                           return `${year}-${month}-${day}T${hours}:${minutes}`;
                         })() : ''}
-                        onChange={e => setDraft({...draft, start: new Date(e.target.value).toISOString()})}
+                        onChange={e => {
+                          const newStart = new Date(e.target.value);
+                          // Calculate duration from current start/end to maintain it
+                          const currentStart = draft.start ? new Date(draft.start) : newStart;
+                          const currentEnd = draft.end ? new Date(draft.end) : new Date(newStart.getTime() + 3600000);
+                          const duration = currentEnd.getTime() - currentStart.getTime();
+                          // Adjust end time to maintain the same duration
+                          const newEnd = new Date(newStart.getTime() + duration);
+                          setDraft({...draft, start: newStart.toISOString(), end: newEnd.toISOString()});
+                        }}
                       />
                     </div>
                     <div className="space-y-2 md:space-y-3">
