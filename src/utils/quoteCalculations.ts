@@ -222,14 +222,21 @@ export function calculateQuoteTotals(
  * Simple helper to get just the grand total for a quote.
  * Use this in list views where only the final total is needed.
  * For full breakdown, use calculateQuoteTotals() instead.
+ *
+ * IMPORTANT: Uses the quote's own displayOptions if available,
+ * so list totals match the document totals.
  */
 export function getQuoteGrandTotal(
   quote: Quote,
   settings: QuoteTotalSettings
 ): number {
+  // Use quote's own display options if set, otherwise fall back to global settings
+  const quoteShowVat = quote.displayOptions?.showVat ?? settings.enableVat;
+  const quoteShowCis = quote.displayOptions?.showCis ?? settings.enableCis;
+
   const displayOptions: QuoteDisplayOptions = {
-    showVat: settings.enableVat,
-    showCis: settings.enableCis,
+    showVat: quoteShowVat,
+    showCis: quoteShowCis,
     showMaterials: true,
     showMaterialItems: true,
     showMaterialQty: true,
@@ -250,8 +257,8 @@ export function getQuoteGrandTotal(
   const totals = calculateQuoteTotals(quote, {
     enableVat: settings.enableVat,
     enableCis: settings.enableCis,
-    showVat: settings.enableVat,
-    showCis: settings.enableCis,
+    showVat: quoteShowVat,
+    showCis: quoteShowCis,
     defaultLabourRate: settings.defaultLabourRate,
   }, displayOptions);
 
