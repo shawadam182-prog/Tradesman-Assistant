@@ -2309,7 +2309,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
 
       {/* Mark as Sent Prompt Modal */}
       {showMarkAsSentPrompt && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-2">
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-[200] p-2">
           <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm overflow-hidden animate-in slide-in-from-bottom-4">
             <div className="p-5 text-center">
               <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
