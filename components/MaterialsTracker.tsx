@@ -6,7 +6,6 @@ import {
   Plus, Minus, X, Send, ListPlus, PencilLine,
   Info
 } from 'lucide-react';
-import { parseVoiceCommandForItems } from '../src/services/geminiService';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
@@ -92,33 +91,32 @@ export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
     setQuickInput('');
   };
 
-  const processScratchpad = async () => {
+  const processScratchpad = () => {
     if (!scratchpadText.trim()) return;
-    setIsProcessing(true);
-    try {
-      const items = await parseVoiceCommandForItems(scratchpadText);
-      if (items && items.length > 0) {
-        const newItems: ProjectMaterial[] = items.map((item: any) => ({
-          id: Math.random().toString(36).substr(2, 9),
-          name: item.name,
-          unit: item.unit || 'pc',
-          quotedQty: Number(item.quantity) || 1,
-          orderedQty: 0,
-          deliveredQty: 0,
-          usedQty: 0,
-          status: 'pending'
-        }));
-        onSaveProject({
-          ...project,
-          materials: [...newItems, ...(project.materials || [])]
-        });
-        setScratchpadText('');
-        setShowScratchpad(false);
-      }
-    } catch (err) {
-      alert("AI was unable to parse those notes. Try a simpler list.");
-    } finally {
-      setIsProcessing(false);
+
+    // Simple notepad - split by newlines and add each line as an item
+    const lines = scratchpadText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    if (lines.length > 0) {
+      const newItems: ProjectMaterial[] = lines.map(line => ({
+        id: Math.random().toString(36).substr(2, 9),
+        name: line,
+        unit: 'pc',
+        quotedQty: 1,
+        orderedQty: 0,
+        deliveredQty: 0,
+        usedQty: 0,
+        status: 'pending'
+      }));
+      onSaveProject({
+        ...project,
+        materials: [...newItems, ...(project.materials || [])]
+      });
+      setScratchpadText('');
+      setShowScratchpad(false);
     }
   };
 
