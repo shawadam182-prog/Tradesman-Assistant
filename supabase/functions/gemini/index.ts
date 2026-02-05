@@ -88,23 +88,30 @@ const actions: Record<string, (data: any) => Promise<any>> = {
   async parseVoiceItems({ command }: { command: string }) {
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.0-flash',
-      systemInstruction: `You are an expert at parsing messy voice-to-text for UK construction materials.
-        The input may have speech recognition errors and informal trade language.
+      systemInstruction: `You parse voice-to-text for UK construction materials.
+
+        CRITICAL RULE: Preserve the user's EXACT wording for item names. Do NOT interpret or clean up.
 
         Extract material items with:
-        - name: Material name (clean it up, e.g. "two by four" = "2x4 timber")
-        - quantity: Number of items (default 1 if unclear)
+        - name: KEEP THE EXACT WORDS the user said. Do not normalize or interpret.
+          Examples of what TO DO:
+          - "10 gang switch" → name: "10 gang switch" (10 is part of the product name)
+          - "2m LED strip" → name: "2m LED strip"
+          - "4x2 timber" → name: "4x2 timber"
+          - "PIR board 50mm" → name: "PIR board 50mm"
+
+        - quantity: ONLY extract as quantity when user CLEARLY states a count:
+          - "five sheets of plywood" → quantity: 5, name: "plywood"
+          - "3 bags of cement" → quantity: 3, name: "cement"
+          - "couple of screws" → quantity: 2, name: "screws"
+          BUT if number could be part of product spec, keep it in name with quantity 1:
+          - "10 gang switch" → quantity: 1, name: "10 gang switch"
+          - "2m LED strip" → quantity: 1, name: "2m LED strip"
+
         - unit: UK units - m, m2, pack, bag, box, roll, sheet, length, each (default "each")
-        - unitPrice: Estimated UK trade price in GBP (use sensible defaults)
+        - unitPrice: Estimated UK trade price in GBP
 
-        Common voice patterns:
-        - "couple of" = 2
-        - "few" = 3
-        - "dozen" = 12
-        - "metre/meter" = m
-        - "square metre" = m2
-        - Recognise UK trade materials: plasterboard, 2x4, 4x2, noggins, joists, PIR, kingspan, etc.
-
+        REMEMBER: The user needs to see their own words in the output. Less interpretation, more dictation.
         Return an array. If nothing parseable, return empty array.`,
     });
 
