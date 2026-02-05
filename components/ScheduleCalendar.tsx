@@ -765,8 +765,31 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                                     <div className="h-5 w-5 md:h-6 md:w-6 bg-slate-100 rounded-md md:rounded-lg flex items-center justify-center text-teal-500 font-black not-italic text-[9px] md:text-[10px] shadow-sm">
                                       {customer.name.charAt(0)}
                                     </div>
-                                    {customer.name}
+                                    <div className="flex flex-col">
+                                      <span>{customer.name}</span>
+                                      {customer.company && <span className="text-[8px] md:text-[9px] text-slate-400 font-medium">{customer.company}</span>}
+                                    </div>
                                   </div>
+                                )}
+                                {customer?.phone && (
+                                  <a
+                                    href={`tel:${customer.phone}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex items-center gap-1 md:gap-1.5 bg-blue-50 text-blue-600 px-2 md:px-2.5 py-1 md:py-1.5 rounded-md md:rounded-lg font-bold text-[9px] md:text-[10px] hover:bg-blue-100 transition-all"
+                                  >
+                                    <Phone size={10} className="md:w-3 md:h-3" />
+                                    <span>{customer.phone}</span>
+                                  </a>
+                                )}
+                                {customer?.email && (
+                                  <a
+                                    href={`mailto:${customer.email}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex items-center gap-1 md:gap-1.5 bg-purple-50 text-purple-600 px-2 md:px-2.5 py-1 md:py-1.5 rounded-md md:rounded-lg font-bold text-[9px] md:text-[10px] hover:bg-purple-100 transition-all"
+                                  >
+                                    <Mail size={10} className="md:w-3 md:h-3" />
+                                    <span className="max-w-[120px] md:max-w-[150px] truncate">{customer.email}</span>
+                                  </a>
                                 )}
                                 {entry.location && (
                                   <a
