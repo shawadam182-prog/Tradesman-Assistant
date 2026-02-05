@@ -73,54 +73,23 @@ export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
     const val = text.trim();
     if (!val) return;
 
-    // Local parser for simple numeric items (10 Timber)
-    const localMatch = val.match(/^(\d+)\s+(.*)$/i);
-    if (localMatch) {
-      const qty = parseInt(localMatch[1]);
-      const name = localMatch[2];
-      const newItem: ProjectMaterial = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: name.charAt(0).toUpperCase() + name.slice(1),
-        unit: 'pc',
-        quotedQty: qty,
-        orderedQty: 0,
-        deliveredQty: 0,
-        usedQty: 0,
-        status: 'pending'
-      };
-      onSaveProject({
-        ...project,
-        materials: [newItem, ...(project.materials || [])]
-      });
-      setQuickInput('');
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const items = await parseVoiceCommandForItems(val);
-      if (items && items.length > 0) {
-        const newItems: ProjectMaterial[] = items.map((item: any) => ({
-          id: Math.random().toString(36).substr(2, 9),
-          name: item.name,
-          unit: item.unit || 'pc',
-          quotedQty: Number(item.quantity) || 1,
-          orderedQty: 0,
-          deliveredQty: 0,
-          usedQty: 0,
-          status: 'pending'
-        }));
-        onSaveProject({
-          ...project,
-          materials: [...newItems, ...(project.materials || [])]
-        });
-      }
-      setQuickInput('');
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsProcessing(false);
-    }
+    // Simple direct add - preserve user's exact input as the item name
+    // No AI, no parsing - just add what they typed with qty 1
+    const newItem: ProjectMaterial = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: val,
+      unit: 'pc',
+      quotedQty: 1,
+      orderedQty: 0,
+      deliveredQty: 0,
+      usedQty: 0,
+      status: 'pending'
+    };
+    onSaveProject({
+      ...project,
+      materials: [newItem, ...(project.materials || [])]
+    });
+    setQuickInput('');
   };
 
   const processScratchpad = async () => {
