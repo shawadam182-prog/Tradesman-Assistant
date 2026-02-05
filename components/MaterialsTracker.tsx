@@ -183,34 +183,34 @@ export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
   return (
     <div className="max-w-2xl mx-auto space-y-4">
       {/* Search and Quick Add */}
-      <div className="flex gap-2">
-        <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm p-1.5 flex items-center gap-2 focus-within:border-amber-400 transition-all">
-          <input 
-            type="text" 
-            className="flex-1 bg-transparent border-none text-sm font-bold text-slate-900 outline-none px-3 placeholder:text-slate-400 placeholder:italic"
+      <div className="flex gap-2 w-full">
+        <div className="flex-1 min-w-0 bg-white rounded-2xl border border-slate-200 shadow-sm p-1.5 flex items-center gap-1.5 sm:gap-2 focus-within:border-amber-400 transition-all">
+          <input
+            type="text"
+            className="flex-1 min-w-0 bg-transparent border-none text-sm font-bold text-slate-900 outline-none px-2 sm:px-3 placeholder:text-slate-400 placeholder:italic"
             placeholder="Quick add (e.g. 10 Timber)..."
             value={quickInput}
             onChange={(e) => setQuickInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleQuickAdd(quickInput)}
           />
-          <button 
+          <button
             onClick={() => startListening('quick')}
-            className={`p-2.5 rounded-xl transition-all ${isListening && !showScratchpad ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-100 text-slate-400 hover:text-amber-600'}`}
+            className={`p-2 sm:p-2.5 rounded-xl transition-all shrink-0 ${isListening && !showScratchpad ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-100 text-slate-400 hover:text-amber-600'}`}
           >
             <Mic size={18} />
           </button>
-          <button 
+          <button
             onClick={() => handleQuickAdd(quickInput)}
             disabled={!quickInput.trim() || isProcessing}
-            className="p-2.5 bg-slate-900 text-white rounded-xl hover:bg-black disabled:opacity-20 transition-all"
+            className="p-2 sm:p-2.5 bg-slate-900 text-white rounded-xl hover:bg-black disabled:opacity-20 transition-all shrink-0"
           >
             {isProcessing ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
           </button>
         </div>
-        
+
         <button
           onClick={() => setShowScratchpad(!showScratchpad)}
-          className={`px-3 sm:px-4 rounded-2xl border font-bold text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm shrink-0 ${showScratchpad ? 'bg-amber-500 border-amber-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+          className={`p-2.5 sm:px-4 rounded-2xl border font-bold text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm shrink-0 ${showScratchpad ? 'bg-amber-500 border-amber-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
         >
           <PencilLine size={16} />
           <span className="hidden sm:inline">{showScratchpad ? 'Close' : 'Scratchpad'}</span>
