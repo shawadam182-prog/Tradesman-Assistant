@@ -479,7 +479,7 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
   const hasDetectedFields = Object.keys(detectedData).length > 0;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[300] flex items-end sm:items-center justify-center animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[600] flex items-end sm:items-center justify-center animate-in fade-in duration-200">
       <div className="bg-white w-full sm:w-[480px] sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 duration-300">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100">
