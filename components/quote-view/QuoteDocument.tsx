@@ -508,7 +508,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                               {showQtyColumn && (
                                 <th className="py-2 px-2 text-center w-16 text-[10px] font-semibold">Qty</th>
                               )}
-                              {showRateColumn && (activeTemplate === 'professional' || activeTemplate === 'spacious') && (
+                              {showRateColumn && (
                                 <th className="py-2 px-2 text-right w-24 text-[10px] font-semibold">Rate</th>
                               )}
                               {showAmountColumn && (
@@ -530,7 +530,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                                   </span>
                                 </td>
                                 {showQtyColumn && <td className="py-1.5 px-2"></td>}
-                                {showRateColumn && (activeTemplate === 'professional' || activeTemplate === 'spacious') && <td className="py-1.5 px-2"></td>}
+                                {showRateColumn && <td className="py-1.5 px-2"></td>}
                                 {showAmountColumn && (
                                   <td className={`py-1.5 px-2 text-right font-bold text-[11px] ${item.itemType === 'labour' ? 'text-blue-600' : 'text-amber-600'}`}>
                                     £{item.amount.toFixed(2)}
@@ -592,7 +592,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                                 {showQtyColumn && (
                                   <td className="py-2 px-2 text-slate-900 text-[10px] text-center font-medium">{item.qty}</td>
                                 )}
-                                {showRateColumn && activeTemplate === 'professional' && (
+                                {showRateColumn && (
                                   <td className="py-2 px-2 text-slate-900 text-[10px] text-right">{item.rate ? `${item.rate.toFixed(2)}` : '-'}</td>
                                 )}
                                 {showAmountColumn && (
