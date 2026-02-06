@@ -37,13 +37,13 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
   const headerBgValue = (colorScheme as any).headerBgHex || '#1a1a2e';
   const headerTextColor = (colorScheme as any).headerTextHex || '#ffffff';
   const accentLineColor = (colorScheme as any).accentLineHex || '#c9a962';
-  
+
   // For borders and non-gradient uses, extract first color from gradient or use solid
   const headerBgColor = isGradient ? '#0f172a' : headerBgValue;
-  
+
   // For gradients, use 'background' instead of 'backgroundColor'
-  const headerBgStyle = isGradient 
-    ? { background: headerBgValue } 
+  const headerBgStyle = isGradient
+    ? { background: headerBgValue }
     : { backgroundColor: headerBgValue };
 
   // Flatten all items with section headers
@@ -106,12 +106,12 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             itemType: 'material',
           });
         }
-        
+
         // Calculate materials total for this section
         const sectionMaterialsTotal = (section.items || [])
           .filter(i => !i.isHeading)
           .reduce((sum, item) => sum + ((item.totalPrice || 0) * markupMultiplier), 0);
-        
+
         // Only add individual items if showMaterialItems is true
         if (displayOptions.showMaterialItems) {
           (section.items || []).filter(i => !i.isHeading).forEach(item => {
@@ -125,7 +125,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             });
           });
         }
-        
+
         // Add materials section total
         if (displayOptions.showMaterialSectionTotal && sectionMaterialsTotal > 0) {
           items.push({
@@ -152,7 +152,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             itemType: 'labour',
           });
         }
-        
+
         // Calculate labour total for this section
         let sectionLabourTotal = 0;
         if (section.labourItems?.length) {
@@ -164,7 +164,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
           const rate = section.labourRate || quote.labourRate || settings.defaultLabourRate;
           sectionLabourTotal = (section.labourHours || 0) * rate * markupMultiplier;
         }
-        
+
         // Only add individual items if showLabourItems is true
         if (displayOptions.showLabourItems) {
           if (section.labourItems?.length) {
@@ -191,7 +191,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             });
           }
         }
-        
+
         // Add labour section total
         if (displayOptions.showLabourSectionTotal && sectionLabourTotal > 0) {
           items.push({
@@ -204,7 +204,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
           });
         }
       }
-      
+
       // Add job section total (materials + labour for this section, or direct price if set)
       const sectionMaterialsSum = (section.items || [])
         .filter(i => !i.isHeading)
@@ -302,7 +302,8 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
         const showRateColumn = (displayOptions.showMaterials && displayOptions.showMaterialUnitPrice) ||
           (displayOptions.showLabour && displayOptions.showLabourUnitPrice);
         const showAmountColumn = (displayOptions.showMaterials && displayOptions.showMaterialLineTotals) ||
-          (displayOptions.showLabour && displayOptions.showLabourLineTotals);
+          (displayOptions.showLabour && displayOptions.showLabourLineTotals) ||
+          displayOptions.showWorkSectionTotal;
         const colSpan = 1 + (showQtyColumn ? 1 : 0) + (showRateColumn ? 1 : 0) + (showAmountColumn ? 1 : 0);
 
         return (
@@ -393,8 +394,8 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
                   /* Subtotal row for materials/labour */
                   return (
                     <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
-                      <td 
-                        colSpan={showQtyColumn && showRateColumn ? 3 : (showQtyColumn || showRateColumn ? 2 : 1)} 
+                      <td
+                        colSpan={showQtyColumn && showRateColumn ? 3 : (showQtyColumn || showRateColumn ? 2 : 1)}
                         style={{ padding: '6px 8px 6px 24px', fontSize: '12px', fontWeight: '600', color: '#475569', textAlign: 'right' }}
                       >
                         {item.description}
@@ -408,8 +409,8 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
                   /* Section total row */
                   return (
                     <tr key={idx} style={{ borderBottom: '2px solid #cbd5e1', backgroundColor: '#f1f5f9' }}>
-                      <td 
-                        colSpan={showQtyColumn && showRateColumn ? 3 : (showQtyColumn || showRateColumn ? 2 : 1)} 
+                      <td
+                        colSpan={showQtyColumn && showRateColumn ? 3 : (showQtyColumn || showRateColumn ? 2 : 1)}
                         style={{ padding: '8px 8px 8px 12px', fontSize: '13px', fontWeight: '700', color: '#1e293b', textAlign: 'right' }}
                       >
                         {item.description}
