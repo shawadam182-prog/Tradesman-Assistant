@@ -8,7 +8,7 @@ import {
   LayoutGrid, List,
   Pencil, CheckCircle2, CalendarRange, ArrowRight,
   UserPlus, User, Mail, Phone, Hammer, MapPinned,
-  Briefcase, Link2, ArrowLeft
+  Briefcase, Link2, ArrowLeft, MessageSquare
 } from 'lucide-react';
 import { parseScheduleVoiceInput, parseCustomerVoiceInput } from '../src/services/geminiService';
 import { AddressAutocomplete } from './AddressAutocomplete';
@@ -18,6 +18,7 @@ import { useToast } from '../src/contexts/ToastContext';
 import { useData } from '../src/contexts/DataContext';
 import { LiveVoiceFill, VoiceFieldConfig } from './LiveVoiceFill';
 import { AppointmentNotification } from './schedule/AppointmentNotification';
+import { QuickMessage } from './QuickMessage';
 
 // Field configuration for customer voice fill
 const customerVoiceFields: VoiceFieldConfig[] = [
@@ -70,6 +71,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [notificationEntry, setNotificationEntry] = useState<ScheduleEntry | null>(null);
   const [notificationType, setNotificationType] = useState<'confirmation' | 'reminder'>('confirmation');
+  const [quickMessageEntry, setQuickMessageEntry] = useState<ScheduleEntry | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date>(new Date());
   const [viewType, setViewType] = useState<'month' | 'week' | 'day'>('week');
 
@@ -838,6 +840,13 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                                 >
                                   <Clock size={14} className="md:w-4 md:h-4"/>
                                 </button>
+                                <button
+                                  onClick={() => setQuickMessageEntry(entry)}
+                                  className="p-2 md:p-3 bg-violet-50 text-violet-400 rounded-lg md:rounded-xl hover:bg-violet-500 hover:text-white transition-all shadow-sm"
+                                  title="Quick Message"
+                                >
+                                  <MessageSquare size={14} className="md:w-4 md:h-4"/>
+                                </button>
                               </>
                             )}
                             <button
@@ -1435,6 +1444,23 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                 notificationType === 'confirmation' ? 'Confirmation Sent' : 'Reminder Sent',
                 `Email sent to ${notifCustomer.email}`
               );
+            }}
+          />
+        );
+      })()}
+
+      {/* Quick Message Modal */}
+      {quickMessageEntry && (() => {
+        const qmCustomer = customers.find(c => c.id === quickMessageEntry.customerId);
+        if (!qmCustomer?.email) return null;
+        return (
+          <QuickMessage
+            entry={quickMessageEntry}
+            customer={qmCustomer}
+            settings={settings}
+            onClose={() => setQuickMessageEntry(null)}
+            onSent={() => {
+              toast.success('Message Sent', `Sent to ${qmCustomer.name}`);
             }}
           />
         );
