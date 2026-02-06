@@ -134,12 +134,13 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       return savedDraft;
     }
 
-    if (!existingQuote) {
+    if (!existingQuote || !existingQuote.id) {
+      // New quote — or AI-generated draft (has data but no id)
       const defaultDueDate = initialType === 'invoice'
         ? (() => { const d = new Date(); d.setDate(d.getDate() + 14); return d.toISOString().split('T')[0]; })()
         : undefined;
 
-      return {
+      const defaults: Partial<Quote> = {
         id: Math.random().toString(36).substr(2, 9),
         projectId,
         date: new Date().toISOString().split('T')[0],
@@ -157,6 +158,13 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         displayOptions: { ...settings.defaultDisplayOptions },
         dueDate: defaultDueDate
       };
+
+      // Merge AI draft data over defaults (AI draft provides sections, title, rates, etc.)
+      if (existingQuote && !existingQuote.id) {
+        return { ...defaults, ...existingQuote, id: defaults.id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      }
+
+      return defaults;
     }
 
     if ((existingQuote as any).items) {
