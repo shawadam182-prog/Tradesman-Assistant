@@ -222,8 +222,10 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
       />
 
       {/* Status Filter Tabs */}
-      <div className="flex gap-1 pb-2">
-        {(['all', 'draft', 'unpaid', 'paid', 'overdue', 'recurring', 'credit_notes', 'cancelled'] as const).map(tab => {
+      <div className="flex gap-1 pb-2 overflow-x-auto">
+        {(['all', 'draft', 'unpaid', 'paid', 'overdue', 'recurring', 'credit_notes', 'cancelled'] as const)
+          .filter(tab => tab === 'all' || tab === 'draft' || tab === 'unpaid' || tab === 'paid' || tab === 'overdue' || tabCounts[tab] > 0)
+          .map(tab => {
           const label: Record<InvoiceFilterTab, string> = {
             all: 'All', draft: 'Draft', unpaid: 'Unpaid', paid: 'Paid', overdue: 'Due', recurring: 'Recur', credit_notes: 'Credits', cancelled: "Canc'd"
           };
