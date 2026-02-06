@@ -20,6 +20,9 @@ import {
   siteNotesService,
   projectMaterialsService,
 } from '../services/dataService';
+import { materialKitsService } from '../services/materialKitsService';
+import { paymentMilestoneService } from '../services/paymentMilestoneService';
+import { recurringInvoiceService } from '../services/recurringInvoiceService';
 import { offlineService } from '../services/offlineStorage';
 import { syncManager } from '../services/syncManager';
 import type { Customer, Quote, JobPack, ScheduleEntry, AppSettings, DocumentTemplate, ProjectMaterial, SiteNote, SitePhoto, LabourRatePreset } from '../../types';
@@ -142,6 +145,9 @@ interface DataContextType {
     vendorKeywords: typeof vendorKeywordsService;
     materialsLibrary: typeof materialsLibraryService;
     materialsImportHistory: typeof materialsImportHistoryService;
+    materialKits: typeof materialKitsService;
+    paymentMilestones: typeof paymentMilestoneService;
+    recurringInvoices: typeof recurringInvoiceService;
   };
 
   // Refresh data
@@ -269,6 +275,13 @@ function dbQuoteToApp(dbQuote: any): Quote {
     shareToken: dbQuote.share_token || undefined,
     acceptedAt: dbQuote.accepted_at || undefined,
     declinedAt: dbQuote.declined_at || undefined,
+    // Recurring invoice fields
+    isRecurring: dbQuote.is_recurring || false,
+    recurringFrequency: dbQuote.recurring_frequency || undefined,
+    recurringStartDate: dbQuote.recurring_start_date || undefined,
+    recurringEndDate: dbQuote.recurring_end_date || undefined,
+    recurringNextDate: dbQuote.recurring_next_date || undefined,
+    recurringParentId: dbQuote.recurring_parent_id || undefined,
   };
 }
 
@@ -629,7 +642,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         part_payment_label: quote.partPaymentLabel || null,
         // Job address
         job_address: quote.jobAddress || null,
-      });
+        // Recurring invoice fields (not in generated types yet)
+        ...(quote.isRecurring ? {
+          is_recurring: true,
+          recurring_frequency: quote.recurringFrequency || null,
+          recurring_start_date: quote.recurringStartDate || null,
+          recurring_end_date: quote.recurringEndDate || null,
+          recurring_next_date: quote.recurringNextDate || null,
+        } : {}),
+        ...(quote.recurringParentId ? { recurring_parent_id: quote.recurringParentId } : {}),
+      } as any);
 
       const newQuote = dbQuoteToApp(created);
       setQuotes(prev => [...prev, newQuote]);
@@ -665,7 +687,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         part_payment_label: quote.partPaymentLabel || null,
         // Job address
         job_address: quote.jobAddress || null,
-      });
+        // Recurring invoice fields (not in generated types yet)
+        ...(quote.isRecurring !== undefined ? {
+          is_recurring: quote.isRecurring || false,
+          recurring_frequency: quote.recurringFrequency || null,
+          recurring_start_date: quote.recurringStartDate || null,
+          recurring_end_date: quote.recurringEndDate || null,
+          recurring_next_date: quote.recurringNextDate || null,
+        } : {}),
+        ...(quote.recurringParentId ? { recurring_parent_id: quote.recurringParentId } : {}),
+      } as any);
 
       const updatedQuote = dbQuoteToApp(updated);
       setQuotes(prev => prev.map(q => q.id === quote.id ? updatedQuote : q));
@@ -1017,6 +1048,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       vendorKeywords: vendorKeywordsService,
       materialsLibrary: materialsLibraryService,
       materialsImportHistory: materialsImportHistoryService,
+      materialKits: materialKitsService,
+      paymentMilestones: paymentMilestoneService,
+      recurringInvoices: recurringInvoiceService,
     },
     refresh: fetchData,
   };

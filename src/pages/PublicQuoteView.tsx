@@ -4,8 +4,10 @@ import { supabase } from '../lib/supabase';
 import {
   Check, X, Loader2, FileText, Building2, User, Calendar,
   Phone, Mail, MapPin, AlertCircle, CheckCircle2, XCircle,
-  Clock, Shield, ChevronDown, ChevronUp
+  Clock, Shield, ChevronDown, ChevronUp, Banknote
 } from 'lucide-react';
+import { SignaturePad, SignatureDisplay } from '../../components/signature';
+import type { QuoteSignature } from '../../types';
 
 interface PublicQuoteViewProps {
   shareToken: string;
@@ -63,6 +65,9 @@ export const PublicQuoteView: React.FC<PublicQuoteViewProps> = ({ shareToken }) 
   const [responseComplete, setResponseComplete] = useState<'accepted' | 'declined' | null>(null);
   const [showDetails, setShowDetails] = useState(true);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
+  const [existingSignature, setExistingSignature] = useState<QuoteSignature | null>(null);
+  const [milestones, setMilestones] = useState<Array<{ label: string; percentage?: number; fixedAmount?: number; dueDate?: string; status: string }>>([]);
 
   useEffect(() => {
     loadQuote();
@@ -98,6 +103,41 @@ export const PublicQuoteView: React.FC<PublicQuoteViewProps> = ({ shareToken }) 
         }
       }
 
+      // Load existing signature if present
+      if (result.signature) {
+        setExistingSignature({
+          id: result.signature.id,
+          quoteId: result.quote?.id || '',
+          signerName: result.signature.signer_name,
+          signatureData: result.signature.signature_data,
+          signatureType: (result.signature.signature_type as 'draw' | 'type') || 'draw',
+          signedAt: result.signature.signed_at,
+          createdAt: result.signature.signed_at,
+        });
+      }
+
+      // Load payment milestones for this quote (may return empty if RLS blocks anon)
+      if (result.quote?.id) {
+        try {
+          const { data: msData } = await (supabase as any)
+            .from('payment_milestones')
+            .select('label, percentage, fixed_amount, due_date, status, sort_order')
+            .eq('quote_id', result.quote.id)
+            .order('sort_order');
+          if (msData && msData.length > 0) {
+            setMilestones(msData.map((m: any) => ({
+              label: m.label,
+              percentage: m.percentage != null ? Number(m.percentage) : undefined,
+              fixedAmount: m.fixed_amount != null ? Number(m.fixed_amount) : undefined,
+              dueDate: m.due_date || undefined,
+              status: m.status || 'pending',
+            })));
+          }
+        } catch {
+          // Silently ignore — RLS may block anon access
+        }
+      }
+
       // Check if already responded
       if (result.quote?.accepted_at) {
         setResponseComplete('accepted');
@@ -112,16 +152,19 @@ export const PublicQuoteView: React.FC<PublicQuoteViewProps> = ({ shareToken }) 
     }
   };
 
-  const handleResponse = async (response: 'accepted' | 'declined') => {
+  const handleResponse = async (
+    response: 'accepted' | 'declined',
+    signatureData?: { signatureData: string; signerName: string; signatureType: 'draw' | 'type' }
+  ) => {
     if (!quote || responding) return;
 
     setResponding(true);
     try {
-      const result = await quotesService.respondToQuote(shareToken, response);
+      const result = await quotesService.respondToQuote(shareToken, response, signatureData);
 
       if (result.success) {
         setResponseComplete(response);
-        // Reload to get updated data
+        setShowSignaturePad(false);
         await loadQuote();
       } else {
         setError(result.error || 'Failed to submit response');
@@ -132,6 +175,14 @@ export const PublicQuoteView: React.FC<PublicQuoteViewProps> = ({ shareToken }) 
     } finally {
       setResponding(false);
     }
+  };
+
+  const handleAcceptClick = () => {
+    setShowSignaturePad(true);
+  };
+
+  const handleSignatureComplete = (data: { signatureData: string; signerName: string; signatureType: 'draw' | 'type' }) => {
+    handleResponse('accepted', data);
   };
 
   // Calculate totals
@@ -236,6 +287,13 @@ export const PublicQuoteView: React.FC<PublicQuoteViewProps> = ({ shareToken }) 
               Total: <span className="font-bold">£{totals.total.toFixed(2)}</span>
             </p>
           </div>
+
+          {/* Show signature on accepted quotes */}
+          {isAccepted && existingSignature && (
+            <div className="mb-6">
+              <SignatureDisplay signature={existingSignature} />
+            </div>
+          )}
 
           {company && (
             <div className="text-sm text-slate-500">
@@ -449,8 +507,54 @@ export const PublicQuoteView: React.FC<PublicQuoteViewProps> = ({ shareToken }) 
           </div>
         )}
 
+        {/* Payment Schedule */}
+        {milestones.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
+              <Banknote size={16} className="text-blue-600" />
+              <h3 className="font-bold text-slate-900">Payment Schedule</h3>
+            </div>
+            <div className="p-6 space-y-3">
+              {milestones.map((ms, idx) => {
+                const amount = ms.fixedAmount || (ms.percentage ? ms.percentage / 100 * totals.total : 0);
+                return (
+                  <div key={idx} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-b-0">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">{ms.label}</p>
+                      {ms.dueDate && (
+                        <p className="text-xs text-slate-500">Due: {new Date(ms.dueDate).toLocaleDateString('en-GB')}</p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-slate-900">£{amount.toFixed(2)}</p>
+                      {ms.percentage && <p className="text-xs text-slate-400">({ms.percentage}%)</p>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Signature Pad (shown when accepting) */}
+        {showSignaturePad && canRespond && (
+          <div className="mb-6">
+            <SignaturePad
+              onComplete={handleSignatureComplete}
+              onCancel={() => setShowSignaturePad(false)}
+              defaultName={customer?.name || ''}
+            />
+            {responding && (
+              <div className="flex items-center justify-center gap-2 mt-4 text-slate-600">
+                <Loader2 size={16} className="animate-spin" />
+                <span className="text-sm">Submitting your acceptance...</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Response Buttons */}
-        {canRespond && (
+        {canRespond && !showSignaturePad && (
           <div className="bg-white rounded-2xl shadow-xl p-6">
             <h3 className="font-bold text-slate-900 mb-2 text-center">Your Response</h3>
             <p className="text-sm text-slate-600 text-center mb-6">
@@ -474,7 +578,7 @@ export const PublicQuoteView: React.FC<PublicQuoteViewProps> = ({ shareToken }) 
               </button>
 
               <button
-                onClick={() => handleResponse('accepted')}
+                onClick={handleAcceptClick}
                 disabled={responding}
                 className="flex items-center justify-center gap-2 py-4 px-6 rounded-xl bg-green-500 text-white font-bold hover:bg-green-600 transition-colors shadow-lg shadow-green-500/30 disabled:opacity-50"
               >
@@ -498,20 +602,27 @@ export const PublicQuoteView: React.FC<PublicQuoteViewProps> = ({ shareToken }) 
 
         {/* Already responded message */}
         {quote.status !== 'sent' && quote.type !== 'invoice' && (
-          <div className={`rounded-2xl p-6 text-center ${
-            quote.status === 'accepted' ? 'bg-green-50 border border-green-200' :
-            quote.status === 'declined' ? 'bg-red-50 border border-red-200' :
-            'bg-slate-50 border border-slate-200'
-          }`}>
-            <p className={`font-medium ${
-              quote.status === 'accepted' ? 'text-green-700' :
-              quote.status === 'declined' ? 'text-red-700' :
-              'text-slate-700'
+          <div className="space-y-4">
+            <div className={`rounded-2xl p-6 text-center ${
+              quote.status === 'accepted' ? 'bg-green-50 border border-green-200' :
+              quote.status === 'declined' ? 'bg-red-50 border border-red-200' :
+              'bg-slate-50 border border-slate-200'
             }`}>
-              {quote.status === 'accepted' ? 'This quote has been accepted.' :
-               quote.status === 'declined' ? 'This quote has been declined.' :
-               `This quote is currently ${quote.status}.`}
-            </p>
+              <p className={`font-medium ${
+                quote.status === 'accepted' ? 'text-green-700' :
+                quote.status === 'declined' ? 'text-red-700' :
+                'text-slate-700'
+              }`}>
+                {quote.status === 'accepted' ? 'This quote has been accepted.' :
+                 quote.status === 'declined' ? 'This quote has been declined.' :
+                 `This quote is currently ${quote.status}.`}
+              </p>
+            </div>
+
+            {/* Show signature on accepted quotes */}
+            {quote.status === 'accepted' && existingSignature && (
+              <SignatureDisplay signature={existingSignature} />
+            )}
           </div>
         )}
 

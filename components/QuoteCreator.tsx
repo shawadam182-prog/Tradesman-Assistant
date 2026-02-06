@@ -14,6 +14,9 @@ import {
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 import { MaterialsLibrary } from './MaterialsLibrary';
+import { MaterialKitPicker } from './materials/MaterialKitPicker';
+import { PaymentMilestoneEditor, MilestoneData } from './payments/PaymentMilestoneEditor';
+import { RecurringInvoiceSetup } from './invoices/RecurringInvoiceSetup';
 import { useData } from '../src/contexts/DataContext';
 import { useToast } from '../src/contexts/ToastContext';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
@@ -75,11 +78,18 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   const [showMaterialsLibrary, setShowMaterialsLibrary] = useState(false);
   const [targetSectionForMaterial, setTargetSectionForMaterial] = useState<string | null>(null);
 
+  // Material Kit picker modal
+  const [showKitPicker, setShowKitPicker] = useState(false);
+  const [targetSectionForKit, setTargetSectionForKit] = useState<string | null>(null);
+
   // Discount modal
   const [showDiscountModal, setShowDiscountModal] = useState(false);
 
   // Part Payment modal
   const [showPartPaymentModal, setShowPartPaymentModal] = useState(false);
+
+  // Payment milestones
+  const [paymentMilestones, setPaymentMilestones] = useState<MilestoneData[]>([]);
 
   // Generate a unique storage key for this draft
   // For new quotes: based on projectId or 'new'
@@ -223,6 +233,25 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       setDraftRestored(false);
     }
   }, [draftRestored, existingQuote, toast]);
+
+  // Load existing milestones when editing
+  useEffect(() => {
+    if (existingQuote?.id) {
+      services.paymentMilestones.getForQuote(existingQuote.id)
+        .then(ms => {
+          if (ms.length > 0) {
+            setPaymentMilestones(ms.map(m => ({
+              id: m.id,
+              label: m.label,
+              percentage: m.percentage,
+              fixedAmount: m.fixedAmount,
+              dueDate: m.dueDate,
+            })));
+          }
+        })
+        .catch(err => console.warn('Failed to load milestones:', err));
+    }
+  }, [existingQuote?.id, services.paymentMilestones]);
 
   // Clear draft from localStorage
   const clearDraft = useCallback(() => {
@@ -731,9 +760,27 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     clearDraft(); // Clear the draft on successful save
     onSave(formData as Quote);
+
+    // Save payment milestones (fire-and-forget after quote save)
+    if (paymentMilestones.length > 0 && formData.id) {
+      try {
+        await services.paymentMilestones.saveBatch(
+          formData.id,
+          paymentMilestones.map((m, idx) => ({
+            label: m.label,
+            percentage: m.percentage,
+            fixedAmount: m.fixedAmount,
+            dueDate: m.dueDate,
+            sortOrder: idx,
+          }))
+        );
+      } catch (err) {
+        console.warn('Failed to save milestones:', err);
+      }
+    }
   };
 
   const handleCancel = () => {
@@ -927,6 +974,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               onAddMaterial={addMaterialToSection}
               onAddHeading={addHeadingToSection}
               onOpenPriceList={(sectionId) => { setTargetSectionForMaterial(sectionId); setShowMaterialsLibrary(true); }}
+              onApplyKit={(sectionId) => { setTargetSectionForKit(sectionId); setShowKitPicker(true); }}
               onSaveItemToLibrary={saveItemToLibrary}
               onAddLabourItem={addLabourItem}
               onUpdateLabourItem={updateLabourItem}
@@ -995,6 +1043,43 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
           </div>
         )}
 
+        {/* Recurring Invoice Setup */}
+        {formData.type === 'invoice' && (
+          <div className="bg-white p-4 rounded-[24px] border border-slate-200 shadow-sm">
+            <RecurringInvoiceSetup
+              isRecurring={formData.isRecurring || false}
+              frequency={formData.recurringFrequency}
+              startDate={formData.recurringStartDate}
+              endDate={formData.recurringEndDate}
+              onToggle={(enabled) => {
+                setFormData(prev => ({
+                  ...prev,
+                  isRecurring: enabled,
+                  recurringStartDate: enabled ? (prev.recurringStartDate || new Date().toISOString().split('T')[0]) : undefined,
+                  recurringNextDate: enabled ? (prev.recurringStartDate || new Date().toISOString().split('T')[0]) : undefined,
+                }));
+              }}
+              onFrequencyChange={(freq) => setFormData(prev => ({ ...prev, recurringFrequency: freq }))}
+              onStartDateChange={(date) => setFormData(prev => ({ ...prev, recurringStartDate: date, recurringNextDate: date }))}
+              onEndDateChange={(date) => setFormData(prev => ({ ...prev, recurringEndDate: date }))}
+            />
+          </div>
+        )}
+
+        {/* Payment Schedule */}
+        <div className="bg-white p-4 rounded-[24px] border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <Banknote size={16} className="text-amber-500" />
+            <span className="text-xs font-black text-slate-600 uppercase tracking-widest">Payment Schedule</span>
+            <span className="text-[10px] text-slate-400 ml-auto">{paymentMilestones.length} milestone{paymentMilestones.length !== 1 ? 's' : ''}</span>
+          </div>
+          <PaymentMilestoneEditor
+            milestones={paymentMilestones}
+            onChange={setPaymentMilestones}
+            totalAmount={totals.total}
+          />
+        </div>
+
         {/* Totals */}
         <QuoteTotals totals={totals} settings={settings} documentType={formData.type || 'estimate'} onSave={handleSave} />
       </div>
@@ -1049,6 +1134,31 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
             <div className="overflow-auto max-h-[calc(85vh-60px)]">
               <MaterialsLibrary selectionMode={true} onSelectMaterial={(material) => { if (targetSectionForMaterial) { addMaterialFromLibrary(targetSectionForMaterial, material); } }} onBack={() => setShowMaterialsLibrary(false)} />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Material Kit Picker Modal */}
+      {showKitPicker && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
+          <div className="bg-white rounded-t-3xl w-full max-w-lg max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-4">
+            <MaterialKitPicker
+              onApplyKit={(items) => {
+                if (targetSectionForKit) {
+                  setFormData(prev => ({
+                    ...prev,
+                    sections: prev.sections?.map(s =>
+                      s.id === targetSectionForKit
+                        ? { ...s, items: [...s.items, ...items] }
+                        : s
+                    ),
+                  }));
+                  hapticSuccess();
+                }
+                setShowKitPicker(false);
+              }}
+              onClose={() => setShowKitPicker(false)}
+            />
           </div>
         </div>
       )}

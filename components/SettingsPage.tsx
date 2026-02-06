@@ -23,6 +23,9 @@ import { useData } from '../src/contexts/DataContext';
 import { useAuth } from '../src/contexts/AuthContext';
 import { supabase } from '../src/lib/supabase';
 import { useDarkMode } from '../src/hooks/useDarkMode';
+import { EmailTemplateEditor } from './email/EmailTemplateEditor';
+import { PaymentReminderSettings } from './payments/PaymentReminderSettings';
+import { AppointmentReminderSettings } from './schedule/AppointmentReminderSettings';
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -31,7 +34,7 @@ interface SettingsPageProps {
   onBack?: () => void;
 }
 
-type SettingsCategory = 'company' | 'quotes' | 'invoices' | 'materials' | 'subscription' | 'help';
+type SettingsCategory = 'company' | 'quotes' | 'invoices' | 'materials' | 'communications' | 'subscription' | 'help';
 
 // Collapsible Section Component for Quote/Invoice Preferences
 const CollapsibleSection: React.FC<{
@@ -81,6 +84,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const [helpMessage, setHelpMessage] = useState('');
   const [submittingHelp, setSubmittingHelp] = useState(false);
   const [newMaterialInput, setNewMaterialInput] = useState('');
+  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [reminderDays, setReminderDays] = useState<number[]>([7, 14, 30]);
+  const [appointmentReminderEnabled, setAppointmentReminderEnabled] = useState(true);
+  const [appointmentReminderHours, setAppointmentReminderHours] = useState(24);
 
   // Collapsible section states for Quote & Invoice preferences (all collapsed by default)
   const [expandedQuoteSections, setExpandedQuoteSections] = useState<Record<string, boolean>>({});
@@ -334,6 +341,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
             <CategoryButton id="quotes" label="Quote Preferences" icon={FileText} color="bg-blue-500 text-white" />
             <CategoryButton id="invoices" label="Invoice Preferences" icon={ReceiptText} color="bg-emerald-500 text-white" />
             <CategoryButton id="materials" label="Materials Library" icon={Package} color="bg-amber-500 text-white" />
+            <CategoryButton id="communications" label="Communications" icon={Send} color="bg-blue-500 text-white" />
             <CategoryButton id="help" label="Help & Contact" icon={HelpCircle} color="bg-teal-500 text-white" />
           </div>
 
@@ -1498,6 +1506,43 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     </div>
                   </div>
 
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeCategory === 'communications' && (
+            <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
+                <div className="p-4 md:p-10 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-slate-50">
+                  <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                    <div className="p-2 md:p-3 bg-blue-100 text-blue-600 rounded-xl md:rounded-2xl"><Send size={20} className="md:w-6 md:h-6" /></div>
+                    <h3 className="text-base md:text-xl font-black text-slate-900 uppercase tracking-tight">Communications</h3>
+                  </div>
+                  <p className="text-slate-500 text-xs md:text-sm font-medium italic hidden md:block">Customise your email templates and communication preferences.</p>
+                </div>
+                <div className="p-4 md:p-10 space-y-6">
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-700 mb-3">Email Templates</h4>
+                    <EmailTemplateEditor />
+                  </div>
+                  <div className="pt-4 border-t border-slate-200">
+                    <h4 className="text-sm font-bold text-slate-700 mb-3">Automated Reminders</h4>
+                    <div className="space-y-4">
+                      <PaymentReminderSettings
+                        enabled={reminderEnabled}
+                        reminderDays={reminderDays}
+                        onToggle={setReminderEnabled}
+                        onUpdateDays={setReminderDays}
+                      />
+                      <AppointmentReminderSettings
+                        enabled={appointmentReminderEnabled}
+                        reminderHours={appointmentReminderHours}
+                        onToggle={setAppointmentReminderEnabled}
+                        onUpdateHours={setAppointmentReminderHours}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

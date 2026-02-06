@@ -15,6 +15,12 @@ import type {
   SubscriptionStatus,
   UsageLimits,
   TIER_LIMITS,
+  QuoteSignature,
+  PaymentMilestone,
+  EmailTemplate,
+  EmailLogEntry,
+  CommunicationPreferences,
+  MaterialKit,
 } from '../../types';
 
 // Counter for generating unique IDs
@@ -106,6 +112,7 @@ export const defaultDisplayOptions: QuoteDisplayOptions = {
   showNotes: true,
   showLogo: true,
   showTotalsBreakdown: true,
+  showWorkSectionTotal: true,
 };
 
 export function createMockDisplayOptions(
@@ -342,6 +349,7 @@ export function createMockUsageLimits(overrides: Partial<UsageLimits> = {}): Usa
 export function createMockSettings(overrides: Partial<AppSettings> = {}): AppSettings {
   return {
     defaultLabourRate: 50,
+    defaultMarkupPercent: 0,
     defaultTaxRate: 20,
     defaultCisRate: 20,
     companyName: 'Test Trade Co',
@@ -465,4 +473,130 @@ export function createMockSettingsExpired(
     usageLimits: createMockUsageLimits(), // Falls back to free limits
     ...overrides,
   });
+}
+
+// ============================================
+// SIGNATURE FACTORY
+// ============================================
+
+export function createMockSignature(overrides: Partial<QuoteSignature> = {}): QuoteSignature {
+  return {
+    id: generateId('sig'),
+    quoteId: generateId('quote'),
+    signerName: 'John Smith',
+    signatureData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    signatureType: 'draw',
+    ipAddress: '192.168.1.1',
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
+    signedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+// ============================================
+// PAYMENT MILESTONE FACTORY
+// ============================================
+
+export function createMockPaymentMilestone(overrides: Partial<PaymentMilestone> = {}): PaymentMilestone {
+  return {
+    id: generateId('milestone'),
+    quoteId: generateId('quote'),
+    userId: generateId('user'),
+    label: 'Deposit',
+    percentage: 30,
+    fixedAmount: undefined,
+    dueDate: undefined,
+    status: 'pending',
+    invoiceId: undefined,
+    paidAt: undefined,
+    sortOrder: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+// ============================================
+// EMAIL FACTORIES
+// ============================================
+
+export function createMockEmailTemplate(overrides: Partial<EmailTemplate> = {}): EmailTemplate {
+  return {
+    id: generateId('tmpl'),
+    userId: generateId('user'),
+    templateType: 'quote_send',
+    subject: 'Your {{doc_type}} from {{company_name}}',
+    body: 'Hi {{customer_name}},\n\nPlease find your {{doc_type}} for {{project_title}} attached.\n\nThanks,\n{{company_name}}',
+    isDefault: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+export function createMockEmailLog(overrides: Partial<EmailLogEntry> = {}): EmailLogEntry {
+  return {
+    id: generateId('email'),
+    userId: generateId('user'),
+    quoteId: generateId('quote'),
+    recipientEmail: 'customer@example.com',
+    templateType: 'quote_send',
+    subject: 'Your Quote from Test Trade Co',
+    status: 'sent',
+    resendMessageId: 're_' + generateId('msg'),
+    errorMessage: undefined,
+    retryCount: 0,
+    maxRetries: 3,
+    nextRetryAt: undefined,
+    sentAt: new Date().toISOString(),
+    openedAt: undefined,
+    createdAt: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+// ============================================
+// COMMUNICATION PREFERENCES FACTORY
+// ============================================
+
+export function createMockCommunicationPreferences(
+  overrides: Partial<CommunicationPreferences> = {}
+): CommunicationPreferences {
+  return {
+    id: generateId('commpref'),
+    userId: generateId('user'),
+    paymentReminderEnabled: true,
+    paymentReminderDays: [7, 14, 30],
+    appointmentReminderEnabled: true,
+    appointmentReminderHours: 24,
+    quoteFollowUpEnabled: false,
+    quoteFollowUpDays: 7,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+// ============================================
+// MATERIAL KIT FACTORY
+// ============================================
+
+export function createMockMaterialKit(overrides: Partial<MaterialKit> = {}): MaterialKit {
+  return {
+    id: generateId('kit'),
+    userId: generateId('user'),
+    name: 'Bathroom Kit',
+    description: 'Standard bathroom renovation materials',
+    items: [
+      createMockMaterialItem({ name: 'Bath', quantity: 1, unitPrice: 200, totalPrice: 200 }),
+      createMockMaterialItem({ name: 'Basin', quantity: 1, unitPrice: 80, totalPrice: 80 }),
+      createMockMaterialItem({ name: 'Toilet', quantity: 1, unitPrice: 150, totalPrice: 150 }),
+    ],
+    category: 'bathroom',
+    isFavourite: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...overrides,
+  };
 }

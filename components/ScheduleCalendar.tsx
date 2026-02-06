@@ -15,7 +15,9 @@ import { AddressAutocomplete } from './AddressAutocomplete';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
 import { useToast } from '../src/contexts/ToastContext';
+import { useData } from '../src/contexts/DataContext';
 import { LiveVoiceFill, VoiceFieldConfig } from './LiveVoiceFill';
+import { AppointmentNotification } from './schedule/AppointmentNotification';
 
 // Field configuration for customer voice fill
 const customerVoiceFields: VoiceFieldConfig[] = [
@@ -64,7 +66,10 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   onBack
 }) => {
   const toast = useToast();
+  const { settings } = useData();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [notificationEntry, setNotificationEntry] = useState<ScheduleEntry | null>(null);
+  const [notificationType, setNotificationType] = useState<'confirmation' | 'reminder'>('confirmation');
   const [selectedDay, setSelectedDay] = useState<Date>(new Date());
   const [viewType, setViewType] = useState<'month' | 'week' | 'day'>('week');
 
@@ -817,6 +822,24 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                           </div>
 
                           <div className="flex flex-row md:flex-col gap-1.5 md:gap-2 shrink-0">
+                            {customer?.email && (
+                              <>
+                                <button
+                                  onClick={() => { setNotificationEntry(entry); setNotificationType('confirmation'); }}
+                                  className="p-2 md:p-3 bg-blue-50 text-blue-400 rounded-lg md:rounded-xl hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                                  title="Send Confirmation"
+                                >
+                                  <Mail size={14} className="md:w-4 md:h-4"/>
+                                </button>
+                                <button
+                                  onClick={() => { setNotificationEntry(entry); setNotificationType('reminder'); }}
+                                  className="p-2 md:p-3 bg-amber-50 text-amber-400 rounded-lg md:rounded-xl hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                                  title="Send Reminder"
+                                >
+                                  <Clock size={14} className="md:w-4 md:h-4"/>
+                                </button>
+                              </>
+                            )}
                             <button
                               onClick={() => handleEdit(entry)}
                               className="p-2 md:p-3 bg-slate-50 text-slate-400 rounded-lg md:rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm"
@@ -1395,6 +1418,27 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
           title="Voice Book Site Visit"
         />
       )}
+
+      {/* Appointment Notification Modal */}
+      {notificationEntry && (() => {
+        const notifCustomer = customers.find(c => c.id === notificationEntry.customerId);
+        if (!notifCustomer) return null;
+        return (
+          <AppointmentNotification
+            entry={notificationEntry}
+            customer={notifCustomer}
+            settings={settings}
+            type={notificationType}
+            onClose={() => setNotificationEntry(null)}
+            onSent={() => {
+              toast.success(
+                notificationType === 'confirmation' ? 'Confirmation Sent' : 'Reminder Sent',
+                `Email sent to ${notifCustomer.email}`
+              );
+            }}
+          />
+        );
+      })()}
     </div>
   );
 };

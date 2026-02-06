@@ -270,6 +270,12 @@ export function getFeatureDisplayName(feature: GatedFeature): string {
     unlimitedCustomers: 'Unlimited Customers',
     unlimitedJobPacks: 'Unlimited Job Packs',
     unlimitedPhotos: 'Unlimited Photos',
+    digitalSignatures: 'Digital Signatures',
+    emailSending: 'Email Sending',
+    materialKits: 'Material Kits',
+    paymentMilestones: 'Payment Milestones',
+    appointmentComms: 'Appointment Communications',
+    recurringInvoices: 'Recurring Invoices',
   };
   return names[feature] || feature;
 }

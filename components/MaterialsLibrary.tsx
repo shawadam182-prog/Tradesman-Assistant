@@ -2,11 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Package, Search, Star, Filter, Plus, Edit2, Trash2,
   Upload, ChevronDown, X, Check, AlertCircle, Loader2,
-  Building2, Tag, PoundSterling, ArrowLeft, MoreVertical
+  Building2, Tag, PoundSterling, ArrowLeft, MoreVertical, Layers
 } from 'lucide-react';
 import { useData } from '../src/contexts/DataContext';
 import { WholesalerImportPage } from './WholesalerImportPage';
-import type { DBMaterialLibraryItem } from '../types';
+import { MaterialKitEditor } from './materials/MaterialKitEditor';
+import type { DBMaterialLibraryItem, MaterialKit } from '../types';
 
 interface MaterialsLibraryProps {
   onSelectMaterial?: (material: DBMaterialLibraryItem) => void;
@@ -20,7 +21,7 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
   onBack,
 }) => {
   const { services } = useData();
-  const [view, setView] = useState<'library' | 'import'>('library');
+  const [view, setView] = useState<'library' | 'import' | 'kits'>('library');
   const [materials, setMaterials] = useState<DBMaterialLibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +48,12 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
   // Delete confirmation
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Kits state
+  const [kits, setKits] = useState<MaterialKit[]>([]);
+  const [kitsLoading, setKitsLoading] = useState(false);
+  const [editingKit, setEditingKit] = useState<MaterialKit | null | 'new'>(null);
+  const [deletingKitId, setDeletingKitId] = useState<string | null>(null);
+
   const loadMaterials = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -72,6 +79,22 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
   useEffect(() => {
     loadMaterials();
   }, [loadMaterials]);
+
+  const loadKits = useCallback(async () => {
+    setKitsLoading(true);
+    try {
+      const data = await services.materialKits.getAll();
+      setKits(data);
+    } catch (err) {
+      console.error('Failed to load kits:', err);
+    } finally {
+      setKitsLoading(false);
+    }
+  }, [services.materialKits]);
+
+  useEffect(() => {
+    if (view === 'kits') loadKits();
+  }, [view, loadKits]);
 
   // Filter materials
   const filteredMaterials = materials.filter(m => {
@@ -178,6 +201,28 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
     );
   }
 
+  // Kit editor modal (shown over both library and kits views)
+  if (editingKit) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <MaterialKitEditor
+          kit={editingKit === 'new' ? undefined : editingKit}
+          onSave={async (data) => {
+            if (editingKit === 'new') {
+              const created = await services.materialKits.create(data);
+              setKits(prev => [...prev, created]);
+            } else {
+              const updated = await services.materialKits.update(editingKit.id, data);
+              setKits(prev => prev.map(k => k.id === updated.id ? updated : k));
+            }
+            setEditingKit(null);
+          }}
+          onCancel={() => setEditingKit(null)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
@@ -198,17 +243,152 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
             </p>
           </div>
         </div>
-        <button
-          onClick={() => setView('import')}
-          className="flex items-center gap-2 px-4 py-3 bg-teal-500 text-white rounded-2xl font-black hover:bg-teal-400 transition-colors"
-        >
-          <Upload size={18} />
-          Import CSV
-        </button>
+        <div className="flex items-center gap-2">
+          {view === 'library' && (
+            <button
+              onClick={() => setView('import')}
+              className="flex items-center gap-2 px-4 py-3 bg-teal-500 text-white rounded-2xl font-black hover:bg-teal-400 transition-colors"
+            >
+              <Upload size={18} />
+              Import CSV
+            </button>
+          )}
+          {view === 'kits' && (
+            <button
+              onClick={() => setEditingKit('new')}
+              className="flex items-center gap-2 px-4 py-3 bg-purple-500 text-white rounded-2xl font-black hover:bg-purple-400 transition-colors"
+            >
+              <Plus size={18} />
+              New Kit
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Tab Bar */}
       {!selectionMode && (
+        <div className="flex gap-1 mb-6 bg-slate-100 rounded-2xl p-1">
+          <button
+            onClick={() => setView('library')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-colors ${
+              view === 'library' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Package size={16} />
+            Materials
+          </button>
+          <button
+            onClick={() => setView('kits')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-colors ${
+              view === 'kits' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Layers size={16} />
+            Kits
+            {kits.length > 0 && (
+              <span className="px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded-full text-[10px] font-black">
+                {kits.length}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Kits View */}
+      {view === 'kits' && (
+        <div className="space-y-4">
+          {kitsLoading ? (
+            <div className="text-center py-12 text-slate-400"><Loader2 size={24} className="animate-spin mx-auto mb-2" />Loading kits...</div>
+          ) : kits.length === 0 ? (
+            <div className="text-center py-12">
+              <Layers size={48} className="mx-auto text-slate-300 mb-3" />
+              <h3 className="text-lg font-bold text-slate-700 mb-1">No Material Kits Yet</h3>
+              <p className="text-sm text-slate-500 mb-4">Create reusable kits of materials you use together frequently.</p>
+              <button
+                onClick={() => setEditingKit('new')}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-purple-500 text-white rounded-2xl font-black hover:bg-purple-400 transition-colors"
+              >
+                <Plus size={18} />
+                Create First Kit
+              </button>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {kits.map(kit => (
+                <div key={kit.id} className="bg-white rounded-2xl border border-slate-200 p-4 hover:border-purple-200 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-slate-900">{kit.name}</h3>
+                        {kit.isFavourite && <Star size={14} className="text-amber-400 fill-amber-400" />}
+                        {kit.category && (
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-bold">{kit.category}</span>
+                        )}
+                      </div>
+                      {kit.description && <p className="text-xs text-slate-500 mt-0.5">{kit.description}</p>}
+                      <div className="flex items-center gap-3 mt-2">
+                        <span className="text-xs text-slate-400">{kit.items.length} item{kit.items.length !== 1 ? 's' : ''}</span>
+                        <span className="text-xs font-bold text-teal-600">
+                          £{kit.items.reduce((s, i) => s + i.totalPrice, 0).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={async () => {
+                          const updated = await services.materialKits.toggleFavourite(kit.id);
+                          setKits(prev => prev.map(k => k.id === updated.id ? updated : k));
+                        }}
+                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                      >
+                        <Star size={16} className={kit.isFavourite ? 'text-amber-400 fill-amber-400' : 'text-slate-300'} />
+                      </button>
+                      <button
+                        onClick={() => setEditingKit(kit)}
+                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                      >
+                        <Edit2 size={16} className="text-slate-400" />
+                      </button>
+                      <button
+                        onClick={() => setDeletingKitId(kit.id)}
+                        className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={16} className="text-slate-400 hover:text-red-500" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Kit Delete Confirmation */}
+          {deletingKitId && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+                <h3 className="text-xl font-black text-slate-900 mb-2">Delete Kit?</h3>
+                <p className="text-sm text-slate-500 mb-4">This action cannot be undone.</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setDeletingKitId(null)} className="flex-1 py-2.5 bg-slate-100 rounded-xl font-bold text-sm">Cancel</button>
+                  <button
+                    onClick={async () => {
+                      await services.materialKits.delete(deletingKitId);
+                      setKits(prev => prev.filter(k => k.id !== deletingKitId));
+                      setDeletingKitId(null);
+                    }}
+                    className="flex-1 py-2.5 bg-red-500 text-white rounded-xl font-bold text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Stats Cards */}
+      {!selectionMode && view === 'library' && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-2xl border border-slate-200 p-4">
             <Package size={20} className="text-slate-400 mb-2" />
@@ -232,6 +412,9 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
           </div>
         </div>
       )}
+
+      {/* Library Content (search, table, modals) */}
+      {view === 'library' && (<>
 
       {/* Search and Filters */}
       <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-6">
@@ -581,6 +764,8 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
           </div>
         </div>
       )}
+
+      </>)}
     </div>
   );
 };

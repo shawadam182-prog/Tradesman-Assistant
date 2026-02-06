@@ -586,13 +586,20 @@ export type GatedFeature =
   | 'filingCabinet'
   | 'unlimitedCustomers'
   | 'unlimitedJobPacks'
-  | 'unlimitedPhotos';
+  | 'unlimitedPhotos'
+  | 'digitalSignatures'
+  | 'emailSending'
+  | 'materialKits'
+  | 'paymentMilestones'
+  | 'appointmentComms'
+  | 'recurringInvoices';
 
 // Maps features to their required tier
 export const FEATURE_TIER_MAP: Record<GatedFeature, SubscriptionTier> = {
   // Free tier features (available to all)
-  invoices: 'free', // Basic invoicing available to all
-  schedule: 'free', // Basic schedule available to all
+  invoices: 'free',
+  schedule: 'free',
+  digitalSignatures: 'free',
 
   // Professional tier features
   expenses: 'professional',
@@ -601,12 +608,17 @@ export const FEATURE_TIER_MAP: Record<GatedFeature, SubscriptionTier> = {
   unlimitedCustomers: 'professional',
   unlimitedJobPacks: 'professional',
   unlimitedPhotos: 'professional',
+  emailSending: 'professional',
+  materialKits: 'professional',
+  paymentMilestones: 'professional',
+  appointmentComms: 'professional',
 
   // Business tier features
   bankImport: 'business',
   vatReports: 'business',
   payables: 'business',
   filingCabinet: 'business',
+  recurringInvoices: 'business',
 };
 
 // Default usage limits by tier
@@ -636,3 +648,105 @@ export const TIER_LIMITS: Record<SubscriptionTier, UsageLimits> = {
     documentsPerMonth: null,
   },
 };
+
+// ============================================
+// SIGNATURES
+// ============================================
+
+export interface QuoteSignature {
+  id: string;
+  quoteId: string;
+  signerName: string;
+  signatureData: string;       // base64 PNG
+  signatureType: 'draw' | 'type';
+  ipAddress?: string;
+  userAgent?: string;
+  signedAt: string;
+  createdAt: string;
+}
+
+// ============================================
+// PAYMENT MILESTONES
+// ============================================
+
+export interface PaymentMilestone {
+  id: string;
+  quoteId: string;
+  userId: string;
+  label: string;
+  percentage?: number;
+  fixedAmount?: number;
+  dueDate?: string;
+  status: 'pending' | 'invoiced' | 'paid';
+  invoiceId?: string;
+  paidAt?: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================
+// EMAIL
+// ============================================
+
+export interface EmailTemplate {
+  id: string;
+  userId: string;
+  templateType: string;
+  subject: string;
+  body: string;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EmailLogEntry {
+  id: string;
+  userId: string;
+  quoteId?: string;
+  recipientEmail: string;
+  templateType?: string;
+  subject: string;
+  status: 'pending' | 'queued' | 'sent' | 'failed' | 'bounced';
+  resendMessageId?: string;
+  errorMessage?: string;
+  retryCount: number;
+  maxRetries: number;
+  nextRetryAt?: string;
+  sentAt?: string;
+  openedAt?: string;
+  createdAt: string;
+}
+
+// ============================================
+// COMMUNICATION PREFERENCES
+// ============================================
+
+export interface CommunicationPreferences {
+  id: string;
+  userId: string;
+  paymentReminderEnabled: boolean;
+  paymentReminderDays: number[];
+  appointmentReminderEnabled: boolean;
+  appointmentReminderHours: number;
+  quoteFollowUpEnabled: boolean;
+  quoteFollowUpDays: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================
+// MATERIAL KITS
+// ============================================
+
+export interface MaterialKit {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  items: MaterialItem[];
+  category?: string;
+  isFavourite: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

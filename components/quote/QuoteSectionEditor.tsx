@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { QuoteSection, MaterialItem, LabourItem, AppSettings, LabourRatePreset } from '../../types';
 import { MaterialItemRow } from './MaterialItemRow';
 import { LabourItemRow } from './LabourItemRow';
-import { Trash2, Plus, Package, HardHat, PoundSterling, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, Plus, Package, HardHat, PoundSterling, ChevronDown, ChevronUp, Layers } from 'lucide-react';
 
 interface QuoteSectionEditorProps {
   section: QuoteSection;
@@ -18,6 +18,7 @@ interface QuoteSectionEditorProps {
   onAddMaterial: (sectionId: string) => void;
   onAddHeading: (sectionId: string) => void;
   onOpenPriceList: (sectionId: string) => void;
+  onApplyKit?: (sectionId: string) => void;
   onSaveItemToLibrary: (item: MaterialItem) => void;
   // Labour handlers
   onAddLabourItem: (sectionId: string) => void;
@@ -49,6 +50,7 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
   onAddMaterial,
   onAddHeading,
   onOpenPriceList,
+  onApplyKit,
   onSaveItemToLibrary,
   onAddLabourItem,
   onUpdateLabourItem,
@@ -205,6 +207,16 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
             <Package size={18} className="hidden md:block" />
             Price List
           </button>
+          {onApplyKit && (
+            <button
+              onClick={() => onApplyKit(section.id)}
+              className="flex-1 flex items-center justify-center gap-1 md:gap-2 py-1 md:py-3 bg-purple-50 border border-purple-200 rounded md:rounded-xl text-purple-600 font-bold text-[9px] md:text-sm uppercase tracking-wider shadow-sm hover:bg-purple-100 active:scale-95 transition-all"
+            >
+              <Layers size={12} className="md:hidden" />
+              <Layers size={18} className="hidden md:block" />
+              Apply Kit
+            </button>
+          )}
         </div>
       </div>
 

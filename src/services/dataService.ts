@@ -424,7 +424,7 @@ export const quotesService = {
         p_share_token: shareToken,
       });
     if (error) throw error;
-    return data as {
+    return data as unknown as {
       success: boolean;
       error?: string;
       quote?: any;
@@ -437,17 +437,31 @@ export const quotesService = {
         email: string;
         footer_logos: string[];
       } | null;
+      signature?: {
+        id: string;
+        signer_name: string;
+        signature_data: string;
+        signature_type: string;
+        signed_at: string;
+      } | null;
     };
   },
 
   // Respond to quote (accept or decline) - public access
-  async respondToQuote(shareToken: string, response: 'accepted' | 'declined') {
+  async respondToQuote(
+    shareToken: string,
+    response: 'accepted' | 'declined',
+    signatureData?: { signatureData: string; signerName: string; signatureType: 'draw' | 'type' }
+  ) {
     const { data, error } = await supabase
       .rpc('respond_to_quote', {
         p_share_token: shareToken,
         p_response: response,
-        p_ip: null, // Could capture if needed
+        p_ip: null,
         p_user_agent: navigator.userAgent,
+        p_signature_data: signatureData?.signatureData || null,
+        p_signer_name: signatureData?.signerName || null,
+        p_signature_type: signatureData?.signatureType || 'draw',
       });
     if (error) throw error;
     return data as {

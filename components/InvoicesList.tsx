@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Quote, Customer, AppSettings, TIER_LIMITS } from '../types';
-import { ReceiptText, Search, CheckCircle2, AlertCircle, Plus, Hash, ChevronRight, Trash2, Clock, AlertTriangle, ArrowUpDown } from 'lucide-react';
+import { ReceiptText, Search, CheckCircle2, AlertCircle, Plus, Hash, ChevronRight, Trash2, Clock, AlertTriangle, ArrowUpDown, RefreshCw } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
@@ -41,7 +41,7 @@ interface InvoicesListProps {
 }
 
 // Tab filter types
-type InvoiceFilterTab = 'all' | 'draft' | 'unpaid' | 'paid' | 'overdue' | 'cancelled';
+type InvoiceFilterTab = 'all' | 'draft' | 'unpaid' | 'paid' | 'overdue' | 'recurring' | 'cancelled';
 
 // Sort options
 type SortOption = 'updated_desc' | 'updated_asc' | 'created_desc' | 'created_asc' | 'amount_desc' | 'amount_asc' | 'customer_asc' | 'customer_desc' | 'title_asc' | 'title_desc';
@@ -153,6 +153,8 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
         return invoice.status === 'paid';
       case 'overdue':
         return isOverdue(invoice);
+      case 'recurring':
+        return invoice.isRecurring === true;
       case 'cancelled':
         return invoice.status === 'declined';
       case 'all':
@@ -184,6 +186,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
     unpaid: quotes.filter(q => q.status !== 'paid' && q.status !== 'draft' && q.status !== 'declined' && !isOverdue(q)).length,
     paid: quotes.filter(q => q.status === 'paid').length,
     overdue: quotes.filter(q => isOverdue(q)).length,
+    recurring: quotes.filter(q => q.isRecurring === true).length,
     cancelled: quotes.filter(q => q.status === 'declined').length,
   };
 
@@ -217,9 +220,9 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
 
       {/* Status Filter Tabs */}
       <div className="flex gap-1 pb-2">
-        {(['all', 'draft', 'unpaid', 'paid', 'overdue', 'cancelled'] as const).map(tab => {
+        {(['all', 'draft', 'unpaid', 'paid', 'overdue', 'recurring', 'cancelled'] as const).map(tab => {
           const label: Record<InvoiceFilterTab, string> = {
-            all: 'All', draft: 'Draft', unpaid: 'Unpaid', paid: 'Paid', overdue: 'Due', cancelled: "Canc'd"
+            all: 'All', draft: 'Draft', unpaid: 'Unpaid', paid: 'Paid', overdue: 'Due', recurring: 'Recur', cancelled: "Canc'd"
           };
           return (
           <button
@@ -234,7 +237,9 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                   ? 'bg-red-500 text-white shadow-md shadow-red-500/20'
                   : tab === 'paid'
                     ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
-                    : 'bg-slate-900 text-white shadow-md'
+                    : tab === 'recurring'
+                      ? 'bg-purple-500 text-white shadow-md shadow-purple-500/20'
+                      : 'bg-slate-900 text-white shadow-md'
                 : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
             }`}
           >
@@ -247,7 +252,9 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                     ? 'bg-red-100 text-red-600'
                     : tab === 'paid' && tabCounts.paid > 0
                       ? 'bg-emerald-100 text-emerald-600'
-                      : 'bg-slate-100'
+                      : tab === 'recurring' && tabCounts.recurring > 0
+                        ? 'bg-purple-100 text-purple-600'
+                        : 'bg-slate-100'
               }`}>
                 {tabCounts[tab]}
               </span>
@@ -342,6 +349,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
               {activeTab === 'unpaid' && 'No unpaid invoices.'}
               {activeTab === 'paid' && 'No paid invoices.'}
               {activeTab === 'overdue' && 'No overdue invoices.'}
+              {activeTab === 'recurring' && 'No recurring invoices set up.'}
               {activeTab === 'cancelled' && 'No cancelled invoices.'}
             </p>
           </div>
@@ -371,6 +379,11 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                     <span className="bg-teal-500 text-white text-[10px] font-black px-2 py-1 rounded flex items-center gap-1">
                       <Hash size={10} /> {ref}
                     </span>
+                    {invoice.isRecurring && (
+                      <span className="bg-purple-500 text-white text-[9px] font-black px-2 py-1 rounded flex items-center gap-1">
+                        <RefreshCw size={10} /> {invoice.recurringFrequency}
+                      </span>
+                    )}
                     {overdue && (
                       <span className="bg-red-500 text-white text-[9px] font-black px-2 py-1 rounded flex items-center gap-1">
                         <AlertTriangle size={10} /> {daysOverdue}d overdue
@@ -417,6 +430,11 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                   {invoice.dueDate && !isPaid && (
                     <p className={`text-sm ${overdue ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
                       Due {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                    </p>
+                  )}
+                  {invoice.isRecurring && invoice.recurringNextDate && (
+                    <p className="text-sm text-purple-500">
+                      Next: {new Date(invoice.recurringNextDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                     </p>
                   )}
                 </div>
