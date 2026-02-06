@@ -487,12 +487,12 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                 <div className="px-4 pb-2">
                   {/* Determine which columns to show based on displayOptions */}
                   {(() => {
-                    const showQtyColumn = (displayOptions.showMaterials && displayOptions.showMaterialQty) ||
-                      (displayOptions.showLabour && displayOptions.showLabourQty);
-                    const showRateColumn = (displayOptions.showMaterials && displayOptions.showMaterialUnitPrice) ||
-                      (displayOptions.showLabour && displayOptions.showLabourUnitPrice);
-                    const showAmountColumn = (displayOptions.showMaterials && displayOptions.showMaterialLineTotals) ||
-                      (displayOptions.showLabour && displayOptions.showLabourLineTotals) ||
+                    const showQtyColumn = (displayOptions.showMaterials && displayOptions.showMaterialItems && displayOptions.showMaterialQty) ||
+                      (displayOptions.showLabour && displayOptions.showLabourItems && displayOptions.showLabourQty);
+                    const showRateColumn = (displayOptions.showMaterials && displayOptions.showMaterialItems && displayOptions.showMaterialUnitPrice) ||
+                      (displayOptions.showLabour && displayOptions.showLabourItems && displayOptions.showLabourUnitPrice);
+                    const showAmountColumn = (displayOptions.showMaterials && displayOptions.showMaterialItems && displayOptions.showMaterialLineTotals) ||
+                      (displayOptions.showLabour && displayOptions.showLabourItems && displayOptions.showLabourLineTotals) ||
                       displayOptions.showWorkSectionTotal;
                     const colSpan = 1 + (templateConfig.showLineNumbers ? 1 : 0) + (showQtyColumn ? 1 : 0) + (showRateColumn ? 1 : 0) + (showAmountColumn ? 1 : 0);
 
