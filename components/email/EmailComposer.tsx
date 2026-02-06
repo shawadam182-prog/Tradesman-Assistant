@@ -126,9 +126,9 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
       {/* Header */}
-      <div className="bg-blue-600 text-white p-4 flex items-center justify-between">
+      <div className="bg-blue-600 text-white p-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <Send size={20} />
           <h3 className="text-lg font-bold">Send Email</h3>
@@ -138,7 +138,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         </button>
       </div>
 
-      <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+      <div className="p-4 space-y-3 overflow-y-auto flex-1 min-h-0">
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{error}</div>
         )}
@@ -172,7 +172,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            rows={8}
+            rows={6}
             className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
           />
         </div>
@@ -197,8 +197,8 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         )}
       </div>
 
-      {/* Actions */}
-      <div className="p-4 pb-6 border-t border-slate-100 flex gap-3">
+      {/* Actions — pinned at bottom */}
+      <div className="p-4 pb-6 border-t border-slate-100 flex gap-3 shrink-0">
         <button
           onClick={onClose}
           className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors"

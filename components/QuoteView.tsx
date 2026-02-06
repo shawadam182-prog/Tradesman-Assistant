@@ -927,7 +927,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       {/* Email Composer Modal */}
       {showEmailComposer && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 pb-24 md:pb-4 print:hidden">
-          <div className="w-full max-w-lg max-h-[85vh] overflow-auto rounded-2xl">
+          <div className="w-full max-w-lg rounded-2xl">
             <EmailComposer
               quote={activeQuote}
               customer={customer}
