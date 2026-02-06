@@ -10,7 +10,7 @@ import {
   Calendar, Layout, FileSpreadsheet, FileEdit, List, ArrowLeft,
   Crown, Zap, Clock, Users, Briefcase, Camera, FileBox, ExternalLink,
   HelpCircle, MessageSquare, Send, Hammer, Minus, Minimize2, LayoutGrid, Check, Type, Trash2,
-  Moon, Sun
+  Moon, Sun, Mail
 } from 'lucide-react';
 import { TEMPLATE_METADATA, TEMPLATE_DESCRIPTIONS, COLOR_SCHEMES, getTemplateConfig } from '../src/lib/invoiceTemplates';
 import { useToast } from '../src/contexts/ToastContext';
@@ -88,6 +88,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const [reminderDays, setReminderDays] = useState<number[]>([7, 14, 30]);
   const [appointmentReminderEnabled, setAppointmentReminderEnabled] = useState(true);
   const [appointmentReminderHours, setAppointmentReminderHours] = useState(24);
+  const [quoteFollowUpEnabled, setQuoteFollowUpEnabled] = useState(false);
+  const [quoteFollowUpDays, setQuoteFollowUpDays] = useState(3);
 
   // Collapsible section states for Quote & Invoice preferences (all collapsed by default)
   const [expandedQuoteSections, setExpandedQuoteSections] = useState<Record<string, boolean>>({});
@@ -1541,6 +1543,46 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         onToggle={setAppointmentReminderEnabled}
                         onUpdateHours={setAppointmentReminderHours}
                       />
+
+                      {/* Quote Follow-Up */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Mail size={16} className="text-blue-500" />
+                            <div>
+                              <p className="text-sm font-bold text-slate-900">Quote Follow-Ups</p>
+                              <p className="text-[10px] text-slate-500">Automatically follow up on unanswered quotes</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setQuoteFollowUpEnabled(!quoteFollowUpEnabled)}
+                            className={`relative w-11 h-6 rounded-full transition-colors ${quoteFollowUpEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                          >
+                            <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${quoteFollowUpEnabled ? 'left-[22px]' : 'left-0.5'}`} />
+                          </button>
+                        </div>
+
+                        {quoteFollowUpEnabled && (
+                          <div className="pl-7 space-y-2">
+                            <p className="text-xs text-slate-500">Send a follow-up after this many days with no response:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {[1, 2, 3, 5, 7, 14].map(days => (
+                                <button
+                                  key={days}
+                                  onClick={() => setQuoteFollowUpDays(days)}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                                    quoteFollowUpDays === days
+                                      ? 'bg-blue-500 text-white shadow-sm'
+                                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                  }`}
+                                >
+                                  {days} day{days !== 1 ? 's' : ''}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

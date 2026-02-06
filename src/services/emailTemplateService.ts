@@ -76,6 +76,22 @@ We appreciate your prompt payment.
 Kind regards,
 {{company_name}}`,
   },
+  {
+    templateType: 'quote_followup',
+    subject: 'Following up: {{doc_type}} {{reference}} for {{project_title}}',
+    body: `Hi {{customer_name}},
+
+I'm just following up on the {{doc_type}} I sent over for {{project_title}}. I wanted to check whether you've had a chance to review it.
+
+You can view and respond to it here: {{quote_link}}
+
+If you have any questions or would like to discuss anything, please don't hesitate to get in touch.
+
+Kind regards,
+{{company_name}}
+{{company_phone}}
+{{company_email}}`,
+  },
 ];
 
 export const emailTemplateService = {
