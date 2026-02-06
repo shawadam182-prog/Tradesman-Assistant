@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Upload, FileSpreadsheet, Check, X, AlertCircle,
   Loader2, ArrowRight, Building2, Package, Star,
-  RefreshCw, Trash2, ArrowLeft, PoundSterling
+  RefreshCw, Trash2, ArrowLeft, PoundSterling, FileText, Sparkles
 } from 'lucide-react';
 import { useData } from '../src/contexts/DataContext';
 import type { WholesalerPreset } from '../types';
-import { validateCsvFile } from '../src/utils/fileValidation';
+import { validateCsvFile, validatePdfFile } from '../src/utils/fileValidation';
+import { parsePriceListPdf } from '../src/services/geminiService';
 
 interface ParsedMaterial {
   productCode?: string;
@@ -98,7 +99,7 @@ interface WholesalerImportPageProps {
 
 export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBack }) => {
   const { services } = useData();
-  const [step, setStep] = useState<'upload' | 'preview' | 'importing' | 'complete'>('upload');
+  const [step, setStep] = useState<'upload' | 'processing' | 'preview' | 'importing' | 'complete'>('upload');
   const [rawData, setRawData] = useState<string[][]>([]);
   const [parsedMaterials, setParsedMaterials] = useState<ParsedMaterial[]>([]);
   const [selectedWholesaler, setSelectedWholesaler] = useState<string>('custom');
@@ -110,6 +111,8 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ imported: number; updated: number; failed: number; errors: string[] } | null>(null);
   const [fileName, setFileName] = useState<string>('');
+  const [fileType, setFileType] = useState<'csv' | 'pdf'>('csv');
+  const [processingPdf, setProcessingPdf] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const parseCSV = (text: string): string[][] => {
@@ -226,36 +229,100 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
     return undefined;
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate CSV file
-    const validation = validateCsvFile(file);
-    if (!validation.valid) {
-      setError(validation.error || 'Invalid file');
-      return;
-    }
-
+    const isPdf = file.name.toLowerCase().endsWith('.pdf');
+    setFileType(isPdf ? 'pdf' : 'csv');
     setError(null);
     setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const text = ev.target?.result as string;
-        const data = parseCSV(text);
-        if (data.length < 2) {
-          setError('CSV file appears to be empty or invalid');
-          return;
-        }
-        setRawData(data);
-        setStep('preview');
-      } catch (err) {
-        setError('Failed to parse CSV file');
+
+    if (isPdf) {
+      // Validate PDF file
+      const validation = validatePdfFile(file);
+      if (!validation.valid) {
+        setError(validation.error || 'Invalid PDF file');
+        return;
       }
-    };
-    reader.onerror = () => setError('Failed to read file');
-    reader.readAsText(file);
+
+      // Process PDF with AI
+      setStep('processing');
+      setProcessingPdf(true);
+
+      try {
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          try {
+            const base64 = ev.target?.result as string;
+            const aiResults = await parsePriceListPdf(base64, customSupplierName || undefined);
+
+            if (aiResults.length === 0) {
+              setError('Could not extract any products from the PDF. Try a CSV export instead.');
+              setStep('upload');
+              setProcessingPdf(false);
+              return;
+            }
+
+            // Convert AI results to ParsedMaterial format
+            const materials: ParsedMaterial[] = aiResults.map(item => ({
+              productCode: item.productCode,
+              name: item.name,
+              description: item.description,
+              unit: item.unit || 'each',
+              costPrice: item.costPrice,
+              sellPrice: item.sellPrice || (item.costPrice ? item.costPrice * (1 + defaultMarkupPercent / 100) : undefined),
+              category: item.category,
+              isValid: !!item.name,
+            }));
+
+            setParsedMaterials(materials);
+            setStep('preview');
+          } catch (err: any) {
+            console.error('PDF parsing error:', err);
+            setError(err.message || 'Failed to analyze PDF with AI');
+            setStep('upload');
+          } finally {
+            setProcessingPdf(false);
+          }
+        };
+        reader.onerror = () => {
+          setError('Failed to read PDF file');
+          setStep('upload');
+          setProcessingPdf(false);
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        setError('Failed to process PDF file');
+        setStep('upload');
+        setProcessingPdf(false);
+      }
+    } else {
+      // Validate CSV file
+      const validation = validateCsvFile(file);
+      if (!validation.valid) {
+        setError(validation.error || 'Invalid file');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const text = ev.target?.result as string;
+          const data = parseCSV(text);
+          if (data.length < 2) {
+            setError('CSV file appears to be empty or invalid');
+            return;
+          }
+          setRawData(data);
+          setStep('preview');
+        } catch (err) {
+          setError('Failed to parse CSV file');
+        }
+      };
+      reader.onerror = () => setError('Failed to read file');
+      reader.readAsText(file);
+    }
   };
 
   const handleWholesalerSelect = (wholesalerId: string) => {
@@ -409,7 +476,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
         )}
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Import Price List</h1>
-          <p className="text-slate-500 text-sm font-medium">Upload a CSV from your wholesaler to build your materials library</p>
+          <p className="text-slate-500 text-sm font-medium">Upload a CSV or PDF from your wholesaler to build your materials library</p>
         </div>
       </div>
 
@@ -417,17 +484,16 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
       <div className="flex items-center gap-4 mb-4 md:mb-8">
         {['Upload', 'Preview', 'Import'].map((label, idx) => {
           const stepNum = idx + 1;
-          const isActive = (step === 'upload' && stepNum === 1) ||
-                          (step === 'preview' && stepNum === 2) ||
-                          ((step === 'importing' || step === 'complete') && stepNum === 3);
+          const isActive = ((step === 'upload' || step === 'processing') && stepNum === 1) ||
+            (step === 'preview' && stepNum === 2) ||
+            ((step === 'importing' || step === 'complete') && stepNum === 3);
           const isComplete = (step === 'preview' && stepNum === 1) ||
-                            ((step === 'importing' || step === 'complete') && stepNum <= 2);
+            ((step === 'importing' || step === 'complete') && stepNum <= 2);
           return (
             <React.Fragment key={label}>
               <div className={`flex items-center gap-2 ${isActive ? 'text-amber-600' : isComplete ? 'text-emerald-600' : 'text-slate-400'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm ${
-                  isActive ? 'bg-amber-100' : isComplete ? 'bg-emerald-100' : 'bg-slate-100'
-                }`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm ${isActive ? 'bg-amber-100' : isComplete ? 'bg-emerald-100' : 'bg-slate-100'
+                  }`}>
                   {isComplete ? <Check size={16} /> : stepNum}
                 </div>
                 <span className="font-bold text-sm hidden sm:inline">{label}</span>
@@ -446,90 +512,118 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
       )}
 
       {/* Step 1: Upload */}
-      {step === 'upload' && (
+      {(step === 'upload' || step === 'processing') && (
         <div className="bg-white rounded-3xl border border-slate-200 p-4 md:p-8">
-          <div className="text-center mb-4 md:mb-8">
-            <FileSpreadsheet className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h2 className="text-xl font-black text-slate-900 mb-2">Upload Price List CSV</h2>
-            <p className="text-slate-500 text-sm">Export a price list from your wholesaler account and upload it here</p>
-          </div>
+          {step === 'processing' ? (
+            <div className="text-center py-12">
+              <div className="relative inline-block mb-6">
+                <FileText className="w-16 h-16 text-teal-400" />
+                <Sparkles className="w-8 h-8 text-amber-500 absolute -top-2 -right-2 animate-pulse" />
+              </div>
+              <h2 className="text-xl font-black text-slate-900 mb-2">Analyzing PDF with AI...</h2>
+              <p className="text-slate-500 text-sm mb-6">Extracting products and prices from your document</p>
+              <Loader2 className="w-8 h-8 text-teal-500 mx-auto animate-spin" />
+            </div>
+          ) : (
+            <>
+              <div className="text-center mb-4 md:mb-8">
+                <FileSpreadsheet className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <h2 className="text-xl font-black text-slate-900 mb-2">Upload Price List</h2>
+                <p className="text-slate-500 text-sm">Export a price list from your wholesaler account and upload it here</p>
+              </div>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.pdf"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
 
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-amber-500 hover:bg-amber-50 transition-colors group"
-          >
-            <Upload className="w-10 h-10 text-slate-400 group-hover:text-amber-500 mx-auto mb-3 transition-colors" />
-            <p className="font-bold text-slate-600 group-hover:text-amber-600 mb-1">Click to upload CSV</p>
-            <p className="text-xs text-slate-400">Supports: Jewson, Travis Perkins, Selco, Buildbase, Howdens, and more</p>
-          </button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-teal-500 hover:bg-teal-50 transition-colors group"
+              >
+                <Upload className="w-10 h-10 text-slate-400 group-hover:text-teal-500 mx-auto mb-3 transition-colors" />
+                <p className="font-bold text-slate-600 group-hover:text-teal-600 mb-1">Click to upload CSV or PDF</p>
+                <p className="text-xs text-slate-400">PDF files are analyzed with AI to extract products</p>
+              </button>
 
-          <div className="mt-8 p-3 md:p-6 bg-slate-50 rounded-2xl">
-            <h3 className="font-black text-sm text-slate-700 mb-3 flex items-center gap-2">
-              <Building2 size={16} />
-              How to export from your wholesaler
-            </h3>
-            <ul className="text-xs text-slate-500 space-y-2">
-              <li>• <strong>Jewson:</strong> My Account → Order History → Export Price List</li>
-              <li>• <strong>Travis Perkins:</strong> Trade Account → Products → Download CSV</li>
-              <li>• <strong>Selco:</strong> Account → Price List → Export</li>
-              <li>• <strong>Buildbase:</strong> Trade Account → Materials → Export List</li>
-              <li>• <strong>Or:</strong> Use any spreadsheet with columns for Name, Price, etc.</li>
-            </ul>
-          </div>
+              <div className="mt-8 p-3 md:p-6 bg-slate-50 rounded-2xl">
+                <h3 className="font-black text-sm text-slate-700 mb-3 flex items-center gap-2">
+                  <Building2 size={16} />
+                  How to export from your wholesaler
+                </h3>
+                <ul className="text-xs text-slate-500 space-y-2">
+                  <li>• <strong>Jewson:</strong> My Account → Order History → Export Price List</li>
+                  <li>• <strong>Travis Perkins:</strong> Trade Account → Products → Download CSV</li>
+                  <li>• <strong>Selco:</strong> Account → Price List → Export</li>
+                  <li>• <strong>Buildbase:</strong> Trade Account → Materials → Export List</li>
+                  <li>• <strong>PDF Support:</strong> Upload any supplier PDF and AI will extract the products</li>
+                </ul>
+              </div>
+            </>
+          )}
         </div>
       )}
 
       {/* Step 2: Preview & Map */}
       {step === 'preview' && (
         <div className="space-y-6">
-          {/* Wholesaler Selection */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-3 md:p-6">
-            <h3 className="font-black text-sm text-slate-700 mb-4">Select Your Wholesaler</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {Object.entries(WHOLESALER_PRESETS).map(([id, preset]) => (
-                <button
-                  key={id}
-                  onClick={() => handleWholesalerSelect(id)}
-                  className={`p-4 rounded-2xl border-2 transition-all text-left ${
-                    selectedWholesaler === id
+          {/* PDF Success Banner */}
+          {fileType === 'pdf' && (
+            <div className="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-3xl border border-teal-200 p-4 md:p-6 flex items-center gap-4">
+              <div className="p-3 bg-teal-100 rounded-2xl">
+                <Sparkles className="w-6 h-6 text-teal-600" />
+              </div>
+              <div>
+                <h3 className="font-black text-sm text-teal-800">AI Extraction Complete</h3>
+                <p className="text-xs text-teal-600">Found {validCount} products from your PDF. Review below and import.</p>
+              </div>
+            </div>
+          )}
+
+          {/* Wholesaler Selection - CSV only */}
+          {fileType === 'csv' && (
+            <div className="bg-white rounded-3xl border border-slate-200 p-3 md:p-6">
+              <h3 className="font-black text-sm text-slate-700 mb-4">Select Your Wholesaler</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {Object.entries(WHOLESALER_PRESETS).map(([id, preset]) => (
+                  <button
+                    key={id}
+                    onClick={() => handleWholesalerSelect(id)}
+                    className={`p-4 rounded-2xl border-2 transition-all text-left ${selectedWholesaler === id
                       ? 'border-amber-500 bg-amber-50'
                       : 'border-slate-100 hover:border-slate-200'
-                  }`}
-                >
-                  <p className={`font-bold text-sm ${selectedWholesaler === id ? 'text-amber-700' : 'text-slate-700'}`}>
-                    {preset.name}
-                  </p>
-                </button>
-              ))}
-            </div>
-
-            {/* Custom supplier name */}
-            {selectedWholesaler === 'custom' && (
-              <div className="mt-4">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">
-                  Supplier Name
-                </label>
-                <input
-                  type="text"
-                  value={customSupplierName}
-                  onChange={(e) => setCustomSupplierName(e.target.value)}
-                  placeholder="Enter supplier name..."
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm"
-                />
+                      }`}
+                  >
+                    <p className={`font-bold text-sm ${selectedWholesaler === id ? 'text-amber-700' : 'text-slate-700'}`}>
+                      {preset.name}
+                    </p>
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
 
-          {/* Column Mapping (for custom) */}
-          {selectedWholesaler === 'custom' && (
+              {/* Custom supplier name */}
+              {selectedWholesaler === 'custom' && (
+                <div className="mt-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">
+                    Supplier Name
+                  </label>
+                  <input
+                    type="text"
+                    value={customSupplierName}
+                    onChange={(e) => setCustomSupplierName(e.target.value)}
+                    placeholder="Enter supplier name..."
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Column Mapping (for custom CSV only) */}
+          {fileType === 'csv' && selectedWholesaler === 'custom' && (
             <div className="bg-white rounded-3xl border border-slate-200 p-3 md:p-6">
               <h3 className="font-black text-sm text-slate-700 mb-4">Column Mapping</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -577,6 +671,20 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
             </div>
           )}
 
+          {/* Supplier Name for PDF */}
+          {fileType === 'pdf' && (
+            <div className="bg-white rounded-3xl border border-slate-200 p-3 md:p-6">
+              <h3 className="font-black text-sm text-slate-700 mb-4">Supplier Name</h3>
+              <input
+                type="text"
+                value={customSupplierName}
+                onChange={(e) => setCustomSupplierName(e.target.value)}
+                placeholder="Enter supplier name for these products..."
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm"
+              />
+            </div>
+          )}
+
           {/* Markup Settings */}
           <div className="bg-white rounded-3xl border border-slate-200 p-3 md:p-6">
             <h3 className="font-black text-sm text-slate-700 mb-4 flex items-center gap-2">
@@ -584,7 +692,9 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
               Default Markup
             </h3>
             <p className="text-xs text-slate-500 mb-4">
-              If no sell price is in the CSV, we'll calculate it from the cost price
+              {fileType === 'pdf'
+                ? "Apply markup to products without a sell price"
+                : "If no sell price is in the CSV, we'll calculate it from the cost price"}
             </p>
             <div className="flex items-center gap-4">
               <input

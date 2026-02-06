@@ -468,6 +468,83 @@ ${priceListHint ? `Match prices from this list where items match:\n${priceListHi
 
     return JSON.parse(result.response.text());
   },
+
+  // Parse PDF price list for materials library import
+  async parsePriceListPdf({ pdfBase64, supplierHint }: { pdfBase64: string; supplierHint?: string }) {
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction: `You are an expert at extracting product data from UK builders merchant and wholesaler price lists.
+
+Analyze the PDF document and extract ALL product/material entries into a structured list.
+
+## EXTRACTION RULES:
+- Extract every product row you can identify
+- Product codes are typically alphanumeric codes at the start of rows
+- Names should be the full product description
+- Prices are in GBP (£) - look for columns labeled "Price", "Cost", "Trade", "Net", etc.
+- Units might be: each, m, m2, pack, bag, box, roll, sheet, length, pair, set, tin, tube, litre
+- If unit not specified, infer from product name or default to "each"
+- Categories: timber, plasterboard, plaster, fixings, insulation, electrical, plumbing, cement, aggregates, paint, adhesives, roofing, doors, windows, tools, or leave empty
+
+## PRICE HANDLING:
+- costPrice = trade/net/cost price (the price paid)
+- sellPrice = RRP/retail price if available, otherwise leave undefined
+- If only one price column exists, use it as costPrice
+- Remove currency symbols, parse to numbers
+
+## SUPPLIER CONTEXT:
+${supplierHint ? `This appears to be from: ${supplierHint}` : 'Supplier not specified - infer from document header if visible'}
+
+Return an array of products. If no products can be extracted, return an empty array.`,
+    });
+
+    const base64Data = pdfBase64.includes(',') ? pdfBase64.split(',')[1] : pdfBase64;
+
+    const result = await model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [
+          { text: 'Extract all product/material items from this price list PDF:' },
+          { inlineData: { mimeType: 'application/pdf', data: base64Data } }
+        ]
+      }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: SchemaType.ARRAY,
+          items: {
+            type: SchemaType.OBJECT,
+            properties: {
+              productCode: { type: SchemaType.STRING },
+              name: { type: SchemaType.STRING },
+              description: { type: SchemaType.STRING },
+              unit: { type: SchemaType.STRING },
+              costPrice: { type: SchemaType.NUMBER },
+              sellPrice: { type: SchemaType.NUMBER },
+              category: { type: SchemaType.STRING },
+            },
+            required: ['name'],
+          },
+        },
+      },
+    });
+
+    const parsed = JSON.parse(result.response.text());
+
+    // Clean and validate results
+    const validUnits = ['each', 'm', 'm2', 'pack', 'bag', 'box', 'roll', 'sheet', 'length', 'pair', 'set', 'tin', 'tube', 'litre'];
+    return (parsed || [])
+      .filter((item: any) => item.name && item.name.trim().length > 0)
+      .map((item: any) => ({
+        productCode: item.productCode?.trim() || undefined,
+        name: item.name.trim(),
+        description: item.description?.trim() || undefined,
+        unit: validUnits.includes(item.unit?.toLowerCase()) ? item.unit.toLowerCase() : 'each',
+        costPrice: typeof item.costPrice === 'number' && item.costPrice > 0 ? Math.round(item.costPrice * 100) / 100 : undefined,
+        sellPrice: typeof item.sellPrice === 'number' && item.sellPrice > 0 ? Math.round(item.sellPrice * 100) / 100 : undefined,
+        category: item.category?.trim().toLowerCase() || undefined,
+      }));
+  },
 };
 
 // Retry wrapper for transient Gemini API failures (429, 503, network errors)
@@ -545,6 +622,12 @@ const validationRules: Record<string, (data: any) => string | null> = {
   parseReceipt(data) {
     if (!data?.imageBase64 || typeof data.imageBase64 !== 'string') return 'imageBase64 is required';
     if (data.imageBase64.length > MAX_IMAGE_BASE64_LENGTH) return 'Image too large (max ~7.5MB)';
+    return null;
+  },
+  parsePriceListPdf(data) {
+    if (!data?.pdfBase64 || typeof data.pdfBase64 !== 'string') return 'pdfBase64 is required';
+    if (data.pdfBase64.length > MAX_IMAGE_BASE64_LENGTH) return 'PDF too large (max ~7.5MB)';
+    if (data.supplierHint && typeof data.supplierHint !== 'string') return 'supplierHint must be a string';
     return null;
   },
 };

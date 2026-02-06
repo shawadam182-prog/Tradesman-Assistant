@@ -154,3 +154,28 @@ export const parseReceiptImage = async (
 ): Promise<ParsedReceipt> => {
   return callGemini<ParsedReceipt>('parseReceipt', { imageBase64 });
 };
+
+export interface ParsedPriceListItem {
+  productCode?: string;
+  name: string;
+  description?: string;
+  unit?: string;
+  costPrice?: number;
+  sellPrice?: number;
+  category?: string;
+}
+
+export const parsePriceListPdf = async (
+  pdfBase64: string,
+  supplierHint?: string
+): Promise<ParsedPriceListItem[]> => {
+  try {
+    return await callGemini<ParsedPriceListItem[]>('parsePriceListPdf', {
+      pdfBase64,
+      supplierHint
+    });
+  } catch (error) {
+    console.error('parsePriceListPdf failed:', error);
+    return [];
+  }
+};

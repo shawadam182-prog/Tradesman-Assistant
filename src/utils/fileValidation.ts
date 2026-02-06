@@ -23,6 +23,7 @@ const ALLOWED_MIME_TYPES = {
     'text/csv',
   ],
   csv: ['text/csv', 'text/plain', 'application/csv'],
+  pdf: ['application/pdf'],
 } as const;
 
 // Map extensions to expected MIME types
@@ -47,6 +48,7 @@ const MAX_FILE_SIZES = {
   image: 10 * 1024 * 1024, // 10MB
   document: 25 * 1024 * 1024, // 25MB
   csv: 50 * 1024 * 1024, // 50MB for bank imports
+  pdf: 10 * 1024 * 1024, // 10MB for PDF price lists
 };
 
 export type FileCategory = keyof typeof ALLOWED_MIME_TYPES;
@@ -146,6 +148,13 @@ export function validateDocumentFile(file: File): ValidationResult {
  */
 export function validateCsvFile(file: File): ValidationResult {
   return validateFile(file, 'csv');
+}
+
+/**
+ * Validate a PDF file
+ */
+export function validatePdfFile(file: File): ValidationResult {
+  return validateFile(file, 'pdf');
 }
 
 /**
