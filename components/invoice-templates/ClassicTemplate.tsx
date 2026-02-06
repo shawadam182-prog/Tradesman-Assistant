@@ -407,10 +407,12 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
                   );
                 } else if (item.type === 'sectiontotal') {
                   /* Section total row */
+                  // Calculate colSpan: span all columns except Amount (1 for Description + optionally Qty + optionally Rate)
+                  const sectionTotalColSpan = 1 + (showQtyColumn ? 1 : 0) + (showRateColumn ? 1 : 0);
                   return (
                     <tr key={idx} style={{ borderBottom: '2px solid #cbd5e1', backgroundColor: '#f1f5f9' }}>
                       <td
-                        colSpan={showQtyColumn && showRateColumn ? 3 : (showQtyColumn || showRateColumn ? 2 : 1)}
+                        colSpan={sectionTotalColSpan}
                         style={{ padding: '8px 8px 8px 12px', fontSize: '13px', fontWeight: '700', color: '#1e293b', textAlign: 'right' }}
                       >
                         {item.description}
