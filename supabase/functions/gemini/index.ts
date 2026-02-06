@@ -492,6 +492,63 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2): Promise<T> {
   throw lastError;
 }
 
+// Input validation rules per action
+const MAX_TEXT_LENGTH = 5000;
+const MAX_IMAGE_BASE64_LENGTH = 10_000_000; // ~7.5MB raw image
+const MAX_PAYLOAD_BYTES = 15_000_000; // 15MB total request
+
+const validationRules: Record<string, (data: any) => string | null> = {
+  analyzeJob(data) {
+    if (!data?.prompt && !data?.imageBase64) return 'Either prompt or imageBase64 is required';
+    if (data.prompt && typeof data.prompt !== 'string') return 'prompt must be a string';
+    if (data.prompt && data.prompt.length > MAX_TEXT_LENGTH) return `prompt exceeds ${MAX_TEXT_LENGTH} characters`;
+    if (data.imageBase64 && typeof data.imageBase64 !== 'string') return 'imageBase64 must be a string';
+    if (data.imageBase64 && data.imageBase64.length > MAX_IMAGE_BASE64_LENGTH) return 'Image too large (max ~7.5MB)';
+    return null;
+  },
+  parseVoiceItems(data) {
+    if (!data?.command || typeof data.command !== 'string') return 'command is required and must be a string';
+    if (data.command.length > MAX_TEXT_LENGTH) return `command exceeds ${MAX_TEXT_LENGTH} characters`;
+    return null;
+  },
+  parseCustomer(data) {
+    if (!data?.input || typeof data.input !== 'string') return 'input is required and must be a string';
+    if (data.input.length > MAX_TEXT_LENGTH) return `input exceeds ${MAX_TEXT_LENGTH} characters`;
+    return null;
+  },
+  parseSchedule(data) {
+    if (!data?.input || typeof data.input !== 'string') return 'input is required and must be a string';
+    if (data.input.length > MAX_TEXT_LENGTH) return `input exceeds ${MAX_TEXT_LENGTH} characters`;
+    return null;
+  },
+  parseReminder(data) {
+    if (!data?.input || typeof data.input !== 'string') return 'input is required and must be a string';
+    if (data.input.length > MAX_TEXT_LENGTH) return `input exceeds ${MAX_TEXT_LENGTH} characters`;
+    return null;
+  },
+  formatAddress(data) {
+    if (!data?.address || typeof data.address !== 'string') return 'address is required and must be a string';
+    if (data.address.length > 1000) return 'address exceeds 1000 characters';
+    return null;
+  },
+  reverseGeocode(data) {
+    if (typeof data?.lat !== 'number' || typeof data?.lng !== 'number') return 'lat and lng must be numbers';
+    if (data.lat < -90 || data.lat > 90 || data.lng < -180 || data.lng > 180) return 'Invalid coordinates';
+    return null;
+  },
+  transcribeAudio(data) {
+    if (!data?.audioBase64 || typeof data.audioBase64 !== 'string') return 'audioBase64 is required';
+    if (data.audioBase64.length > MAX_IMAGE_BASE64_LENGTH) return 'Audio too large (max ~7.5MB)';
+    if (data.mimeType && typeof data.mimeType !== 'string') return 'mimeType must be a string';
+    return null;
+  },
+  parseReceipt(data) {
+    if (!data?.imageBase64 || typeof data.imageBase64 !== 'string') return 'imageBase64 is required';
+    if (data.imageBase64.length > MAX_IMAGE_BASE64_LENGTH) return 'Image too large (max ~7.5MB)';
+    return null;
+  },
+};
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -499,13 +556,34 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Check payload size via Content-Length header
+    const contentLength = parseInt(req.headers.get('content-length') || '0', 10);
+    if (contentLength > MAX_PAYLOAD_BYTES) {
+      return new Response(
+        JSON.stringify({ error: 'Request too large (max 15MB)' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { action, data } = await req.json();
 
-    if (!action || !actions[action]) {
+    if (!action || typeof action !== 'string' || !actions[action]) {
       return new Response(
         JSON.stringify({ error: `Invalid action: ${action}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Validate inputs for this action
+    const validate = validationRules[action];
+    if (validate) {
+      const validationError = validate(data);
+      if (validationError) {
+        return new Response(
+          JSON.stringify({ error: validationError }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     const result = await withRetry(() => actions[action](data));

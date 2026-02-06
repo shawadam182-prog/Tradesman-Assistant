@@ -345,25 +345,19 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('handleFileSelect triggered');
     const file = e.target.files?.[0];
-    console.log('File selected:', file?.name, file?.size);
 
     // Reset input value so the same file can be selected again
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
 
-    if (!file) {
-      console.log('No file selected');
-      return;
-    }
+    if (!file) return;
     await processFile(file);
   };
 
   // Trigger the hidden file input
   const triggerFileSelect = () => {
-    console.log('triggerFileSelect called');
     // Reset value before clicking to ensure onChange fires
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -452,7 +446,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
       const selectedCat = categories.find(c => c.name === formData.category);
       if (selectedCat && formData.vendor.length >= 3) {
         try { await vendorKeywordsService.learnKeyword(formData.vendor, selectedCat.id); }
-        catch (err) { console.log('Keyword learning skipped:', err); }
+        catch { /* keyword learning is non-critical */ }
       }
 
       await loadData();

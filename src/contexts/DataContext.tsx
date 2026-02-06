@@ -508,7 +508,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (appSettings.subscriptionStatus === 'trialing' && appSettings.trialEnd) {
           const trialEndDate = new Date(appSettings.trialEnd);
           if (trialEndDate < new Date()) {
-            console.log('Trial expired, downgrading to free tier');
             // Update local state immediately
             appSettings.subscriptionTier = 'free';
             appSettings.subscriptionStatus = 'expired';
@@ -556,7 +555,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && !loading && user) {
-        console.log('[DataContext] Tab visible - refreshing data for cross-device sync');
         fetchData();
       }
     };

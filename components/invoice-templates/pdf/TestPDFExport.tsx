@@ -80,12 +80,6 @@ export const TestPDFExport: React.FC<TestPDFExportProps> = ({
       URL.revokeObjectURL(url);
 
       setResult('success');
-      console.log('✅ react-pdf export successful:', {
-        filename,
-        size: `${(blob.size / 1024).toFixed(1)} KB`,
-        template: settings.documentTemplate || 'professional',
-        colorScheme: quote.type === 'invoice' ? settings.invoiceColorScheme : settings.quoteColorScheme,
-      });
     } catch (err) {
       console.error('❌ react-pdf export failed:', err);
       setResult('error');

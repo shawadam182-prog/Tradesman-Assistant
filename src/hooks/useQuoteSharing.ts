@@ -125,7 +125,6 @@ export function useQuoteSharing(options: UseQuoteSharingOptions) {
         tax_year: taxYear,
         tags: ['paid', 'invoice', reference],
       });
-      console.log('Invoice filed to Filing Cabinet successfully');
     } catch (err) {
       console.error('Failed to file invoice:', err);
       // Don't throw - filing is a nice-to-have, don't block the payment recording
@@ -213,7 +212,7 @@ export function useQuoteSharing(options: UseQuoteSharingOptions) {
           }
         } catch (shareErr) {
           if ((shareErr as Error).name === 'AbortError') return;
-          console.log('Web Share failed:', shareErr);
+          console.warn('Web Share failed, falling back to download:', shareErr);
         }
       }
 

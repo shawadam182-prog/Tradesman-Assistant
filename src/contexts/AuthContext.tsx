@@ -102,9 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (settingsError) {
             console.error('Failed to initialize trial settings:', settingsError);
           } else {
-            console.log(`Trial initialized for user: ${data.user!.id}, ends: ${trialEnd.toISOString()}`);
             if (referralCode) {
-              console.log(`Referral code ${referralCode} attached to user`);
               clearReferralCode();
             }
           }

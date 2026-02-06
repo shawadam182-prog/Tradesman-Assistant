@@ -29,8 +29,6 @@ export function useReferralCapture(): void {
       localStorage.setItem(REFERRAL_STORAGE_KEY, referralCode);
       localStorage.setItem(REFERRAL_TIMESTAMP_KEY, new Date().toISOString());
 
-      console.log(`Referral code captured: ${referralCode}`);
-
       // Clean the URL by redirecting to home without the referral path/param
       const cleanUrl = window.location.origin + '/';
       window.history.replaceState({}, document.title, cleanUrl);

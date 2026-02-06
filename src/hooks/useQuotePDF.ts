@@ -126,7 +126,6 @@ export function useQuotePDF({ quote, customer, settings, totals, displayOptions 
         tax_year: taxYear,
         tags: ['paid', 'invoice', reference],
       });
-      console.log('Invoice filed to Filing Cabinet successfully');
     } catch (err) {
       console.error('Failed to file invoice:', err);
     }
@@ -359,7 +358,7 @@ ${settings?.companyName || ''}${settings?.phone ? `\n${settings.phone}` : ''}${s
           if ((shareErr as Error).name === 'AbortError') {
             return;
           }
-          console.log('Web Share failed:', shareErr);
+          console.warn('Web Share failed, falling back to download:', shareErr);
         }
       }
 

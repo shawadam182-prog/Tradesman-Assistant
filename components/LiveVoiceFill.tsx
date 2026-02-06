@@ -144,9 +144,6 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
     try {
       // Pre-process to convert speech patterns
       const preprocessed = preprocessTranscript(text);
-      console.log('Original:', text);
-      console.log('Preprocessed:', preprocessed);
-
       const result = await parseAction(preprocessed);
 
       // Ignore stale responses
