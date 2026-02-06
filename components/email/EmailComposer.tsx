@@ -126,7 +126,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[calc(100vh-8rem)]">
       {/* Header */}
       <div className="bg-blue-600 text-white p-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
@@ -172,7 +172,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            rows={6}
+            rows={4}
             className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
           />
         </div>
