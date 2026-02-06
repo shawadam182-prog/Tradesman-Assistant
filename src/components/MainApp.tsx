@@ -75,7 +75,7 @@ type TabType =
   | 'credit_note';
 
 // Valid main tabs that can be restored after page reload (e.g., returning from camera)
-const RESTORABLE_TABS: readonly TabType[] = ['home', 'jobpacks', 'jobpack_detail', 'quotes', 'invoices', 'aged_receivables', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'accountant_export', 'files', 'materials', 'wholesalers', 'support', 'trial_analytics', 'future_jobs'];
+const RESTORABLE_TABS: readonly TabType[] = ['home', 'jobpacks', 'jobpack_detail', 'quotes', 'invoices', 'aged_receivables', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'accountant_export', 'files', 'materials', 'wholesalers', 'support', 'trial_analytics', 'future_jobs', 'view', 'quote_edit', 'profitloss'];
 type RestorableTab = typeof RESTORABLE_TABS[number];
 
 const App: React.FC = () => {
@@ -121,8 +121,28 @@ const App: React.FC = () => {
     } catch (e) { /* sessionStorage not available */ }
   };
 
-  const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
-  const [viewingQuoteId, setViewingQuoteId] = useState<string | null>(null);
+  const [editingQuoteId, setEditingQuoteIdState] = useState<string | null>(() => {
+    try { return sessionStorage.getItem('editingQuoteId'); } catch { return null; }
+  });
+  const [viewingQuoteId, setViewingQuoteIdState] = useState<string | null>(() => {
+    try { return sessionStorage.getItem('viewingQuoteId'); } catch { return null; }
+  });
+
+  const setEditingQuoteId = (id: string | null) => {
+    setEditingQuoteIdState(id);
+    try {
+      if (id) { sessionStorage.setItem('editingQuoteId', id); }
+      else { sessionStorage.removeItem('editingQuoteId'); }
+    } catch { /* sessionStorage not available */ }
+  };
+
+  const setViewingQuoteId = (id: string | null) => {
+    setViewingQuoteIdState(id);
+    try {
+      if (id) { sessionStorage.setItem('viewingQuoteId', id); }
+      else { sessionStorage.removeItem('viewingQuoteId'); }
+    } catch { /* sessionStorage not available */ }
+  };
   const [activeProjectIdState, setActiveProjectIdState] = useState<string | null>(getInitialProjectId);
 
   // Onboarding state
