@@ -222,12 +222,20 @@ export const ProfitLossPage: React.FC<ProfitLossPageProps> = ({ onBack }) => {
   const plData = useMemo(() => {
     const { start, end, label } = getPeriodBoundaries(selectedPeriod);
 
-    // Filter paid invoices in period
+    // Filter paid invoices in period (excluding credit notes)
     const paidInvoices = quotes.filter(q => {
-      if (q.type !== 'invoice' || q.status !== 'paid') return false;
+      if (q.type !== 'invoice' || q.status !== 'paid' || q.isCreditNote) return false;
       const paymentDate = q.paymentDate ? new Date(q.paymentDate) : new Date(q.updatedAt);
       return paymentDate >= start && paymentDate <= end;
     });
+
+    // Filter credit notes in period
+    const creditNotes = quotes.filter(q => {
+      if (q.type !== 'invoice' || q.status !== 'paid' || !q.isCreditNote) return false;
+      const paymentDate = q.paymentDate ? new Date(q.paymentDate) : new Date(q.updatedAt);
+      return paymentDate >= start && paymentDate <= end;
+    });
+    const creditNotesTotal = creditNotes.reduce((sum, cn) => sum + calculateQuoteTotal(cn), 0);
 
     // Filter expenses in period
     const periodExpenses = expenses.filter(e => {
@@ -235,8 +243,9 @@ export const ProfitLossPage: React.FC<ProfitLossPageProps> = ({ onBack }) => {
       return expenseDate >= start && expenseDate <= end;
     });
 
-    // Calculate revenue
-    const totalRevenue = paidInvoices.reduce((sum, inv) => sum + calculateQuoteTotal(inv), 0);
+    // Calculate revenue (gross revenue minus credit notes)
+    const grossRevenue = paidInvoices.reduce((sum, inv) => sum + calculateQuoteTotal(inv), 0);
+    const totalRevenue = grossRevenue - creditNotesTotal;
 
     // Group expenses by category
     const expensesByCategory = periodExpenses.reduce((acc, exp) => {

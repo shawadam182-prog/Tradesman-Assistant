@@ -435,12 +435,12 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
 
                   {/* Document Type Badge */}
                   <div className="text-right">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      {quote.type === 'invoice' ? 'Invoice' : quote.type === 'quotation' ? 'Quotation' : 'Estimate'}
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${quote.isCreditNote ? 'text-red-500' : 'text-slate-400'}`}>
+                      {quote.isCreditNote ? 'Credit Note' : quote.type === 'invoice' ? 'Invoice' : quote.type === 'quotation' ? 'Quotation' : 'Estimate'}
                     </span>
-                    <p className="text-base font-mono font-bold text-slate-900">{reference}</p>
+                    <p className={`text-base font-mono font-bold ${quote.isCreditNote ? 'text-red-700' : 'text-slate-900'}`}>{reference}</p>
                     <p className="text-[11px] text-slate-500">{quote?.date ? new Date(quote.date).toLocaleDateString('en-GB') : ''}</p>
-                    {quote.type === 'invoice' && quote.dueDate && (
+                    {quote.type === 'invoice' && quote.dueDate && !quote.isCreditNote && (
                       <p className="text-[11px] text-amber-600 font-bold">
                         Due: {new Date(quote.dueDate).toLocaleDateString('en-GB')}
                       </p>

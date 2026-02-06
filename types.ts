@@ -108,6 +108,10 @@ export interface Quote {
   recurringNextDate?: string;
   recurringParentId?: string; // Links generated invoices to the recurring template
   partPaymentLabel?: string;
+  // Credit note fields
+  isCreditNote?: boolean;
+  originalInvoiceId?: string;
+  creditNoteReason?: string;
   // Share/acceptance fields
   shareToken?: string;
   acceptedAt?: string;

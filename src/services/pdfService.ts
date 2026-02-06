@@ -32,6 +32,10 @@ export function buildPDFFilename(quote: Quote, settings: AppSettings): string {
  * e.g. "EST-0001" or "INV-0023"
  */
 export function buildPDFReference(quote: Quote, settings: AppSettings): string {
+  if (quote.isCreditNote) {
+    const numStr = (quote.referenceNumber || 1).toString().padStart(4, '0');
+    return `CN-${numStr}`;
+  }
   const prefix = quote.type === 'invoice'
     ? (settings.invoicePrefix || 'INV-')
     : (settings.quotePrefix || 'EST-');

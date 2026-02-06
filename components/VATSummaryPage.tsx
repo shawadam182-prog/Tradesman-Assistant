@@ -26,6 +26,7 @@ interface Invoice {
   updated_at: string;
   status: string;
   type: string;
+  is_credit_note?: boolean;
 }
 
 interface QuarterSummary {
@@ -149,7 +150,12 @@ export const VATSummaryPage: React.FC<VATSummaryPageProps> = ({ onBack }) => {
         invoiceCount: 0,
         deadline: getQuarterDeadline(quarter),
       };
-      existing.outputVat += inv.vat || 0;
+      // Credit notes reduce output VAT
+      if (inv.is_credit_note) {
+        existing.outputVat -= inv.vat || 0;
+      } else {
+        existing.outputVat += inv.vat || 0;
+      }
       existing.invoiceCount += 1;
       summaryMap.set(quarter, existing);
     });
@@ -202,8 +208,8 @@ export const VATSummaryPage: React.FC<VATSummaryPageProps> = ({ onBack }) => {
     });
 
     const inputVat = filteredExpenses.reduce((sum, e) => sum + (e.vat_amount || 0), 0);
-    const outputVat = filteredInvoices.reduce((sum, i) => sum + (i.vat || 0), 0);
-    const grossSales = filteredInvoices.reduce((sum, i) => sum + i.total, 0);
+    const outputVat = filteredInvoices.reduce((sum, i) => sum + (i.is_credit_note ? -(i.vat || 0) : (i.vat || 0)), 0);
+    const grossSales = filteredInvoices.reduce((sum, i) => sum + (i.is_credit_note ? -(i.total || 0) : (i.total || 0)), 0);
 
     return {
       expenses: filteredExpenses,

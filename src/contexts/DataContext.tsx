@@ -282,6 +282,10 @@ function dbQuoteToApp(dbQuote: any): Quote {
     recurringEndDate: dbQuote.recurring_end_date || undefined,
     recurringNextDate: dbQuote.recurring_next_date || undefined,
     recurringParentId: dbQuote.recurring_parent_id || undefined,
+    // Credit note fields
+    isCreditNote: dbQuote.is_credit_note || false,
+    originalInvoiceId: dbQuote.original_invoice_id || undefined,
+    creditNoteReason: dbQuote.credit_note_reason || undefined,
   };
 }
 
@@ -651,6 +655,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           recurring_next_date: quote.recurringNextDate || null,
         } : {}),
         ...(quote.recurringParentId ? { recurring_parent_id: quote.recurringParentId } : {}),
+        // Credit note fields
+        ...(quote.isCreditNote ? {
+          is_credit_note: true,
+          original_invoice_id: quote.originalInvoiceId || null,
+          credit_note_reason: quote.creditNoteReason || null,
+        } : {}),
       } as any);
 
       const newQuote = dbQuoteToApp(created);

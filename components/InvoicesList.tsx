@@ -41,7 +41,7 @@ interface InvoicesListProps {
 }
 
 // Tab filter types
-type InvoiceFilterTab = 'all' | 'draft' | 'unpaid' | 'paid' | 'overdue' | 'recurring' | 'cancelled';
+type InvoiceFilterTab = 'all' | 'draft' | 'unpaid' | 'paid' | 'overdue' | 'recurring' | 'credit_notes' | 'cancelled';
 
 // Sort options
 type SortOption = 'updated_desc' | 'updated_asc' | 'created_desc' | 'created_asc' | 'amount_desc' | 'amount_asc' | 'customer_asc' | 'customer_desc' | 'title_asc' | 'title_desc';
@@ -155,6 +155,8 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
         return isOverdue(invoice);
       case 'recurring':
         return invoice.isRecurring === true;
+      case 'credit_notes':
+        return invoice.isCreditNote === true;
       case 'cancelled':
         return invoice.status === 'declined';
       case 'all':
@@ -187,6 +189,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
     paid: quotes.filter(q => q.status === 'paid').length,
     overdue: quotes.filter(q => isOverdue(q)).length,
     recurring: quotes.filter(q => q.isRecurring === true).length,
+    credit_notes: quotes.filter(q => q.isCreditNote === true).length,
     cancelled: quotes.filter(q => q.status === 'declined').length,
   };
 
@@ -220,9 +223,9 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
 
       {/* Status Filter Tabs */}
       <div className="flex gap-1 pb-2">
-        {(['all', 'draft', 'unpaid', 'paid', 'overdue', 'recurring', 'cancelled'] as const).map(tab => {
+        {(['all', 'draft', 'unpaid', 'paid', 'overdue', 'recurring', 'credit_notes', 'cancelled'] as const).map(tab => {
           const label: Record<InvoiceFilterTab, string> = {
-            all: 'All', draft: 'Draft', unpaid: 'Unpaid', paid: 'Paid', overdue: 'Due', recurring: 'Recur', cancelled: "Canc'd"
+            all: 'All', draft: 'Draft', unpaid: 'Unpaid', paid: 'Paid', overdue: 'Due', recurring: 'Recur', credit_notes: 'Credits', cancelled: "Canc'd"
           };
           return (
           <button
@@ -239,7 +242,9 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                     ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
                     : tab === 'recurring'
                       ? 'bg-purple-500 text-white shadow-md shadow-purple-500/20'
-                      : 'bg-slate-900 text-white shadow-md'
+                      : tab === 'credit_notes'
+                        ? 'bg-red-600 text-white shadow-md shadow-red-600/20'
+                        : 'bg-slate-900 text-white shadow-md'
                 : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
             }`}
           >
@@ -254,7 +259,9 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                       ? 'bg-emerald-100 text-emerald-600'
                       : tab === 'recurring' && tabCounts.recurring > 0
                         ? 'bg-purple-100 text-purple-600'
-                        : 'bg-slate-100'
+                        : tab === 'credit_notes' && tabCounts.credit_notes > 0
+                          ? 'bg-red-100 text-red-600'
+                          : 'bg-slate-100'
               }`}>
                 {tabCounts[tab]}
               </span>
@@ -350,17 +357,19 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
               {activeTab === 'paid' && 'No paid invoices.'}
               {activeTab === 'overdue' && 'No overdue invoices.'}
               {activeTab === 'recurring' && 'No recurring invoices set up.'}
+              {activeTab === 'credit_notes' && 'No credit notes issued.'}
               {activeTab === 'cancelled' && 'No cancelled invoices.'}
             </p>
           </div>
         ) : (
           filtered.map((invoice) => {
             const customer = customers.find(c => c.id === invoice.customerId);
-            const prefix = settings.invoicePrefix || 'INV-';
+            const isCN = invoice.isCreditNote === true;
+            const prefix = isCN ? 'CN-' : (settings.invoicePrefix || 'INV-');
             const numStr = (invoice.referenceNumber || 1).toString().padStart(4, '0');
             const ref = `${prefix}${numStr}`;
             const isPaid = invoice.status === 'paid';
-            const overdue = isOverdue(invoice);
+            const overdue = !isCN && isOverdue(invoice);
             const daysOverdue = getDaysOverdue(invoice);
 
             return (
@@ -368,17 +377,24 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                 key={invoice.id}
                 onClick={() => onViewQuote(invoice.id)}
                 className={`bg-white px-4 py-4 rounded-2xl border-2 transition-all group cursor-pointer shadow-sm hover:shadow-md ${
-                  overdue
-                    ? 'border-red-200 hover:border-red-400 bg-red-50/30'
-                    : 'border-slate-100 hover:border-teal-500'
+                  isCN
+                    ? 'border-red-200 hover:border-red-400 bg-red-50/20'
+                    : overdue
+                      ? 'border-red-200 hover:border-red-400 bg-red-50/30'
+                      : 'border-slate-100 hover:border-teal-500'
                 }`}
               >
                 {/* Top row: Reference badge + Amount + Status */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="bg-teal-500 text-white text-[10px] font-black px-2 py-1 rounded flex items-center gap-1">
+                    <span className={`text-white text-[10px] font-black px-2 py-1 rounded flex items-center gap-1 ${isCN ? 'bg-red-500' : 'bg-teal-500'}`}>
                       <Hash size={10} /> {ref}
                     </span>
+                    {isCN && (
+                      <span className="bg-red-100 text-red-700 text-[9px] font-black px-2 py-1 rounded">
+                        CREDIT NOTE
+                      </span>
+                    )}
                     {invoice.isRecurring && (
                       <span className="bg-purple-500 text-white text-[9px] font-black px-2 py-1 rounded flex items-center gap-1">
                         <RefreshCw size={10} /> {invoice.recurringFrequency}
@@ -392,13 +408,13 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <p className={`font-black text-base ${overdue ? 'text-red-700' : 'text-slate-900'}`}>
-                        £{calculateQuoteTotal(invoice).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      <p className={`font-black text-base ${isCN ? 'text-red-600' : overdue ? 'text-red-700' : 'text-slate-900'}`}>
+                        {isCN ? '-' : ''}£{calculateQuoteTotal(invoice).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                       </p>
                       <div className={`text-[10px] font-bold uppercase ${
-                        isPaid ? 'text-emerald-600' : overdue ? 'text-red-500' : invoice.status === 'sent' || invoice.status === 'accepted' ? 'text-blue-600' : invoice.status === 'draft' ? 'text-amber-600' : 'text-slate-400'
+                        isCN ? 'text-red-500' : isPaid ? 'text-emerald-600' : overdue ? 'text-red-500' : invoice.status === 'sent' || invoice.status === 'accepted' ? 'text-blue-600' : invoice.status === 'draft' ? 'text-amber-600' : 'text-slate-400'
                       }`}>
-                        {overdue ? 'Overdue' : invoice.status}
+                        {isCN ? 'Credit Note' : overdue ? 'Overdue' : invoice.status}
                       </div>
                     </div>
                     {onDeleteInvoice && (

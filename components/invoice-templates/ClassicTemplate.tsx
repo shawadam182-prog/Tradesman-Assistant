@@ -268,7 +268,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '13px', fontWeight: '300', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-            {quote.type === 'invoice' ? 'Invoice' : 'Quote'}
+            {quote.isCreditNote ? 'Credit Note' : quote.type === 'invoice' ? 'Invoice' : 'Quote'}
           </div>
           <div style={{ fontSize: '11px', fontWeight: 'bold' }}>{reference}</div>
           <div style={{ fontSize: '10px', color: '#64748b' }}>{quote.date ? new Date(quote.date).toLocaleDateString('en-GB') : ''}</div>

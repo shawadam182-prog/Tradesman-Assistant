@@ -12,6 +12,7 @@ import { hapticSuccess } from '../src/hooks/useHaptic';
 import {
   calculateQuoteTotals,
   calculatePartPayment,
+  getQuoteGrandTotal,
 } from '../src/utils/quoteCalculations';
 import { buildPDFReference } from '../src/services/pdfService';
 import { useQuoteSharing } from '../src/hooks/useQuoteSharing';
@@ -35,13 +36,14 @@ interface QuoteViewProps {
   onUpdateStatus: (status: Quote['status']) => void;
   onUpdateQuote: (quote: Quote) => void;
   onConvertToInvoice?: () => void;
+  onIssueCreditNote?: () => void;
   onDuplicate?: () => void;
   onDelete?: () => Promise<void>;
 }
 
 export const QuoteView: React.FC<QuoteViewProps> = ({
   quote, customer, settings, onEdit, onBack, onUpdateStatus, onUpdateQuote,
-  onConvertToInvoice, onDuplicate, onDelete
+  onConvertToInvoice, onIssueCreditNote, onDuplicate, onDelete
 }) => {
   const [showCustomiser, setShowCustomiser] = useState(false);
   const [localDisplayOptions, setLocalDisplayOptions] = useState<QuoteDisplayOptions | null>(null);
@@ -52,7 +54,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   const [milestones, setMilestones] = useState<PaymentMilestone[]>([]);
   const [generatedInvoices, setGeneratedInvoices] = useState<any[]>([]);
   const [isGeneratingRecurring, setIsGeneratingRecurring] = useState(false);
-  const { services, refresh } = useData();
+  const { services, refresh, quotes: allQuotes } = useData();
   const documentRef = useRef<HTMLDivElement>(null);
   const shareMenuRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
@@ -579,6 +581,14 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
               <Banknote size={14} /> Record Payment
             </button>
           )}
+          {activeQuote.type === 'invoice' && activeQuote.status === 'paid' && !activeQuote.isCreditNote && onIssueCreditNote && (
+            <button
+              onClick={onIssueCreditNote}
+              className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-red-50 text-red-600 text-xs font-bold shadow-sm border border-red-100 hover:bg-red-100 transition-colors"
+            >
+              <ReceiptText size={14} /> Credit Note
+            </button>
+          )}
 
           {/* More Menu - secondary actions */}
           <div className="relative" ref={moreMenuRef}>
@@ -796,6 +806,44 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
           )}
         </div>
       )}
+
+      {/* Credit Note Info Banners */}
+      {activeQuote.isCreditNote && activeQuote.originalInvoiceId && (() => {
+        const origInv = allQuotes.find(q => q.id === activeQuote.originalInvoiceId);
+        const origRef = origInv ? `${settings.invoicePrefix || 'INV-'}${(origInv.referenceNumber || 1).toString().padStart(4, '0')}` : 'Unknown';
+        return (
+          <div className="print:hidden p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3">
+            <ReceiptText size={18} className="text-red-500 shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-red-800">Credit Note</p>
+              <p className="text-xs text-red-600">Against original invoice {origRef}{activeQuote.creditNoteReason ? ` — ${activeQuote.creditNoteReason}` : ''}</p>
+            </div>
+          </div>
+        );
+      })()}
+      {activeQuote.type === 'invoice' && !activeQuote.isCreditNote && (() => {
+        const linkedCreditNotes = allQuotes.filter(q => q.isCreditNote && q.originalInvoiceId === activeQuote.id);
+        if (linkedCreditNotes.length === 0) return null;
+        const creditTotal = linkedCreditNotes.reduce((sum, cn) => {
+          return sum + getQuoteGrandTotal(cn, {
+            enableVat: settings.enableVat ?? false,
+            enableCis: settings.enableCis ?? false,
+            defaultLabourRate: settings.defaultLabourRate ?? 0,
+          });
+        }, 0);
+        return (
+          <div className="print:hidden p-4 bg-red-50 border border-red-200 rounded-2xl">
+            <div className="flex items-center gap-3">
+              <ReceiptText size={18} className="text-red-500 shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-red-800">{linkedCreditNotes.length} Credit Note{linkedCreditNotes.length !== 1 ? 's' : ''} Issued</p>
+                <p className="text-xs text-red-600">Total credited: -£{creditTotal.toFixed(2)}</p>
+              </div>
+              <p className="text-lg font-black text-red-700">-£{creditTotal.toFixed(2)}</p>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Email History */}
       <div className="print:hidden">
