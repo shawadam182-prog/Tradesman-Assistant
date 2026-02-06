@@ -29,7 +29,7 @@ export const MaterialsSavePrompt: React.FC<MaterialsSavePromptProps> = ({
   if (unsavedItems.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-in slide-in-from-bottom-4">
+    <div className="fixed bottom-24 md:bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-in slide-in-from-bottom-4">
       <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl shadow-slate-900/10 overflow-hidden">
         <div className="p-4">
           <div className="flex items-start gap-3">
