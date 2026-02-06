@@ -20,6 +20,17 @@ const actions: Record<string, (data: any) => Promise<any>> = {
       labourRate?: number;
       existingItems?: { name: string; quantity: number; unit: string }[];
       priceList?: { name: string; unit: string; unitPrice: number }[];
+      propertyContext?: {
+        propertyType?: string;
+        buildType?: string;
+        rooms?: number;
+        floors?: number;
+      };
+      similarQuotes?: Array<{
+        title: string;
+        totalCost: number;
+        sections: string[];
+      }>;
     }
   }) {
     // Build trade-specific context
@@ -30,6 +41,23 @@ const actions: Record<string, (data: any) => Promise<any>> = {
     const priceListHint = context?.priceList?.slice(0, 100).map(p =>
       `${p.name} (${p.unit}): £${p.unitPrice.toFixed(2)}`
     ).join('\n') || '';
+
+    // Build property context hint
+    const propertyHint = context?.propertyContext ? `
+## PROPERTY CONTEXT:
+- Property type: ${context.propertyContext.propertyType || 'not specified'}
+- Build type: ${context.propertyContext.buildType || 'not specified'}
+- Number of rooms: ${context.propertyContext.rooms || 'not specified'}
+- Number of floors: ${context.propertyContext.floors || 'not specified'}
+Use this to inform material quantities, labour time, and scope of work.` : '';
+
+    // Build similar quotes reference
+    const similarQuotesHint = context?.similarQuotes?.length ? `
+## SIMILAR PAST QUOTES FOR REFERENCE:
+${context.similarQuotes.slice(0, 3).map(q =>
+  `- "${q.title}" (£${q.totalCost.toFixed(0)}): Sections: ${q.sections.join(', ')}`
+).join('\n')}
+Use these as pricing and scope reference. Adapt quantities and tasks to the current job description.` : '';
 
     const systemInstruction = `You are a professional UK construction quantity surveyor specializing in ${tradeType} work.
 Your task is to analyze the provided text/image and generate an accurate breakdown of materials and labour.
@@ -51,7 +79,8 @@ Only use these exact unit values: m, m2, pack, bag, box, roll, sheet, length, ea
 - Be realistic with UK trade standard timings
 - Example tasks: "Install double socket" (0.5hrs), "First fix wiring to 3 points" (1.5hrs)
 - The labour rate is £${labourRate}/hour
-
+${propertyHint}
+${similarQuotesHint}
 ## ALREADY QUOTED ITEMS:
 ${context?.existingItems?.length ? `These items are already in the quote, do not duplicate:\n${context.existingItems.map(i => `- ${i.name}: ${i.quantity} ${i.unit}`).join('\n')}` : 'None'}
 
@@ -581,6 +610,8 @@ const validationRules: Record<string, (data: any) => string | null> = {
     if (data.prompt && data.prompt.length > MAX_TEXT_LENGTH) return `prompt exceeds ${MAX_TEXT_LENGTH} characters`;
     if (data.imageBase64 && typeof data.imageBase64 !== 'string') return 'imageBase64 must be a string';
     if (data.imageBase64 && data.imageBase64.length > MAX_IMAGE_BASE64_LENGTH) return 'Image too large (max ~7.5MB)';
+    if (data.context?.propertyContext && typeof data.context.propertyContext !== 'object') return 'propertyContext must be an object';
+    if (data.context?.similarQuotes && !Array.isArray(data.context.similarQuotes)) return 'similarQuotes must be an array';
     return null;
   },
   parseVoiceItems(data) {

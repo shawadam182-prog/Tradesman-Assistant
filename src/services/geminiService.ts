@@ -89,6 +89,17 @@ export interface AIJobContext {
   labourRate?: number;
   existingItems?: { name: string; quantity: number; unit: string }[];
   priceList?: { name: string; unit: string; unitPrice: number }[];
+  propertyContext?: {
+    propertyType?: string;
+    buildType?: string;
+    rooms?: number;
+    floors?: number;
+  };
+  similarQuotes?: Array<{
+    title: string;
+    totalCost: number;
+    sections: string[];
+  }>;
 }
 
 // API Functions

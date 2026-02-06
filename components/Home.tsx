@@ -42,6 +42,7 @@ interface HomeProps {
   onCreateInvoice?: () => void;
   onLogExpense?: () => void;
   onAddCustomer?: () => void;
+  onCreateAIQuote?: () => void;
   onTakePhoto?: (jobPackId?: string) => void;
   onViewJob?: (jobId: string) => void;
   onAddProject?: (project: Partial<JobPack>) => Promise<JobPack>;
@@ -80,6 +81,7 @@ export const Home: React.FC<HomeProps> = ({
   onCreateInvoice,
   onLogExpense,
   onAddCustomer,
+  onCreateAIQuote,
   onTakePhoto,
   onViewJob,
   onAddProject,
@@ -823,6 +825,23 @@ export const Home: React.FC<HomeProps> = ({
           </div>
         </div>
       </div>
+
+      {/* AI Quote Builder CTA */}
+      {onCreateAIQuote && (
+        <button
+          onClick={() => { hapticTap(); onCreateAIQuote(); }}
+          className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-2xl p-4 flex items-center gap-3 shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-all"
+        >
+          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+            <Sparkles size={22} />
+          </div>
+          <div className="text-left flex-1">
+            <p className="font-bold text-sm">AI Quote Builder</p>
+            <p className="text-[10px] opacity-90">Describe the job, get a quote in seconds</p>
+          </div>
+          <ArrowRight size={18} className="opacity-70 flex-shrink-0" />
+        </button>
+      )}
 
       {/* QUICK ACTIONS Section — Stitch circular icon style */}
       <div>

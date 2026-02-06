@@ -901,6 +901,14 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
           </div>
         )}
 
+        {/* AI-Generated Quote Banner */}
+        {!existingQuote?.id && formData.sections?.some(s => s.items.some(i => i.isAIProposed) || (s.labourItems || []).some(l => l.isAIProposed)) && (
+          <div className="bg-teal-50 border border-teal-200 rounded-2xl p-3 flex items-center gap-2.5 animate-in slide-in-from-top-2 duration-300">
+            <Sparkles size={16} className="text-teal-500 flex-shrink-0" />
+            <span className="text-xs font-medium text-teal-800">AI-generated quote — review and edit before saving</span>
+          </div>
+        )}
+
         {/* Document Info Card */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
