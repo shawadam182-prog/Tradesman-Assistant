@@ -373,74 +373,74 @@ const App: React.FC = () => {
     <Layout activeTab={activeTab === 'view' || activeTab === 'jobpack_detail' || activeTab === 'quote_edit' || activeTab === 'credit_note' || activeTab === 'ai_quote_builder' ? '' : activeTab} setActiveTab={setActiveTab} onSignOut={signOut} onCreateJob={() => setActiveTab('jobpacks')} onCreateQuote={() => handleCreateQuote()} onCreateInvoice={handleCreateInvoice}>
       {/* Page-level error boundary - keeps navigation accessible if a page crashes */}
       <ErrorBoundary key={activeTab} onReset={handleErrorReset}>
-      {activeTab === 'home' && <Home
-        schedule={schedule}
-        customers={customers}
-        projects={projects}
-        quotes={quotes}
-        settings={settings}
-        onNavigateToSchedule={() => setActiveTab('schedule')}
-        onNavigateToInvoices={() => setActiveTab('invoices')}
-        onNavigateToQuotes={() => setActiveTab('quotes')}
-        onNavigateToAccounting={() => setActiveTab('expenses')}
-        onCreateJob={() => setActiveTab('jobpacks')}
-        onCreateQuote={() => handleCreateQuote()}
-        onCreateInvoice={handleCreateInvoice}
-        onLogExpense={() => setActiveTab('expenses')}
-        onAddCustomer={() => setActiveTab('customers')}
-        onTakePhoto={handleTakePhoto}
-        onViewJob={(jobId) => { setActiveProjectId(jobId); setActiveTab('jobpack_detail'); }}
-        onAddProject={async (project) => {
-          const created = await addProject({
-            title: project.title || 'New Job',
-            customerId: project.customerId,
-            status: project.status || 'active',
-            notepad: project.notepad || '',
-            notes: [],
-            photos: [],
-            drawings: [],
-            documents: [],
-            materials: [],
-          });
-          return created;
-        }}
-        onRefresh={refresh}
-        onNavigateToFutureJobs={() => setActiveTab('future_jobs')}
-        onCreateAIQuote={() => setActiveTab('ai_quote_builder')}
-      />}
-      {activeTab === 'jobpacks' && <JobPackList projects={[...projects].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())} customers={customers} onOpenProject={openProject} onAddProject={handleAddProject} onAddCustomer={handleAddCustomer} onDeleteProject={deleteProject} onBack={() => setActiveTab('home')} />}
+        {activeTab === 'home' && <Home
+          schedule={schedule}
+          customers={customers}
+          projects={projects}
+          quotes={quotes}
+          settings={settings}
+          onNavigateToSchedule={() => setActiveTab('schedule')}
+          onNavigateToInvoices={() => setActiveTab('invoices')}
+          onNavigateToQuotes={() => setActiveTab('quotes')}
+          onNavigateToAccounting={() => setActiveTab('expenses')}
+          onCreateJob={() => setActiveTab('jobpacks')}
+          onCreateQuote={() => handleCreateQuote()}
+          onCreateInvoice={handleCreateInvoice}
+          onLogExpense={() => setActiveTab('expenses')}
+          onAddCustomer={() => setActiveTab('customers')}
+          onTakePhoto={handleTakePhoto}
+          onViewJob={(jobId) => { setActiveProjectId(jobId); setActiveTab('jobpack_detail'); }}
+          onAddProject={async (project) => {
+            const created = await addProject({
+              title: project.title || 'New Job',
+              customerId: project.customerId,
+              status: project.status || 'active',
+              notepad: project.notepad || '',
+              notes: [],
+              photos: [],
+              drawings: [],
+              documents: [],
+              materials: [],
+            });
+            return created;
+          }}
+          onRefresh={refresh}
+          onNavigateToFutureJobs={() => setActiveTab('future_jobs')}
+          onCreateAIQuote={() => setActiveTab('ai_quote_builder')}
+        />}
+        {activeTab === 'jobpacks' && <JobPackList projects={[...projects].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())} customers={customers} onOpenProject={openProject} onAddProject={handleAddProject} onAddCustomer={handleAddCustomer} onDeleteProject={deleteProject} onBack={() => setActiveTab('home')} />}
 
-      <Suspense fallback={<PageLoader />}>
-        {activeTab === 'schedule' && <ScheduleCalendar entries={schedule} projects={projects} customers={customers} onAddCustomer={handleAddCustomer} onAddProject={(project) => handleAddProject(project, false)} onAddEntry={addScheduleEntry} onUpdateEntry={updateScheduleEntry} onDeleteEntry={deleteScheduleEntry} onBack={() => setActiveTab('home')} />}
-        {activeTab === 'jobpack_detail' && activeProjectId && (activeProject ? <JobPackView key={activeProjectId} project={activeProject} customers={customers} quotes={quotes.filter(q => q.projectId === activeProjectId)} settings={settings} onSaveProject={handleSaveProject} onViewQuote={handleViewQuote} onCreateQuote={() => handleCreateQuote(activeProjectId)} onBack={() => setActiveTab('jobpacks')} onDeleteProject={deleteProject} onRefresh={refresh} /> : <div className="flex flex-col items-center justify-center py-20 text-slate-400"><AlertCircle size={48} className="text-teal-500 mb-4" /><p>Job Pack Not Found</p><button onClick={() => setActiveTab('jobpacks')} className="mt-4 bg-slate-900 text-white px-4 py-2 rounded">Back</button></div>)}
-        {activeTab === 'quotes' && <QuotesList quotes={[...quotes].filter(q => q.type === 'estimate' || q.type === 'quotation').sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())} customers={customers} settings={settings} onViewQuote={handleViewQuote} onEditQuote={handleEditQuote} onCreateQuote={() => handleCreateQuote()} onDeleteQuote={deleteQuote} onBack={() => setActiveTab('home')} />}
-        {activeTab === 'invoices' && <InvoicesList quotes={[...quotes].filter(q => q.type === 'invoice').sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())} customers={customers} settings={settings} onViewQuote={handleViewQuote} onCreateInvoice={handleCreateInvoice} onDeleteInvoice={deleteQuote} onBack={() => setActiveTab('home')} />}
-        {activeTab === 'aged_receivables' && <AgedReceivablesPage onBack={() => setActiveTab('home')} onViewInvoice={handleViewQuote} />}
-        {activeTab === 'expenses' && <ExpensesPage projects={projects} onBack={() => setActiveTab('home')} />}
-        {activeTab === 'bank' && <BankImportPage onBack={() => setActiveTab('home')} />}
-        {activeTab === 'reconcile' && <ReconciliationPage onBack={() => setActiveTab('home')} />}
-        {activeTab === 'vat' && <VATSummaryPage onBack={() => setActiveTab('home')} />}
-        {activeTab === 'profitloss' && <ProfitLossPage onBack={() => setActiveTab('home')} />}
-        {activeTab === 'payables' && <AgedPayablesPage onBack={() => setActiveTab('home')} />}
-        {activeTab === 'accountant_export' && <AccountantExportPage onBack={() => setActiveTab('home')} />}
-        {activeTab === 'files' && <FilingCabinetPage onBack={() => setActiveTab('home')} />}
-        {activeTab === 'materials' && <MaterialsLibrary onBack={() => setActiveTab('home')} />}
-        {activeTab === 'wholesalers' && <WholesalerAdmin onBack={() => setActiveTab('home')} />}
-        {activeTab === 'support' && <SupportRequestsAdmin onBack={() => setActiveTab('home')} />}
-        {activeTab === 'trial_analytics' && <TrialUsersAdmin onBack={() => setActiveTab('home')} />}
-        {activeTab === 'future_jobs' && <FutureJobsPage onBack={() => setActiveTab('home')} onCreateJob={() => setActiveTab('jobpacks')} />}
-        {activeTab === 'customers' && <CustomerManager customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer} deleteCustomer={deleteCustomer} onBack={() => setActiveTab('home')} />}
-        {activeTab === 'settings' && <SettingsPage settings={settings} setSettings={setSettings} onSave={updateSettings} onBack={() => setActiveTab('home')} />}
-        {activeTab === 'ai_quote_builder' && <AIQuoteBuilder customers={customers} quotes={quotes} settings={settings} onComplete={handleAIQuoteComplete} onCancel={() => setActiveTab('home')} />}
-        {activeTab === 'quote_edit' && <QuoteCreator existingQuote={aiGeneratedDraft as Quote || quotes.find(q => q.id === editingQuoteId)} projectId={activeProjectId || undefined} projectTitle={activeProject?.title} initialType={initialQuoteType} customers={customers} settings={settings} onSave={handleSaveQuote} onAddCustomer={handleAddCustomer} onCancel={() => activeProjectId ? setActiveTab('jobpack_detail') : (initialQuoteType === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes'))} />}
-        {activeTab === 'view' && viewingQuoteId && (activeViewQuote ? <QuoteView quote={activeViewQuote} customer={activeViewCustomer || { id: 'unknown', name: 'Unassigned Client', email: '', phone: '', address: 'N/A' }} settings={settings} onEdit={() => handleEditQuote(viewingQuoteId)} onBack={() => activeProjectId ? setActiveTab('jobpack_detail') : (activeViewQuote.type === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes'))} onUpdateStatus={(status) => handleUpdateQuoteStatus(viewingQuoteId, status)} onUpdateQuote={handleUpdateQuote} onConvertToInvoice={handleConvertToInvoice} onIssueCreditNote={handleIssueCreditNote} onDuplicate={handleDuplicateQuote} onDelete={async () => { await deleteQuote(viewingQuoteId); setViewingQuoteId(null); activeProjectId ? setActiveTab('jobpack_detail') : (activeViewQuote.type === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes')); toast.success('Deleted', 'Document has been discarded'); }} /> : <div className="flex flex-col items-center justify-center py-20 text-slate-400"><FileWarning size={48} className="text-teal-500 mb-4" /><p>Document Not Found</p><button onClick={() => setActiveTab('quotes')} className="mt-4 bg-slate-900 text-white px-4 py-2 rounded">Back</button></div>)}
-        {activeTab === 'credit_note' && viewingQuoteId && (() => {
-          const invoice = quotes.find(q => q.id === viewingQuoteId);
-          const cust = invoice ? customers.find(c => c.id === invoice.customerId) : null;
-          if (!invoice || !cust) return null;
-          return <CreditNoteCreator originalInvoice={invoice} customer={cust} settings={settings} onSave={handleSaveCreditNote} onCancel={() => { setActiveTab('view'); }} />;
-        })()}
-      </Suspense>
+        <Suspense fallback={<PageLoader />}>
+          {activeTab === 'schedule' && <ScheduleCalendar entries={schedule} projects={projects} customers={customers} onAddCustomer={handleAddCustomer} onAddProject={(project) => handleAddProject(project, false)} onAddEntry={addScheduleEntry} onUpdateEntry={updateScheduleEntry} onDeleteEntry={deleteScheduleEntry} onBack={() => setActiveTab('home')} />}
+          {activeTab === 'jobpack_detail' && activeProjectId && (activeProject ? <JobPackView key={activeProjectId} project={activeProject} customers={customers} quotes={quotes.filter(q => q.projectId === activeProjectId)} settings={settings} onSaveProject={handleSaveProject} onViewQuote={handleViewQuote} onCreateQuote={() => handleCreateQuote(activeProjectId)} onBack={() => setActiveTab('jobpacks')} onDeleteProject={deleteProject} onRefresh={refresh} /> : <div className="flex flex-col items-center justify-center py-20 text-slate-400"><AlertCircle size={48} className="text-teal-500 mb-4" /><p>Job Pack Not Found</p><button onClick={() => setActiveTab('jobpacks')} className="mt-4 bg-slate-900 text-white px-4 py-2 rounded">Back</button></div>)}
+          {activeTab === 'quotes' && <QuotesList quotes={[...quotes].filter(q => q.type === 'estimate' || q.type === 'quotation').sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())} customers={customers} settings={settings} onViewQuote={handleViewQuote} onEditQuote={handleEditQuote} onCreateQuote={() => handleCreateQuote()} onDeleteQuote={deleteQuote} onBack={() => setActiveTab('home')} />}
+          {activeTab === 'invoices' && <InvoicesList quotes={[...quotes].filter(q => q.type === 'invoice').sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())} customers={customers} settings={settings} onViewQuote={handleViewQuote} onCreateInvoice={handleCreateInvoice} onDeleteInvoice={deleteQuote} onBack={() => setActiveTab('home')} />}
+          {activeTab === 'aged_receivables' && <AgedReceivablesPage onBack={() => setActiveTab('home')} onViewInvoice={handleViewQuote} />}
+          {activeTab === 'expenses' && <ExpensesPage projects={projects} onBack={() => setActiveTab('home')} />}
+          {activeTab === 'bank' && <BankImportPage onBack={() => setActiveTab('home')} />}
+          {activeTab === 'reconcile' && <ReconciliationPage onBack={() => setActiveTab('home')} />}
+          {activeTab === 'vat' && <VATSummaryPage onBack={() => setActiveTab('home')} />}
+          {activeTab === 'profitloss' && <ProfitLossPage onBack={() => setActiveTab('home')} />}
+          {activeTab === 'payables' && <AgedPayablesPage onBack={() => setActiveTab('home')} />}
+          {activeTab === 'accountant_export' && <AccountantExportPage onBack={() => setActiveTab('home')} />}
+          {activeTab === 'files' && <FilingCabinetPage onBack={() => setActiveTab('home')} />}
+          {activeTab === 'materials' && <MaterialsLibrary onBack={() => setActiveTab('home')} />}
+          {activeTab === 'wholesalers' && <WholesalerAdmin onBack={() => setActiveTab('home')} />}
+          {activeTab === 'support' && <SupportRequestsAdmin onBack={() => setActiveTab('home')} />}
+          {activeTab === 'trial_analytics' && <TrialUsersAdmin onBack={() => setActiveTab('home')} />}
+          {activeTab === 'future_jobs' && <FutureJobsPage onBack={() => setActiveTab('home')} onCreateJob={() => setActiveTab('jobpacks')} />}
+          {activeTab === 'customers' && <CustomerManager customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer} deleteCustomer={deleteCustomer} onBack={() => setActiveTab('home')} />}
+          {activeTab === 'settings' && <SettingsPage settings={settings} setSettings={setSettings} onSave={updateSettings} onBack={() => setActiveTab('home')} />}
+          {activeTab === 'ai_quote_builder' && <AIQuoteBuilder customers={customers} quotes={quotes} settings={settings} onComplete={handleAIQuoteComplete} onCancel={() => setActiveTab('home')} />}
+          {activeTab === 'quote_edit' && <QuoteCreator existingQuote={aiGeneratedDraft as Quote || quotes.find(q => q.id === editingQuoteId)} projectId={activeProjectId || undefined} projectTitle={activeProject?.title} initialType={initialQuoteType} customers={customers} settings={settings} onSave={handleSaveQuote} onAddCustomer={handleAddCustomer} onCancel={() => activeProjectId ? setActiveTab('jobpack_detail') : (initialQuoteType === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes'))} />}
+          {activeTab === 'view' && viewingQuoteId && (activeViewQuote ? <QuoteView quote={activeViewQuote} customer={activeViewCustomer || { id: 'unknown', name: 'Unassigned Client', email: '', phone: '', address: 'N/A' }} settings={settings} onEdit={() => handleEditQuote(viewingQuoteId)} onBack={() => activeProjectId ? setActiveTab('jobpack_detail') : (activeViewQuote.type === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes'))} onUpdateStatus={(status) => handleUpdateQuoteStatus(viewingQuoteId, status)} onUpdateQuote={handleUpdateQuote} onConvertToInvoice={handleConvertToInvoice} onIssueCreditNote={handleIssueCreditNote} onDuplicate={handleDuplicateQuote} onDelete={async () => { await deleteQuote(viewingQuoteId); setViewingQuoteId(null); activeProjectId ? setActiveTab('jobpack_detail') : (activeViewQuote.type === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes')); toast.success('Deleted', 'Document has been discarded'); }} /> : <div className="flex flex-col items-center justify-center py-20 text-slate-400"><FileWarning size={48} className="text-teal-500 mb-4" /><p>Document Not Found</p><button onClick={() => setActiveTab('quotes')} className="mt-4 bg-slate-900 text-white px-4 py-2 rounded">Back</button></div>)}
+          {activeTab === 'credit_note' && viewingQuoteId && (() => {
+            const invoice = quotes.find(q => q.id === viewingQuoteId);
+            const cust = invoice ? customers.find(c => c.id === invoice.customerId) : null;
+            if (!invoice || !cust) return null;
+            return <CreditNoteCreator originalInvoice={invoice} customer={cust} settings={settings} onSave={handleSaveCreditNote} onCancel={() => { setActiveTab('view'); }} />;
+          })()}
+        </Suspense>
       </ErrorBoundary>
 
       {/* Onboarding Wizard */}

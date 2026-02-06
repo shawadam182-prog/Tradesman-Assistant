@@ -29,7 +29,7 @@ export interface UseQuoteSharingOptions {
   settings: AppSettings;
   totals: QuoteTotals;
   displayOptions: QuoteDisplayOptions;
-  onUpdateQuote: (quote: Quote) => void;
+  onUpdateQuote: (quote: Quote) => void | Promise<void>;
   onUpdateStatus: (status: Quote['status']) => void;
 }
 
