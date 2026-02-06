@@ -470,6 +470,28 @@ ${priceListHint ? `Match prices from this list where items match:\n${priceListHi
   },
 };
 
+// Retry wrapper for transient Gemini API failures (429, 503, network errors)
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2): Promise<T> {
+  let lastError: any;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      const msg = (error.message || '').toLowerCase();
+      const isRetryable = msg.includes('429') || msg.includes('503') ||
+        msg.includes('rate') || msg.includes('overloaded') ||
+        msg.includes('unavailable') || msg.includes('timeout');
+      if (!isRetryable || attempt === maxRetries) throw error;
+      // Exponential backoff: 1s, 3s
+      const delay = (attempt + 1) * 1500;
+      console.log(`Gemini retry ${attempt + 1}/${maxRetries} after ${delay}ms...`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+  throw lastError;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -486,7 +508,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const result = await actions[action](data);
+    const result = await withRetry(() => actions[action](data));
 
     return new Response(
       JSON.stringify(result),
