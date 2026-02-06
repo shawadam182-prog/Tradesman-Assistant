@@ -145,7 +145,7 @@ export function useQuoteSharing(options: UseQuoteSharingOptions) {
       paymentDate: payment.date,
       status: payment.markAsPaid ? 'paid' : quote.status,
     };
-    onUpdateQuote(updatedQuote);
+    await onUpdateQuote(updatedQuote);
     setShowPaymentRecorder(false);
     hapticSuccess();
 
