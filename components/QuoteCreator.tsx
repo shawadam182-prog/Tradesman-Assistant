@@ -433,15 +433,17 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
-      recognition.continuous = false;
+      recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-GB';
       recognition.onstart = () => setIsListening(true);
       recognition.onend = () => setIsListening(false);
       recognition.onerror = () => setIsListening(false);
       recognition.onresult = (event: any) => {
-        if (event.results?.[0]?.isFinal && event.results[0][0]?.transcript) {
-          handleVoiceCommand(event.results[0][0].transcript);
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal && event.results[i][0]?.transcript) {
+            handleVoiceCommand(event.results[i][0].transcript);
+          }
         }
       };
       recognitionRef.current = recognition;
@@ -585,9 +587,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
           s.id === (targetSectionId || prev.sections?.[0].id)
             ? {
               ...s,
-              title: (!s.title || s.title.startsWith('Work Section'))
-                ? (result.suggestedTitle || s.title)
-                : s.title,
+              title: result.suggestedTitle || s.title,
               labourHours: s.labourHours + totalLabourHours,
               labourItems: [...(s.labourItems || []), ...newLabourItems],
               items: [...s.items, ...newItems]
@@ -602,9 +602,9 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
 
       setAiInput('');
       setAttachedImage(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('AI analysis failed:', error);
-      toast.error('AI analysis failed. Please try again.');
+      toast.error(error.message || 'AI analysis failed. Please try again.');
     }
     finally { setLoading(false); }
   };

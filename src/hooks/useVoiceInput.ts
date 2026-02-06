@@ -155,12 +155,12 @@ export function useVoiceInput({ onResult, onError, lang = 'en-GB' }: UseVoiceInp
       hapticTap();
       mediaRecorder.start();
 
-      // Auto-stop after 10 seconds to prevent very long recordings
+      // Auto-stop after 30 seconds to allow longer dictation
       setTimeout(() => {
         if (mediaRecorderRef.current?.state === 'recording') {
           mediaRecorderRef.current.stop();
         }
-      }, 10000);
+      }, 30000);
 
     } catch (err: any) {
       setIsListening(false);
