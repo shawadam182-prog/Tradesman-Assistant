@@ -118,9 +118,9 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             items.push({
               type: 'item',
               description: [item.name, item.description].filter(Boolean).join(' - '),
-              qty: `${item.quantity} ${item.unit}`,
-              rate: item.unitPrice * markupMultiplier,
-              amount: (item.totalPrice || 0) * markupMultiplier,
+              qty: displayOptions.showMaterialQty ? `${item.quantity} ${item.unit}` : '',
+              rate: displayOptions.showMaterialUnitPrice ? item.unitPrice * markupMultiplier : 0,
+              amount: displayOptions.showMaterialLineTotals ? (item.totalPrice || 0) * markupMultiplier : 0,
               itemType: 'material',
             });
           });
@@ -426,17 +426,23 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
                   );
                 } else {
                   /* Regular item row */
+                  // Check per-item-type toggles so material cells are blank when material toggles are off (and vice versa)
+                  const isMat = item.itemType === 'material';
+                  const isLab = item.itemType === 'labour';
+                  const showItemQty = isMat ? displayOptions.showMaterialQty : isLab ? displayOptions.showLabourQty : true;
+                  const showItemRate = isMat ? displayOptions.showMaterialUnitPrice : isLab ? displayOptions.showLabourUnitPrice : true;
+                  const showItemAmount = isMat ? displayOptions.showMaterialLineTotals : isLab ? displayOptions.showLabourLineTotals : true;
                   return (
                     <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
                       <td style={{ padding: '5px 8px 5px 24px', fontSize: '13px', color: '#334155' }}>{item.description}</td>
                       {showQtyColumn && (
-                        <td style={{ padding: '5px 8px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>{item.qty}</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>{showItemQty ? item.qty : ''}</td>
                       )}
                       {showRateColumn && (
-                        <td style={{ padding: '5px 8px', textAlign: 'right', color: '#64748b', fontSize: '13px' }}>£{item.rate.toFixed(2)}</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'right', color: '#64748b', fontSize: '13px' }}>{showItemRate ? `£${item.rate.toFixed(2)}` : ''}</td>
                       )}
                       {showAmountColumn && (
-                        <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: '600', fontSize: '13px', color: '#1e293b' }}>£{item.amount.toFixed(2)}</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: '600', fontSize: '13px', color: '#1e293b' }}>{showItemAmount ? `£${item.amount.toFixed(2)}` : ''}</td>
                       )}
                     </tr>
                   );
