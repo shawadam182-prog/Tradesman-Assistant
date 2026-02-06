@@ -1,22 +1,27 @@
-import { supabase } from '../lib/supabase';
-
 const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gemini`;
 
 async function callGemini<T>(action: string, data: Record<string, any>): Promise<T> {
-  const { data: { session } } = await supabase.auth.getSession();
+  // Always use anon key — edge function doesn't need user identity
+  const token = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   const response = await fetch(FUNCTION_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify({ action, data }),
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Gemini API call failed');
+    let message = `Gemini API call failed (${response.status})`;
+    try {
+      const body = await response.json();
+      message = body.error || body.msg || body.message || message;
+    } catch {
+      // Response wasn't JSON
+    }
+    throw new Error(message);
   }
 
   return response.json();
