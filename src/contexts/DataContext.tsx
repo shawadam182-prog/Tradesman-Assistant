@@ -313,6 +313,8 @@ function dbSettingsToApp(dbSettings: any): AppSettings {
     labourRatePresets: dbSettings.labour_rate_presets || DEFAULT_LABOUR_RATE_PRESETS,
     companyName: dbSettings.company_name || '',
     companyAddress: dbSettings.company_address || '',
+    phone: dbSettings.phone || undefined,
+    email: dbSettings.email || undefined,
     // Store the path for now, we'll fetch the signed URL separately
     companyLogo: undefined,
     companyLogoPath: dbSettings.company_logo_path || undefined,
@@ -996,6 +998,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       labour_rate_presets: updates.labourRatePresets || null,
       company_name: updates.companyName || null,
       company_address: updates.companyAddress || null,
+      phone: updates.phone || null,
+      email: updates.email || null,
       is_vat_registered: updates.isVatRegistered,
       vat_number: updates.vatNumber || null,
       enable_vat: updates.enableVat,

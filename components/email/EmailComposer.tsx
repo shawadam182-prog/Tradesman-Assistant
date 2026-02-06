@@ -198,7 +198,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
       </div>
 
       {/* Actions */}
-      <div className="p-4 border-t border-slate-100 flex gap-3">
+      <div className="p-4 pb-6 border-t border-slate-100 flex gap-3">
         <button
           onClick={onClose}
           className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors"

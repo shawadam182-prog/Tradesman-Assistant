@@ -634,6 +634,35 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     />
                   </div>
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                  <div className="space-y-1 md:space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Business Email</label>
+                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-4 focus-within:border-teal-400 focus-within:bg-white transition-all">
+                      <Mail size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 shrink-0" />
+                      <input
+                        type="email"
+                        className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
+                        value={settings.email || ''}
+                        onChange={e => setSettings({ ...settings, email: e.target.value })}
+                        placeholder="you@yourbusiness.co.uk"
+                      />
+                    </div>
+                    <p className="text-[9px] text-slate-400 px-1">Used as reply-to on outgoing emails so customers can reply directly to you</p>
+                  </div>
+                  <div className="space-y-1 md:space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Business Phone</label>
+                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-4 focus-within:border-teal-400 focus-within:bg-white transition-all">
+                      <Send size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 shrink-0" />
+                      <input
+                        type="tel"
+                        className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
+                        value={settings.phone || ''}
+                        onChange={e => setSettings({ ...settings, phone: e.target.value })}
+                        placeholder="07xxx xxxxxx"
+                      />
+                    </div>
+                  </div>
+                </div>
 
                 {/* VAT Registration Section */}
                 <div className="p-4 md:p-10 border-t border-slate-100 space-y-3 md:space-y-6">

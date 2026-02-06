@@ -93,6 +93,7 @@ export const AppointmentNotification: React.FC<AppointmentNotificationProps> = (
         subject,
         html,
         fromName: settings.companyName || 'TradeSync',
+        replyTo: settings.email || undefined,
         templateType: isConfirmation ? 'appointment_confirmation' : 'appointment_reminder',
       });
       setSent(true);

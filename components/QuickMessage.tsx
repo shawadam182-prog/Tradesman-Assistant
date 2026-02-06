@@ -154,6 +154,7 @@ export const QuickMessage: React.FC<QuickMessageProps> = ({
         subject: option.subject(entry.title),
         html,
         fromName: settings.companyName || 'TradeSync',
+        replyTo: settings.email || undefined,
         templateType: `quick_${option.type}`,
       });
       setSent(true);

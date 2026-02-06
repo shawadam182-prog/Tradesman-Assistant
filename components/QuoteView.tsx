@@ -14,7 +14,7 @@ import {
   calculatePartPayment,
   getQuoteGrandTotal,
 } from '../src/utils/quoteCalculations';
-import { buildPDFReference } from '../src/services/pdfService';
+import { buildPDFReference, buildPDFFilename, generatePDFFromElement } from '../src/services/pdfService';
 import { useQuoteSharing } from '../src/hooks/useQuoteSharing';
 import { QuoteDocument } from './quote-view/QuoteDocument';
 import { QuoteModals } from './quote-view/QuoteModals';
@@ -50,6 +50,9 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showEmailComposer, setShowEmailComposer] = useState(false);
+  const [emailPdfBase64, setEmailPdfBase64] = useState<string | undefined>();
+  const [emailPdfFilename, setEmailPdfFilename] = useState<string | undefined>();
+  const [isPreparingEmail, setIsPreparingEmail] = useState(false);
   const [quoteSignature, setQuoteSignature] = useState<QuoteSignature | null>(null);
   const [milestones, setMilestones] = useState<PaymentMilestone[]>([]);
   const [generatedInvoices, setGeneratedInvoices] = useState<any[]>([]);
@@ -260,10 +263,34 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
             {showShareMenu && (
               <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-100 py-1 min-w-[160px] z-50">
                 <button
-                  onClick={() => { setShowEmailComposer(true); setShowShareMenu(false); }}
+                  onClick={async () => {
+                    setShowShareMenu(false);
+                    setIsPreparingEmail(true);
+                    try {
+                      if (documentRef.current) {
+                        const filename = buildPDFFilename(activeQuote, settings);
+                        const blob = await generatePDFFromElement(documentRef.current, { scale: 3 });
+                        const reader = new FileReader();
+                        const base64 = await new Promise<string>((resolve) => {
+                          reader.onloadend = () => {
+                            const result = reader.result as string;
+                            resolve(result.split(',')[1]); // strip data:...;base64, prefix
+                          };
+                          reader.readAsDataURL(blob);
+                        });
+                        setEmailPdfBase64(base64);
+                        setEmailPdfFilename(filename);
+                      }
+                    } catch (err) {
+                      console.error('PDF generation for email failed:', err);
+                    }
+                    setIsPreparingEmail(false);
+                    setShowEmailComposer(true);
+                  }}
+                  disabled={isPreparingEmail}
                   className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-slate-700"
                 >
-                  <Mail size={16} className="text-blue-500" /> Send Email
+                  {isPreparingEmail ? <Loader2 size={16} className="text-blue-500 animate-spin" /> : <Mail size={16} className="text-blue-500" />} Send Email
                 </button>
                 <button
                   onClick={() => { sharing.handleEmailShare(); setShowShareMenu(false); }}
@@ -887,13 +914,19 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       {/* Modals */}
       {/* Email Composer Modal */}
       {showEmailComposer && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center print:hidden">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 pb-24 md:pb-4 print:hidden">
+          <div className="w-full max-w-lg max-h-[85vh] overflow-auto rounded-2xl">
             <EmailComposer
               quote={activeQuote}
               customer={customer}
               settings={settings}
-              onClose={() => setShowEmailComposer(false)}
+              pdfBase64={emailPdfBase64}
+              pdfFilename={emailPdfFilename}
+              onClose={() => {
+                setShowEmailComposer(false);
+                setEmailPdfBase64(undefined);
+                setEmailPdfFilename(undefined);
+              }}
               onSent={() => {
                 // Prompt mark as sent if draft
                 if (activeQuote.status === 'draft') {
