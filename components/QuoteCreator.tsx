@@ -1140,8 +1140,8 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
 
       {/* Material Kit Picker Modal */}
       {showKitPicker && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
-          <div className="bg-white rounded-t-3xl w-full max-w-lg max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-white rounded-t-3xl md:rounded-2xl w-full max-w-lg max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-4">
             <MaterialKitPicker
               onApplyKit={(items) => {
                 if (targetSectionForKit) {
