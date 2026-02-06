@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { QuoteSection, MaterialItem, LabourItem, AppSettings, LabourRatePreset } from '../../types';
 import { MaterialItemRow } from './MaterialItemRow';
 import { LabourItemRow } from './LabourItemRow';
-import { Trash2, Plus, Package, HardHat, PoundSterling, ChevronDown, ChevronUp, Layers } from 'lucide-react';
+import { Trash2, Plus, Package, HardHat, PoundSterling, ChevronDown, ChevronUp, Layers, Sparkles, X } from 'lucide-react';
 
 interface QuoteSectionEditorProps {
   section: QuoteSection;
@@ -35,6 +35,8 @@ interface QuoteSectionEditorProps {
   // Calculations
   calculateSectionLabour: (section: QuoteSection) => number;
   getTotalLabourHours: (section: QuoteSection) => number;
+  // Clear AI items
+  onClearAIItems?: (sectionId: string) => void;
 }
 
 export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
@@ -64,12 +66,17 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
   onRemoveSection,
   calculateSectionLabour,
   getTotalLabourHours,
+  onClearAIItems,
 }) => {
   const sectionRate = section.labourRate || defaultLabourRate;
   const materialsTotal = section.items.filter(i => !i.isHeading).reduce((s, i) => s + i.totalPrice, 0);
   const labourTotal = calculateSectionLabour(section);
   const calculatedTotal = materialsTotal + labourTotal;
   const displayTotal = section.subsectionPrice !== undefined ? section.subsectionPrice : calculatedTotal;
+
+  // Check if section has any AI-proposed items
+  const hasAIItems = section.items.some(i => i.isAIProposed) ||
+    (section.labourItems || []).some(l => l.isAIProposed);
 
   // Local state for subsection price input to allow typing decimals
   const [subsectionPriceInput, setSubsectionPriceInput] = useState<string>(
@@ -163,6 +170,18 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
             <Trash2 size={14} className="md:hidden" />
             <Trash2 size={20} className="hidden md:block" />
           </button>
+          {hasAIItems && onClearAIItems && (
+            <button
+              onClick={() => onClearAIItems(section.id)}
+              className="p-1.5 md:p-2 text-teal-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors flex items-center gap-1"
+              title="Clear AI-generated items"
+            >
+              <Sparkles size={12} className="md:hidden" />
+              <Sparkles size={16} className="hidden md:block" />
+              <X size={10} className="md:hidden" />
+              <X size={12} className="hidden md:block" />
+            </button>
+          )}
         </div>
       </div>
 

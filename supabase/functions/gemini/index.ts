@@ -12,24 +12,61 @@ const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
 // Action handlers
 const actions: Record<string, (data: any) => Promise<any>> = {
   // Analyze job requirements from text/image
-  async analyzeJob({ prompt, imageBase64 }: { prompt: string; imageBase64?: string }) {
+  async analyzeJob({ prompt, imageBase64, context }: {
+    prompt: string;
+    imageBase64?: string;
+    context?: {
+      tradeType?: string;
+      labourRate?: number;
+      existingItems?: { name: string; quantity: number; unit: string }[];
+      priceList?: { name: string; unit: string; unitPrice: number }[];
+    }
+  }) {
+    // Build trade-specific context
+    const tradeType = context?.tradeType?.replace('other:', '') || 'general tradesman';
+    const labourRate = context?.labourRate || 45;
+
+    // Build price list hint for prompt (limit to 100 items)
+    const priceListHint = context?.priceList?.slice(0, 100).map(p =>
+      `${p.name} (${p.unit}): £${p.unitPrice.toFixed(2)}`
+    ).join('\n') || '';
+
+    const systemInstruction = `You are a professional UK construction quantity surveyor specializing in ${tradeType} work.
+Your task is to analyze the provided text/image and generate an accurate breakdown of materials and labour.
+
+## CRITICAL RULES FOR MATERIALS:
+- Use UK product names and specifications (e.g., "22mm copper pipe" not "3/4 inch copper pipe")
+- Use UK trade prices in Sterling (£) for 2024-2025
+- Round quantities UP to the nearest sensible purchase unit (e.g., cables in metre increments, timber in 2.4m lengths)
+- Include only items that would appear on a trade supplier receipt
+- DO NOT include consumables like screws, nails, washers, tape, or sundries unless specifically mentioned
+- Every material MUST have a clear description
+
+## UNITS:
+Only use these exact unit values: m, m2, pack, bag, box, roll, sheet, length, each, pair, set, tin, tube, litre
+
+## LABOUR:
+- Break down into specific tasks a ${tradeType} would do
+- Minimum 0.5 hours per task (30 minute minimum call-out)
+- Be realistic with UK trade standard timings
+- Example tasks: "Install double socket" (0.5hrs), "First fix wiring to 3 points" (1.5hrs)
+- The labour rate is £${labourRate}/hour
+
+## ALREADY QUOTED ITEMS:
+${context?.existingItems?.length ? `These items are already in the quote, do not duplicate:\n${context.existingItems.map(i => `- ${i.name}: ${i.quantity} ${i.unit}`).join('\n')}` : 'None'}
+
+## USER'S PRICE LIST:
+${priceListHint ? `Match prices from this list where items match:\n${priceListHint}` : 'No custom price list provided - use typical UK trade prices.'}`;
+
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.0-flash',
-      systemInstruction: `You are a professional UK construction quantity surveyor.
-        Analyze the text and image provided to generate:
-        1. A suggested title for this work section
-        2. A list of materials with quantities and UK trade prices
-        3. A list of labour items with descriptions and estimated hours
-        
-        Use UK market prices in Sterling (£) for 2024-2025.
-        Standard UK units: metres (m), square metres (m2), packs, or each.
-        
-        For labourItems, break down the work into specific tasks that a tradesman would do.
-        For example: "Install double socket" (0.5 hours), "First fix wiring" (1 hour), etc.
-        Be realistic with time estimates based on UK trade standards.`,
+      systemInstruction,
     });
 
-    const parts: any[] = [{ text: prompt }];
+    // Handle empty prompt for image-only requests
+    const effectivePrompt = prompt?.trim() || 'Analyze this image and provide a materials and labour breakdown for the work shown.';
+
+    const parts: any[] = [{ text: effectivePrompt }];
     if (imageBase64) {
       const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
       parts.push({
@@ -68,10 +105,13 @@ const actions: Record<string, (data: any) => Promise<any>> = {
                   name: { type: SchemaType.STRING },
                   description: { type: SchemaType.STRING },
                   quantity: { type: SchemaType.NUMBER },
-                  unit: { type: SchemaType.STRING },
+                  unit: {
+                    type: SchemaType.STRING,
+                    enum: ['m', 'm2', 'pack', 'bag', 'box', 'roll', 'sheet', 'length', 'each', 'pair', 'set', 'tin', 'tube', 'litre']
+                  },
                   estimatedUnitPrice: { type: SchemaType.NUMBER },
                 },
-                required: ['name', 'quantity', 'unit', 'estimatedUnitPrice'],
+                required: ['name', 'description', 'quantity', 'unit', 'estimatedUnitPrice'],
               },
             },
             notes: { type: SchemaType.STRING },
@@ -81,7 +121,32 @@ const actions: Record<string, (data: any) => Promise<any>> = {
       },
     });
 
-    return JSON.parse(result.response.text());
+    const parsed = JSON.parse(result.response.text());
+
+    // Validate and clean materials
+    const validUnits = ['m', 'm2', 'pack', 'bag', 'box', 'roll', 'sheet', 'length', 'each', 'pair', 'set', 'tin', 'tube', 'litre'];
+    parsed.materials = (parsed.materials || [])
+      .filter((m: any) => m.name && m.quantity > 0 && m.estimatedUnitPrice >= 0)
+      .map((m: any) => ({
+        ...m,
+        quantity: Math.round(m.quantity * 100) / 100,
+        unit: validUnits.includes(m.unit) ? m.unit : 'each',
+        estimatedUnitPrice: Math.round(m.estimatedUnitPrice * 100) / 100,
+        description: m.description || '',
+      }));
+
+    // Validate and clean labour items
+    parsed.labourItems = (parsed.labourItems || [])
+      .filter((l: any) => l.description && l.hours > 0)
+      .map((l: any) => ({
+        ...l,
+        hours: Math.max(0.5, Math.round(l.hours * 2) / 2), // Round to nearest 0.5, min 0.5
+      }));
+
+    // Recalculate total labour hours
+    parsed.laborHoursEstimate = parsed.labourItems.reduce((sum: number, l: any) => sum + l.hours, 0);
+
+    return parsed;
   },
 
   // Parse voice command for material items

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MaterialItem } from '../../types';
-import { Plus, Minus, Trash2, BookmarkPlus, Type } from 'lucide-react';
+import { Plus, Minus, Trash2, BookmarkPlus, Type, Sparkles } from 'lucide-react';
 
 interface MaterialItemRowProps {
   item: MaterialItem;
@@ -50,15 +50,15 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
           onClick={() => onRemove(sectionId, item.id)}
           className="p-0.5 md:p-1.5 text-slate-300 hover:text-red-500 transition-colors md:hover:bg-red-50 md:rounded-lg"
         >
-          <Trash2 size={10} className="md:hidden"/>
-          <Trash2 size={16} className="hidden md:block"/>
+          <Trash2 size={10} className="md:hidden" />
+          <Trash2 size={16} className="hidden md:block" />
         </button>
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-0.5 md:p-3 rounded-md md:rounded-xl shadow-sm border border-slate-100 md:border-slate-200 relative group overflow-hidden">
+    <div className={`bg-white p-0.5 md:p-3 rounded-md md:rounded-xl shadow-sm border relative group overflow-hidden ${item.isAIProposed ? 'border-l-2 border-l-teal-400 border-slate-100 md:border-slate-200' : 'border-slate-100 md:border-slate-200'}`}>
       <div className="flex justify-between items-center gap-1 md:gap-3 mb-0.5 md:mb-2">
         <div className="flex-1 min-w-0">
           <input
@@ -68,6 +68,9 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
             onChange={e => onUpdate(sectionId, item.id, { name: e.target.value })}
             placeholder="Item Name"
           />
+          {item.isAIProposed && (
+            <Sparkles size={10} className="inline text-teal-400 ml-1 mt-0.5" />
+          )}
           <input
             type="text"
             className="w-full h-3 md:h-auto text-[8px] md:text-sm text-slate-500 outline-none placeholder:text-slate-300 bg-transparent leading-none md:leading-normal p-0 m-0 mt-0.5 md:mt-1"
@@ -83,16 +86,16 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
               className="p-1 md:p-2 bg-slate-50 text-slate-300 rounded md:rounded-lg hover:bg-teal-50 hover:text-teal-500 transition-colors touch-manipulation"
               title="Save to price list"
             >
-              <BookmarkPlus size={10} className="md:hidden"/>
-              <BookmarkPlus size={16} className="hidden md:block"/>
+              <BookmarkPlus size={10} className="md:hidden" />
+              <BookmarkPlus size={16} className="hidden md:block" />
             </button>
           )}
           <button
             onClick={() => onRemove(sectionId, item.id)}
             className="p-1 md:p-2 bg-slate-50 text-slate-300 rounded md:rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors touch-manipulation"
           >
-            <Trash2 size={10} className="md:hidden"/>
-            <Trash2 size={16} className="hidden md:block"/>
+            <Trash2 size={10} className="md:hidden" />
+            <Trash2 size={16} className="hidden md:block" />
           </button>
         </div>
       </div>

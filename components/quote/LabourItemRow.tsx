@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LabourItem, LabourRatePreset } from '../../types';
-import { Plus, Minus, Trash2, ChevronDown } from 'lucide-react';
+import { Plus, Minus, Trash2, ChevronDown, Sparkles } from 'lucide-react';
 
 interface LabourItemRowProps {
   item: LabourItem;
@@ -46,7 +46,7 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
   };
 
   return (
-    <div className="bg-blue-50 p-0.5 md:p-3 rounded md:rounded-xl mb-1 md:mb-2">
+    <div className={`p-0.5 md:p-3 rounded md:rounded-xl mb-1 md:mb-2 ${item.isAIProposed ? 'bg-teal-50 border-l-2 border-l-teal-400' : 'bg-blue-50'}`}>
       {/* Top row: Description and delete button */}
       <div className="flex items-center gap-1 md:gap-3 mb-0.5 md:mb-2">
         <input
@@ -56,6 +56,9 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
           onChange={e => onUpdate(sectionId, item.id, { description: e.target.value })}
           className="flex-1 bg-transparent text-[10px] md:text-base font-medium text-slate-900 outline-none placeholder:text-blue-300 leading-tight md:leading-normal py-0.5 md:py-1 md:border-b md:border-transparent md:focus:border-blue-400 md:transition-colors"
         />
+        {item.isAIProposed && (
+          <Sparkles size={10} className="text-teal-400 shrink-0" />
+        )}
         <button
           onClick={() => onRemove(sectionId, item.id)}
           className="p-0.5 md:p-2 text-slate-300 hover:text-red-500 transition-colors md:bg-white md:rounded-lg md:hover:bg-red-50"
@@ -98,13 +101,12 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
             <button
               type="button"
               onClick={() => setShowRateDropdown(!showRateDropdown)}
-              className={`flex items-center gap-0.5 md:gap-1 text-[8px] md:text-sm px-1.5 md:px-2 py-0.5 md:py-1 rounded md:rounded-lg border transition-all ${
-                isCustomRate
+              className={`flex items-center gap-0.5 md:gap-1 text-[8px] md:text-sm px-1.5 md:px-2 py-0.5 md:py-1 rounded md:rounded-lg border transition-all ${isCustomRate
                   ? 'bg-amber-50 border-amber-200 text-amber-700'
                   : currentPreset
                     ? 'bg-blue-100 border-blue-200 text-blue-700'
                     : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300'
-              }`}
+                }`}
             >
               <span className="font-bold">
                 {currentPreset ? currentPreset.name : isCustomRate ? 'Custom' : 'Default'}
@@ -125,9 +127,8 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
                   <button
                     type="button"
                     onClick={handleUseDefault}
-                    className={`w-full text-left px-2 md:px-3 py-1.5 md:py-2 text-[10px] md:text-sm hover:bg-slate-50 transition-colors border-b border-slate-100 ${
-                      !item.rate ? 'bg-slate-50 font-bold' : ''
-                    }`}
+                    className={`w-full text-left px-2 md:px-3 py-1.5 md:py-2 text-[10px] md:text-sm hover:bg-slate-50 transition-colors border-b border-slate-100 ${!item.rate ? 'bg-slate-50 font-bold' : ''
+                      }`}
                   >
                     <div className="flex justify-between items-center">
                       <span>Default</span>
@@ -141,9 +142,8 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
                       key={preset.name}
                       type="button"
                       onClick={() => handlePresetSelect(preset)}
-                      className={`w-full text-left px-2 md:px-3 py-1.5 md:py-2 text-[10px] md:text-sm hover:bg-blue-50 transition-colors ${
-                        currentPreset?.name === preset.name ? 'bg-blue-50 text-blue-700 font-bold' : ''
-                      }`}
+                      className={`w-full text-left px-2 md:px-3 py-1.5 md:py-2 text-[10px] md:text-sm hover:bg-blue-50 transition-colors ${currentPreset?.name === preset.name ? 'bg-blue-50 text-blue-700 font-bold' : ''
+                        }`}
                     >
                       <div className="flex justify-between items-center">
                         <span>{preset.name}</span>

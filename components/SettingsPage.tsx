@@ -54,9 +54,9 @@ const CollapsibleSection: React.FC<{
         <div className={`p-1.5 md:p-2 ${iconBg} rounded-lg md:rounded-xl`}>{icon}</div>
         <span className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-tight">{title}</span>
       </div>
-      <ChevronDown 
-        size={18} 
-        className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+      <ChevronDown
+        size={18}
+        className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
       />
     </button>
     {isExpanded && (
@@ -623,6 +623,47 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                   />
                 </div>
                 <div className="space-y-1 md:space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Trade Type</label>
+                  <select
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] p-3 md:p-5 focus:border-teal-400 focus:bg-white outline-none text-slate-900 font-bold text-sm transition-all cursor-pointer"
+                    value={settings.tradeType?.startsWith('other:') ? 'other' : (settings.tradeType || '')}
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === 'other') {
+                        setSettings({ ...settings, tradeType: 'other:' });
+                      } else {
+                        setSettings({ ...settings, tradeType: val || undefined });
+                      }
+                    }}
+                  >
+                    <option value="">Select your trade...</option>
+                    <option value="plumber">Plumber</option>
+                    <option value="electrician">Electrician</option>
+                    <option value="carpenter">Carpenter / Joiner</option>
+                    <option value="general builder">General Builder</option>
+                    <option value="plasterer">Plasterer</option>
+                    <option value="painter">Painter & Decorator</option>
+                    <option value="roofer">Roofer</option>
+                    <option value="tiler">Tiler</option>
+                    <option value="bricklayer">Bricklayer</option>
+                    <option value="landscaper">Landscaper / Groundworker</option>
+                    <option value="gas engineer">Gas Engineer</option>
+                    <option value="kitchen fitter">Kitchen / Bathroom Fitter</option>
+                    <option value="handyman">Handyman</option>
+                    <option value="other">Other</option>
+                  </select>
+                  {settings.tradeType?.startsWith('other:') && (
+                    <input
+                      type="text"
+                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] p-3 md:p-5 focus:border-teal-400 focus:bg-white outline-none text-slate-900 font-bold text-sm transition-all mt-2"
+                      value={settings.tradeType.replace('other:', '')}
+                      onChange={e => setSettings({ ...settings, tradeType: `other:${e.target.value}` })}
+                      placeholder="Enter your trade type..."
+                    />
+                  )}
+                  <p className="text-[9px] text-slate-400 px-1">Helps generate more accurate AI quotes for your trade</p>
+                </div>
+                <div className="space-y-1 md:space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Business Address & Contact</label>
                   <div className="flex items-start bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-4 focus-within:border-teal-400 focus-within:bg-white transition-all">
                     <MapPin size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mt-3 md:mt-5 mr-2 shrink-0" />
@@ -791,59 +832,59 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                   Define quick-select rates for different job types (e.g., Standard, Callout, Overtime).
                 </p>
                 <div className="space-y-2">
-                      {(settings.labourRatePresets || []).map((preset, index) => (
-                        <div key={index} className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl p-2 md:p-3">
-                          <input
-                            type="text"
-                            className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-blue-400 transition-colors"
-                            value={preset.name}
-                            onChange={e => {
-                              const newPresets = [...(settings.labourRatePresets || [])];
-                              newPresets[index] = { ...preset, name: e.target.value };
-                              setSettings({ ...settings, labourRatePresets: newPresets });
-                            }}
-                            placeholder="Rate name"
-                          />
-                          <div className="flex items-center bg-white border border-slate-200 rounded-lg px-2 py-2 focus-within:border-blue-400 transition-colors">
-                            <PoundSterling size={14} className="text-slate-400 mr-1" />
-                            <input
-                              type="number"
-                              step="0.50"
-                              className="w-16 md:w-20 bg-transparent text-sm font-bold text-slate-900 outline-none"
-                              value={preset.rate}
-                              onChange={e => {
-                                const newPresets = [...(settings.labourRatePresets || [])];
-                                newPresets[index] = { ...preset, rate: parseFloat(e.target.value) || 0 };
-                                setSettings({ ...settings, labourRatePresets: newPresets });
-                              }}
-                              placeholder="0.00"
-                            />
-                            <span className="text-slate-400 text-xs">/hr</span>
-                          </div>
-                          <button
-                            onClick={() => {
-                              const newPresets = (settings.labourRatePresets || []).filter((_, i) => i !== index);
-                              setSettings({ ...settings, labourRatePresets: newPresets });
-                            }}
-                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Remove preset"
-                          >
-                            <Minus size={16} />
-                          </button>
-                        </div>
-                      ))}
-
-                      <button
-                        onClick={() => {
-                          const newPresets = [...(settings.labourRatePresets || []), { name: '', rate: settings.defaultLabourRate || 65 }];
+                  {(settings.labourRatePresets || []).map((preset, index) => (
+                    <div key={index} className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl p-2 md:p-3">
+                      <input
+                        type="text"
+                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-blue-400 transition-colors"
+                        value={preset.name}
+                        onChange={e => {
+                          const newPresets = [...(settings.labourRatePresets || [])];
+                          newPresets[index] = { ...preset, name: e.target.value };
                           setSettings({ ...settings, labourRatePresets: newPresets });
                         }}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-blue-50 border-2 border-dashed border-blue-200 rounded-xl text-blue-600 font-bold text-xs uppercase tracking-wider hover:bg-blue-100 transition-colors"
+                        placeholder="Rate name"
+                      />
+                      <div className="flex items-center bg-white border border-slate-200 rounded-lg px-2 py-2 focus-within:border-blue-400 transition-colors">
+                        <PoundSterling size={14} className="text-slate-400 mr-1" />
+                        <input
+                          type="number"
+                          step="0.50"
+                          className="w-16 md:w-20 bg-transparent text-sm font-bold text-slate-900 outline-none"
+                          value={preset.rate}
+                          onChange={e => {
+                            const newPresets = [...(settings.labourRatePresets || [])];
+                            newPresets[index] = { ...preset, rate: parseFloat(e.target.value) || 0 };
+                            setSettings({ ...settings, labourRatePresets: newPresets });
+                          }}
+                          placeholder="0.00"
+                        />
+                        <span className="text-slate-400 text-xs">/hr</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const newPresets = (settings.labourRatePresets || []).filter((_, i) => i !== index);
+                          setSettings({ ...settings, labourRatePresets: newPresets });
+                        }}
+                        className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Remove preset"
                       >
-                        <Plus size={16} />
-                        Add Rate Preset
+                        <Minus size={16} />
                       </button>
                     </div>
+                  ))}
+
+                  <button
+                    onClick={() => {
+                      const newPresets = [...(settings.labourRatePresets || []), { name: '', rate: settings.defaultLabourRate || 65 }];
+                      setSettings({ ...settings, labourRatePresets: newPresets });
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-50 border-2 border-dashed border-blue-200 rounded-xl text-blue-600 font-bold text-xs uppercase tracking-wider hover:bg-blue-100 transition-colors"
+                  >
+                    <Plus size={16} />
+                    Add Rate Preset
+                  </button>
+                </div>
               </CollapsibleSection>
 
               {/* Default Visibility Section */}
@@ -973,30 +1014,30 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                   Choose a color scheme for your quote headers and accents when exported as PDF.
                 </p>
 
-                  <div className="grid grid-cols-3 gap-2 md:gap-3">
-                    {Object.values(COLOR_SCHEMES).map(scheme => (
-                      <button
-                        key={scheme.id}
-                        onClick={() => setSettings({ ...settings, quoteColorScheme: scheme.id })}
-                        className={`flex flex-col items-center gap-1.5 md:gap-3 p-2 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all ${(settings.quoteColorScheme || 'executive') === scheme.id
-                          ? 'border-blue-500 bg-blue-50/30 shadow-lg'
-                          : 'border-slate-100 bg-white hover:border-blue-200'
-                          }`}
-                      >
-                        <div className={`w-full h-8 md:h-12 rounded-lg md:rounded-xl ${scheme.headerBg} flex items-center justify-center border border-slate-200`}>
-                          <span className={`text-[7px] md:text-[9px] font-bold ${scheme.headerText}`}>Header</span>
+                <div className="grid grid-cols-3 gap-2 md:gap-3">
+                  {Object.values(COLOR_SCHEMES).map(scheme => (
+                    <button
+                      key={scheme.id}
+                      onClick={() => setSettings({ ...settings, quoteColorScheme: scheme.id })}
+                      className={`flex flex-col items-center gap-1.5 md:gap-3 p-2 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all ${(settings.quoteColorScheme || 'executive') === scheme.id
+                        ? 'border-blue-500 bg-blue-50/30 shadow-lg'
+                        : 'border-slate-100 bg-white hover:border-blue-200'
+                        }`}
+                    >
+                      <div className={`w-full h-8 md:h-12 rounded-lg md:rounded-xl ${scheme.headerBg} flex items-center justify-center border border-slate-200`}>
+                        <span className={`text-[7px] md:text-[9px] font-bold ${scheme.headerText}`}>Header</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest block">{scheme.name}</span>
+                        <div className="flex items-center gap-1 justify-center mt-0.5 md:mt-1">
+                          {(settings.quoteColorScheme || 'executive') === scheme.id && (
+                            <Check size={10} className="md:w-3 md:h-3 text-blue-500" />
+                          )}
                         </div>
-                        <div className="text-center">
-                          <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest block">{scheme.name}</span>
-                          <div className="flex items-center gap-1 justify-center mt-0.5 md:mt-1">
-                            {(settings.quoteColorScheme || 'executive') === scheme.id && (
-                              <Check size={10} className="md:w-3 md:h-3 text-blue-500" />
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </CollapsibleSection>
 
               {/* Materials Quick Picks */}
@@ -1599,11 +1640,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                                 <button
                                   key={days}
                                   onClick={() => setQuoteFollowUpDays(days)}
-                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                                    quoteFollowUpDays === days
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${quoteFollowUpDays === days
                                       ? 'bg-blue-500 text-white shadow-sm'
                                       : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                                  }`}
+                                    }`}
                                 >
                                   {days} day{days !== 1 ? 's' : ''}
                                 </button>

@@ -78,12 +78,21 @@ export interface ParsedReceipt {
   paymentMethod?: string;
 }
 
+// AI Job Context for enhanced analysis
+export interface AIJobContext {
+  tradeType?: string;
+  labourRate?: number;
+  existingItems?: { name: string; quantity: number; unit: string }[];
+  priceList?: { name: string; unit: string; unitPrice: number }[];
+}
+
 // API Functions
 export const analyzeJobRequirements = async (
   prompt: string,
-  imageBase64?: string
+  imageBase64?: string,
+  context?: AIJobContext
 ): Promise<AnalyzeJobResult> => {
-  return callGemini<AnalyzeJobResult>('analyzeJob', { prompt, imageBase64 });
+  return callGemini<AnalyzeJobResult>('analyzeJob', { prompt, imageBase64, context });
 };
 
 export const parseVoiceCommandForItems = async (

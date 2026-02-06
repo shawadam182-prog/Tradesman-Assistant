@@ -526,19 +526,54 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     }
     setLoading(true);
     try {
-      const result = await analyzeJobRequirements(aiInput, attachedImage || undefined);
+      // Get the target section for existing items
+      const targetSection = formData.sections?.find(s => s.id === (targetSectionId || formData.sections?.[0].id));
+      const existingItems = targetSection?.items.map(i => ({
+        name: i.name,
+        quantity: i.quantity,
+        unit: i.unit
+      })) || [];
+
+      // Fetch materials library for price matching
+      let priceList: { name: string; unit: string; unitPrice: number }[] = [];
+      try {
+        const libraryItems = await services.materialsLibrary.getAll();
+        priceList = libraryItems.map((item: any) => ({
+          name: item.name,
+          unit: item.unit || 'each',
+          unitPrice: item.unit_price || 0
+        }));
+      } catch (err) {
+        console.warn('Could not load materials library for AI context:', err);
+      }
+
+      // Build context from settings
+      const context = {
+        tradeType: settings.tradeType,
+        labourRate: settings.defaultLabourRate || 65,
+        existingItems,
+        priceList
+      };
+
+      const result = await analyzeJobRequirements(aiInput, attachedImage || undefined, context);
+
       const newItems = result.materials.map((m: any) => ({
         id: Math.random().toString(36).substr(2, 9),
-        name: m.name, description: m.description, quantity: m.quantity,
-        unit: m.unit, unitPrice: m.estimatedUnitPrice,
-        totalPrice: m.quantity * m.estimatedUnitPrice, isAIProposed: true
+        name: m.name,
+        description: m.description || '',
+        quantity: m.quantity,
+        unit: m.unit,
+        unitPrice: m.estimatedUnitPrice,
+        totalPrice: m.quantity * m.estimatedUnitPrice,
+        isAIProposed: true
       }));
 
-      // Create labour items from AI result
+      // Create labour items from AI result with isAIProposed flag
       const newLabourItems = (result.labourItems || []).map((l: any) => ({
         id: Math.random().toString(36).substr(2, 9),
         description: l.description,
-        hours: l.hours
+        hours: l.hours,
+        isAIProposed: true
       }));
 
       // Calculate total labour hours from items
@@ -549,9 +584,9 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         sections: prev.sections?.map(s =>
           s.id === (targetSectionId || prev.sections?.[0].id)
             ? {
-              ...s, 
-              title: (!s.title || s.title.startsWith('Work Section')) 
-                ? (result.suggestedTitle || s.title) 
+              ...s,
+              title: (!s.title || s.title.startsWith('Work Section'))
+                ? (result.suggestedTitle || s.title)
                 : s.title,
               labourHours: s.labourHours + totalLabourHours,
               labourItems: [...(s.labourItems || []), ...newLabourItems],
@@ -559,9 +594,39 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
             } : s
         )
       }));
-      setAiInput(''); setAttachedImage(null);
-    } catch (error) { console.error('AI analysis failed:', error); alert("AI analysis failed."); }
+
+      // Show toast with counts
+      const materialCount = newItems.length;
+      const labourCount = newLabourItems.length;
+      toast.success(`Added ${materialCount} material${materialCount !== 1 ? 's' : ''} and ${labourCount} labour item${labourCount !== 1 ? 's' : ''}`);
+
+      setAiInput('');
+      setAttachedImage(null);
+    } catch (error) {
+      console.error('AI analysis failed:', error);
+      toast.error('AI analysis failed. Please try again.');
+    }
     finally { setLoading(false); }
+  };
+
+  // Clear all AI-proposed items from a section
+  const clearAIItems = (sectionId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      sections: prev.sections?.map(s =>
+        s.id === sectionId
+          ? {
+            ...s,
+            items: s.items.filter(item => !item.isAIProposed),
+            labourItems: (s.labourItems || []).filter(item => !item.isAIProposed),
+            labourHours: (s.labourItems || [])
+              .filter(item => !item.isAIProposed)
+              .reduce((sum, l) => sum + l.hours, 0)
+          }
+          : s
+      )
+    }));
+    toast.info('AI items cleared');
   };
 
   // Section handlers
@@ -849,8 +914,8 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                 {(['estimate', 'quotation', 'invoice'] as const).map(type => (
                   <button key={type} type="button" onClick={() => { hapticTap(); handleTypeChange(type); }}
                     className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-all ${formData.type === type
-                        ? type === 'estimate' ? 'bg-teal-500 text-white shadow-lg' : type === 'quotation' ? 'bg-blue-500 text-white shadow-lg' : 'bg-slate-900 text-white shadow-lg'
-                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      ? type === 'estimate' ? 'bg-teal-500 text-white shadow-lg' : type === 'quotation' ? 'bg-blue-500 text-white shadow-lg' : 'bg-slate-900 text-white shadow-lg'
+                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                       }`}>
                     {type === 'estimate' ? <><span className="sm:hidden">Est.</span><span className="hidden sm:inline">Estimate</span></> : type === 'quotation' ? <><span className="sm:hidden">Quote</span><span className="hidden sm:inline">Quotation</span></> : 'Invoice'}
                   </button>
@@ -932,7 +997,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               </select>
             </div>
             <div className="relative mb-2">
-              <textarea className="w-full bg-white border border-teal-100 rounded-xl p-3 min-h-[60px] text-xs font-bold text-slate-900 outline-none focus:border-teal-400 transition-all placeholder:text-teal-300/60 shadow-inner" placeholder="Describe items..." value={aiInput} onChange={e => setAiInput(e.target.value)} />
+              <textarea className="w-full bg-white border border-teal-100 rounded-xl p-3 min-h-[60px] text-xs font-bold text-slate-900 outline-none focus:border-teal-400 transition-all placeholder:text-teal-300/60 shadow-inner" placeholder="e.g., Fit a new bathroom with bath, toilet, basin. Include all pipework and waste connections..." value={aiInput} onChange={e => setAiInput(e.target.value)} />
               <button onClick={() => {
                 if (isListening || isHookListening) {
                   if (isIOS) stopHookListening();
@@ -988,6 +1053,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               onRemoveSection={removeSection}
               calculateSectionLabour={calculateSectionLabour}
               getTotalLabourHours={getTotalLabourHours}
+              onClearAIItems={clearAIItems}
             />
           ))}
 

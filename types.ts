@@ -26,6 +26,7 @@ export interface LabourItem {
   description: string;
   hours: number;
   rate?: number; // Optional per-item rate override
+  isAIProposed?: boolean; // Flag for AI-generated items
 }
 
 export interface QuoteSection {
@@ -99,7 +100,7 @@ export interface Quote {
   partPaymentEnabled?: boolean;
   partPaymentType?: 'percentage' | 'fixed';
   partPaymentValue?: number;
-  
+
   // Recurring invoice fields
   isRecurring?: boolean;
   recurringFrequency?: 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
@@ -251,6 +252,8 @@ export interface AppSettings {
   usageLimits?: UsageLimits;
   // Materials quick picks for job tracker
   quickPickMaterials?: string[];
+  // Trade type for AI context
+  tradeType?: string;
 }
 
 export interface Expense {
