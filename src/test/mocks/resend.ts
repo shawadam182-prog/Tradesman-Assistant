@@ -1,24 +1,18 @@
 /**
- * Mock Resend API responses for testing email functionality.
+ * Mock SendGrid API responses for testing email functionality.
  */
 
-export interface MockResendResponse {
-  id: string;
-  from: string;
-  to: string[];
-  subject: string;
-  created_at: string;
+export interface MockSendGridSuccess {
+  message_id: string;
 }
 
-export interface MockResendError {
-  statusCode: number;
-  message: string;
-  name: string;
+export interface MockSendGridError {
+  errors: { message: string; field?: string; help?: string }[];
 }
 
 let sendCount = 0;
 
-export function resetResendMock(): void {
+export function resetSendGridMock(): void {
   sendCount = 0;
 }
 
@@ -27,37 +21,31 @@ export function getSendCount(): number {
 }
 
 /**
- * Creates a successful Resend send response.
+ * Creates a successful SendGrid send response.
+ * SendGrid returns 202 with an x-message-id header and empty body on success.
  */
-export function createMockResendSuccess(overrides: Partial<MockResendResponse> = {}): MockResendResponse {
+export function createMockSendGridSuccess(): MockSendGridSuccess {
   sendCount++;
   return {
-    id: `re_${Date.now()}_${sendCount}`,
-    from: 'Test Trade Co <noreply@tradesync.co.uk>',
-    to: ['customer@example.com'],
-    subject: 'Your Quote',
-    created_at: new Date().toISOString(),
-    ...overrides,
+    message_id: `sg_${Date.now()}_${sendCount}`,
   };
 }
 
 /**
- * Creates a Resend error response.
+ * Creates a SendGrid error response.
  */
-export function createMockResendError(overrides: Partial<MockResendError> = {}): MockResendError {
+export function createMockSendGridError(overrides: Partial<MockSendGridError> = {}): MockSendGridError {
   return {
-    statusCode: 422,
-    message: 'The `to` field must be a valid email address.',
-    name: 'validation_error',
+    errors: [{ message: 'The to field is required.', field: 'personalizations.0.to' }],
     ...overrides,
   };
 }
 
 /**
- * Creates a mock fetch function that simulates the Resend API.
- * Use with vi.stubGlobal('fetch', createMockResendFetch()) in tests.
+ * Creates a mock fetch function that simulates the SendGrid v3 mail/send API.
+ * Use with vi.stubGlobal('fetch', createMockSendGridFetch()) in tests.
  */
-export function createMockResendFetch(options: {
+export function createMockSendGridFetch(options: {
   shouldFail?: boolean;
   failAfter?: number;
   errorMessage?: string;
@@ -67,8 +55,8 @@ export function createMockResendFetch(options: {
   return async (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
     const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url;
 
-    // Only intercept Resend API calls
-    if (!urlStr.includes('api.resend.com')) {
+    // Only intercept SendGrid API calls
+    if (!urlStr.includes('api.sendgrid.com')) {
       return fetch(url, init);
     }
 
@@ -78,20 +66,29 @@ export function createMockResendFetch(options: {
 
     if (shouldFail) {
       return new Response(
-        JSON.stringify(createMockResendError({ message: options.errorMessage || 'Rate limit exceeded' })),
+        JSON.stringify(createMockSendGridError({
+          errors: [{ message: options.errorMessage || 'Rate limit exceeded' }],
+        })),
         { status: 429, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const body = init?.body ? JSON.parse(init.body as string) : {};
-    const response = createMockResendSuccess({
-      to: body.to || ['customer@example.com'],
-      subject: body.subject || 'Test Email',
-    });
+    const success = createMockSendGridSuccess();
 
+    // SendGrid returns 202 with empty body on success, message ID in header
     return new Response(
-      JSON.stringify(response),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      null,
+      {
+        status: 202,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-message-id': success.message_id,
+        },
+      }
     );
   };
 }
+
+// Re-export with old names for backwards compatibility during transition
+export const resetResendMock = resetSendGridMock;
+export const createMockResendFetch = createMockSendGridFetch;

@@ -7,21 +7,21 @@ const corsHeaders = {
 };
 
 /**
- * Handles Resend delivery webhooks.
- * Resend sends events for: email.sent, email.delivered, email.opened, email.bounced, email.complained
- * Configure webhook URL in Resend dashboard: https://<project>.supabase.co/functions/v1/email-webhook
+ * Handles SendGrid Event Webhook callbacks.
+ * SendGrid posts an array of event objects for: processed, delivered, open, bounce, dropped, deferred, spamreport
+ * Configure webhook URL in SendGrid Settings > Mail Settings > Event Webhook:
+ *   https://<project>.supabase.co/functions/v1/email-webhook
  */
 
-interface ResendWebhookEvent {
-  type: string;
-  created_at: string;
-  data: {
-    email_id: string;
-    from: string;
-    to: string[];
-    subject: string;
-    created_at: string;
-  };
+interface SendGridEvent {
+  email: string;
+  timestamp: number;
+  event: string;
+  sg_message_id: string;
+  reason?: string;
+  response?: string;
+  category?: string[];
+  [key: string]: unknown;
 }
 
 Deno.serve(async (req) => {
@@ -30,80 +30,79 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify webhook signature (Resend sends svix headers)
-    const svixId = req.headers.get('svix-id');
-    const svixTimestamp = req.headers.get('svix-timestamp');
-    const svixSignature = req.headers.get('svix-signature');
-
-    // Basic validation - in production you'd verify the signature
-    if (!svixId || !svixTimestamp || !svixSignature) {
-      // Allow requests without svix headers for testing
-      const webhookSecret = Deno.env.get('RESEND_WEBHOOK_SECRET');
-      if (webhookSecret) {
-        console.warn('Missing svix headers - skipping signature verification');
-      }
-    }
-
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const event: ResendWebhookEvent = await req.json();
-    const messageId = event.data?.email_id;
+    // SendGrid posts an array of events
+    const events: SendGridEvent[] = await req.json();
 
-    if (!messageId) {
+    if (!Array.isArray(events) || events.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'Missing email_id in event' }),
+        JSON.stringify({ error: 'Expected array of events' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Map Resend event types to our status
-    const statusMap: Record<string, string> = {
-      'email.sent': 'sent',
-      'email.delivered': 'sent',
-      'email.delivery_delayed': 'queued',
-      'email.bounced': 'bounced',
-      'email.complained': 'bounced',
-    };
+    const results: { event: string; action: string }[] = [];
 
-    const newStatus = statusMap[event.type];
+    for (const event of events) {
+      // SendGrid sg_message_id includes a filter ID suffix after ".", strip it
+      const rawId = event.sg_message_id || '';
+      const messageId = rawId.split('.')[0];
 
-    if (event.type === 'email.opened') {
-      // Update opened_at timestamp
-      await supabaseAdmin
-        .from('email_log')
-        .update({ opened_at: event.created_at })
-        .eq('resend_message_id', messageId);
-
-      return new Response(
-        JSON.stringify({ received: true, action: 'opened_at_updated' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (newStatus) {
-      const updateData: Record<string, unknown> = { status: newStatus };
-
-      if (newStatus === 'bounced') {
-        updateData.error_message = `Email ${event.type.replace('email.', '')}`;
+      if (!messageId) {
+        results.push({ event: event.event, action: 'skipped_no_message_id' });
+        continue;
       }
 
-      await supabaseAdmin
-        .from('email_log')
-        .update(updateData)
-        .eq('resend_message_id', messageId);
+      // Map SendGrid event types to our status
+      const statusMap: Record<string, string> = {
+        'processed': 'queued',
+        'delivered': 'sent',
+        'deferred': 'queued',
+        'bounce': 'bounced',
+        'dropped': 'failed',
+        'spamreport': 'bounced',
+      };
 
-      return new Response(
-        JSON.stringify({ received: true, action: `status_updated_to_${newStatus}` }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (event.event === 'open') {
+        await supabaseAdmin
+          .from('email_log')
+          .update({ opened_at: new Date(event.timestamp * 1000).toISOString() })
+          .eq('resend_message_id', messageId);
+
+        results.push({ event: event.event, action: 'opened_at_updated' });
+        continue;
+      }
+
+      const newStatus = statusMap[event.event];
+
+      if (newStatus) {
+        const updateData: Record<string, unknown> = { status: newStatus };
+
+        if (newStatus === 'sent') {
+          updateData.sent_at = new Date(event.timestamp * 1000).toISOString();
+        }
+
+        if (newStatus === 'bounced' || newStatus === 'failed') {
+          updateData.error_message = event.reason || event.response || `Email ${event.event}`;
+        }
+
+        await supabaseAdmin
+          .from('email_log')
+          .update(updateData)
+          .eq('resend_message_id', messageId);
+
+        results.push({ event: event.event, action: `status_updated_to_${newStatus}` });
+      } else {
+        results.push({ event: event.event, action: 'ignored' });
+      }
     }
 
-    // Unknown event type - acknowledge but don't process
     return new Response(
-      JSON.stringify({ received: true, action: 'ignored', event_type: event.type }),
+      JSON.stringify({ received: true, processed: results.length, results }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

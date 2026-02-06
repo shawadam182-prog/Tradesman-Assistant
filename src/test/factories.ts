@@ -544,7 +544,7 @@ export function createMockEmailLog(overrides: Partial<EmailLogEntry> = {}): Emai
     templateType: 'quote_send',
     subject: 'Your Quote from Test Trade Co',
     status: 'sent',
-    resendMessageId: 're_' + generateId('msg'),
+    resendMessageId: 'sg_' + generateId('msg'),
     errorMessage: undefined,
     retryCount: 0,
     maxRetries: 3,
