@@ -63,6 +63,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [isListeningTitle, setIsListeningTitle] = useState(false);
   const [aiInput, setAiInput] = useState('');
+  const [aiSectionTitle, setAiSectionTitle] = useState('');
   const [targetSectionId, setTargetSectionId] = useState<string | null>(null);
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [customerSearch, setCustomerSearch] = useState('');
@@ -587,7 +588,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
           s.id === (targetSectionId || prev.sections?.[0].id)
             ? {
               ...s,
-              title: result.suggestedTitle || s.title,
+              title: aiSectionTitle.trim() || result.suggestedTitle || s.title,
               labourHours: s.labourHours + totalLabourHours,
               labourItems: [...(s.labourItems || []), ...newLabourItems],
               items: [...s.items, ...newItems]
@@ -601,6 +602,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       toast.success(`Added ${materialCount} material${materialCount !== 1 ? 's' : ''} and ${labourCount} labour item${labourCount !== 1 ? 's' : ''}`);
 
       setAiInput('');
+      setAiSectionTitle('');
       setAttachedImage(null);
     } catch (error: any) {
       console.error('AI analysis failed:', error);
@@ -996,8 +998,15 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                 {(formData.sections || []).map((s, idx) => <option key={s.id} value={s.id}>{s.title || `Job ${idx + 1}`}</option>)}
               </select>
             </div>
+            <input
+              type="text"
+              className="w-full bg-white border border-teal-100 rounded-xl px-3 py-2 mb-2 text-xs font-bold text-slate-900 outline-none focus:border-teal-400 transition-all placeholder:text-teal-300/60 shadow-inner"
+              placeholder="Section title (optional — AI will suggest one)"
+              value={aiSectionTitle}
+              onChange={e => setAiSectionTitle(e.target.value)}
+            />
             <div className="relative mb-2">
-              <textarea className="w-full bg-white border border-teal-100 rounded-xl p-3 min-h-[60px] text-xs font-bold text-slate-900 outline-none focus:border-teal-400 transition-all placeholder:text-teal-300/60 shadow-inner" placeholder="e.g., Fit a new bathroom with bath, toilet, basin. Include all pipework and waste connections..." value={aiInput} onChange={e => setAiInput(e.target.value)} />
+              <textarea className="w-full bg-white border border-teal-100 rounded-xl p-3 min-h-[60px] text-xs font-bold text-slate-900 outline-none focus:border-teal-400 transition-all placeholder:text-teal-300/60 shadow-inner" placeholder="Describe the work, e.g. Fit a new bathroom with bath, toilet, basin..." value={aiInput} onChange={e => setAiInput(e.target.value)} />
               <button onClick={() => {
                 if (isListening || isHookListening) {
                   if (isIOS) stopHookListening();

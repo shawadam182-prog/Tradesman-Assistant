@@ -84,7 +84,7 @@ ${priceListHint ? `Match prices from this list where items match:\n${priceListHi
         responseSchema: {
           type: SchemaType.OBJECT,
           properties: {
-            suggestedTitle: { type: SchemaType.STRING },
+            suggestedTitle: { type: SchemaType.STRING, description: 'Short 2-5 word title for the work section, e.g. "Bathroom Installation" or "Kitchen Rewire"' },
             laborHoursEstimate: { type: SchemaType.NUMBER },
             labourItems: {
               type: SchemaType.ARRAY,
