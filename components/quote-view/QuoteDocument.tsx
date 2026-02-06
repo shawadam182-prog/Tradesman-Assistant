@@ -702,12 +702,14 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                           </div>
                         )}
 
-                        {displayOptions.showMaterialSectionTotal && (
-                          <div className={`flex justify-between items-center py-1 ${templateConfig.showBackgrounds ? 'bg-slate-50 px-2 rounded-lg border border-slate-100/50' : 'border-t border-slate-100 px-1'}`}>
-                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Materials Total</span>
-                            <span className="font-bold text-[11px] text-slate-900">£{(rawMaterialsTotal * markupMultiplier).toFixed(2)}</span>
-                          </div>
-                        )}
+                      </div>
+                    )}
+
+                    {/* Materials Total — shown independently of showMaterials */}
+                    {displayOptions.showMaterialSectionTotal && rawMaterialsTotal > 0 && (
+                      <div className={`flex justify-between items-center py-1 ${templateConfig.showBackgrounds ? 'bg-slate-50 px-2 rounded-lg border border-slate-100/50' : 'border-t border-slate-100 px-1'}`}>
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Materials Total</span>
+                        <span className="font-bold text-[11px] text-slate-900">£{(rawMaterialsTotal * markupMultiplier).toFixed(2)}</span>
                       </div>
                     )}
 
@@ -769,14 +771,16 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                           </div>
                         )}
 
-                        {displayOptions.showLabourSectionTotal && (
-                          <div className={`flex justify-between items-center py-1 ${templateConfig.showBackgrounds ? 'bg-blue-50/50 px-2 rounded-lg border border-blue-100/50' : 'border-t border-slate-100 px-1'}`}>
-                            <span className="text-[9px] font-bold text-blue-500 uppercase tracking-wider">
-                              Labour Total {totalLabourHours > 0 && `(${totalLabourHours} hrs)`}
-                            </span>
-                            <span className="font-bold text-[11px] text-blue-600">£{(rawLabourTotal * markupMultiplier).toFixed(2)}</span>
-                          </div>
-                        )}
+                      </div>
+                    )}
+
+                    {/* Labour Total — shown independently of showLabour */}
+                    {displayOptions.showLabourSectionTotal && rawLabourTotal > 0 && (
+                      <div className={`flex justify-between items-center py-1 ${templateConfig.showBackgrounds ? 'bg-blue-50/50 px-2 rounded-lg border border-blue-100/50' : 'border-t border-slate-100 px-1'}`}>
+                        <span className="text-[9px] font-bold text-blue-500 uppercase tracking-wider">
+                          Labour Total {totalLabourHours > 0 && `(${totalLabourHours} hrs)`}
+                        </span>
+                        <span className="font-bold text-[11px] text-blue-600">£{(rawLabourTotal * markupMultiplier).toFixed(2)}</span>
                       </div>
                     )}
 
