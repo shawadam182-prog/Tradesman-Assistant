@@ -6,7 +6,7 @@ import {
   Landmark, Package, HardHat, FileDown, Loader2,
   Settings2, Eye, EyeOff, ChevronDown, List,
   ReceiptText, Share2, Copy, MessageCircle, MapPin, Mail, Banknote, Check, X, Clock, Link2, Phone,
-  RefreshCw, Play
+  RefreshCw, Play, Pen
 } from 'lucide-react';
 import { hapticSuccess } from '../src/hooks/useHaptic';
 import {
@@ -19,6 +19,7 @@ import { useQuoteSharing } from '../src/hooks/useQuoteSharing';
 import { QuoteDocument } from './quote-view/QuoteDocument';
 import { QuoteModals } from './quote-view/QuoteModals';
 import { SignatureDisplay } from './signature';
+import { OnSiteSignature } from './OnSiteSignature';
 import { EmailComposer } from './email/EmailComposer';
 import { EmailLog } from './email/EmailLog';
 import { PaymentMilestoneTracker } from './payments/PaymentMilestoneTracker';
@@ -57,6 +58,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   const [milestones, setMilestones] = useState<PaymentMilestone[]>([]);
   const [generatedInvoices, setGeneratedInvoices] = useState<any[]>([]);
   const [isGeneratingRecurring, setIsGeneratingRecurring] = useState(false);
+  const [showOnSiteSignature, setShowOnSiteSignature] = useState(false);
   const { services, refresh, quotes: allQuotes } = useData();
   const documentRef = useRef<HTMLDivElement>(null);
   const shareMenuRef = useRef<HTMLDivElement>(null);
@@ -617,6 +619,16 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
             </button>
           )}
 
+          {/* On-Site Signature - show for accepted quotes/invoices */}
+          {(activeQuote.status === 'accepted' || activeQuote.status === 'sent' || activeQuote.status === 'paid') && (
+            <button
+              onClick={() => setShowOnSiteSignature(true)}
+              className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-teal-50 text-teal-600 text-xs font-bold shadow-sm border border-teal-100 hover:bg-teal-100 transition-colors"
+            >
+              <Pen size={14} /> {quoteSignature ? 'Re-sign' : 'Get Signature'}
+            </button>
+          )}
+
           {/* More Menu - secondary actions */}
           <div className="relative" ref={moreMenuRef}>
             <button
@@ -936,6 +948,19 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
             />
           </div>
         </div>
+      )}
+
+      {/* On-Site Signature Overlay */}
+      {showOnSiteSignature && (
+        <OnSiteSignature
+          quoteId={activeQuote.id}
+          customerName={customer?.name || 'Customer'}
+          onComplete={(signature) => {
+            setQuoteSignature(signature);
+            setShowOnSiteSignature(false);
+          }}
+          onClose={() => setShowOnSiteSignature(false)}
+        />
       )}
 
       <QuoteModals
