@@ -801,7 +801,8 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       : 0;
     const afterDiscount = clientSubtotal - discount;
     const tax = afterDiscount * ((formData.taxPercent || 0) / 100);
-    const cis = (afterDiscount + tax) * ((formData.cisPercent || 0) / 100);
+    // CIS is calculated on labour only, not materials (per HMRC rules)
+    const cis = labourTotal * ((formData.cisPercent || 0) / 100);
     const total = afterDiscount + tax - cis;
 
     return { materialsTotal, labourTotal, subtotal, markup, discount, tax, cis, total };
