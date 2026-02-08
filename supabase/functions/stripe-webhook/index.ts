@@ -14,7 +14,7 @@ const PRICE_TO_TIER: Record<string, string> = {
   'price_1SqywzK6gNizuAaGmBTYOfKl': 'enterprise',
 };
 
-// Field Worker Seat price ID — replace with actual price after creating in Stripe Dashboard
+// Admin User Seat price ID — £10/mo per admin user
 const SEAT_PRICE_ID = 'price_1SyUrfGiHvsip9mTXoJ3riNO';
 
 Deno.serve(async (req) => {
@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
             stripe_subscription_id: subscriptionId,
             subscription_tier: tier,
             subscription_status: subscription.status === 'trialing' ? 'trialing' : 'active',
-            team_seat_count: seatCount,
+            admin_seat_count: seatCount,
             trial_end: subscription.trial_end && subscription.trial_end > 0
               ? new Date(subscription.trial_end * 1000).toISOString()
               : null,
@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
           stripe_subscription_id: subscription.id,
           subscription_tier: tier,
           subscription_status: subscription.status === 'trialing' ? 'trialing' : 'active',
-          team_seat_count: seatCount,
+          admin_seat_count: seatCount,
           trial_end: subscription.trial_end && subscription.trial_end > 0
             ? new Date(subscription.trial_end * 1000).toISOString()
             : null,
@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
         await updateUserSettings(customerId, {
           subscription_tier: tier,
           subscription_status: status,
-          team_seat_count: seatCount,
+          admin_seat_count: seatCount,
           trial_end: subscription.trial_end && subscription.trial_end > 0
             ? new Date(subscription.trial_end * 1000).toISOString()
             : null,
@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
         await updateUserSettings(customerId, {
           subscription_status: 'cancelled',
           subscription_tier: 'free',
-          team_seat_count: 0,
+          admin_seat_count: 0,
         });
 
         // Deactivate all team members for this owner

@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, FileText, Settings, Briefcase, ReceiptText, CalendarDays, Home, LogOut, Receipt, Landmark, Link2, Calculator, CreditCard, FolderOpen, ChevronDown, ChevronRight, Package, MoreHorizontal, X, QrCode, Shield, MessageSquare, TrendingUp, Activity, Download, Clock, Moon, Sun } from 'lucide-react';
+import { Users, FileText, Settings, Briefcase, ReceiptText, CalendarDays, Home, LogOut, Receipt, Landmark, Link2, Calculator, CreditCard, FolderOpen, ChevronDown, ChevronRight, Package, MoreHorizontal, X, QrCode, Shield, MessageSquare, TrendingUp, Activity, Download, Clock, Moon, Sun, User } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useAuth } from '../src/contexts/AuthContext';
 import { useData } from '../src/contexts/DataContext';
 import { isAdminUser } from '../src/lib/constants';
 import { useDarkMode } from '../src/hooks/useDarkMode';
+import { usePermissions } from '../src/hooks/usePermissions';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -35,6 +36,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   const { user } = useAuth();
   const { settings } = useData();
   const { isDark, toggle: toggleDarkMode } = useDarkMode();
+  const permissions = usePermissions();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['work']));
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [moreMenuGroup, setMoreMenuGroup] = useState<string | null>(null);
@@ -62,7 +64,37 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
     return tierNames[settings.subscriptionTier || 'free'] || 'Free';
   };
 
-  const navGroups: NavGroup[] = [
+  // Field workers get a minimal navigation
+  const navGroups: NavGroup[] = permissions.isFieldWorker ? [
+    {
+      id: 'work',
+      label: 'Work',
+      icon: Briefcase,
+      tier: 'starter',
+      items: [
+        { id: 'home', label: 'Home', icon: Home, tier: 'starter' },
+        { id: 'jobpacks', label: 'My Jobs', icon: Briefcase, tier: 'starter' },
+        { id: 'schedule', label: 'Schedule', icon: CalendarDays, tier: 'starter' },
+      ]
+    },
+    {
+      id: 'team',
+      label: 'Team',
+      icon: Users,
+      items: [
+        { id: 'timesheet_approval', label: 'My Timesheets', icon: Clock },
+      ]
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: Settings,
+      tier: 'starter',
+      items: [
+        { id: 'settings', label: 'Profile', icon: User, tier: 'starter' },
+      ]
+    },
+  ] : [
     {
       id: 'work',
       label: 'Work',
@@ -90,23 +122,23 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         { id: 'files', label: 'Files', icon: FolderOpen, tier: 'professional' },
       ]
     },
-    {
+    ...(permissions.canAccessAccounting ? [{
       id: 'accounting',
       label: 'Accounting',
       icon: Calculator,
-      tier: 'business',
+      tier: 'business' as const,
       badge: 'BIZ',
       items: [
-        { id: 'bank', label: 'Bank Import', icon: Landmark, tier: 'business' },
-        { id: 'reconcile', label: 'Reconcile', icon: Link2, tier: 'business' },
-        { id: 'vat', label: 'VAT Summary', icon: Calculator, tier: 'business' },
-        { id: 'profitloss', label: 'Profit & Loss', icon: TrendingUp, tier: 'business' },
-        { id: 'payables', label: 'Payables', icon: CreditCard, tier: 'business' },
-        { id: 'accountant_export', label: 'Export Data', icon: Download, tier: 'business' },
+        { id: 'bank', label: 'Bank Import', icon: Landmark, tier: 'business' as const },
+        { id: 'reconcile', label: 'Reconcile', icon: Link2, tier: 'business' as const },
+        { id: 'vat', label: 'VAT Summary', icon: Calculator, tier: 'business' as const },
+        { id: 'profitloss', label: 'Profit & Loss', icon: TrendingUp, tier: 'business' as const },
+        { id: 'payables', label: 'Payables', icon: CreditCard, tier: 'business' as const },
+        { id: 'accountant_export', label: 'Export Data', icon: Download, tier: 'business' as const },
       ]
-    },
-    // Team section — visible for any paid subscriber so they can access Team Setup to buy seats
-    ...((settings.subscriptionStatus === 'active' || settings.subscriptionStatus === 'trialing' || (settings.teamSeatCount ?? 0) > 0) ? [{
+    }] : []),
+    // Team section — visible for owners/admins with paid subscription or seats
+    ...((settings.subscriptionStatus === 'active' || settings.subscriptionStatus === 'trialing' || (settings.adminSeatCount ?? settings.teamSeatCount ?? 0) > 0) ? [{
       id: 'team',
       label: 'Team',
       icon: Users,
@@ -114,7 +146,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       items: [
         { id: 'team_dashboard', label: 'Dashboard', icon: Users },
         { id: 'timesheet_approval', label: 'Timesheets', icon: Clock },
-        { id: 'team_settings', label: 'Team Setup', icon: Settings },
+        ...(permissions.isOwner ? [{ id: 'team_settings', label: 'Team Setup', icon: Settings }] : []),
       ]
     }] : []),
     {
@@ -126,7 +158,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         { id: 'settings', label: 'Settings', icon: Settings, tier: 'starter' },
       ]
     },
-    // Admin section - only visible to admin users
+    // Admin section - only visible to admin users (system admins, not team admins)
     ...(isAdmin ? [{
       id: 'admin',
       label: 'Admin',
@@ -155,8 +187,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   // Flat list for mobile nav
   const navItems = navGroups.flatMap(g => g.items);
 
-  // Primary navigation items for mobile bottom bar — 6 tabs
-  const mobileNavItems = [
+  // Primary navigation items for mobile bottom bar
+  const mobileNavItems = permissions.isFieldWorker ? [
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'jobpacks', label: 'My Jobs', icon: Briefcase },
+    { id: 'schedule', label: 'Schedule', icon: CalendarDays },
+    { id: 'timesheet_approval', label: 'Timesheets', icon: Clock },
+    { id: 'settings', label: 'Profile', icon: User },
+  ] : [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'jobpacks', label: 'Jobs', icon: Briefcase },
     { id: 'schedule', label: 'Schedule', icon: CalendarDays },

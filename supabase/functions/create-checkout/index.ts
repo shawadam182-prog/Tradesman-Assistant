@@ -14,7 +14,7 @@ const PRICE_IDS: Record<string, string> = {
   enterprise: 'price_1SqywzK6gNizuAaGmBTYOfKl',
 };
 
-// Field Worker Seat price ID — replace with actual price after creating in Stripe Dashboard
+// Admin User Seat price ID — £10/mo per admin user
 const SEAT_PRICE_ID = 'price_1SyUrfGiHvsip9mTXoJ3riNO';
 
 Deno.serve(async (req) => {

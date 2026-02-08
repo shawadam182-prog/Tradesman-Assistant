@@ -354,6 +354,9 @@ function dbSettingsToApp(dbSettings: any): AppSettings {
     referralCode: dbSettings.referral_code || undefined,
     usageLimits: dbSettings.usage_limits || undefined,
     quickPickMaterials: dbSettings.quick_pick_materials || DEFAULT_SETTINGS.quickPickMaterials,
+    // Team seat counts
+    teamSeatCount: dbSettings.team_seat_count ?? 0,
+    adminSeatCount: dbSettings.admin_seat_count ?? 0,
   };
 }
 

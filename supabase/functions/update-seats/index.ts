@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Field Worker Seat price ID — replace with actual price after creating in Stripe Dashboard
+// Admin User Seat price ID — £10/mo per admin user
 const SEAT_PRICE_ID = 'price_1SyUrfGiHvsip9mTXoJ3riNO';
 
 Deno.serve(async (req) => {
@@ -56,13 +56,13 @@ Deno.serve(async (req) => {
     // Get user's subscription info
     const { data: settings } = await supabaseAdmin
       .from('user_settings')
-      .select('stripe_customer_id, stripe_subscription_id, team_seat_count')
+      .select('stripe_customer_id, stripe_subscription_id, admin_seat_count')
       .eq('user_id', user.id)
       .single();
 
     if (!settings?.stripe_subscription_id) {
       return new Response(
-        JSON.stringify({ error: 'You must have an active subscription to add team seats' }),
+        JSON.stringify({ error: 'You must have an active subscription to add admin seats' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
 
     if (subscription.status !== 'active' && subscription.status !== 'trialing') {
       return new Response(
-        JSON.stringify({ error: 'Your subscription must be active to manage team seats' }),
+        JSON.stringify({ error: 'Your subscription must be active to manage admin seats' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -103,11 +103,11 @@ Deno.serve(async (req) => {
     }
     // seatCount === 0 && !seatItem → nothing to do
 
-    // Update local seat count
+    // Update local admin seat count
     await supabaseAdmin
       .from('user_settings')
       .update({
-        team_seat_count: seatCount,
+        admin_seat_count: seatCount,
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', user.id);

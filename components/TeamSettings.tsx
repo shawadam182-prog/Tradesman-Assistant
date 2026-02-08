@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Plus, Mail, Trash2, Loader2, UserCheck, UserX, Clock, Minus } from 'lucide-react';
+import { ArrowLeft, Users, Plus, Mail, Trash2, Loader2, UserCheck, UserX, Clock, Minus, Shield, HardHat } from 'lucide-react';
 import { teamService } from '../src/services/teamService';
 import { useToast } from '../src/contexts/ToastContext';
 import { useAuth } from '../src/contexts/AuthContext';
 import { useData } from '../src/contexts/DataContext';
-import { updateTeamSeats } from '../src/lib/stripe';
+import { updateAdminSeats } from '../src/lib/stripe';
+import { MAX_FIELD_WORKERS } from '../types';
+import type { TeamRole, SubscriptionTier } from '../types';
 
 interface TeamSettingsProps {
   onBack: () => void;
@@ -27,13 +29,17 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
   // Invite form
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteDisplayName, setInviteDisplayName] = useState('');
+  const [inviteRole, setInviteRole] = useState<'admin' | 'field_worker'>('field_worker');
   const [inviting, setInviting] = useState(false);
 
   // Seat management
   const [updatingSeats, setUpdatingSeats] = useState(false);
-  const currentSeatCount = settings.teamSeatCount ?? 0;
-  const activeWorkerCount = members.filter(m => m.role !== 'owner' && m.status === 'active').length;
+  const adminSeatCount = settings.adminSeatCount ?? settings.teamSeatCount ?? 0;
+  const activeAdmins = members.filter(m => m.role === 'admin' && m.status === 'active').length;
+  const activeFieldWorkers = members.filter(m => m.role === 'field_worker' && m.status === 'active').length;
   const hasSubscription = settings.subscriptionStatus === 'active' || settings.subscriptionStatus === 'trialing';
+  const tier = (settings.subscriptionTier || 'free') as SubscriptionTier;
+  const maxFreeWorkers = MAX_FIELD_WORKERS[tier] || 0;
 
   useEffect(() => {
     fetchTeamData();
@@ -77,21 +83,28 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
   const handleInvite = async () => {
     if (!inviteEmail.trim() || !team) return;
 
-    // Check seat limit before inviting
-    if (currentSeatCount > 0 && activeWorkerCount >= currentSeatCount) {
-      toast.error('All seats are in use. Add another seat before inviting.');
-      return;
+    // Check limits based on role
+    if (inviteRole === 'admin') {
+      if (adminSeatCount > 0 && activeAdmins >= adminSeatCount) {
+        toast.error('All admin seats are in use. Add another seat before inviting.');
+        return;
+      }
+    } else {
+      if (maxFreeWorkers > 0 && activeFieldWorkers >= maxFreeWorkers) {
+        toast.error(`Your ${tier} plan includes ${maxFreeWorkers} field workers. Upgrade for more.`);
+        return;
+      }
     }
 
     setInviting(true);
     try {
-      await teamService.sendInvitation(team.id, inviteEmail.trim(), 'field_worker', inviteDisplayName.trim() || undefined);
+      await teamService.sendInvitation(team.id, inviteEmail.trim(), inviteRole, inviteDisplayName.trim() || undefined);
 
       // Try to send email (non-blocking)
       try {
         await teamService.sendInvitationEmail(
           inviteEmail.trim(),
-          'field_worker',
+          inviteRole,
           inviteDisplayName.trim() || undefined,
           team.name,
           settings.companyName || user?.email || 'Your employer'
@@ -143,23 +156,30 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
     }
   };
 
-  const handleUpdateSeats = async (newCount: number) => {
+  const handleUpdateAdminSeats = async (newCount: number) => {
     if (newCount < 0 || !Number.isInteger(newCount)) return;
-    if (newCount < activeWorkerCount) {
-      toast.error(`Cannot reduce below ${activeWorkerCount} seats — deactivate workers first`);
+    if (newCount < activeAdmins) {
+      toast.error(`Cannot reduce below ${activeAdmins} seats — deactivate admins first`);
       return;
     }
     setUpdatingSeats(true);
     try {
-      await updateTeamSeats(newCount);
-      toast.success(`Team seats updated to ${newCount}`);
-      // Settings will sync via webhook, but update locally for instant feedback
+      await updateAdminSeats(newCount);
+      toast.success(`Admin seats updated to ${newCount}`);
+      // Update locally for instant feedback
+      (settings as any).adminSeatCount = newCount;
       (settings as any).teamSeatCount = newCount;
     } catch (err: any) {
       toast.error(err?.message || 'Failed to update seats');
     } finally {
       setUpdatingSeats(false);
     }
+  };
+
+  const roleBadge = (role: string) => {
+    if (role === 'owner') return <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-400">OWNER</span>;
+    if (role === 'admin') return <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-400">ADMIN</span>;
+    return <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-500/20 text-slate-400">WORKER</span>;
   };
 
   if (loading) {
@@ -186,7 +206,7 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
           <div className="text-center">
             <Users className="w-12 h-12 text-slate-600 mx-auto mb-3" />
             <h2 className="text-lg font-semibold text-slate-200 mb-1">Create Your Team</h2>
-            <p className="text-sm text-slate-400">Set up a team to invite field workers and manage timesheets.</p>
+            <p className="text-sm text-slate-400">Set up a team to invite admins and field workers.</p>
           </div>
           <div>
             <label className="text-xs font-semibold text-slate-400 block mb-1">Team Name</label>
@@ -215,32 +235,32 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
             <p className="text-lg font-semibold text-slate-200">{team.name}</p>
           </div>
 
-          {/* Seat Management */}
+          {/* Admin Seats (paid) */}
           {hasSubscription && (
             <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
-              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Field Worker Seats</h2>
+              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Admin Users</h2>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-300">
-                    {currentSeatCount} seat{currentSeatCount !== 1 ? 's' : ''} purchased
+                    {adminSeatCount} seat{adminSeatCount !== 1 ? 's' : ''} purchased
                   </p>
                   <p className="text-xs text-slate-500">
-                    {activeWorkerCount} of {currentSeatCount} in use &middot; £9/mo per seat
+                    {activeAdmins} of {adminSeatCount} in use &middot; £10/mo per admin
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleUpdateSeats(currentSeatCount - 1)}
-                    disabled={updatingSeats || currentSeatCount <= 0}
+                    onClick={() => handleUpdateAdminSeats(adminSeatCount - 1)}
+                    disabled={updatingSeats || adminSeatCount <= 0}
                     className="w-8 h-8 flex items-center justify-center bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 disabled:opacity-30 transition-colors"
                   >
                     <Minus className="w-4 h-4" />
                   </button>
                   <span className="text-lg font-bold text-slate-200 w-8 text-center">
-                    {updatingSeats ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : currentSeatCount}
+                    {updatingSeats ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : adminSeatCount}
                   </span>
                   <button
-                    onClick={() => handleUpdateSeats(currentSeatCount + 1)}
+                    onClick={() => handleUpdateAdminSeats(adminSeatCount + 1)}
                     disabled={updatingSeats}
                     className="w-8 h-8 flex items-center justify-center bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50 transition-colors"
                   >
@@ -251,17 +271,60 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
             </div>
           )}
 
+          {/* Field Workers (free with tier limits) */}
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Field Workers</h2>
+            <p className="text-sm text-slate-300">
+              {activeFieldWorkers} of {maxFreeWorkers} included free
+            </p>
+            <p className="text-xs text-slate-500">
+              {tier === 'professional' ? 'Pro' : tier === 'business' ? 'Business' : tier.charAt(0).toUpperCase() + tier.slice(1)} plan includes {maxFreeWorkers} field workers
+            </p>
+          </div>
+
           {!hasSubscription && (
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
               <p className="text-sm text-amber-400">
-                You need an active subscription to add team seats. Go to Settings to subscribe.
+                You need an active subscription to manage your team. Go to Settings to subscribe.
               </p>
             </div>
           )}
 
           {/* Invite member */}
           <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Invite Field Worker</h2>
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Invite Team Member</h2>
+
+            {/* Role selector */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setInviteRole('field_worker')}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                  inviteRole === 'field_worker'
+                    ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50'
+                    : 'bg-slate-700 text-slate-400 border border-slate-600'
+                }`}
+              >
+                <HardHat className="w-4 h-4" />
+                Field Worker
+              </button>
+              <button
+                onClick={() => setInviteRole('admin')}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                  inviteRole === 'admin'
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                    : 'bg-slate-700 text-slate-400 border border-slate-600'
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                Admin
+              </button>
+            </div>
+            <p className="text-xs text-slate-500">
+              {inviteRole === 'field_worker'
+                ? 'Can view assigned jobs, submit timesheets, add photos & notes. Free within plan limits.'
+                : 'Can manage jobs, quotes, invoices, customers & team. £10/mo per admin.'}
+            </p>
+
             <div className="space-y-2">
               <input
                 type="email"
@@ -283,7 +346,7 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
                 className="w-full py-2.5 bg-teal-500 text-white font-medium rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {inviting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                Send Invitation
+                Invite {inviteRole === 'admin' ? 'Admin' : 'Field Worker'}
               </button>
             </div>
           </div>
@@ -296,7 +359,10 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
                 {invitations.filter(i => i.status === 'pending').map(inv => (
                   <div key={inv.id} className="flex items-center justify-between py-2 border-b border-slate-700 last:border-0">
                     <div>
-                      <p className="text-sm text-slate-200">{inv.email}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-slate-200">{inv.email}</p>
+                        {roleBadge(inv.role)}
+                      </div>
                       <p className="text-xs text-slate-500">
                         Expires {new Date(inv.expires_at).toLocaleDateString('en-GB')}
                       </p>
@@ -329,6 +395,7 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
                         <UserX className="w-4 h-4 text-slate-500" />
                       )}
                       <span className="text-sm font-medium text-slate-200">{member.display_name}</span>
+                      {roleBadge(member.role)}
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                         member.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-slate-600/20 text-slate-500'
                       }`}>
@@ -344,17 +411,19 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
                       </button>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-3 h-3 text-slate-500" />
-                    <span className="text-xs text-slate-400">Rate:</span>
-                    <input
-                      type="number"
-                      defaultValue={member.hourly_rate || 0}
-                      onBlur={e => handleUpdateRate(member.id, e.target.value)}
-                      className="w-20 px-2 py-1 bg-slate-600 border border-slate-500 rounded text-xs text-slate-200 focus:outline-none focus:border-teal-500"
-                    />
-                    <span className="text-xs text-slate-500">/hr</span>
-                  </div>
+                  {member.role === 'field_worker' && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-3 h-3 text-slate-500" />
+                      <span className="text-xs text-slate-400">Rate:</span>
+                      <input
+                        type="number"
+                        defaultValue={member.hourly_rate || 0}
+                        onBlur={e => handleUpdateRate(member.id, e.target.value)}
+                        className="w-20 px-2 py-1 bg-slate-600 border border-slate-500 rounded text-xs text-slate-200 focus:outline-none focus:border-teal-500"
+                      />
+                      <span className="text-xs text-slate-500">/hr</span>
+                    </div>
+                  )}
                 </div>
               ))}
               {members.filter(m => m.role !== 'owner').length === 0 && (

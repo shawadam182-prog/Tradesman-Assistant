@@ -250,8 +250,9 @@ export interface AppSettings {
   stripeSubscriptionId?: string;
   referralCode?: string;
   usageLimits?: UsageLimits;
-  // Team seats
-  teamSeatCount?: number;
+  // Team (admin seats are paid £10/mo, field workers free within tier limits)
+  teamSeatCount?: number;       // legacy — kept for backward compat
+  adminSeatCount?: number;      // paid admin seats
   // Materials quick picks for job tracker
   quickPickMaterials?: string[];
   // Trade type for AI context
@@ -559,6 +560,16 @@ export interface Invoice {
 export type SubscriptionTier = 'free' | 'professional' | 'business' | 'team';
 
 export type SubscriptionStatus = 'trialing' | 'active' | 'cancelled' | 'past_due' | 'expired';
+
+export type TeamRole = 'owner' | 'admin' | 'field_worker';
+
+// Max free field workers per tier (admin users are paid add-ons)
+export const MAX_FIELD_WORKERS: Record<SubscriptionTier, number> = {
+  free: 0,
+  professional: 3,
+  business: 5,
+  team: 5,
+};
 
 export interface UsageLimits {
   customers: number | null;
