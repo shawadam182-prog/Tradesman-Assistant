@@ -83,6 +83,45 @@ export type Database = {
           },
         ]
       }
+      communication_preferences: {
+        Row: {
+          appointment_reminder_enabled: boolean | null
+          appointment_reminder_hours: number | null
+          created_at: string | null
+          id: string
+          payment_reminder_days: number[] | null
+          payment_reminder_enabled: boolean | null
+          quote_follow_up_days: number | null
+          quote_follow_up_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          appointment_reminder_enabled?: boolean | null
+          appointment_reminder_hours?: number | null
+          created_at?: string | null
+          id?: string
+          payment_reminder_days?: number[] | null
+          payment_reminder_enabled?: boolean | null
+          quote_follow_up_days?: number | null
+          quote_follow_up_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          appointment_reminder_enabled?: boolean | null
+          appointment_reminder_hours?: number | null
+          created_at?: string | null
+          id?: string
+          payment_reminder_days?: number[] | null
+          payment_reminder_enabled?: boolean | null
+          quote_follow_up_days?: number | null
+          quote_follow_up_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -114,6 +153,101 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_log: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          max_retries: number | null
+          next_retry_at: string | null
+          opened_at: string | null
+          quote_id: string | null
+          recipient_email: string
+          resend_message_id: string | null
+          retry_count: number | null
+          sent_at: string | null
+          status: string | null
+          subject: string
+          template_type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          max_retries?: number | null
+          next_retry_at?: string | null
+          opened_at?: string | null
+          quote_id?: string | null
+          recipient_email: string
+          resend_message_id?: string | null
+          retry_count?: number | null
+          sent_at?: string | null
+          status?: string | null
+          subject: string
+          template_type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          max_retries?: number | null
+          next_retry_at?: string | null
+          opened_at?: string | null
+          quote_id?: string | null
+          recipient_email?: string
+          resend_message_id?: string | null
+          retry_count?: number | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string
+          template_type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_log_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          body: string
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          subject: string
+          template_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          subject: string
+          template_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          subject?: string
+          template_type?: string
           updated_at?: string | null
           user_id?: string
         }
@@ -281,7 +415,103 @@ export type Database = {
           user_id?: string
           vendor_name?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "filed_documents_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filed_documents_job_pack_id_fkey"
+            columns: ["job_pack_id"]
+            isOneToOne: false
+            referencedRelation: "job_packs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filed_documents_payable_id_fkey"
+            columns: ["payable_id"]
+            isOneToOne: false
+            referencedRelation: "payables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gps_logs: {
+        Row: {
+          accuracy: number | null
+          id: string
+          lat: number
+          lng: number
+          logged_at: string | null
+          timesheet_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          id?: string
+          lat: number
+          lng: number
+          logged_at?: string | null
+          timesheet_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          logged_at?: string | null
+          timesheet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_logs_timesheet_id_fkey"
+            columns: ["timesheet_id"]
+            isOneToOne: false
+            referencedRelation: "timesheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string
+          id: string
+          job_pack_id: string
+          team_member_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by: string
+          id?: string
+          job_pack_id: string
+          team_member_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string
+          id?: string
+          job_pack_id?: string
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_assignments_job_pack_id_fkey"
+            columns: ["job_pack_id"]
+            isOneToOne: false
+            referencedRelation: "job_packs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_assignments_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_packs: {
         Row: {
@@ -323,6 +553,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      material_kits: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_favourite: boolean | null
+          items: Json
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_favourite?: boolean | null
+          items?: Json
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_favourite?: boolean | null
+          items?: Json
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       materials_import_history: {
         Row: {
@@ -475,7 +741,99 @@ export type Database = {
           vendor_id?: string | null
           vendor_name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payables_job_pack_id_fkey"
+            columns: ["job_pack_id"]
+            isOneToOne: false
+            referencedRelation: "job_packs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payables_reconciled_transaction_id_fkey"
+            columns: ["reconciled_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payables_reconciled_transaction_id_fkey"
+            columns: ["reconciled_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "reconciliation_summary"
+            referencedColumns: ["transaction_id"]
+          },
+          {
+            foreignKeyName: "payables_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_milestones: {
+        Row: {
+          created_at: string | null
+          due_date: string | null
+          fixed_amount: number | null
+          id: string
+          invoice_id: string | null
+          label: string
+          paid_at: string | null
+          percentage: number | null
+          quote_id: string
+          sort_order: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          due_date?: string | null
+          fixed_amount?: number | null
+          id?: string
+          invoice_id?: string | null
+          label: string
+          paid_at?: string | null
+          percentage?: number | null
+          quote_id: string
+          sort_order?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          due_date?: string | null
+          fixed_amount?: number | null
+          id?: string
+          invoice_id?: string | null
+          label?: string
+          paid_at?: string | null
+          percentage?: number | null
+          quote_id?: string
+          sort_order?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_milestones_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_milestones_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_materials: {
         Row: {
@@ -527,12 +885,57 @@ export type Database = {
           },
         ]
       }
+      quote_signatures: {
+        Row: {
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          quote_id: string
+          signature_data: string
+          signature_type: string | null
+          signed_at: string | null
+          signer_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          quote_id: string
+          signature_data: string
+          signature_type?: string | null
+          signed_at?: string | null
+          signer_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          quote_id?: string
+          signature_data?: string
+          signature_type?: string | null
+          signed_at?: string | null
+          signer_name?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_signatures_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quotes: {
         Row: {
           accepted_at: string | null
           amount_paid: number | null
           cis_percent: number | null
           created_at: string | null
+          credit_note_reason: string | null
           customer_id: string | null
           customer_response_ip: string | null
           customer_response_user_agent: string | null
@@ -544,33 +947,51 @@ export type Database = {
           display_options: Json | null
           due_date: string | null
           id: string
+          is_credit_note: boolean | null
+          is_recurring: boolean | null
           job_address: string | null
           job_pack_id: string | null
           labour_rate: number | null
           markup_percent: number | null
           notes: string | null
+          online_payment_amount: number | null
+          online_payment_fee: number | null
+          online_payment_net: number | null
+          original_invoice_id: string | null
           parent_quote_id: string | null
           part_payment_enabled: boolean | null
           part_payment_label: string | null
           part_payment_type: string | null
           part_payment_value: number | null
           payment_date: string | null
+          payment_link_created_at: string | null
+          payment_link_expires_at: string | null
+          payment_link_url: string | null
           payment_method: string | null
+          recurring_end_date: string | null
+          recurring_frequency: string | null
+          recurring_next_date: string | null
+          recurring_parent_id: string | null
+          recurring_start_date: string | null
           reference_number: number | null
           sections: Json | null
           share_token: string | null
           status: string | null
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
           tax_percent: number | null
           title: string
           type: string | null
           updated_at: string | null
           user_id: string
+          view_count: number | null
         }
         Insert: {
           accepted_at?: string | null
           amount_paid?: number | null
           cis_percent?: number | null
           created_at?: string | null
+          credit_note_reason?: string | null
           customer_id?: string | null
           customer_response_ip?: string | null
           customer_response_user_agent?: string | null
@@ -582,33 +1003,51 @@ export type Database = {
           display_options?: Json | null
           due_date?: string | null
           id?: string
+          is_credit_note?: boolean | null
+          is_recurring?: boolean | null
           job_address?: string | null
           job_pack_id?: string | null
           labour_rate?: number | null
           markup_percent?: number | null
           notes?: string | null
+          online_payment_amount?: number | null
+          online_payment_fee?: number | null
+          online_payment_net?: number | null
+          original_invoice_id?: string | null
           parent_quote_id?: string | null
           part_payment_enabled?: boolean | null
           part_payment_label?: string | null
           part_payment_type?: string | null
           part_payment_value?: number | null
           payment_date?: string | null
+          payment_link_created_at?: string | null
+          payment_link_expires_at?: string | null
+          payment_link_url?: string | null
           payment_method?: string | null
+          recurring_end_date?: string | null
+          recurring_frequency?: string | null
+          recurring_next_date?: string | null
+          recurring_parent_id?: string | null
+          recurring_start_date?: string | null
           reference_number?: number | null
           sections?: Json | null
           share_token?: string | null
           status?: string | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
           tax_percent?: number | null
           title: string
           type?: string | null
           updated_at?: string | null
           user_id: string
+          view_count?: number | null
         }
         Update: {
           accepted_at?: string | null
           amount_paid?: number | null
           cis_percent?: number | null
           created_at?: string | null
+          credit_note_reason?: string | null
           customer_id?: string | null
           customer_response_ip?: string | null
           customer_response_user_agent?: string | null
@@ -620,29 +1059,82 @@ export type Database = {
           display_options?: Json | null
           due_date?: string | null
           id?: string
+          is_credit_note?: boolean | null
+          is_recurring?: boolean | null
           job_address?: string | null
           job_pack_id?: string | null
           labour_rate?: number | null
           markup_percent?: number | null
           notes?: string | null
+          online_payment_amount?: number | null
+          online_payment_fee?: number | null
+          online_payment_net?: number | null
+          original_invoice_id?: string | null
           parent_quote_id?: string | null
           part_payment_enabled?: boolean | null
           part_payment_label?: string | null
           part_payment_type?: string | null
           part_payment_value?: number | null
           payment_date?: string | null
+          payment_link_created_at?: string | null
+          payment_link_expires_at?: string | null
+          payment_link_url?: string | null
           payment_method?: string | null
+          recurring_end_date?: string | null
+          recurring_frequency?: string | null
+          recurring_next_date?: string | null
+          recurring_parent_id?: string | null
+          recurring_start_date?: string | null
           reference_number?: number | null
           sections?: Json | null
           share_token?: string | null
           status?: string | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
           tax_percent?: number | null
           title?: string
           type?: string | null
           updated_at?: string | null
           user_id?: string
+          view_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quotes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_job_pack_id_fkey"
+            columns: ["job_pack_id"]
+            isOneToOne: false
+            referencedRelation: "job_packs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_original_invoice_id_fkey"
+            columns: ["original_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_parent_quote_id_fkey"
+            columns: ["parent_quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_recurring_parent_id_fkey"
+            columns: ["recurring_parent_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reconciliation_links: {
         Row: {
@@ -672,49 +1164,102 @@ export type Database = {
           invoice_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reconciliation_links_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliation_links_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "reconciliation_summary"
+            referencedColumns: ["transaction_id"]
+          },
+          {
+            foreignKeyName: "reconciliation_links_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliation_links_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       schedule_entries: {
         Row: {
+          confirmation_sent_at: string | null
           created_at: string | null
+          customer_email: string | null
           customer_id: string | null
           description: string | null
           end_time: string
           id: string
           job_pack_id: string | null
           location: string | null
+          reminder_sent_at: string | null
           start_time: string
           title: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          confirmation_sent_at?: string | null
           created_at?: string | null
+          customer_email?: string | null
           customer_id?: string | null
           description?: string | null
           end_time: string
           id?: string
           job_pack_id?: string | null
           location?: string | null
+          reminder_sent_at?: string | null
           start_time: string
           title: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          confirmation_sent_at?: string | null
           created_at?: string | null
+          customer_email?: string | null
           customer_id?: string | null
           description?: string | null
           end_time?: string
           id?: string
           job_pack_id?: string | null
           location?: string | null
+          reminder_sent_at?: string | null
           start_time?: string
           title?: string
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "schedule_entries_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_entries_job_pack_id_fkey"
+            columns: ["job_pack_id"]
+            isOneToOne: false
+            referencedRelation: "job_packs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_documents: {
         Row: {
@@ -744,7 +1289,15 @@ export type Database = {
           storage_path?: string
           summary?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "site_documents_job_pack_id_fkey"
+            columns: ["job_pack_id"]
+            isOneToOne: false
+            referencedRelation: "job_packs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_notes: {
         Row: {
@@ -768,7 +1321,15 @@ export type Database = {
           job_pack_id?: string
           text?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "site_notes_job_pack_id_fkey"
+            columns: ["job_pack_id"]
+            isOneToOne: false
+            referencedRelation: "job_packs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_photos: {
         Row: {
@@ -798,7 +1359,15 @@ export type Database = {
           storage_path?: string
           tags?: string[] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "site_photos_job_pack_id_fkey"
+            columns: ["job_pack_id"]
+            isOneToOne: false
+            referencedRelation: "job_packs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_requests: {
         Row: {
@@ -841,6 +1410,208 @@ export type Database = {
           user_name?: string | null
         }
         Relationships: []
+      }
+      team_invitations: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          role: string
+          status: string
+          team_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          role?: string
+          status?: string
+          team_id: string
+          token?: string
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          role?: string
+          status?: string
+          team_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invitations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          created_at: string | null
+          display_name: string
+          hourly_rate: number | null
+          id: string
+          phone: string | null
+          role: string
+          status: string
+          team_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_name: string
+          hourly_rate?: number | null
+          id?: string
+          phone?: string | null
+          role?: string
+          status?: string
+          team_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string
+          hourly_rate?: number | null
+          id?: string
+          phone?: string | null
+          role?: string
+          status?: string
+          team_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          owner_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      timesheets: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          break_minutes: number | null
+          clock_in: string
+          clock_in_accuracy: number | null
+          clock_in_lat: number | null
+          clock_in_lng: number | null
+          clock_out: string | null
+          clock_out_accuracy: number | null
+          clock_out_lat: number | null
+          clock_out_lng: number | null
+          created_at: string | null
+          id: string
+          is_gps_verified: boolean | null
+          job_pack_id: string | null
+          notes: string | null
+          rejection_reason: string | null
+          status: string | null
+          team_member_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          break_minutes?: number | null
+          clock_in: string
+          clock_in_accuracy?: number | null
+          clock_in_lat?: number | null
+          clock_in_lng?: number | null
+          clock_out?: string | null
+          clock_out_accuracy?: number | null
+          clock_out_lat?: number | null
+          clock_out_lng?: number | null
+          created_at?: string | null
+          id?: string
+          is_gps_verified?: boolean | null
+          job_pack_id?: string | null
+          notes?: string | null
+          rejection_reason?: string | null
+          status?: string | null
+          team_member_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          break_minutes?: number | null
+          clock_in?: string
+          clock_in_accuracy?: number | null
+          clock_in_lat?: number | null
+          clock_in_lng?: number | null
+          clock_out?: string | null
+          clock_out_accuracy?: number | null
+          clock_out_lat?: number | null
+          clock_out_lng?: number | null
+          created_at?: string | null
+          id?: string
+          is_gps_verified?: boolean | null
+          job_pack_id?: string | null
+          notes?: string | null
+          rejection_reason?: string | null
+          status?: string | null
+          team_member_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timesheets_job_pack_id_fkey"
+            columns: ["job_pack_id"]
+            isOneToOne: false
+            referencedRelation: "job_packs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timesheets_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_activity_logs: {
         Row: {
@@ -925,6 +1696,10 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_name: string | null
+          bank_sort_code: string | null
           company_address: string | null
           company_logo_path: string | null
           company_name: string | null
@@ -936,18 +1711,37 @@ export type Database = {
           default_display_options: Json | null
           default_invoice_notes: string | null
           default_labour_rate: number | null
+          default_markup_percent: number | null
+          default_payment_terms_days: number | null
           default_quote_notes: string | null
           default_tax_rate: number | null
           document_template: string | null
+          email: string | null
           enable_cis: boolean | null
           enable_vat: boolean | null
           footer_logos: string[] | null
           id: string
+          invoice_color_scheme: string | null
+          invoice_display_options: Json | null
+          invoice_labour_rate: number | null
+          invoice_markup_percent: number | null
           invoice_prefix: string | null
           is_vat_registered: boolean | null
+          labour_rate_presets: Json | null
+          phone: string | null
+          quick_pick_materials: string[] | null
+          quote_color_scheme: string | null
+          quote_display_options: Json | null
+          quote_labour_rate: number | null
+          quote_markup_percent: number | null
           quote_prefix: string | null
           referral_code: string | null
           show_breakdown: boolean | null
+          stripe_connect_account_id: string | null
+          stripe_connect_charges_enabled: boolean | null
+          stripe_connect_onboarded_at: string | null
+          stripe_connect_onboarding_complete: boolean | null
+          stripe_connect_payouts_enabled: boolean | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_end: string | null
@@ -969,6 +1763,10 @@ export type Database = {
           vat_number: string | null
         }
         Insert: {
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          bank_sort_code?: string | null
           company_address?: string | null
           company_logo_path?: string | null
           company_name?: string | null
@@ -980,18 +1778,37 @@ export type Database = {
           default_display_options?: Json | null
           default_invoice_notes?: string | null
           default_labour_rate?: number | null
+          default_markup_percent?: number | null
+          default_payment_terms_days?: number | null
           default_quote_notes?: string | null
           default_tax_rate?: number | null
           document_template?: string | null
+          email?: string | null
           enable_cis?: boolean | null
           enable_vat?: boolean | null
           footer_logos?: string[] | null
           id?: string
+          invoice_color_scheme?: string | null
+          invoice_display_options?: Json | null
+          invoice_labour_rate?: number | null
+          invoice_markup_percent?: number | null
           invoice_prefix?: string | null
           is_vat_registered?: boolean | null
+          labour_rate_presets?: Json | null
+          phone?: string | null
+          quick_pick_materials?: string[] | null
+          quote_color_scheme?: string | null
+          quote_display_options?: Json | null
+          quote_labour_rate?: number | null
+          quote_markup_percent?: number | null
           quote_prefix?: string | null
           referral_code?: string | null
           show_breakdown?: boolean | null
+          stripe_connect_account_id?: string | null
+          stripe_connect_charges_enabled?: boolean | null
+          stripe_connect_onboarded_at?: string | null
+          stripe_connect_onboarding_complete?: boolean | null
+          stripe_connect_payouts_enabled?: boolean | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_end?: string | null
@@ -1013,6 +1830,10 @@ export type Database = {
           vat_number?: string | null
         }
         Update: {
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          bank_sort_code?: string | null
           company_address?: string | null
           company_logo_path?: string | null
           company_name?: string | null
@@ -1024,18 +1845,37 @@ export type Database = {
           default_display_options?: Json | null
           default_invoice_notes?: string | null
           default_labour_rate?: number | null
+          default_markup_percent?: number | null
+          default_payment_terms_days?: number | null
           default_quote_notes?: string | null
           default_tax_rate?: number | null
           document_template?: string | null
+          email?: string | null
           enable_cis?: boolean | null
           enable_vat?: boolean | null
           footer_logos?: string[] | null
           id?: string
+          invoice_color_scheme?: string | null
+          invoice_display_options?: Json | null
+          invoice_labour_rate?: number | null
+          invoice_markup_percent?: number | null
           invoice_prefix?: string | null
           is_vat_registered?: boolean | null
+          labour_rate_presets?: Json | null
+          phone?: string | null
+          quick_pick_materials?: string[] | null
+          quote_color_scheme?: string | null
+          quote_display_options?: Json | null
+          quote_labour_rate?: number | null
+          quote_markup_percent?: number | null
           quote_prefix?: string | null
           referral_code?: string | null
           show_breakdown?: boolean | null
+          stripe_connect_account_id?: string | null
+          stripe_connect_charges_enabled?: boolean | null
+          stripe_connect_onboarded_at?: string | null
+          stripe_connect_onboarding_complete?: boolean | null
+          stripe_connect_payouts_enabled?: boolean | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_end?: string | null
@@ -1086,7 +1926,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vendor_keywords_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vendors: {
         Row: {
@@ -1177,6 +2025,132 @@ export type Database = {
       }
     }
     Views: {
+      expiring_documents: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          document_date: string | null
+          expense_id: string | null
+          expiry_date: string | null
+          extracted_text: string | null
+          file_size: number | null
+          file_type: string | null
+          id: string | null
+          job_pack_id: string | null
+          name: string | null
+          payable_id: string | null
+          storage_path: string | null
+          tags: string[] | null
+          tax_year: string | null
+          updated_at: string | null
+          user_id: string | null
+          vendor_name: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_date?: string | null
+          expense_id?: string | null
+          expiry_date?: string | null
+          extracted_text?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string | null
+          job_pack_id?: string | null
+          name?: string | null
+          payable_id?: string | null
+          storage_path?: string | null
+          tags?: string[] | null
+          tax_year?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          vendor_name?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_date?: string | null
+          expense_id?: string | null
+          expiry_date?: string | null
+          extracted_text?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string | null
+          job_pack_id?: string | null
+          name?: string | null
+          payable_id?: string | null
+          storage_path?: string | null
+          tags?: string[] | null
+          tax_year?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          vendor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filed_documents_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filed_documents_job_pack_id_fkey"
+            columns: ["job_pack_id"]
+            isOneToOne: false
+            referencedRelation: "job_packs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filed_documents_payable_id_fkey"
+            columns: ["payable_id"]
+            isOneToOne: false
+            referencedRelation: "payables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filing_summary: {
+        Row: {
+          category: string | null
+          document_count: number | null
+          last_upload: string | null
+          total_size: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      payables_summary: {
+        Row: {
+          due_this_week: number | null
+          overdue_count: number | null
+          paid_count: number | null
+          partial_count: number | null
+          total_outstanding: number | null
+          total_overdue: number | null
+          unpaid_count: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      reconciliation_summary: {
+        Row: {
+          description: string | null
+          is_reconciled: boolean | null
+          link_count: number | null
+          linked_items: string[] | null
+          total_matched: number | null
+          transaction_amount: number | null
+          transaction_date: string | null
+          transaction_id: string | null
+          unmatched_amount: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       trial_users_analytics: {
         Row: {
           activity_last_24h: number | null
@@ -1185,14 +2159,18 @@ export type Database = {
           company_name: string | null
           converted: boolean | null
           converted_at: string | null
+          customers_count: number | null
           days_remaining: number | null
           engagement_score: number | null
           features_used: number | null
           first_login: string | null
+          invoices_count: number | null
+          job_packs_count: number | null
           last_activity: string | null
           last_login: string | null
           most_used_feature: string | null
           page_views: number | null
+          quotes_count: number | null
           referral_code: string | null
           subscription_status:
             | Database["public"]["Enums"]["subscription_status"]
@@ -1206,15 +2184,114 @@ export type Database = {
           trial_start: string | null
           trial_status: string | null
           unique_features_used: number | null
+          user_email: string | null
           user_id: string | null
+        }
+        Relationships: []
+      }
+      user_subscription_status: {
+        Row: {
+          is_active: boolean | null
+          referral_code: string | null
+          subscription_end: string | null
+          subscription_start: string | null
+          subscription_status:
+            | Database["public"]["Enums"]["subscription_status"]
+            | null
+          subscription_tier:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          trial_days_remaining: number | null
+          trial_end: string | null
+          trial_start: string | null
+          usage_limits: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          is_active?: never
+          referral_code?: string | null
+          subscription_end?: string | null
+          subscription_start?: string | null
+          subscription_status?:
+            | Database["public"]["Enums"]["subscription_status"]
+            | null
+          subscription_tier?:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          trial_days_remaining?: never
+          trial_end?: string | null
+          trial_start?: string | null
+          usage_limits?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          is_active?: never
+          referral_code?: string | null
+          subscription_end?: string | null
+          subscription_start?: string | null
+          subscription_status?:
+            | Database["public"]["Enums"]["subscription_status"]
+            | null
+          subscription_tier?:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          trial_days_remaining?: never
+          trial_end?: string | null
+          trial_start?: string | null
+          usage_limits?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      vat_summary: {
+        Row: {
+          input_vat: number | null
+          output_vat: number | null
+          quarter: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      wholesaler_stats: {
+        Row: {
+          active: boolean | null
+          commission_owed: number | null
+          commission_paid: number | null
+          commission_per_conversion: number | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string | null
+          id: string | null
+          last_payment_date: string | null
+          name: string | null
+          notes: string | null
+          referral_code: string | null
+          total_conversions: number | null
+          total_signups: number | null
         }
         Relationships: []
       }
     }
     Functions: {
+      accept_team_invitation: { Args: { p_token: string }; Returns: Json }
+      admin_extend_trial: {
+        Args: { extra_days: number; target_user_id: string }
+        Returns: undefined
+      }
+      admin_reset_trial: {
+        Args: { new_trial_end: string; target_user_id: string }
+        Returns: undefined
+      }
+      decline_team_invitation: { Args: { p_token: string }; Returns: Json }
+      generate_share_token: { Args: { p_quote_id: string }; Returns: Json }
       get_next_reference_number: {
         Args: { p_type: string; p_user_id: string }
         Returns: number
+      }
+      get_quote_by_share_token: {
+        Args: { p_share_token: string }
+        Returns: Json
       }
       has_subscription_access: {
         Args: {
@@ -1223,6 +2300,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_user: { Args: never; Returns: boolean }
+      is_assigned_to_job: { Args: { p_job_pack_id: string }; Returns: boolean }
       is_trial_active: { Args: { user_uuid: string }; Returns: boolean }
       mark_payable_paid: {
         Args: {
@@ -1239,6 +2318,18 @@ export type Database = {
           p_transaction_id: string
         }
         Returns: undefined
+      }
+      respond_to_quote: {
+        Args: {
+          p_ip?: string
+          p_response: string
+          p_share_token: string
+          p_signature_data?: string
+          p_signature_type?: string
+          p_signer_name?: string
+          p_user_agent?: string
+        }
+        Returns: Json
       }
       search_filed_documents: {
         Args: {
@@ -1277,23 +2368,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof Database
+  schema: keyof DatabaseWithoutInternals
 }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -1311,16 +2404,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof Database
+  schema: keyof DatabaseWithoutInternals
 }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -1336,16 +2429,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof Database
+  schema: keyof DatabaseWithoutInternals
 }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -1361,16 +2454,48 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof Database
+  schema: keyof DatabaseWithoutInternals
 }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      subscription_status: [
+        "trialing",
+        "active",
+        "cancelled",
+        "past_due",
+        "expired",
+      ],
+      subscription_tier: ["free", "professional", "business"],
+    },
+  },
+} as const

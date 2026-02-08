@@ -16,6 +16,9 @@ export const APP_CONFIG = {
   DEFAULT_COMMISSION: 10.00,
 } as const;
 
+// Team features flag - set to false to completely disable team features
+export const ENABLE_TEAM_FEATURES = true;
+
 // Free tier limits (same as TIER_LIMITS['free'] but usable without importing types)
 export const FREE_TIER_LIMITS = {
   customers: 5,

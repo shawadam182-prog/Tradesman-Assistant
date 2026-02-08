@@ -39,6 +39,9 @@ const AccountantExportPage = lazy(() => import('../../components/AccountantExpor
 const AgedReceivablesPage = lazy(() => import('../../components/AgedReceivablesPage').then(m => ({ default: m.AgedReceivablesPage })));
 const CreditNoteCreator = lazy(() => import('../../components/CreditNoteCreator').then(m => ({ default: m.CreditNoteCreator })));
 const AIQuoteBuilder = lazy(() => import('../../components/AIQuoteBuilder').then(m => ({ default: m.AIQuoteBuilder })));
+const TeamDashboard = lazy(() => import('../../components/TeamDashboard').then(m => ({ default: m.TeamDashboard })));
+const TeamSettings = lazy(() => import('../../components/TeamSettings').then(m => ({ default: m.TeamSettings })));
+const TimesheetApproval = lazy(() => import('../../components/TimesheetApproval').then(m => ({ default: m.TimesheetApproval })));
 
 // Loading fallback component
 const PageLoader: React.FC = () => (
@@ -74,10 +77,13 @@ type TabType =
   | 'view'
   | 'jobpack_detail'
   | 'quote_edit'
-  | 'credit_note';
+  | 'credit_note'
+  | 'team_dashboard'
+  | 'team_settings'
+  | 'timesheet_approval';
 
 // Valid main tabs that can be restored after page reload (e.g., returning from camera)
-const RESTORABLE_TABS: readonly TabType[] = ['home', 'ai_quote_builder', 'jobpacks', 'jobpack_detail', 'quotes', 'invoices', 'aged_receivables', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'accountant_export', 'files', 'materials', 'wholesalers', 'support', 'trial_analytics', 'future_jobs', 'view', 'quote_edit', 'profitloss'];
+const RESTORABLE_TABS: readonly TabType[] = ['home', 'ai_quote_builder', 'jobpacks', 'jobpack_detail', 'quotes', 'invoices', 'aged_receivables', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'accountant_export', 'files', 'materials', 'wholesalers', 'support', 'trial_analytics', 'future_jobs', 'view', 'quote_edit', 'profitloss', 'team_dashboard', 'team_settings', 'timesheet_approval'];
 type RestorableTab = typeof RESTORABLE_TABS[number];
 
 const App: React.FC = () => {
@@ -431,6 +437,9 @@ const App: React.FC = () => {
           {activeTab === 'future_jobs' && <FutureJobsPage onBack={() => setActiveTab('home')} onCreateJob={() => setActiveTab('jobpacks')} />}
           {activeTab === 'customers' && <CustomerManager customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer} deleteCustomer={deleteCustomer} onBack={() => setActiveTab('home')} />}
           {activeTab === 'settings' && <SettingsPage settings={settings} setSettings={setSettings} onSave={updateSettings} onBack={() => setActiveTab('home')} />}
+          {activeTab === 'team_dashboard' && <TeamDashboard onBack={() => setActiveTab('home')} />}
+          {activeTab === 'team_settings' && <TeamSettings onBack={() => setActiveTab('home')} />}
+          {activeTab === 'timesheet_approval' && <TimesheetApproval onBack={() => setActiveTab('home')} />}
           {activeTab === 'ai_quote_builder' && <AIQuoteBuilder customers={customers} quotes={quotes} settings={settings} onComplete={handleAIQuoteComplete} onCancel={() => setActiveTab('home')} />}
           {activeTab === 'quote_edit' && <QuoteCreator existingQuote={aiGeneratedDraft as Quote || quotes.find(q => q.id === editingQuoteId)} projectId={activeProjectId || undefined} projectTitle={activeProject?.title} initialType={initialQuoteType} customers={customers} settings={settings} onSave={handleSaveQuote} onAddCustomer={handleAddCustomer} onCancel={() => activeProjectId ? setActiveTab('jobpack_detail') : (initialQuoteType === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes'))} />}
           {activeTab === 'view' && viewingQuoteId && (activeViewQuote ? <QuoteView quote={activeViewQuote} customer={activeViewCustomer || { id: 'unknown', name: 'Unassigned Client', email: '', phone: '', address: 'N/A' }} settings={settings} onEdit={() => handleEditQuote(viewingQuoteId)} onBack={() => activeProjectId ? setActiveTab('jobpack_detail') : (activeViewQuote.type === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes'))} onUpdateStatus={(status) => handleUpdateQuoteStatus(viewingQuoteId, status)} onUpdateQuote={handleUpdateQuote} onConvertToInvoice={handleConvertToInvoice} onIssueCreditNote={handleIssueCreditNote} onDuplicate={handleDuplicateQuote} onDelete={async () => { await deleteQuote(viewingQuoteId); setViewingQuoteId(null); activeProjectId ? setActiveTab('jobpack_detail') : (activeViewQuote.type === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes')); toast.success('Deleted', 'Document has been discarded'); }} /> : <div className="flex flex-col items-center justify-center py-20 text-slate-400"><FileWarning size={48} className="text-teal-500 mb-4" /><p>Document Not Found</p><button onClick={() => setActiveTab('quotes')} className="mt-4 bg-slate-900 text-white px-4 py-2 rounded">Back</button></div>)}

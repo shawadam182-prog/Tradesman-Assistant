@@ -6,14 +6,16 @@ import {
   MessageSquare, History, FileDown, Paperclip, Loader2, Send,
   FileCheck, ReceiptText, FolderOpen, Sparkles, PackageSearch, Navigation,
   StickyNote, Eraser, MicOff, Ruler, X, RotateCw, Pencil, Check,
-  ZoomIn, ZoomOut, Maximize2
+  ZoomIn, ZoomOut, Maximize2, Users
 } from 'lucide-react';
 import { MaterialsTracker } from './MaterialsTracker';
 import { JobProfitSummary } from './JobProfitSummary';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
+import { useTeam } from '../src/contexts/TeamContext';
 import { sitePhotosService } from '../src/services/dataService';
 import { ConfirmDialog } from './ConfirmDialog';
+import { JobAssignmentModal } from './JobAssignmentModal';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
 
 // Detect iOS for voice input fallback
@@ -39,8 +41,10 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   const [activeTab, setActiveTab] = useState<'log' | 'photos' | 'drawings' | 'materials' | 'finance'>('log');
   const [isRecording, setIsRecording] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
   const recognitionInstance = useRef<any>(null);
   const toast = useToast();
+  const { isTeamOwner } = useTeam();
 
   const [notepadContent, setNotepadContent] = useState(project.notepad || '');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -564,6 +568,15 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
               <Navigation size={18} />
             </a>
           )}
+          {isTeamOwner && (
+            <button
+              onClick={() => setShowAssignModal(true)}
+              className="p-2 bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100"
+              title="Assign Team"
+            >
+              <Users size={18} />
+            </button>
+          )}
           {onDeleteProject && <button onClick={handleDeleteProject} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><Trash2 size={18} /></button>}
         </div>
       </div>
@@ -797,6 +810,13 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
         onConfirm={handleConfirmDeleteProject}
         onCancel={() => setShowDeleteConfirm(false)}
       />
+      {showAssignModal && (
+        <JobAssignmentModal
+          jobPackId={project.id}
+          jobTitle={project.title}
+          onClose={() => setShowAssignModal(false)}
+        />
+      )}
     </div>
   );
 };

@@ -554,7 +554,7 @@ export interface Invoice {
 // For tier-based feature gating
 // ============================================
 
-export type SubscriptionTier = 'free' | 'professional' | 'business';
+export type SubscriptionTier = 'free' | 'professional' | 'business' | 'team';
 
 export type SubscriptionStatus = 'trialing' | 'active' | 'cancelled' | 'past_due' | 'expired';
 
@@ -647,6 +647,14 @@ export const TIER_LIMITS: Record<SubscriptionTier, UsageLimits> = {
     documentsPerMonth: 50,
   },
   business: {
+    customers: null,
+    jobPacks: null,
+    quotes: null,
+    invoices: null,
+    photosPerMonth: null,
+    documentsPerMonth: null,
+  },
+  team: {
     customers: null,
     jobPacks: null,
     quotes: null,
@@ -756,4 +764,95 @@ export interface MaterialKit {
   isFavourite: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+// ============================================
+// TEAM TYPES
+// For team management and field worker features
+// ============================================
+
+export type TeamMemberRole = 'owner' | 'field_worker';
+export type TeamMemberStatus = 'pending' | 'active' | 'deactivated';
+export type TeamInvitationStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'revoked';
+export type TimesheetStatus = 'active' | 'submitted' | 'approved' | 'rejected';
+
+export interface Team {
+  id: string;
+  ownerId: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeamMember {
+  id: string;
+  teamId: string;
+  userId: string;
+  role: TeamMemberRole;
+  displayName: string;
+  phone?: string;
+  hourlyRate: number;
+  status: TeamMemberStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeamInvitation {
+  id: string;
+  teamId: string;
+  email: string;
+  role: TeamMemberRole;
+  displayName?: string;
+  invitedBy: string;
+  token: string;
+  status: TeamInvitationStatus;
+  expiresAt: string;
+  createdAt: string;
+  // Joined data
+  team?: { id: string; name: string; owner_id: string };
+}
+
+export interface JobAssignment {
+  id: string;
+  jobPackId: string;
+  teamMemberId: string;
+  assignedAt: string;
+  assignedBy: string;
+  // Joined data
+  teamMember?: TeamMember;
+}
+
+export interface Timesheet {
+  id: string;
+  teamMemberId: string;
+  jobPackId?: string | null;
+  clockIn: string;
+  clockOut?: string | null;
+  clockInLat?: number | null;
+  clockInLng?: number | null;
+  clockOutLat?: number | null;
+  clockOutLng?: number | null;
+  clockInAccuracy?: number | null;
+  clockOutAccuracy?: number | null;
+  isGpsVerified: boolean;
+  breakMinutes: number;
+  notes?: string | null;
+  status: TimesheetStatus;
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  rejectionReason?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  // Joined data
+  teamMember?: { id: string; display_name: string; user_id: string };
+  jobPack?: { id: string; title: string } | null;
+}
+
+export interface GpsLog {
+  id: string;
+  timesheetId: string;
+  lat: number;
+  lng: number;
+  accuracy?: number | null;
+  loggedAt: string;
 }

@@ -56,9 +56,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       starter: 'Starter',
       professional: 'Professional',
       business: 'Business',
+      team: 'Team',
       enterprise: 'Enterprise',
     };
-    return tierNames[settings.subscriptionTier] || 'Free';
+    return tierNames[settings.subscriptionTier || 'free'] || 'Free';
   };
 
   const navGroups: NavGroup[] = [
@@ -102,6 +103,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         { id: 'profitloss', label: 'Profit & Loss', icon: TrendingUp, tier: 'business' },
         { id: 'payables', label: 'Payables', icon: CreditCard, tier: 'business' },
         { id: 'accountant_export', label: 'Export Data', icon: Download, tier: 'business' },
+      ]
+    },
+    {
+      id: 'team',
+      label: 'Team',
+      icon: Users,
+      tier: 'team' as any,
+      badge: 'TEAM',
+      items: [
+        { id: 'team_dashboard', label: 'Dashboard', icon: Users, tier: 'team' as any },
+        { id: 'timesheet_approval', label: 'Timesheets', icon: Clock, tier: 'team' as any },
+        { id: 'team_settings', label: 'Team Setup', icon: Settings, tier: 'team' as any },
       ]
     },
     {
