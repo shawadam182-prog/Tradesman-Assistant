@@ -56,58 +56,67 @@ Deno.serve(async (req) => {
     // Get user's subscription info
     const { data: settings } = await supabaseAdmin
       .from('user_settings')
-      .select('stripe_customer_id, stripe_subscription_id, admin_seat_count')
+      .select('stripe_customer_id, stripe_subscription_id, admin_seat_count, subscription_status, subscription_tier')
       .eq('user_id', user.id)
       .single();
 
-    if (!settings?.stripe_subscription_id) {
+    // Check subscription status
+    const subscriptionStatus = settings?.subscription_status;
+    const hasActiveOrTrialing = subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
+
+    if (!hasActiveOrTrialing) {
       return new Response(
-        JSON.stringify({ error: 'You must have an active subscription to add admin seats' }),
+        JSON.stringify({ error: 'You must have an active subscription or be in trial to manage admin seats' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Retrieve current subscription
-    const subscription = await stripe.subscriptions.retrieve(settings.stripe_subscription_id);
+    // If user has a Stripe subscription, update via Stripe API
+    if (settings?.stripe_subscription_id) {
+      // Retrieve current subscription
+      const subscription = await stripe.subscriptions.retrieve(settings.stripe_subscription_id);
 
-    if (subscription.status !== 'active' && subscription.status !== 'trialing') {
-      return new Response(
-        JSON.stringify({ error: 'Your subscription must be active to manage admin seats' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      if (subscription.status !== 'active' && subscription.status !== 'trialing') {
+        return new Response(
+          JSON.stringify({ error: 'Your Stripe subscription must be active to manage admin seats' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Find existing seat line item
+      const seatItem = subscription.items.data.find(
+        (item: any) => item.price.id === SEAT_PRICE_ID
       );
-    }
 
-    // Find existing seat line item
-    const seatItem = subscription.items.data.find(
-      (item: any) => item.price.id === SEAT_PRICE_ID
-    );
-
-    if (seatCount === 0 && seatItem) {
-      // Remove seat line item entirely
-      await stripe.subscriptions.update(subscription.id, {
-        items: [{ id: seatItem.id, deleted: true }],
-        proration_behavior: 'create_prorations',
-      });
-    } else if (seatCount > 0 && seatItem) {
-      // Update existing seat quantity
-      await stripe.subscriptions.update(subscription.id, {
-        items: [{ id: seatItem.id, quantity: seatCount }],
-        proration_behavior: 'create_prorations',
-      });
-    } else if (seatCount > 0 && !seatItem) {
-      // Add new seat line item
-      await stripe.subscriptions.update(subscription.id, {
-        items: [{ price: SEAT_PRICE_ID, quantity: seatCount }],
-        proration_behavior: 'create_prorations',
-      });
+      if (seatCount === 0 && seatItem) {
+        // Remove seat line item entirely
+        await stripe.subscriptions.update(subscription.id, {
+          items: [{ id: seatItem.id, deleted: true }],
+          proration_behavior: 'create_prorations',
+        });
+      } else if (seatCount > 0 && seatItem) {
+        // Update existing seat quantity
+        await stripe.subscriptions.update(subscription.id, {
+          items: [{ id: seatItem.id, quantity: seatCount }],
+          proration_behavior: 'create_prorations',
+        });
+      } else if (seatCount > 0 && !seatItem) {
+        // Add new seat line item
+        await stripe.subscriptions.update(subscription.id, {
+          items: [{ price: SEAT_PRICE_ID, quantity: seatCount }],
+          proration_behavior: 'create_prorations',
+        });
+      }
+      // seatCount === 0 && !seatItem → nothing to do
     }
-    // seatCount === 0 && !seatItem → nothing to do
+    // If no Stripe subscription (e.g., trialing or owner), just update the local count
 
     // Update local admin seat count
     await supabaseAdmin
       .from('user_settings')
       .update({
         admin_seat_count: seatCount,
+        team_seat_count: seatCount, // Keep in sync
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', user.id);
