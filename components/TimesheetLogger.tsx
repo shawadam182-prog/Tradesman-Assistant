@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Clock, MapPin, Play, Square, History, Briefcase, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useData } from '../src/contexts/DataContext';
 import { useToast } from '../src/contexts/ToastContext';
@@ -26,6 +27,11 @@ export const TimesheetLogger: React.FC<TimesheetLoggerProps> = ({ memberId, onVi
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const gpsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Clock-out sheet state
+  const [showClockOutSheet, setShowClockOutSheet] = useState(false);
+  const [breakMinutes, setBreakMinutes] = useState(0);
+  const [clockOutNotes, setClockOutNotes] = useState('');
 
   // Fetch active timesheet on mount
   useEffect(() => {
@@ -133,9 +139,20 @@ export const TimesheetLogger: React.FC<TimesheetLoggerProps> = ({ memberId, onVi
         // GPS denied
       }
 
+      // Save break_minutes and notes before clocking out
+      if (breakMinutes > 0 || clockOutNotes.trim()) {
+        await teamService.updateTimesheet(activeTimesheet.id, {
+          break_minutes: breakMinutes > 0 ? breakMinutes : undefined,
+          notes: clockOutNotes.trim() || undefined,
+        });
+      }
+
       await teamService.clockOut(activeTimesheet.id, lat, lng, accuracy);
       setActiveTimesheet(null);
       localStorage.removeItem(ACTIVE_TIMESHEET_KEY);
+      setShowClockOutSheet(false);
+      setBreakMinutes(0);
+      setClockOutNotes('');
       toast.success('Clocked out!');
     } catch (err) {
       toast.error('Failed to clock out');
@@ -143,7 +160,7 @@ export const TimesheetLogger: React.FC<TimesheetLoggerProps> = ({ memberId, onVi
     } finally {
       setClockingOut(false);
     }
-  }, [activeTimesheet, getCurrentPosition, toast]);
+  }, [activeTimesheet, getCurrentPosition, toast, breakMinutes, clockOutNotes]);
 
   const formatDuration = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -214,9 +231,9 @@ export const TimesheetLogger: React.FC<TimesheetLoggerProps> = ({ memberId, onVi
             Started at {new Date(activeTimesheet.clock_in).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
           </p>
 
-          {/* Clock Out button */}
+          {/* Clock Out button — opens confirmation sheet */}
           <button
-            onClick={handleClockOut}
+            onClick={() => setShowClockOutSheet(true)}
             disabled={clockingOut}
             className="w-full flex items-center justify-center gap-2 py-4 bg-red-500/20 text-red-400 font-semibold rounded-xl border border-red-500/30 active:bg-red-500/30 transition-colors disabled:opacity-50"
           >
@@ -269,6 +286,78 @@ export const TimesheetLogger: React.FC<TimesheetLoggerProps> = ({ memberId, onVi
             Clock In
           </button>
         </div>
+      )}
+
+      {/* Clock-out confirmation sheet */}
+      {showClockOutSheet && createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          onClick={(e) => { if (e.target === e.currentTarget && !clockingOut) { setShowClockOutSheet(false); setBreakMinutes(0); setClockOutNotes(''); } }}
+        >
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative w-full sm:max-w-md bg-slate-800 rounded-t-2xl sm:rounded-2xl animate-in slide-in-from-bottom-4 duration-300 p-5 space-y-4">
+            <h2 className="text-base font-bold text-slate-200">Confirm Clock Out</h2>
+            <p className="text-xs text-slate-400">
+              Clocked in since {activeTimesheet && new Date(activeTimesheet.clock_in).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+              {' '}({formatDuration(elapsedSeconds)})
+            </p>
+
+            {/* Break minutes */}
+            <div>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">
+                Break Time (minutes)
+              </label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={480}
+                value={breakMinutes}
+                onChange={(e) => setBreakMinutes(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-full py-2.5 px-3 bg-slate-700 border border-slate-600 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-teal-500"
+                placeholder="0"
+              />
+            </div>
+
+            {/* Notes */}
+            <div>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">
+                Notes (optional)
+              </label>
+              <textarea
+                value={clockOutNotes}
+                onChange={(e) => setClockOutNotes(e.target.value)}
+                rows={3}
+                className="w-full py-2.5 px-3 bg-slate-700 border border-slate-600 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-teal-500 resize-none"
+                placeholder="Any notes about this shift..."
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => { setShowClockOutSheet(false); setBreakMinutes(0); setClockOutNotes(''); }}
+                disabled={clockingOut}
+                className="flex-1 py-3 bg-slate-700 text-slate-300 font-semibold rounded-xl active:bg-slate-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleClockOut}
+                disabled={clockingOut}
+                className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500 text-white font-semibold rounded-xl active:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {clockingOut ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Square className="w-4 h-4" />
+                )}
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

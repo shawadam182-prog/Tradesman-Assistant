@@ -290,7 +290,7 @@ export const teamService = {
   async getTeamTimesheets(dateFrom?: string, dateTo?: string) {
     let query = supabase
       .from('timesheets')
-      .select('*, team_member:team_members(id, display_name, user_id), job_pack:job_packs(id, title)')
+      .select('*, team_member:team_members(id, display_name, user_id, hourly_rate), job_pack:job_packs(id, title)')
       .order('clock_in', { ascending: false });
     if (dateFrom) query = query.gte('clock_in', dateFrom);
     if (dateTo) query = query.lte('clock_in', dateTo);
@@ -331,6 +331,17 @@ export const teamService = {
       .update({
         status: 'rejected',
         rejection_reason: reason,
+      })
+      .eq('id', timesheetId);
+    if (error) throw error;
+  },
+
+  async resubmitTimesheet(timesheetId: string) {
+    const { error } = await supabase
+      .from('timesheets')
+      .update({
+        status: 'submitted',
+        rejection_reason: null,
       })
       .eq('id', timesheetId);
     if (error) throw error;
