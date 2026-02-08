@@ -177,9 +177,9 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
   };
 
   const roleBadge = (role: string) => {
-    if (role === 'owner') return <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-400">OWNER</span>;
-    if (role === 'admin') return <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-400">ADMIN</span>;
-    return <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-500/20 text-slate-400">WORKER</span>;
+    if (role === 'owner') return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">OWNER</span>;
+    if (role === 'admin') return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">ADMIN</span>;
+    return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600">WORKER</span>;
   };
 
   if (loading) {
@@ -191,37 +191,39 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
   }
 
   return (
-    <div className="px-4 pt-4 lg:px-6 space-y-6 pb-40">
+    <div className="px-4 pt-4 lg:px-6 space-y-4 pb-40">
       <div>
-        <button onClick={onBack} className="flex items-center gap-2 text-slate-400 mb-3">
+        <button onClick={onBack} className="flex items-center gap-2 text-teal-600 hover:text-teal-700 mb-3 transition-colors">
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back</span>
+          <span className="text-sm font-medium">Back</span>
         </button>
-        <h1 className="text-lg font-bold text-slate-200">Team Setup</h1>
+        <h1 className="text-xl font-bold text-teal-600">Team Setup</h1>
       </div>
 
       {/* Create team (if no team exists) */}
       {!team ? (
-        <div className="bg-slate-800/50 rounded-xl p-6 space-y-4">
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
           <div className="text-center">
-            <Users className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <h2 className="text-lg font-semibold text-slate-200 mb-1">Create Your Team</h2>
-            <p className="text-sm text-slate-400">Set up a team to invite admins and field workers.</p>
+            <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="w-8 h-8 text-teal-600" />
+            </div>
+            <h2 className="text-lg font-semibold text-slate-800 mb-1">Create Your Team</h2>
+            <p className="text-sm text-slate-500">Set up a team to invite admins and field workers.</p>
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-400 block mb-1">Team Name</label>
+            <label className="text-xs font-semibold text-slate-500 block mb-1.5">Team Name</label>
             <input
               type="text"
               value={teamName}
               onChange={e => setTeamName(e.target.value)}
               placeholder="e.g. Smith Plumbing"
-              className="w-full px-3 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-teal-500"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
             />
           </div>
           <button
             onClick={handleCreateTeam}
             disabled={!teamName.trim() || creating}
-            className="w-full py-2.5 bg-teal-500 text-white font-medium rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-3 bg-teal-500 text-white font-semibold rounded-xl hover:bg-teal-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20"
           >
             {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             Create Team
@@ -230,39 +232,39 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
       ) : (
         <>
           {/* Team info */}
-          <div className="bg-slate-800/50 rounded-xl p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
             <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Team</h2>
-            <p className="text-lg font-semibold text-slate-200">{team.name}</p>
+            <p className="text-lg font-semibold text-slate-800">{team.name}</p>
           </div>
 
           {/* Admin Seats (paid) */}
           {hasSubscription && (
-            <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
-              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Admin Users</h2>
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Admin Users</h2>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-300">
+                  <p className="text-sm font-medium text-slate-700">
                     {adminSeatCount} seat{adminSeatCount !== 1 ? 's' : ''} purchased
                   </p>
                   <p className="text-xs text-slate-500">
-                    {activeAdmins} of {adminSeatCount} in use &middot; £10/mo per admin
+                    {activeAdmins} of {adminSeatCount} in use · £10/mo per admin
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleUpdateAdminSeats(adminSeatCount - 1)}
                     disabled={updatingSeats || adminSeatCount <= 0}
-                    className="w-8 h-8 flex items-center justify-center bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 disabled:opacity-30 transition-colors"
+                    className="w-9 h-9 flex items-center justify-center bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 disabled:opacity-30 transition-colors"
                   >
                     <Minus className="w-4 h-4" />
                   </button>
-                  <span className="text-lg font-bold text-slate-200 w-8 text-center">
+                  <span className="text-lg font-bold text-slate-800 w-8 text-center">
                     {updatingSeats ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : adminSeatCount}
                   </span>
                   <button
                     onClick={() => handleUpdateAdminSeats(adminSeatCount + 1)}
                     disabled={updatingSeats}
-                    className="w-8 h-8 flex items-center justify-center bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50 transition-colors"
+                    className="w-9 h-9 flex items-center justify-center bg-teal-500 text-white rounded-xl hover:bg-teal-600 disabled:opacity-50 transition-colors shadow-lg shadow-teal-500/20"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -272,9 +274,9 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
           )}
 
           {/* Field Workers (free with tier limits) */}
-          <div className="bg-slate-800/50 rounded-xl p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
             <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Field Workers</h2>
-            <p className="text-sm text-slate-300">
+            <p className="text-sm font-medium text-slate-700">
               {activeFieldWorkers} of {maxFreeWorkers} included free
             </p>
             <p className="text-xs text-slate-500">
@@ -283,37 +285,35 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
           </div>
 
           {!hasSubscription && (
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
-              <p className="text-sm text-amber-400">
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+              <p className="text-sm text-amber-700">
                 You need an active subscription to manage your team. Go to Settings to subscribe.
               </p>
             </div>
           )}
 
           {/* Invite member */}
-          <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-4 shadow-sm">
             <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Invite Team Member</h2>
 
             {/* Role selector */}
             <div className="flex gap-2">
               <button
                 onClick={() => setInviteRole('field_worker')}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
-                  inviteRole === 'field_worker'
-                    ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50'
-                    : 'bg-slate-700 text-slate-400 border border-slate-600'
-                }`}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all ${inviteRole === 'field_worker'
+                    ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
               >
                 <HardHat className="w-4 h-4" />
                 Field Worker
               </button>
               <button
                 onClick={() => setInviteRole('admin')}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
-                  inviteRole === 'admin'
-                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
-                    : 'bg-slate-700 text-slate-400 border border-slate-600'
-                }`}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all ${inviteRole === 'admin'
+                    ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
               >
                 <Shield className="w-4 h-4" />
                 Admin
@@ -331,19 +331,19 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
                 value={inviteEmail}
                 onChange={e => setInviteEmail(e.target.value)}
                 placeholder="Email address"
-                className="w-full px-3 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-teal-500"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
               />
               <input
                 type="text"
                 value={inviteDisplayName}
                 onChange={e => setInviteDisplayName(e.target.value)}
                 placeholder="Display name (optional)"
-                className="w-full px-3 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-teal-500"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
               />
               <button
                 onClick={handleInvite}
                 disabled={!inviteEmail.trim() || inviting}
-                className="w-full py-2.5 bg-teal-500 text-white font-medium rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-teal-500 text-white font-semibold rounded-xl hover:bg-teal-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20"
               >
                 {inviting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
                 Invite {inviteRole === 'admin' ? 'Admin' : 'Field Worker'}
@@ -353,14 +353,14 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
 
           {/* Pending invitations */}
           {invitations.filter(i => i.status === 'pending').length > 0 && (
-            <div className="bg-slate-800/50 rounded-xl p-4">
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
               <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Pending Invitations</h2>
               <div className="space-y-2">
                 {invitations.filter(i => i.status === 'pending').map(inv => (
-                  <div key={inv.id} className="flex items-center justify-between py-2 border-b border-slate-700 last:border-0">
+                  <div key={inv.id} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm text-slate-200">{inv.email}</p>
+                        <p className="text-sm font-medium text-slate-800">{inv.email}</p>
                         {roleBadge(inv.role)}
                       </div>
                       <p className="text-xs text-slate-500">
@@ -369,7 +369,7 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
                     </div>
                     <button
                       onClick={() => handleRevokeInvite(inv.id)}
-                      className="p-1.5 text-slate-500 hover:text-red-400 transition-colors"
+                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -380,32 +380,31 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
           )}
 
           {/* Team members */}
-          <div className="bg-slate-800/50 rounded-xl p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
             <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
               Team Members ({members.filter(m => m.status === 'active').length})
             </h2>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {members.filter(m => m.role !== 'owner').map(member => (
-                <div key={member.id} className="bg-slate-700/50 rounded-lg p-3">
+                <div key={member.id} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {member.status === 'active' ? (
-                        <UserCheck className="w-4 h-4 text-green-400" />
+                        <UserCheck className="w-4 h-4 text-green-500" />
                       ) : (
-                        <UserX className="w-4 h-4 text-slate-500" />
+                        <UserX className="w-4 h-4 text-slate-400" />
                       )}
-                      <span className="text-sm font-medium text-slate-200">{member.display_name}</span>
+                      <span className="text-sm font-semibold text-slate-800">{member.display_name}</span>
                       {roleBadge(member.role)}
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                        member.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-slate-600/20 text-slate-500'
-                      }`}>
-                        {member.status}
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${member.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-500'
+                        }`}>
+                        {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
                       </span>
                     </div>
                     {member.status === 'active' && (
                       <button
                         onClick={() => handleDeactivate(member.id, member.display_name)}
-                        className="text-xs text-red-400 hover:text-red-300"
+                        className="text-xs text-red-500 hover:text-red-600 font-medium"
                       >
                         Deactivate
                       </button>
@@ -413,21 +412,26 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
                   </div>
                   {member.role === 'field_worker' && (
                     <div className="flex items-center gap-2">
-                      <Clock className="w-3 h-3 text-slate-500" />
-                      <span className="text-xs text-slate-400">Rate:</span>
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="text-xs text-slate-500">Rate:</span>
                       <input
                         type="number"
                         defaultValue={member.hourly_rate || 0}
                         onBlur={e => handleUpdateRate(member.id, e.target.value)}
-                        className="w-20 px-2 py-1 bg-slate-600 border border-slate-500 rounded text-xs text-slate-200 focus:outline-none focus:border-teal-500"
+                        className="w-20 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-teal-500"
                       />
-                      <span className="text-xs text-slate-500">/hr</span>
+                      <span className="text-xs text-slate-400">/hr</span>
                     </div>
                   )}
                 </div>
               ))}
               {members.filter(m => m.role !== 'owner').length === 0 && (
-                <p className="text-sm text-slate-500 text-center py-4">No team members yet. Send an invitation above.</p>
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Users className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <p className="text-sm text-slate-500">No team members yet. Send an invitation above.</p>
+                </div>
               )}
             </div>
           </div>

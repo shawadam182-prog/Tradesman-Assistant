@@ -96,28 +96,28 @@ export const TimesheetApproval: React.FC<TimesheetApprovalProps> = ({ onBack }) 
   return (
     <div className="px-4 pt-4 lg:px-6 space-y-4 pb-40">
       <div>
-        <button onClick={onBack} className="flex items-center gap-2 text-slate-400 mb-3">
+        <button onClick={onBack} className="flex items-center gap-2 text-teal-600 hover:text-teal-700 mb-3 transition-colors">
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back</span>
+          <span className="text-sm font-medium">Back</span>
         </button>
-        <h1 className="text-lg font-bold text-slate-200">Timesheet Approval</h1>
+        <h1 className="text-xl font-bold text-teal-600">Timesheet Approval</h1>
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2 overflow-x-auto">
+      <div className="flex gap-2 overflow-x-auto pb-1">
         {(['submitted', 'approved', 'rejected', 'all'] as FilterTab[]).map(tab => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-              filter === tab
-                ? 'bg-teal-500/20 text-teal-400'
-                : 'bg-slate-800 text-slate-500'
-            }`}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${filter === tab
+                ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
             {filterCounts[tab] > 0 && (
-              <span className="bg-slate-700 px-1.5 py-0.5 rounded-full text-[10px]">
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${filter === tab ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                }`}>
                 {filterCounts[tab]}
               </span>
             )}
@@ -127,21 +127,23 @@ export const TimesheetApproval: React.FC<TimesheetApprovalProps> = ({ onBack }) 
 
       {/* Timesheet list */}
       {filtered.length === 0 ? (
-        <div className="bg-slate-800/50 rounded-xl p-8 text-center">
-          <Clock className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+        <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
+          <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Clock className="w-6 h-6 text-slate-400" />
+          </div>
           <p className="text-sm text-slate-500">No {filter === 'all' ? '' : filter} timesheets</p>
         </div>
       ) : (
         <div className="space-y-3">
           {filtered.map(ts => (
-            <div key={ts.id} className="bg-slate-800/50 rounded-xl p-4 space-y-3">
+            <div key={ts.id} className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3 shadow-sm hover:shadow-md transition-shadow">
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-200">
+                  <p className="text-sm font-semibold text-slate-800">
                     {ts.team_member?.display_name || 'Unknown Worker'}
                   </p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     {new Date(ts.clock_in).toLocaleDateString('en-GB', {
                       weekday: 'short',
                       day: 'numeric',
@@ -149,50 +151,49 @@ export const TimesheetApproval: React.FC<TimesheetApprovalProps> = ({ onBack }) 
                     })}
                   </p>
                 </div>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
-                  ts.status === 'approved' ? 'bg-green-500/20 text-green-400' :
-                  ts.status === 'submitted' ? 'bg-amber-500/20 text-amber-400' :
-                  ts.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
-                  'bg-blue-500/20 text-blue-400'
-                }`}>
-                  {ts.status}
+                <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${ts.status === 'approved' ? 'bg-green-100 text-green-700' :
+                    ts.status === 'submitted' ? 'bg-amber-100 text-amber-700' :
+                      ts.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                        'bg-blue-100 text-blue-700'
+                  }`}>
+                  {ts.status.charAt(0).toUpperCase() + ts.status.slice(1)}
                 </span>
               </div>
 
               {/* Details */}
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center gap-1.5 text-slate-400">
-                  <Clock className="w-3 h-3" />
+                <div className="flex items-center gap-1.5 text-slate-500">
+                  <Clock className="w-3.5 h-3.5" />
                   {new Date(ts.clock_in).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                   {ts.clock_out && (
-                    <> - {new Date(ts.clock_out).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</>
+                    <> – {new Date(ts.clock_out).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</>
                   )}
                 </div>
-                <div className="text-right font-medium text-slate-300">
+                <div className="text-right font-semibold text-slate-700">
                   {formatDuration(ts.clock_in, ts.clock_out)}
                 </div>
               </div>
 
               {ts.job_pack && (
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <Briefcase className="w-3 h-3" />
+                  <Briefcase className="w-3.5 h-3.5" />
                   {ts.job_pack.title}
                 </div>
               )}
 
               {ts.is_gps_verified && (
-                <div className="flex items-center gap-1 text-[10px] text-green-400">
-                  <MapPin className="w-3 h-3" />
+                <div className="flex items-center gap-1.5 text-[11px] text-green-600 font-medium">
+                  <MapPin className="w-3.5 h-3.5" />
                   GPS verified
                 </div>
               )}
 
               {ts.notes && (
-                <p className="text-xs text-slate-400 bg-slate-700/50 rounded p-2">{ts.notes}</p>
+                <p className="text-xs text-slate-600 bg-slate-50 rounded-xl p-3 border border-slate-100">{ts.notes}</p>
               )}
 
               {ts.rejection_reason && (
-                <p className="text-xs text-red-400 bg-red-500/10 rounded p-2">{ts.rejection_reason}</p>
+                <p className="text-xs text-red-700 bg-red-50 rounded-xl p-3 border border-red-100">{ts.rejection_reason}</p>
               )}
 
               {/* Approve/Reject buttons */}
@@ -205,20 +206,20 @@ export const TimesheetApproval: React.FC<TimesheetApprovalProps> = ({ onBack }) 
                         value={rejectReason}
                         onChange={e => setRejectReason(e.target.value)}
                         placeholder="Reason for rejection..."
-                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-red-500"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
                         autoFocus
                       />
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleReject(ts.id)}
                           disabled={processingId === ts.id}
-                          className="flex-1 py-2 bg-red-500/20 text-red-400 text-sm font-medium rounded-lg disabled:opacity-50"
+                          className="flex-1 py-2.5 bg-red-500 text-white text-sm font-semibold rounded-xl disabled:opacity-50 shadow-lg shadow-red-500/20"
                         >
                           Confirm Reject
                         </button>
                         <button
                           onClick={() => { setRejectingId(null); setRejectReason(''); }}
-                          className="px-3 py-2 bg-slate-700 text-slate-400 text-sm rounded-lg"
+                          className="px-4 py-2.5 bg-slate-100 text-slate-600 text-sm font-medium rounded-xl hover:bg-slate-200"
                         >
                           Cancel
                         </button>
@@ -229,20 +230,20 @@ export const TimesheetApproval: React.FC<TimesheetApprovalProps> = ({ onBack }) 
                       <button
                         onClick={() => handleApprove(ts.id)}
                         disabled={processingId === ts.id}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-green-500/20 text-green-400 text-sm font-medium rounded-lg disabled:opacity-50"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-green-500 text-white text-sm font-semibold rounded-xl disabled:opacity-50 shadow-lg shadow-green-500/20 hover:bg-green-600 transition-colors"
                       >
                         {processingId === ts.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <CheckCircle className="w-3.5 h-3.5" />
+                          <CheckCircle className="w-4 h-4" />
                         )}
                         Approve
                       </button>
                       <button
                         onClick={() => setRejectingId(ts.id)}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-500/20 text-red-400 text-sm font-medium rounded-lg"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-red-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-red-500/20 hover:bg-red-600 transition-colors"
                       >
-                        <XCircle className="w-3.5 h-3.5" />
+                        <XCircle className="w-4 h-4" />
                         Reject
                       </button>
                     </div>
