@@ -42,6 +42,7 @@ const AIQuoteBuilder = lazy(() => import('../../components/AIQuoteBuilder').then
 const TeamDashboard = lazy(() => import('../../components/TeamDashboard').then(m => ({ default: m.TeamDashboard })));
 const TeamSettings = lazy(() => import('../../components/TeamSettings').then(m => ({ default: m.TeamSettings })));
 const TimesheetApproval = lazy(() => import('../../components/TimesheetApproval').then(m => ({ default: m.TimesheetApproval })));
+const WorkerSummary = lazy(() => import('../../components/WorkerSummary').then(m => ({ default: m.WorkerSummary })));
 
 // Loading fallback component
 const PageLoader: React.FC = () => (
@@ -80,7 +81,8 @@ type TabType =
   | 'credit_note'
   | 'team_dashboard'
   | 'team_settings'
-  | 'timesheet_approval';
+  | 'timesheet_approval'
+  | 'worker_summary';
 
 // Valid main tabs that can be restored after page reload (e.g., returning from camera)
 const RESTORABLE_TABS: readonly TabType[] = ['home', 'ai_quote_builder', 'jobpacks', 'jobpack_detail', 'quotes', 'invoices', 'aged_receivables', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'accountant_export', 'files', 'materials', 'wholesalers', 'support', 'trial_analytics', 'future_jobs', 'view', 'quote_edit', 'profitloss', 'team_dashboard', 'team_settings', 'timesheet_approval'];
@@ -154,6 +156,11 @@ const App: React.FC = () => {
     } catch { /* sessionStorage not available */ }
   };
   const [activeProjectIdState, setActiveProjectIdState] = useState<string | null>(getInitialProjectId);
+
+  // Worker summary state
+  const [activeWorkerId, setActiveWorkerId] = useState<string | null>(null);
+  const [activeWorkerName, setActiveWorkerName] = useState('');
+  const [activeWorkerRate, setActiveWorkerRate] = useState<number | undefined>();
 
   // Onboarding state
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -412,6 +419,7 @@ const App: React.FC = () => {
           }}
           onRefresh={refresh}
           onNavigateToFutureJobs={() => setActiveTab('future_jobs')}
+          onNavigateToTimesheets={() => setActiveTab('timesheet_approval')}
           onCreateAIQuote={() => setActiveTab('ai_quote_builder')}
         />}
         {activeTab === 'jobpacks' && <JobPackList projects={[...projects].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())} customers={customers} onOpenProject={openProject} onAddProject={handleAddProject} onAddCustomer={handleAddCustomer} onDeleteProject={deleteProject} onBack={() => setActiveTab('home')} />}
@@ -437,9 +445,17 @@ const App: React.FC = () => {
           {activeTab === 'future_jobs' && <FutureJobsPage onBack={() => setActiveTab('home')} onCreateJob={() => setActiveTab('jobpacks')} />}
           {activeTab === 'customers' && <CustomerManager customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer} deleteCustomer={deleteCustomer} onBack={() => setActiveTab('home')} />}
           {activeTab === 'settings' && <SettingsPage settings={settings} setSettings={setSettings} onSave={updateSettings} onBack={() => setActiveTab('home')} />}
-          {activeTab === 'team_dashboard' && <TeamDashboard onBack={() => setActiveTab('home')} />}
+          {activeTab === 'team_dashboard' && <TeamDashboard onBack={() => setActiveTab('home')} onViewWorker={(id, name, rate) => { setActiveWorkerId(id); setActiveWorkerName(name); setActiveWorkerRate(rate); setActiveTab('worker_summary'); }} />}
           {activeTab === 'team_settings' && <TeamSettings onBack={() => setActiveTab('home')} />}
           {activeTab === 'timesheet_approval' && <TimesheetApproval onBack={() => setActiveTab('home')} />}
+          {activeTab === 'worker_summary' && activeWorkerId && (
+            <WorkerSummary
+              memberId={activeWorkerId}
+              memberName={activeWorkerName}
+              hourlyRate={activeWorkerRate}
+              onBack={() => setActiveTab('team_dashboard')}
+            />
+          )}
           {activeTab === 'ai_quote_builder' && <AIQuoteBuilder customers={customers} quotes={quotes} settings={settings} onComplete={handleAIQuoteComplete} onCancel={() => setActiveTab('home')} />}
           {activeTab === 'quote_edit' && <QuoteCreator existingQuote={aiGeneratedDraft as Quote || quotes.find(q => q.id === editingQuoteId)} projectId={activeProjectId || undefined} projectTitle={activeProject?.title} initialType={initialQuoteType} customers={customers} settings={settings} onSave={handleSaveQuote} onAddCustomer={handleAddCustomer} onCancel={() => activeProjectId ? setActiveTab('jobpack_detail') : (initialQuoteType === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes'))} />}
           {activeTab === 'view' && viewingQuoteId && (activeViewQuote ? <QuoteView quote={activeViewQuote} customer={activeViewCustomer || { id: 'unknown', name: 'Unassigned Client', email: '', phone: '', address: 'N/A' }} settings={settings} onEdit={() => handleEditQuote(viewingQuoteId)} onBack={() => activeProjectId ? setActiveTab('jobpack_detail') : (activeViewQuote.type === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes'))} onUpdateStatus={(status) => handleUpdateQuoteStatus(viewingQuoteId, status)} onUpdateQuote={handleUpdateQuote} onConvertToInvoice={handleConvertToInvoice} onIssueCreditNote={handleIssueCreditNote} onDuplicate={handleDuplicateQuote} onDelete={async () => { await deleteQuote(viewingQuoteId); setViewingQuoteId(null); activeProjectId ? setActiveTab('jobpack_detail') : (activeViewQuote.type === 'invoice' ? setActiveTab('invoices') : setActiveTab('quotes')); toast.success('Deleted', 'Document has been discarded'); }} /> : <div className="flex flex-col items-center justify-center py-20 text-slate-400"><FileWarning size={48} className="text-teal-500 mb-4" /><p>Document Not Found</p><button onClick={() => setActiveTab('quotes')} className="mt-4 bg-slate-900 text-white px-4 py-2 rounded">Back</button></div>)}

@@ -372,6 +372,25 @@ export const teamService = {
   // MEMBERSHIP CHECK (for role-based UI routing)
   // ============================================
 
+  // ============================================
+  // NOTIFICATIONS
+  // ============================================
+
+  async notifyTimesheetStatus(timesheetId: string, action: 'approved' | 'rejected', reason?: string) {
+    try {
+      await supabase.functions.invoke('timesheet-notify', {
+        body: { timesheet_id: timesheetId, action, reason },
+      });
+    } catch (err) {
+      // Non-blocking — log but don't throw
+      console.warn('Failed to send timesheet notification:', err);
+    }
+  },
+
+  // ============================================
+  // MEMBERSHIP CHECK (for role-based UI routing)
+  // ============================================
+
   async getMyMembership() {
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return null;

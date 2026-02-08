@@ -7,9 +7,10 @@ import { JobAssignmentModal } from './JobAssignmentModal';
 
 interface TeamDashboardProps {
   onBack: () => void;
+  onViewWorker?: (memberId: string, name: string, hourlyRate?: number) => void;
 }
 
-export const TeamDashboard: React.FC<TeamDashboardProps> = ({ onBack }) => {
+export const TeamDashboard: React.FC<TeamDashboardProps> = ({ onBack, onViewWorker }) => {
   const toast = useToast();
   const { projects } = useData();
   const [team, setTeam] = useState<any>(null);
@@ -171,10 +172,15 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ onBack }) => {
             {Array.from(memberAssignments.entries()).map(([memberId, { name, jobs }]) => (
               <div key={memberId} className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-7 h-7 bg-teal-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                    {name.charAt(0).toUpperCase()}
-                  </div>
-                  <p className="text-sm font-semibold text-slate-800">{name}</p>
+                  <button
+                    onClick={() => onViewWorker?.(memberId, name)}
+                    className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                  >
+                    <div className="w-7 h-7 bg-teal-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      {name.charAt(0).toUpperCase()}
+                    </div>
+                    <p className="text-sm font-semibold text-slate-800">{name}</p>
+                  </button>
                   <span className="text-[10px] bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded-full font-medium">{jobs.length} job{jobs.length !== 1 ? 's' : ''}</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -227,7 +233,11 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ onBack }) => {
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Currently On Site</h2>
           <div className="space-y-2">
             {activeTimesheets.map(ts => (
-              <div key={ts.id} className="bg-teal-50 border border-teal-200 rounded-xl p-4 flex items-center gap-3">
+              <div
+                key={ts.id}
+                onClick={() => ts.team_member && onViewWorker?.(ts.team_member.id, ts.team_member.display_name, ts.team_member.hourly_rate)}
+                className="bg-teal-50 border border-teal-200 rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:bg-teal-100 transition-colors"
+              >
                 <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center">
                   <Clock className="w-5 h-5 text-white animate-pulse" />
                 </div>

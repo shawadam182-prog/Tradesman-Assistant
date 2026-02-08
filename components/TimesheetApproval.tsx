@@ -72,6 +72,7 @@ export const TimesheetApproval: React.FC<TimesheetApprovalProps> = ({ onBack }) 
     setProcessingId(id);
     try {
       await teamService.approveTimesheet(id);
+      teamService.notifyTimesheetStatus(id, 'approved');
       toast.success('Timesheet approved');
       await fetchTimesheets();
     } catch (err) {
@@ -89,6 +90,7 @@ export const TimesheetApproval: React.FC<TimesheetApprovalProps> = ({ onBack }) 
     setProcessingId(id);
     try {
       await teamService.rejectTimesheet(id, rejectReason.trim());
+      teamService.notifyTimesheetStatus(id, 'rejected', rejectReason.trim());
       toast.success('Timesheet rejected');
       setRejectingId(null);
       setRejectReason('');

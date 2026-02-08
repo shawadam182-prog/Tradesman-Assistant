@@ -6,7 +6,8 @@ import { useAuth } from '../src/contexts/AuthContext';
 import { useData } from '../src/contexts/DataContext';
 import { updateAdminSeats } from '../src/lib/stripe';
 import { MAX_FIELD_WORKERS } from '../types';
-import type { TeamRole, SubscriptionTier } from '../types';
+import type { SubscriptionTier } from '../types';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface TeamSettingsProps {
   onBack: () => void;
@@ -31,6 +32,9 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
   const [inviteDisplayName, setInviteDisplayName] = useState('');
   const [inviteRole, setInviteRole] = useState<'admin' | 'field_worker'>('field_worker');
   const [inviting, setInviting] = useState(false);
+
+  // Deactivation confirmation
+  const [deactivatingMember, setDeactivatingMember] = useState<{ id: string; name: string } | null>(null);
 
   // Seat management
   const [updatingSeats, setUpdatingSeats] = useState(false);
@@ -128,13 +132,16 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
     }
   };
 
-  const handleDeactivate = async (memberId: string, name: string) => {
+  const handleDeactivate = async () => {
+    if (!deactivatingMember) return;
     try {
-      await teamService.deactivateMember(memberId);
-      toast.info(`${name} has been deactivated`);
+      await teamService.deactivateMember(deactivatingMember.id);
+      toast.info(`${deactivatingMember.name} has been deactivated`);
+      setDeactivatingMember(null);
       await fetchTeamData();
     } catch (err) {
       toast.error('Failed to deactivate member');
+      setDeactivatingMember(null);
     }
   };
 
@@ -403,7 +410,7 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
                     </div>
                     {member.status === 'active' && (
                       <button
-                        onClick={() => handleDeactivate(member.id, member.display_name)}
+                        onClick={() => setDeactivatingMember({ id: member.id, name: member.display_name })}
                         className="text-xs text-red-500 hover:text-red-600 font-medium"
                       >
                         Deactivate
@@ -437,6 +444,17 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
           </div>
         </>
       )}
+      {/* Deactivation Confirmation */}
+      <ConfirmDialog
+        open={!!deactivatingMember}
+        title="Deactivate Team Member?"
+        message={`${deactivatingMember?.name || 'This member'} will lose access to all jobs, timesheets, and team features. You can re-invite them later if needed.`}
+        confirmLabel="Deactivate"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={handleDeactivate}
+        onCancel={() => setDeactivatingMember(null)}
+      />
     </div>
   );
 };

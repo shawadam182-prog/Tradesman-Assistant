@@ -22,6 +22,8 @@ import { useSubscription } from '../src/hooks/useFeatureAccess';
 import { UpgradePrompt } from './UpgradePrompt';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
 import { ConfirmDialog } from './ConfirmDialog';
+import { usePermissions } from '../src/hooks/usePermissions';
+import { teamService } from '../src/services/teamService';
 
 // Detect iOS for voice input fallback
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -48,6 +50,7 @@ interface HomeProps {
   onAddProject?: (project: Partial<JobPack>) => Promise<JobPack>;
   onRefresh?: () => Promise<void>;
   onNavigateToFutureJobs?: () => void;
+  onNavigateToTimesheets?: () => void;
 }
 
 interface Reminder {
@@ -86,9 +89,11 @@ export const Home: React.FC<HomeProps> = ({
   onViewJob,
   onAddProject,
   onRefresh,
-  onNavigateToFutureJobs
+  onNavigateToFutureJobs,
+  onNavigateToTimesheets
 }) => {
   const toast = useToast();
+  const permissions = usePermissions();
 
   // Subscription and limit checking
   const subscription = useSubscription();
@@ -119,6 +124,8 @@ export const Home: React.FC<HomeProps> = ({
   const [newJobName, setNewJobName] = useState('');
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [pendingNewJobName, setPendingNewJobName] = useState<string | null>(null);
+  const [pendingTimesheets, setPendingTimesheets] = useState(0);
+
   const [showDashboard, setShowDashboard] = useState<boolean>(() => {
     const saved = localStorage.getItem('bq_show_dashboard');
     return saved !== 'false'; // Default to true
@@ -198,6 +205,14 @@ export const Home: React.FC<HomeProps> = ({
         } catch (e2) { console.error("Failed to parse localStorage future jobs:", e2); }
       }
       futureJobsLoaded.current = true;
+
+      // Fetch pending timesheets count for owners/admins
+      if (permissions.canApproveTimesheets) {
+        try {
+          const ts = await teamService.getTeamTimesheets();
+          setPendingTimesheets(ts.filter((t: any) => t.status === 'submitted').length);
+        } catch { /* team features may not be set up */ }
+      }
     };
 
     loadData();
@@ -784,8 +799,19 @@ export const Home: React.FC<HomeProps> = ({
         });
       });
 
+    // Pending timesheets
+    if (pendingTimesheets > 0) {
+      alertList.unshift({
+        id: 'pending-timesheets',
+        type: 'pending_timesheets',
+        title: `${pendingTimesheets} Timesheet${pendingTimesheets !== 1 ? 's' : ''} Awaiting Approval`,
+        description: 'Tap to review and approve',
+        severity: 'warning'
+      });
+    }
+
     return alertList.slice(0, 5);
-  }, [quotes, schedule, customers]);
+  }, [quotes, schedule, customers, pendingTimesheets]);
 
   const nextJob = useMemo(() => {
     const now = new Date();
@@ -840,6 +866,25 @@ export const Home: React.FC<HomeProps> = ({
             <p className="text-[10px] opacity-90">Describe the job, get a quote in seconds</p>
           </div>
           <ArrowRight size={18} className="opacity-70 flex-shrink-0" />
+        </button>
+      )}
+
+      {/* Pending Timesheets Alert */}
+      {pendingTimesheets > 0 && (
+        <button
+          onClick={() => { hapticTap(); onNavigateToTimesheets?.(); }}
+          className="w-full bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-all"
+        >
+          <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center flex-shrink-0">
+            <Clock size={22} className="text-white" />
+          </div>
+          <div className="text-left flex-1">
+            <p className="font-bold text-sm text-amber-800">
+              {pendingTimesheets} Timesheet{pendingTimesheets !== 1 ? 's' : ''} Awaiting Approval
+            </p>
+            <p className="text-[10px] text-amber-600">Tap to review and approve</p>
+          </div>
+          <ArrowRight size={18} className="text-amber-400 flex-shrink-0" />
         </button>
       )}
 
