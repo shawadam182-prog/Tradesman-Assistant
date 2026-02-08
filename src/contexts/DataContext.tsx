@@ -357,6 +357,8 @@ function dbSettingsToApp(dbSettings: any): AppSettings {
     // Team seat counts
     teamSeatCount: dbSettings.team_seat_count ?? 0,
     adminSeatCount: dbSettings.admin_seat_count ?? 0,
+    // Trade type
+    tradeType: dbSettings.trade_type || undefined,
   };
 }
 
@@ -1022,6 +1024,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       tax_year_start_month: updates.taxYearStartMonth,
       tax_year_start_day: updates.taxYearStartDay,
       quick_pick_materials: updates.quickPickMaterials || null,
+      trade_type: updates.tradeType || null,
     });
 
     setSettings(prev => ({ ...prev, ...updates }));
