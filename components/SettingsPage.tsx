@@ -442,17 +442,20 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         </p>
                       )}
                     </div>
-                    {subscription.tier === 'free' || subscription.status === 'expired' ? (
+                    {/* Show Subscribe button if: free tier, expired, OR trialing without Stripe customer (never paid) */}
+                    {subscription.tier === 'free' || subscription.status === 'expired' || !settings.stripeCustomerId ? (
                       <button
                         onClick={() => handleUpgrade('professional')}
                         disabled={upgradingTier !== null}
                         className={`flex items-center gap-2 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 ${subscription.status === 'expired'
                           ? 'bg-red-500 hover:bg-red-600 shadow-red-200'
-                          : 'bg-purple-500 hover:bg-purple-600 shadow-purple-200'
+                          : subscription.status === 'trialing'
+                            ? 'bg-teal-500 hover:bg-teal-600 shadow-teal-200'
+                            : 'bg-purple-500 hover:bg-purple-600 shadow-purple-200'
                           }`}
                       >
                         {upgradingTier === 'professional' ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
-                        {subscription.status === 'expired' ? 'Choose a Plan' : 'Upgrade to Pro'}
+                        {subscription.status === 'expired' ? 'Choose a Plan' : subscription.status === 'trialing' ? 'Subscribe Now' : 'Upgrade to Pro'}
                       </button>
                     ) : (
                       <button
@@ -1646,8 +1649,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                                   key={days}
                                   onClick={() => setQuoteFollowUpDays(days)}
                                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${quoteFollowUpDays === days
-                                      ? 'bg-blue-500 text-white shadow-sm'
-                                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                    ? 'bg-blue-500 text-white shadow-sm'
+                                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                                     }`}
                                 >
                                   {days} day{days !== 1 ? 's' : ''}
