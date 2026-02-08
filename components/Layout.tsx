@@ -105,8 +105,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         { id: 'accountant_export', label: 'Export Data', icon: Download, tier: 'business' },
       ]
     },
-    // Team section — visible when owner has purchased team seats
-    ...((settings.teamSeatCount ?? 0) > 0 ? [{
+    // Team section — visible for any paid subscriber so they can access Team Setup to buy seats
+    ...((settings.subscriptionStatus === 'active' || settings.subscriptionStatus === 'trialing' || (settings.teamSeatCount ?? 0) > 0) ? [{
       id: 'team',
       label: 'Team',
       icon: Users,
