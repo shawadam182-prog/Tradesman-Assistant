@@ -15,7 +15,7 @@ interface TeamSettingsProps {
 
 export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
   const { user } = useAuth();
-  const { settings } = useData();
+  const { settings, refresh } = useData();
   const toast = useToast();
 
   const [team, setTeam] = useState<any>(null);
@@ -87,6 +87,12 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
   const handleInvite = async () => {
     if (!inviteEmail.trim() || !team) return;
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(inviteEmail.trim())) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
     // Check limits based on role
     if (inviteRole === 'admin') {
       if (adminSeatCount > 0 && activeAdmins >= adminSeatCount) {
@@ -157,7 +163,8 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
 
   const handleUpdateRate = async (memberId: string, rate: string) => {
     try {
-      await teamService.updateMember(memberId, { hourly_rate: parseFloat(rate) || 0 });
+      const clamped = Math.min(999, Math.max(0, parseFloat(rate) || 0));
+      await teamService.updateMember(memberId, { hourly_rate: clamped });
     } catch (err) {
       toast.error('Failed to update rate');
     }
@@ -173,9 +180,7 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
     try {
       await updateAdminSeats(newCount);
       toast.success(`Admin seats updated to ${newCount}`);
-      // Update locally for instant feedback
-      (settings as any).adminSeatCount = newCount;
-      (settings as any).teamSeatCount = newCount;
+      await refresh();
     } catch (err: any) {
       toast.error(err?.message || 'Failed to update seats');
     } finally {
@@ -423,6 +428,8 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
                       <span className="text-xs text-slate-500">Rate:</span>
                       <input
                         type="number"
+                        min={0}
+                        max={999}
                         defaultValue={member.hourly_rate || 0}
                         onBlur={e => handleUpdateRate(member.id, e.target.value)}
                         className="w-20 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-teal-500"

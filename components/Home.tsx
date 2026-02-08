@@ -16,7 +16,6 @@ import { parseReminderVoiceInput } from '../src/services/geminiService';
 import { sitePhotosService, remindersService, futureJobsService } from '../src/services/dataService';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
-import { BusinessDashboard } from './BusinessDashboard';
 import { FinancialOverview } from './FinancialOverview';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
 import { UpgradePrompt } from './UpgradePrompt';
@@ -205,18 +204,18 @@ export const Home: React.FC<HomeProps> = ({
         } catch (e2) { console.error("Failed to parse localStorage future jobs:", e2); }
       }
       futureJobsLoaded.current = true;
-
-      // Fetch pending timesheets count for owners/admins
-      if (permissions.canApproveTimesheets) {
-        try {
-          const ts = await teamService.getTeamTimesheets();
-          setPendingTimesheets(ts.filter((t: any) => t.status === 'submitted').length);
-        } catch { /* team features may not be set up */ }
-      }
     };
 
     loadData();
   }, []);
+
+  // Fetch pending timesheets — separate effect keyed on permission state
+  useEffect(() => {
+    if (!permissions.canApproveTimesheets) return;
+    teamService.getTeamTimesheets()
+      .then(ts => setPendingTimesheets(ts.filter((t: any) => t.status === 'submitted').length))
+      .catch(() => {});
+  }, [permissions.canApproveTimesheets]);
 
   // Reload future jobs from Supabase (for cross-device sync)
   const reloadFutureJobs = async () => {
@@ -239,13 +238,18 @@ export const Home: React.FC<HomeProps> = ({
   // Refresh on tab focus (cross-device sync)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && futureJobsLoaded.current) {
-        reloadFutureJobs();
+      if (document.visibilityState === 'visible') {
+        if (futureJobsLoaded.current) reloadFutureJobs();
+        if (permissions.canApproveTimesheets) {
+          teamService.getTeamTimesheets()
+            .then(ts => setPendingTimesheets(ts.filter((t: any) => t.status === 'submitted').length))
+            .catch(() => {});
+        }
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+  }, [permissions.canApproveTimesheets]);
 
   // Save reminders to localStorage as offline cache
   useEffect(() => {
@@ -741,77 +745,6 @@ export const Home: React.FC<HomeProps> = ({
 
     return days;
   }, [schedule]);
-
-  // Alerts
-  const alerts = useMemo(() => {
-    const alertList: { id: string; type: string; title: string; description: string; severity: 'warning' | 'info' }[] = [];
-    const now = new Date();
-
-    // Overdue invoices (sent/accepted > 14 days old)
-    quotes
-      .filter(q => q.type === 'invoice' && (q.status === 'sent' || q.status === 'accepted'))
-      .forEach(invoice => {
-        const invoiceDate = new Date(invoice.date);
-        const dueDate = new Date(invoiceDate.getTime() + 14 * 24 * 60 * 60 * 1000);
-        if (now > dueDate) {
-          const customer = customers.find(c => c.id === invoice.customerId);
-          alertList.push({
-            id: `overdue-${invoice.id}`,
-            type: 'overdue',
-            title: `Overdue: ${invoice.title}`,
-            description: `${customer?.name || 'Unknown'} - Due ${dueDate.toLocaleDateString()}`,
-            severity: 'warning'
-          });
-        }
-      });
-
-    // Pending quotes (sent > 7 days ago)
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    quotes
-      .filter(q => (q.type === 'estimate' || q.type === 'quotation') && q.status === 'sent')
-      .filter(q => new Date(q.updatedAt) < sevenDaysAgo)
-      .forEach(quote => {
-        const customer = customers.find(c => c.id === quote.customerId);
-        alertList.push({
-          id: `pending-${quote.id}`,
-          type: 'pending_quote',
-          title: `Follow Up: ${quote.title}`,
-          description: `Sent to ${customer?.name || 'Unknown'} - No response`,
-          severity: 'info'
-        });
-      });
-
-    // Upcoming jobs (within 24 hours)
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    schedule
-      .filter(entry => {
-        const start = new Date(entry.start);
-        return start > now && start < tomorrow;
-      })
-      .forEach(job => {
-        const customer = customers.find(c => c.id === job.customerId);
-        alertList.push({
-          id: `upcoming-${job.id}`,
-          type: 'upcoming_job',
-          title: job.title,
-          description: `${new Date(job.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${customer?.name || 'Site visit'}`,
-          severity: 'info'
-        });
-      });
-
-    // Pending timesheets
-    if (pendingTimesheets > 0) {
-      alertList.unshift({
-        id: 'pending-timesheets',
-        type: 'pending_timesheets',
-        title: `${pendingTimesheets} Timesheet${pendingTimesheets !== 1 ? 's' : ''} Awaiting Approval`,
-        description: 'Tap to review and approve',
-        severity: 'warning'
-      });
-    }
-
-    return alertList.slice(0, 5);
-  }, [quotes, schedule, customers, pendingTimesheets]);
 
   const nextJob = useMemo(() => {
     const now = new Date();

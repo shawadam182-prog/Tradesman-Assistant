@@ -47,6 +47,24 @@ const OWNER_OR_SOLO: Permissions = {
   canManageBilling: true,
 };
 
+const LOADING_PERMISSIONS: Permissions = {
+  role: null,
+  isOwner: false,
+  isAdmin: false,
+  isFieldWorker: false,
+  canViewAllJobs: false,
+  canCreateJobs: false,
+  canAssignJobs: false,
+  canAccessQuotes: false,
+  canAccessInvoices: false,
+  canViewAllCustomers: false,
+  canApproveTimesheets: false,
+  canManageAdmins: false,
+  canManageFieldWorkers: false,
+  canAccessAccounting: false,
+  canManageBilling: false,
+};
+
 function permissionsForRole(role: TeamRole, tier: string): Permissions {
   if (role === 'owner') return OWNER_OR_SOLO;
 
@@ -116,8 +134,13 @@ export function usePermissions(): Permissions {
     fetchRole();
   }, [user?.id]);
 
-  // Not loaded yet or solo user (no team membership) → full owner permissions
-  if (!loaded || !teamRole) {
+  // Still loading — return restrictive defaults so nothing leaks
+  if (!loaded) {
+    return LOADING_PERMISSIONS;
+  }
+
+  // Loaded but no team membership → solo user → full owner permissions
+  if (!teamRole) {
     return OWNER_OR_SOLO;
   }
 

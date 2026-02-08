@@ -16,35 +16,38 @@ export const WorkerSummary: React.FC<WorkerSummaryProps> = ({ memberId, memberNa
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchData = async () => {
       try {
-        const [tsData, assignData] = await Promise.all([
-          teamService.getTeamTimesheets(),
-          teamService.getTeamAssignments(),
+        const [memberTs, memberAssign] = await Promise.all([
+          teamService.getMemberTimesheets(memberId),
+          teamService.getMemberAssignments(memberId),
         ]);
-        // Filter to this worker
-        const memberTs = tsData.filter((ts: any) => ts.team_member_id === memberId);
-        const memberAssign = assignData.filter((a: any) => a.team_member_id === memberId);
         setTimesheets(memberTs);
         setAssignments(memberAssign);
 
-        // Fetch GPS logs for active timesheets
+        // Fetch GPS logs for active timesheets in parallel
         const activeTs = memberTs.filter((ts: any) => ts.status === 'active');
-        const logsMap = new Map<string, any[]>();
-        for (const ts of activeTs) {
-          try {
-            const logs = await teamService.getGPSLogs(ts.id);
-            if (logs.length > 0) logsMap.set(ts.id, logs);
-          } catch { /* ignore */ }
+        if (activeTs.length > 0) {
+          const logsMap = new Map<string, any[]>();
+          const results = await Promise.all(
+            activeTs.map((ts: any) =>
+              teamService.getGPSLogs(ts.id)
+                .then(logs => ({ id: ts.id, logs }))
+                .catch(() => ({ id: ts.id, logs: [] as any[] }))
+            )
+          );
+          for (const { id, logs } of results) {
+            if (logs.length > 0) logsMap.set(id, logs);
+          }
+          setGpsLogs(logsMap);
         }
-        setGpsLogs(logsMap);
       } catch (err) {
         console.error('Failed to fetch worker data:', err);
       } finally {
         setLoading(false);
       }
     };
-    fetch();
+    fetchData();
   }, [memberId]);
 
   // Calculate stats

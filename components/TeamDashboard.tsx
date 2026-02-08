@@ -29,9 +29,11 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ onBack, onViewWork
   useEffect(() => {
     const fetch = async () => {
       try {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         const [teamData, tsData, assignData] = await Promise.all([
           teamService.getMyTeamWithMembers(),
-          teamService.getTeamTimesheets(),
+          teamService.getTeamTimesheets(thirtyDaysAgo.toISOString()),
           teamService.getTeamAssignments(),
         ]);
         setTeam(teamData);

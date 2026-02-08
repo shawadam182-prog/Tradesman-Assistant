@@ -85,7 +85,7 @@ type TabType =
   | 'worker_summary';
 
 // Valid main tabs that can be restored after page reload (e.g., returning from camera)
-const RESTORABLE_TABS: readonly TabType[] = ['home', 'ai_quote_builder', 'jobpacks', 'jobpack_detail', 'quotes', 'invoices', 'aged_receivables', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'accountant_export', 'files', 'materials', 'wholesalers', 'support', 'trial_analytics', 'future_jobs', 'view', 'quote_edit', 'profitloss', 'team_dashboard', 'team_settings', 'timesheet_approval'];
+const RESTORABLE_TABS: readonly TabType[] = ['home', 'ai_quote_builder', 'jobpacks', 'jobpack_detail', 'quotes', 'invoices', 'aged_receivables', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'accountant_export', 'files', 'materials', 'wholesalers', 'support', 'trial_analytics', 'future_jobs', 'view', 'quote_edit', 'profitloss', 'team_dashboard', 'team_settings', 'timesheet_approval', 'worker_summary'];
 type RestorableTab = typeof RESTORABLE_TABS[number];
 
 const App: React.FC = () => {
@@ -383,7 +383,7 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <Layout activeTab={activeTab === 'view' || activeTab === 'jobpack_detail' || activeTab === 'quote_edit' || activeTab === 'credit_note' || activeTab === 'ai_quote_builder' ? '' : activeTab} setActiveTab={setActiveTab} onSignOut={signOut} onCreateJob={() => setActiveTab('jobpacks')} onCreateQuote={() => handleCreateQuote()} onCreateInvoice={handleCreateInvoice}>
+    <Layout activeTab={activeTab === 'view' || activeTab === 'jobpack_detail' || activeTab === 'quote_edit' || activeTab === 'credit_note' || activeTab === 'ai_quote_builder' || activeTab === 'worker_summary' ? '' : activeTab} setActiveTab={setActiveTab} onSignOut={signOut} onCreateJob={() => setActiveTab('jobpacks')} onCreateQuote={() => handleCreateQuote()} onCreateInvoice={handleCreateInvoice}>
       {/* Page-level error boundary - keeps navigation accessible if a page crashes */}
       <ErrorBoundary key={activeTab} onReset={handleErrorReset}>
         {activeTab === 'home' && <Home
@@ -453,7 +453,12 @@ const App: React.FC = () => {
               memberId={activeWorkerId}
               memberName={activeWorkerName}
               hourlyRate={activeWorkerRate}
-              onBack={() => setActiveTab('team_dashboard')}
+              onBack={() => {
+                setActiveWorkerId(null);
+                setActiveWorkerName('');
+                setActiveWorkerRate(undefined);
+                setActiveTab('team_dashboard');
+              }}
             />
           )}
           {activeTab === 'ai_quote_builder' && <AIQuoteBuilder customers={customers} quotes={quotes} settings={settings} onComplete={handleAIQuoteComplete} onCancel={() => setActiveTab('home')} />}

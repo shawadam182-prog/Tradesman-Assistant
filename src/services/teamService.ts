@@ -226,6 +226,16 @@ export const teamService = {
     return data || [];
   },
 
+  async getMemberAssignments(memberId: string) {
+    const { data, error } = await supabase
+      .from('job_assignments')
+      .select('*, job_pack:job_packs(id, title, status, customer:customers(id, name))')
+      .eq('team_member_id', memberId)
+      .order('assigned_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
   // ============================================
   // TIMESHEETS
   // ============================================
@@ -295,6 +305,16 @@ export const teamService = {
     if (dateFrom) query = query.gte('clock_in', dateFrom);
     if (dateTo) query = query.lte('clock_in', dateTo);
     const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getMemberTimesheets(memberId: string) {
+    const { data, error } = await supabase
+      .from('timesheets')
+      .select('*, team_member:team_members(id, display_name, user_id, hourly_rate), job_pack:job_packs(id, title)')
+      .eq('team_member_id', memberId)
+      .order('clock_in', { ascending: false });
     if (error) throw error;
     return data || [];
   },
