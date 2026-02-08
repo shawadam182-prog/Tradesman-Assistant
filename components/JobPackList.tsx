@@ -3,7 +3,7 @@ import { JobPack, Customer, TIER_LIMITS } from '../types';
 import {
   FolderPlus, User, ArrowRight, Clock,
   AlertCircle, Loader2, UserPlus, Mic,
-  MicOff, Sparkles, Mail, Phone, Hammer, Trash2, MapPin
+  MicOff, Sparkles, Mail, Phone, Hammer, Trash2, MapPin, Users
 } from 'lucide-react';
 import { parseCustomerVoiceInput } from '../src/services/geminiService';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
@@ -14,6 +14,9 @@ import { useVoiceInput } from '../src/hooks/useVoiceInput';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { LiveVoiceFill, VoiceFieldConfig } from './LiveVoiceFill';
+import { useTeam } from '../src/contexts/TeamContext';
+import { teamService } from '../src/services/teamService';
+import { JobAssignmentModal } from './JobAssignmentModal';
 
 // Detect iOS for voice input fallback
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -33,8 +36,29 @@ export const JobPackList: React.FC<JobPackListProps> = ({
   projects, customers, onOpenProject, onAddProject, onAddCustomer, onDeleteProject, onBack
 }) => {
   const toast = useToast();
+  const { isTeamOwner } = useTeam();
   const [isAdding, setIsAdding] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+
+  // Assignment tracking for team owners
+  const [assignmentMap, setAssignmentMap] = useState<Map<string, { id: string; display_name: string }[]>>(new Map());
+  const [assignModalJobId, setAssignModalJobId] = useState<string | null>(null);
+
+  const refreshAssignments = useCallback(async () => {
+    if (!isTeamOwner) return;
+    try {
+      const all = await teamService.getTeamAssignments();
+      const map = new Map<string, { id: string; display_name: string }[]>();
+      for (const a of all) {
+        const key = a.job_pack_id;
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push({ id: a.team_member?.id, display_name: a.team_member?.display_name || 'Unknown' });
+      }
+      setAssignmentMap(map);
+    } catch { /* ignore */ }
+  }, [isTeamOwner]);
+
+  useEffect(() => { refreshAssignments(); }, [refreshAssignments]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [newTitle, setNewTitle] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState('');
@@ -522,6 +546,24 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                 <span>{project.documents.length} docs</span>
               </span>
             </div>
+            {isTeamOwner && (() => {
+              const workers = assignmentMap.get(project.id);
+              return (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setAssignModalJobId(project.id); }}
+                  className={`flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold transition-colors ${
+                    workers && workers.length > 0
+                      ? 'bg-teal-50 text-teal-600 hover:bg-teal-100'
+                      : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                  }`}
+                >
+                  <Users size={10} />
+                  {workers && workers.length > 0
+                    ? workers.map(w => w.display_name.split(' ')[0]).join(', ')
+                    : 'Unassigned'}
+                </button>
+              );
+            })()}
           </div>
         ))}
       </div>
@@ -559,6 +601,16 @@ export const JobPackList: React.FC<JobPackListProps> = ({
           }}
           onCancel={() => setShowLiveVoiceFill(false)}
           title="Voice Fill Customer"
+        />
+      )}
+
+      {/* Job Assignment Modal */}
+      {assignModalJobId && (
+        <JobAssignmentModal
+          jobPackId={assignModalJobId}
+          jobTitle={projects.find(p => p.id === assignModalJobId)?.title || ''}
+          onClose={() => setAssignModalJobId(null)}
+          onAssignmentChange={refreshAssignments}
         />
       )}
     </div>

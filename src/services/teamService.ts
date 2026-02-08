@@ -217,6 +217,15 @@ export const teamService = {
     return data || [];
   },
 
+  async getTeamAssignments() {
+    const { data, error } = await supabase
+      .from('job_assignments')
+      .select('*, team_member:team_members(id, display_name)')
+      .order('assigned_at');
+    if (error) throw error;
+    return data || [];
+  },
+
   // ============================================
   // TIMESHEETS
   // ============================================

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Briefcase, Search, ChevronRight, MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Briefcase, Search, ChevronRight, Loader2 } from 'lucide-react';
 import { useData } from '../src/contexts/DataContext';
+import { teamService } from '../src/services/teamService';
 
 interface WorkerMyJobsProps {
   onViewJob: (jobId: string) => void;
@@ -10,8 +11,19 @@ export const WorkerMyJobs: React.FC<WorkerMyJobsProps> = ({ onViewJob }) => {
   const { projects, customers } = useData();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'active' | 'completed' | 'all'>('active');
+  const [assignedJobIds, setAssignedJobIds] = useState<Set<string> | null>(null);
+  const [loadingAssignments, setLoadingAssignments] = useState(true);
+
+  // Fetch assigned job IDs for this worker (belt-and-suspenders with RLS)
+  useEffect(() => {
+    teamService.getMyAssignments()
+      .then(a => setAssignedJobIds(new Set(a.map((x: any) => x.job_pack_id))))
+      .catch(() => setAssignedJobIds(null)) // Fall back to RLS-only on error
+      .finally(() => setLoadingAssignments(false));
+  }, []);
 
   const filteredJobs = projects
+    .filter(job => assignedJobIds === null || assignedJobIds.has(job.id))
     .filter(job => {
       if (filter === 'active') return job.status === 'active';
       if (filter === 'completed') return job.status === 'completed';
@@ -60,7 +72,11 @@ export const WorkerMyJobs: React.FC<WorkerMyJobsProps> = ({ onViewJob }) => {
       </div>
 
       {/* Job list */}
-      {filteredJobs.length === 0 ? (
+      {loadingAssignments ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-6 h-6 text-teal-500 animate-spin" />
+        </div>
+      ) : filteredJobs.length === 0 ? (
         <div className="bg-slate-800/50 rounded-xl p-8 text-center">
           <Briefcase className="w-10 h-10 text-slate-600 mx-auto mb-3" />
           <p className="text-sm text-slate-500">

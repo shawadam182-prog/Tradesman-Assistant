@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Users, Clock, CheckCircle, AlertCircle, Loader2, Briefcase } from 'lucide-react';
 import { teamService } from '../src/services/teamService';
 import { useToast } from '../src/contexts/ToastContext';
+import { useData } from '../src/contexts/DataContext';
+import { JobAssignmentModal } from './JobAssignmentModal';
 
 interface TeamDashboardProps {
   onBack: () => void;
@@ -9,19 +11,31 @@ interface TeamDashboardProps {
 
 export const TeamDashboard: React.FC<TeamDashboardProps> = ({ onBack }) => {
   const toast = useToast();
+  const { projects } = useData();
   const [team, setTeam] = useState<any>(null);
   const [timesheets, setTimesheets] = useState<any[]>([]);
+  const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [assignModalJobId, setAssignModalJobId] = useState<string | null>(null);
+
+  const refreshAssignments = useCallback(async () => {
+    try {
+      const a = await teamService.getTeamAssignments();
+      setAssignments(a);
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     const fetch = async () => {
       try {
-        const [teamData, tsData] = await Promise.all([
+        const [teamData, tsData, assignData] = await Promise.all([
           teamService.getMyTeamWithMembers(),
           teamService.getTeamTimesheets(),
+          teamService.getTeamAssignments(),
         ]);
         setTeam(teamData);
         setTimesheets(tsData);
+        setAssignments(assignData);
       } catch (err) {
         console.error('Failed to fetch team data:', err);
         toast.error('Failed to load team data');
@@ -62,6 +76,23 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ onBack }) => {
   const activeMembers = (team.team_members || []).filter((m: any) => m.status === 'active' && m.role !== 'owner');
   const activeTimesheets = timesheets.filter(ts => ts.status === 'active');
   const pendingApprovals = timesheets.filter(ts => ts.status === 'submitted');
+
+  // Assignment data
+  const activeJobs = projects.filter(p => p.status === 'active');
+  const assignedJobIds = new Set(assignments.map(a => a.job_pack_id));
+  const unassignedJobs = activeJobs.filter(j => !assignedJobIds.has(j.id));
+  const memberAssignments = new Map<string, { name: string; jobs: { id: string; title: string }[] }>();
+  for (const a of assignments) {
+    const memberId = a.team_member_id;
+    const memberName = a.team_member?.display_name || 'Unknown';
+    if (!memberAssignments.has(memberId)) {
+      memberAssignments.set(memberId, { name: memberName, jobs: [] });
+    }
+    const job = activeJobs.find(j => j.id === a.job_pack_id);
+    if (job) {
+      memberAssignments.get(memberId)!.jobs.push({ id: job.id, title: job.title });
+    }
+  }
 
   // This week's hours
   const startOfWeek = new Date();
@@ -117,6 +148,77 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ onBack }) => {
           </div>
           <p className="text-3xl font-bold text-white">{totalWeekHours.toFixed(1)}</p>
         </div>
+      </div>
+
+      {/* Job Assignments */}
+      <div>
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Job Assignments</h2>
+
+        {/* Unassigned alert */}
+        {unassignedJobs.length > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-800">{unassignedJobs.length} active job{unassignedJobs.length !== 1 ? 's' : ''} unassigned</p>
+              <p className="text-xs text-amber-600 mt-0.5 truncate">{unassignedJobs.slice(0, 3).map(j => j.title).join(', ')}{unassignedJobs.length > 3 ? '...' : ''}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Per-worker assignments */}
+        {memberAssignments.size > 0 ? (
+          <div className="space-y-2">
+            {Array.from(memberAssignments.entries()).map(([memberId, { name, jobs }]) => (
+              <div key={memberId} className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-7 h-7 bg-teal-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    {name.charAt(0).toUpperCase()}
+                  </div>
+                  <p className="text-sm font-semibold text-slate-800">{name}</p>
+                  <span className="text-[10px] bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded-full font-medium">{jobs.length} job{jobs.length !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {jobs.map(job => (
+                    <button
+                      key={job.id}
+                      onClick={() => setAssignModalJobId(job.id)}
+                      className="flex items-center gap-1 px-2 py-1 bg-slate-50 hover:bg-teal-50 rounded-md text-[11px] font-medium text-slate-600 hover:text-teal-600 transition-colors"
+                    >
+                      <Briefcase size={10} />
+                      <span className="truncate max-w-[120px]">{job.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : activeJobs.length > 0 ? (
+          <div className="bg-white rounded-xl border border-slate-200 p-6 text-center shadow-sm">
+            <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-sm text-slate-500">No workers assigned to jobs yet</p>
+            <p className="text-xs text-slate-400 mt-1">Open a job and tap "Assign" to get started</p>
+          </div>
+        ) : null}
+
+        {/* Unassigned jobs list */}
+        {unassignedJobs.length > 0 && (
+          <div className="mt-3">
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Needs Assignment</p>
+            <div className="space-y-1">
+              {unassignedJobs.map(job => (
+                <button
+                  key={job.id}
+                  onClick={() => setAssignModalJobId(job.id)}
+                  className="w-full flex items-center gap-2 px-3 py-2 bg-amber-50 hover:bg-amber-100 rounded-lg text-left transition-colors"
+                >
+                  <Briefcase size={12} className="text-amber-500 flex-shrink-0" />
+                  <span className="text-xs font-medium text-amber-800 truncate">{job.title}</span>
+                  <span className="text-[10px] text-amber-500 ml-auto flex-shrink-0">Assign</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Active workers */}
@@ -179,6 +281,16 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ onBack }) => {
           </div>
         )}
       </div>
+
+      {/* Job Assignment Modal */}
+      {assignModalJobId && (
+        <JobAssignmentModal
+          jobPackId={assignModalJobId}
+          jobTitle={projects.find(p => p.id === assignModalJobId)?.title || ''}
+          onClose={() => setAssignModalJobId(null)}
+          onAssignmentChange={refreshAssignments}
+        />
+      )}
     </div>
   );
 };

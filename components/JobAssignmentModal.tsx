@@ -8,9 +8,10 @@ interface JobAssignmentModalProps {
   jobPackId: string;
   jobTitle: string;
   onClose: () => void;
+  onAssignmentChange?: () => void;
 }
 
-export const JobAssignmentModal: React.FC<JobAssignmentModalProps> = ({ jobPackId, jobTitle, onClose }) => {
+export const JobAssignmentModal: React.FC<JobAssignmentModalProps> = ({ jobPackId, jobTitle, onClose, onAssignmentChange }) => {
   const toast = useToast();
   const [team, setTeam] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
@@ -53,6 +54,7 @@ export const JobAssignmentModal: React.FC<JobAssignmentModalProps> = ({ jobPackI
         setAssignments(prev => [...prev, assignment]);
         toast.success(`${memberName} assigned`);
       }
+      onAssignmentChange?.();
     } catch (err) {
       toast.error('Failed to update assignment');
     } finally {
