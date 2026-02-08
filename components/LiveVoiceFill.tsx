@@ -85,11 +85,35 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
   const preprocessTranscript = (text: string): string => {
     let processed = text.toLowerCase();
 
-    // Convert email patterns FIRST (most critical)
+    // FIRST: Convert all spoken numbers to digits
+    const wordToDigit: Record<string, string> = {
+      'zero': '0', 'oh': '0', 'o': '0',
+      'one': '1', 'won': '1',
+      'two': '2', 'to': '2', 'too': '2',
+      'three': '3',
+      'four': '4', 'for': '4', 'fore': '4',
+      'five': '5',
+      'six': '6',
+      'seven': '7',
+      'eight': '8', 'ate': '8',
+      'nine': '9', 'niner': '9',
+    };
+
+    // Replace word numbers with digits (word boundaries)
+    for (const [word, digit] of Object.entries(wordToDigit)) {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      processed = processed.replace(regex, digit);
+    }
+
+    // Handle "double [digit]" and "triple [digit]"
+    processed = processed
+      .replace(/\bdouble\s+(\d)/gi, '$1$1')
+      .replace(/\btriple\s+(\d)/gi, '$1$1$1');
+
+    // Convert email patterns
     // Pattern: "[words] at [domain] dot [tld]" or "[words] at [domain] dot co dot uk"
     // Handle spoken email: "adam dot shaw at gmail dot com"
     processed = processed
-      // First, mark email boundaries by finding "at [word] dot com/co/org/net/uk"
       .replace(/\b(\w+(?:\s+(?:dot|point)\s+\w+)*)\s+(?:at|add)\s+(\w+(?:\s+(?:dot|point)\s+\w+)*\s+(?:dot|point)\s+(?:com|co|org|net|uk|io)(?:\s+(?:dot|point)\s+uk)?)\b/gi,
         (match, localPart, domain) => {
           // Convert local part: "adam dot shaw" → "adam.shaw"
@@ -108,19 +132,11 @@ export const LiveVoiceFill: React.FC<LiveVoiceFillProps> = ({
         }
       );
 
-    // Convert phone patterns
-    // "oh seven" → "07", "zero seven" → "07"
-    processed = processed
-      .replace(/\boh\s+/gi, '0')
-      .replace(/\bzero\s+/gi, '0')
-      .replace(/\bdouble\s+(\d)/gi, '$1$1')
-      .replace(/\btriple\s+(\d)/gi, '$1$1$1')
-      // Clean up phone number spacing
-      .replace(/(\d)\s+(\d)/g, '$1$2');
+    // Clean up digit spacing (e.g., "0 7 7 5 1" → "07751")
+    processed = processed.replace(/(\d)\s+(?=\d)/g, '$1');
 
     // Convert remaining standalone "dot" and "at" that might have been missed
     // But be careful not to break already converted emails
-    // Only convert if not already part of an email
     if (!processed.includes('@')) {
       processed = processed
         .replace(/\s+(?:dot|point)\s+/gi, '.')

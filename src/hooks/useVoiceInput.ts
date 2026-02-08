@@ -1,6 +1,44 @@
 import { useState, useRef, useCallback } from 'react';
 import { hapticTap, hapticSuccess } from './useHaptic';
 
+/**
+ * Normalizes spoken numbers to digits.
+ * Converts "one two three" → "123", "oh seven" → "07", etc.
+ * Essential for email addresses, phone numbers, and addresses.
+ */
+function normalizeSpokenNumbers(text: string): string {
+  const wordToDigit: Record<string, string> = {
+    'zero': '0',
+    'oh': '0',
+    'one': '1',
+    'two': '2',
+    'to': '2',
+    'too': '2',
+    'three': '3',
+    'four': '4',
+    'for': '4',
+    'five': '5',
+    'six': '6',
+    'seven': '7',
+    'eight': '8',
+    'nine': '9',
+    'niner': '9',
+  };
+
+  // Replace word numbers with digits (case insensitive, word boundaries)
+  let result = text;
+  for (const [word, digit] of Object.entries(wordToDigit)) {
+    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    result = result.replace(regex, digit);
+  }
+
+  // Clean up spaces between consecutive digits (e.g., "0 7 7 5 1" → "07751")
+  // But only when they appear to be part of a number sequence
+  result = result.replace(/(\d)\s+(?=\d)/g, '$1');
+
+  return result;
+}
+
 interface UseVoiceInputOptions {
   onResult: (text: string) => void;
   onError?: (error: string) => void;
@@ -81,7 +119,8 @@ export function useVoiceInput({ onResult, onError, lang = 'en-GB' }: UseVoiceInp
     recognition.onend = () => setIsListening(false);
 
     recognition.onresult = (event: any) => {
-      const text = event.results[0][0].transcript;
+      const rawText = event.results[0][0].transcript;
+      const text = normalizeSpokenNumbers(rawText);
       hapticSuccess();
       onResult(text);
     };
@@ -130,8 +169,9 @@ export function useVoiceInput({ onResult, onError, lang = 'en-GB' }: UseVoiceInp
           const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
 
           try {
-            const text = await transcribeWithCloud(audioBlob);
-            if (text) {
+            const rawText = await transcribeWithCloud(audioBlob);
+            if (rawText) {
+              const text = normalizeSpokenNumbers(rawText);
               hapticSuccess();
               onResult(text);
             } else {
