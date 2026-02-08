@@ -250,6 +250,8 @@ export interface AppSettings {
   stripeSubscriptionId?: string;
   referralCode?: string;
   usageLimits?: UsageLimits;
+  // Team seats
+  teamSeatCount?: number;
   // Materials quick picks for job tracker
   quickPickMaterials?: string[];
   // Trade type for AI context
@@ -599,7 +601,10 @@ export type GatedFeature =
   | 'materialKits'
   | 'paymentMilestones'
   | 'appointmentComms'
-  | 'recurringInvoices';
+  | 'recurringInvoices'
+  | 'teamDashboard'
+  | 'teamSettings'
+  | 'timesheetApproval';
 
 // Maps features to their required tier
 export const FEATURE_TIER_MAP: Record<GatedFeature, SubscriptionTier> = {
@@ -626,6 +631,11 @@ export const FEATURE_TIER_MAP: Record<GatedFeature, SubscriptionTier> = {
   payables: 'business',
   filingCabinet: 'business',
   recurringInvoices: 'business',
+
+  // Team features (require professional + seats)
+  teamDashboard: 'professional',
+  teamSettings: 'professional',
+  timesheetApproval: 'professional',
 };
 
 // Default usage limits by tier

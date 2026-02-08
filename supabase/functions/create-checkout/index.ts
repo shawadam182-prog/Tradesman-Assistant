@@ -14,6 +14,9 @@ const PRICE_IDS: Record<string, string> = {
   enterprise: 'price_1SqywzK6gNizuAaGmBTYOfKl',
 };
 
+// Field Worker Seat price ID — replace with actual price after creating in Stripe Dashboard
+const SEAT_PRICE_ID = 'price_1SyUrfGiHvsip9mTXoJ3riNO';
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -52,7 +55,7 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const { tier, successUrl, cancelUrl } = await req.json();
+    const { tier, seats, successUrl, cancelUrl } = await req.json();
 
     if (!tier || !PRICE_IDS[tier]) {
       return new Response(
@@ -97,18 +100,21 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Build line items — base plan + optional seats
+    const lineItems: { price: string; quantity: number }[] = [
+      { price: PRICE_IDS[tier], quantity: 1 },
+    ];
+    if (seats && Number.isInteger(seats) && seats > 0) {
+      lineItems.push({ price: SEAT_PRICE_ID, quantity: seats });
+    }
+
     // Checkout session config
     // Note: No trial_period_days - users already have in-app trial, billing starts immediately
     const checkoutConfig = {
       customer: stripeCustomerId,
       mode: 'subscription' as const,
       payment_method_types: ['card'] as const,
-      line_items: [
-        {
-          price: PRICE_IDS[tier],
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       subscription_data: {
         metadata: {
           supabase_user_id: user.id,

@@ -14,6 +14,9 @@ const PRICE_TO_TIER: Record<string, string> = {
   'price_1SqywzK6gNizuAaGmBTYOfKl': 'enterprise',
 };
 
+// Field Worker Seat price ID — replace with actual price after creating in Stripe Dashboard
+const SEAT_PRICE_ID = 'price_1SyUrfGiHvsip9mTXoJ3riNO';
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -79,10 +82,21 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Helper to get tier from subscription
-    function getTierFromSubscription(subscription: Stripe.Subscription): string {
-      const priceId = subscription.items.data[0]?.price?.id;
-      return PRICE_TO_TIER[priceId] || 'professional';
+    // Helper to parse subscription items — finds base plan tier and seat count
+    function parseSubscription(subscription: Stripe.Subscription): { tier: string; seatCount: number } {
+      let tier = 'professional';
+      let seatCount = 0;
+
+      for (const item of subscription.items.data) {
+        const priceId = item.price?.id;
+        if (priceId && PRICE_TO_TIER[priceId]) {
+          tier = PRICE_TO_TIER[priceId];
+        } else if (priceId === SEAT_PRICE_ID) {
+          seatCount = item.quantity || 0;
+        }
+      }
+
+      return { tier, seatCount };
     }
 
     // Handle different event types
@@ -93,14 +107,14 @@ Deno.serve(async (req) => {
         const subscriptionId = session.subscription as string;
 
         if (subscriptionId) {
-          // Retrieve full subscription details
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          const tier = getTierFromSubscription(subscription);
+          const { tier, seatCount } = parseSubscription(subscription);
 
           await updateUserSettings(customerId, {
             stripe_subscription_id: subscriptionId,
             subscription_tier: tier,
             subscription_status: subscription.status === 'trialing' ? 'trialing' : 'active',
+            team_seat_count: seatCount,
             trial_end: subscription.trial_end && subscription.trial_end > 0
               ? new Date(subscription.trial_end * 1000).toISOString()
               : null,
@@ -115,12 +129,13 @@ Deno.serve(async (req) => {
       case 'customer.subscription.created': {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
-        const tier = getTierFromSubscription(subscription);
+        const { tier, seatCount } = parseSubscription(subscription);
 
         await updateUserSettings(customerId, {
           stripe_subscription_id: subscription.id,
           subscription_tier: tier,
           subscription_status: subscription.status === 'trialing' ? 'trialing' : 'active',
+          team_seat_count: seatCount,
           trial_end: subscription.trial_end && subscription.trial_end > 0
             ? new Date(subscription.trial_end * 1000).toISOString()
             : null,
@@ -134,7 +149,7 @@ Deno.serve(async (req) => {
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
-        const tier = getTierFromSubscription(subscription);
+        const { tier, seatCount } = parseSubscription(subscription);
 
         // Map Stripe status to our status
         let status = 'active';
@@ -151,6 +166,7 @@ Deno.serve(async (req) => {
         await updateUserSettings(customerId, {
           subscription_tier: tier,
           subscription_status: status,
+          team_seat_count: seatCount,
           trial_end: subscription.trial_end && subscription.trial_end > 0
             ? new Date(subscription.trial_end * 1000).toISOString()
             : null,
@@ -165,10 +181,35 @@ Deno.serve(async (req) => {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
 
+        // Reset everything — deactivate team members
         await updateUserSettings(customerId, {
           subscription_status: 'cancelled',
           subscription_tier: 'free',
+          team_seat_count: 0,
         });
+
+        // Deactivate all team members for this owner
+        const { data: ownerSettings } = await supabaseAdmin
+          .from('user_settings')
+          .select('user_id')
+          .eq('stripe_customer_id', customerId)
+          .single();
+
+        if (ownerSettings?.user_id) {
+          const { data: team } = await supabaseAdmin
+            .from('teams')
+            .select('id')
+            .eq('owner_id', ownerSettings.user_id)
+            .maybeSingle();
+
+          if (team) {
+            await supabaseAdmin
+              .from('team_members')
+              .update({ status: 'deactivated' })
+              .eq('team_id', team.id)
+              .neq('role', 'owner');
+          }
+        }
         break;
       }
 

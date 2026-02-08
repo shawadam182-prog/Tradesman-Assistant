@@ -199,6 +199,7 @@ export function createMockSubscriptionForTier(
     free: { id: 'price_free', product: 'prod_free', amount: 0 },
     professional: { id: 'price_professional_monthly', product: 'prod_professional', amount: 1499 },
     business: { id: 'price_business_monthly', product: 'prod_business', amount: 2999 },
+    team: { id: 'price_team_monthly', product: 'prod_team', amount: 2999 },
   };
 
   const priceInfo = priceMap[tier];

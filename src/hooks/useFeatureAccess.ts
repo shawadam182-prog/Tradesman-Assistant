@@ -14,6 +14,7 @@ const TIER_ORDER: Record<SubscriptionTier, number> = {
   free: 1,
   professional: 2,
   business: 3,
+  team: 3, // Same level as business — team is a seat add-on, not a higher tier
 };
 
 export type AccessDeniedReason =
@@ -248,6 +249,8 @@ export function getTierDisplayName(tier: SubscriptionTier): string {
       return 'Professional';
     case 'business':
       return 'Business';
+    case 'team':
+      return 'Team';
     default:
       return tier;
   }
@@ -276,6 +279,9 @@ export function getFeatureDisplayName(feature: GatedFeature): string {
     paymentMilestones: 'Payment Milestones',
     appointmentComms: 'Appointment Communications',
     recurringInvoices: 'Recurring Invoices',
+    teamDashboard: 'Team Dashboard',
+    teamSettings: 'Team Settings',
+    timesheetApproval: 'Timesheet Approval',
   };
   return names[feature] || feature;
 }

@@ -5,6 +5,7 @@ export const STRIPE_PRICES = {
   professional: 'price_1SqyvEK6gNizuAaGquTjgPXM',
   business: 'price_1SqywGK6gNizuAaGnTi0Pek8',
   enterprise: 'price_1SqywzK6gNizuAaGmBTYOfKl',
+  seat: 'price_1SyUrfGiHvsip9mTXoJ3riNO', // Field Worker Seat — £9/mo
 } as const;
 
 export type StripeTier = keyof typeof STRIPE_PRICES;
@@ -94,4 +95,33 @@ export async function redirectToPortal(): Promise<void> {
 
   // Redirect to Stripe Customer Portal
   window.location.href = url;
+}
+
+/**
+ * Updates the number of team seats on the current subscription.
+ * @param seatCount - The desired total number of seats
+ */
+export async function updateTeamSeats(seatCount: number): Promise<void> {
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+  if (sessionError || !session) {
+    throw new Error('You must be logged in to manage team seats');
+  }
+
+  const response = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-seats`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ seatCount }),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to update team seats');
+  }
 }

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Plus, Mail, Trash2, Loader2, UserCheck, UserX, Clock } from 'lucide-react';
+import { ArrowLeft, Users, Plus, Mail, Trash2, Loader2, UserCheck, UserX, Clock, Minus } from 'lucide-react';
 import { teamService } from '../src/services/teamService';
 import { useToast } from '../src/contexts/ToastContext';
 import { useAuth } from '../src/contexts/AuthContext';
 import { useData } from '../src/contexts/DataContext';
+import { updateTeamSeats } from '../src/lib/stripe';
 
 interface TeamSettingsProps {
   onBack: () => void;
@@ -27,6 +28,12 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteDisplayName, setInviteDisplayName] = useState('');
   const [inviting, setInviting] = useState(false);
+
+  // Seat management
+  const [updatingSeats, setUpdatingSeats] = useState(false);
+  const currentSeatCount = settings.teamSeatCount ?? 0;
+  const activeWorkerCount = members.filter(m => m.role !== 'owner' && m.status === 'active').length;
+  const hasSubscription = settings.subscriptionStatus === 'active' || settings.subscriptionStatus === 'trialing';
 
   useEffect(() => {
     fetchTeamData();
@@ -69,6 +76,13 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
 
   const handleInvite = async () => {
     if (!inviteEmail.trim() || !team) return;
+
+    // Check seat limit before inviting
+    if (currentSeatCount > 0 && activeWorkerCount >= currentSeatCount) {
+      toast.error('All seats are in use. Add another seat before inviting.');
+      return;
+    }
+
     setInviting(true);
     try {
       await teamService.sendInvitation(team.id, inviteEmail.trim(), 'field_worker', inviteDisplayName.trim() || undefined);
@@ -129,6 +143,25 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
     }
   };
 
+  const handleUpdateSeats = async (newCount: number) => {
+    if (newCount < 0 || !Number.isInteger(newCount)) return;
+    if (newCount < activeWorkerCount) {
+      toast.error(`Cannot reduce below ${activeWorkerCount} seats — deactivate workers first`);
+      return;
+    }
+    setUpdatingSeats(true);
+    try {
+      await updateTeamSeats(newCount);
+      toast.success(`Team seats updated to ${newCount}`);
+      // Settings will sync via webhook, but update locally for instant feedback
+      (settings as any).teamSeatCount = newCount;
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update seats');
+    } finally {
+      setUpdatingSeats(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -181,6 +214,50 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ onBack }) => {
             <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Team</h2>
             <p className="text-lg font-semibold text-slate-200">{team.name}</p>
           </div>
+
+          {/* Seat Management */}
+          {hasSubscription && (
+            <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
+              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Field Worker Seats</h2>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-300">
+                    {currentSeatCount} seat{currentSeatCount !== 1 ? 's' : ''} purchased
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {activeWorkerCount} of {currentSeatCount} in use &middot; £9/mo per seat
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleUpdateSeats(currentSeatCount - 1)}
+                    disabled={updatingSeats || currentSeatCount <= 0}
+                    className="w-8 h-8 flex items-center justify-center bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 disabled:opacity-30 transition-colors"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="text-lg font-bold text-slate-200 w-8 text-center">
+                    {updatingSeats ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : currentSeatCount}
+                  </span>
+                  <button
+                    onClick={() => handleUpdateSeats(currentSeatCount + 1)}
+                    disabled={updatingSeats}
+                    className="w-8 h-8 flex items-center justify-center bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!hasSubscription && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+              <p className="text-sm text-amber-400">
+                You need an active subscription to add team seats. Go to Settings to subscribe.
+              </p>
+            </div>
+          )}
 
           {/* Invite member */}
           <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">

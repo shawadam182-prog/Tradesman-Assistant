@@ -436,6 +436,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                           Your free trial has ended. Upgrade to restore full access.
                         </p>
                       )}
+                      {(settings.teamSeatCount ?? 0) > 0 && (
+                        <p className="text-sm text-teal-600 mt-1 font-medium">
+                          Team Seats: {settings.teamSeatCount} &times; £9/mo
+                        </p>
+                      )}
                     </div>
                     {subscription.tier === 'free' || subscription.status === 'expired' ? (
                       <button

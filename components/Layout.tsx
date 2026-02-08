@@ -105,18 +105,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         { id: 'accountant_export', label: 'Export Data', icon: Download, tier: 'business' },
       ]
     },
-    {
+    // Team section — visible when owner has purchased team seats
+    ...((settings.teamSeatCount ?? 0) > 0 ? [{
       id: 'team',
       label: 'Team',
       icon: Users,
-      tier: 'team' as any,
       badge: 'TEAM',
       items: [
-        { id: 'team_dashboard', label: 'Dashboard', icon: Users, tier: 'team' as any },
-        { id: 'timesheet_approval', label: 'Timesheets', icon: Clock, tier: 'team' as any },
-        { id: 'team_settings', label: 'Team Setup', icon: Settings, tier: 'team' as any },
+        { id: 'team_dashboard', label: 'Dashboard', icon: Users },
+        { id: 'timesheet_approval', label: 'Timesheets', icon: Clock },
+        { id: 'team_settings', label: 'Team Setup', icon: Settings },
       ]
-    },
+    }] : []),
     {
       id: 'settings',
       label: 'Settings',
