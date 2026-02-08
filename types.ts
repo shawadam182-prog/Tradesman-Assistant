@@ -792,7 +792,7 @@ export interface MaterialKit {
 // For team management and field worker features
 // ============================================
 
-export type TeamMemberRole = 'owner' | 'field_worker';
+export type TeamMemberRole = 'owner' | 'admin' | 'field_worker';
 export type TeamMemberStatus = 'pending' | 'active' | 'deactivated';
 export type TeamInvitationStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'revoked';
 export type TimesheetStatus = 'active' | 'submitted' | 'approved' | 'rejected';

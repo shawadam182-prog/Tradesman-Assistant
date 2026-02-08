@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { ArrowLeft, MapPin, User, FileText, Camera, Package, Loader2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { ArrowLeft, MapPin, User, FileText, Camera, Package, Loader2, Plus, Send } from 'lucide-react';
 import { useData } from '../src/contexts/DataContext';
+import { siteNotesService, sitePhotosService } from '../src/services/dataService';
+import { useToast } from '../src/contexts/ToastContext';
 
 interface WorkerJobDetailProps {
   jobPackId: string;
@@ -8,9 +10,54 @@ interface WorkerJobDetailProps {
 }
 
 export const WorkerJobDetail: React.FC<WorkerJobDetailProps> = ({ jobPackId, onBack }) => {
-  const { projects, customers } = useData();
+  const { projects, customers, refresh } = useData();
+  const toast = useToast();
   const job = projects.find(p => p.id === jobPackId);
   const customer = job ? customers.find(c => c.id === job.customerId) : null;
+
+  // Note input state
+  const [noteText, setNoteText] = useState('');
+  const [addingNote, setAddingNote] = useState(false);
+
+  // Photo upload state
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddNote = async () => {
+    if (!noteText.trim() || addingNote) return;
+    setAddingNote(true);
+    try {
+      await siteNotesService.create({
+        job_pack_id: jobPackId,
+        text: noteText.trim(),
+      });
+      setNoteText('');
+      await refresh();
+      toast.success('Note added');
+    } catch (err) {
+      console.error('Failed to add note:', err);
+      toast.error('Failed to add note');
+    } finally {
+      setAddingNote(false);
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || uploadingPhoto) return;
+    setUploadingPhoto(true);
+    try {
+      await sitePhotosService.upload(jobPackId, file, 'Site Photo', ['site']);
+      await refresh();
+      toast.success('Photo uploaded');
+    } catch (err: any) {
+      console.error('Upload failed:', err);
+      toast.error(err.message || 'Failed to upload photo');
+    } finally {
+      setUploadingPhoto(false);
+      if (photoInputRef.current) photoInputRef.current.value = '';
+    }
+  };
 
   if (!job) {
     return (
@@ -27,7 +74,7 @@ export const WorkerJobDetail: React.FC<WorkerJobDetailProps> = ({ jobPackId, onB
   }
 
   return (
-    <div className="px-4 pt-4 space-y-4">
+    <div className="px-4 pt-4 space-y-4 pb-32">
       {/* Header */}
       <div>
         <button onClick={onBack} className="flex items-center gap-2 text-slate-400 mb-3">
@@ -74,18 +121,39 @@ export const WorkerJobDetail: React.FC<WorkerJobDetailProps> = ({ jobPackId, onB
       {/* Notepad */}
       {job.notepad && (
         <div className="bg-slate-800/50 rounded-xl p-4">
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Notes</h3>
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Job Notes</h3>
           <p className="text-sm text-slate-300 whitespace-pre-wrap">{job.notepad}</p>
         </div>
       )}
 
-      {/* Site Notes */}
-      {job.notes && job.notes.length > 0 && (
-        <div className="bg-slate-800/50 rounded-xl p-4">
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-            <FileText className="w-3.5 h-3.5 inline mr-1" />
-            Site Notes ({job.notes.length})
-          </h3>
+      {/* Site Notes + Add Note */}
+      <div className="bg-slate-800/50 rounded-xl p-4">
+        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+          <FileText className="w-3.5 h-3.5 inline mr-1" />
+          Site Notes {job.notes && job.notes.length > 0 ? `(${job.notes.length})` : ''}
+        </h3>
+
+        {/* Add note input */}
+        <div className="flex gap-2 mb-3">
+          <input
+            type="text"
+            value={noteText}
+            onChange={e => setNoteText(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleAddNote(); }}
+            placeholder="Add a site note..."
+            className="flex-1 px-3 py-2.5 bg-slate-700/50 border border-slate-600 rounded-xl text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-teal-500"
+          />
+          <button
+            onClick={handleAddNote}
+            disabled={!noteText.trim() || addingNote}
+            className="px-3 py-2.5 bg-teal-500 text-white rounded-xl disabled:opacity-40 active:bg-teal-600"
+          >
+            {addingNote ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          </button>
+        </div>
+
+        {/* Existing notes */}
+        {job.notes && job.notes.length > 0 && (
           <div className="space-y-2">
             {job.notes.map((note: any) => (
               <div key={note.id} className="bg-slate-700/50 rounded-lg p-3">
@@ -96,18 +164,45 @@ export const WorkerJobDetail: React.FC<WorkerJobDetailProps> = ({ jobPackId, onB
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Site Photos */}
-      {job.photos && job.photos.length > 0 && (
-        <div className="bg-slate-800/50 rounded-xl p-4">
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+        {(!job.notes || job.notes.length === 0) && (
+          <p className="text-xs text-slate-500 text-center py-2">No notes yet</p>
+        )}
+      </div>
+
+      {/* Site Photos + Upload */}
+      <div className="bg-slate-800/50 rounded-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
             <Camera className="w-3.5 h-3.5 inline mr-1" />
-            Photos ({job.photos.length})
+            Photos {job.photos && job.photos.length > 0 ? `(${job.photos.length})` : ''}
           </h3>
+          <button
+            onClick={() => photoInputRef.current?.click()}
+            disabled={uploadingPhoto}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-teal-500/20 text-teal-400 rounded-lg text-xs font-medium active:bg-teal-500/30"
+          >
+            {uploadingPhoto ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Plus className="w-3.5 h-3.5" />
+            )}
+            <span>{uploadingPhoto ? 'Uploading...' : 'Add Photo'}</span>
+          </button>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handlePhotoUpload}
+            className="hidden"
+          />
+        </div>
+
+        {job.photos && job.photos.length > 0 ? (
           <div className="grid grid-cols-3 gap-2">
-            {job.photos.slice(0, 6).map((photo: any) => (
+            {job.photos.map((photo: any) => (
               <div key={photo.id} className="aspect-square bg-slate-700 rounded-lg overflow-hidden">
                 {photo.url ? (
                   <img src={photo.url} alt={photo.caption || ''} className="w-full h-full object-cover" />
@@ -119,8 +214,10 @@ export const WorkerJobDetail: React.FC<WorkerJobDetailProps> = ({ jobPackId, onB
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-xs text-slate-500 text-center py-2">No photos yet</p>
+        )}
+      </div>
 
       {/* Materials */}
       {job.materials && job.materials.length > 0 && (

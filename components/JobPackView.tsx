@@ -12,11 +12,11 @@ import { MaterialsTracker } from './MaterialsTracker';
 import { JobProfitSummary } from './JobProfitSummary';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
-import { useTeam } from '../src/contexts/TeamContext';
 import { sitePhotosService } from '../src/services/dataService';
 import { ConfirmDialog } from './ConfirmDialog';
 import { JobAssignmentModal } from './JobAssignmentModal';
 import { teamService } from '../src/services/teamService';
+import { usePermissions } from '../src/hooks/usePermissions';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
 
 // Detect iOS for voice input fallback
@@ -46,16 +46,16 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   const [assignmentCount, setAssignmentCount] = useState(0);
   const recognitionInstance = useRef<any>(null);
   const toast = useToast();
-  const { isTeamOwner } = useTeam();
+  const permissions = usePermissions();
 
   // Fetch assignment count for team owners
   const refreshAssignmentCount = useCallback(async () => {
-    if (!isTeamOwner) return;
+    if (!permissions.canAssignJobs) return;
     try {
       const a = await teamService.getAssignmentsForJob(project.id);
       setAssignmentCount(a.length);
     } catch { /* ignore */ }
-  }, [isTeamOwner, project.id]);
+  }, [permissions.canAssignJobs, project.id]);
 
   useEffect(() => { refreshAssignmentCount(); }, [refreshAssignmentCount]);
 
@@ -581,7 +581,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
               <Navigation size={18} />
             </a>
           )}
-          {isTeamOwner && (
+          {permissions.canAssignJobs && (
             <button
               onClick={() => setShowAssignModal(true)}
               className="flex items-center gap-1.5 px-3 py-2 bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 text-xs font-bold"

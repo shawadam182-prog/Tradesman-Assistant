@@ -14,9 +14,9 @@ import { useVoiceInput } from '../src/hooks/useVoiceInput';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { LiveVoiceFill, VoiceFieldConfig } from './LiveVoiceFill';
-import { useTeam } from '../src/contexts/TeamContext';
 import { teamService } from '../src/services/teamService';
 import { JobAssignmentModal } from './JobAssignmentModal';
+import { usePermissions } from '../src/hooks/usePermissions';
 
 // Detect iOS for voice input fallback
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -36,7 +36,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
   projects, customers, onOpenProject, onAddProject, onAddCustomer, onDeleteProject, onBack
 }) => {
   const toast = useToast();
-  const { isTeamOwner } = useTeam();
+  const permissions = usePermissions();
   const [isAdding, setIsAdding] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -45,7 +45,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
   const [assignModalJobId, setAssignModalJobId] = useState<string | null>(null);
 
   const refreshAssignments = useCallback(async () => {
-    if (!isTeamOwner) return;
+    if (!permissions.canAssignJobs) return;
     try {
       const all = await teamService.getTeamAssignments();
       const map = new Map<string, { id: string; display_name: string }[]>();
@@ -56,7 +56,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
       }
       setAssignmentMap(map);
     } catch { /* ignore */ }
-  }, [isTeamOwner]);
+  }, [permissions.canAssignJobs]);
 
   useEffect(() => { refreshAssignments(); }, [refreshAssignments]);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -546,7 +546,7 @@ export const JobPackList: React.FC<JobPackListProps> = ({
                 <span>{project.documents.length} docs</span>
               </span>
             </div>
-            {isTeamOwner && (() => {
+            {permissions.canAssignJobs && (() => {
               const workers = assignmentMap.get(project.id);
               return (
                 <button

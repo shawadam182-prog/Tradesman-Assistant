@@ -7,7 +7,7 @@ interface TeamMembership {
   teamId: string;
   teamName: string;
   ownerId: string;
-  role: 'owner' | 'field_worker';
+  role: 'owner' | 'admin' | 'field_worker';
   displayName: string;
   status: string;
 }
@@ -26,6 +26,7 @@ interface TeamContextType {
   pendingInvitations: PendingInvitation[];
   isFieldWorker: boolean;
   isTeamOwner: boolean;
+  isAdmin: boolean;
   loading: boolean;
   acceptInvitation: (token: string) => Promise<void>;
   declineInvitation: (token: string) => Promise<void>;
@@ -69,7 +70,7 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
           teamId: membershipData.team_id,
           teamName: membershipData.team.name,
           ownerId: membershipData.team.owner_id,
-          role: membershipData.role as 'owner' | 'field_worker',
+          role: membershipData.role as 'owner' | 'admin' | 'field_worker',
           displayName: membershipData.display_name,
           status: membershipData.status,
         });
@@ -114,6 +115,7 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isFieldWorker = membership?.role === 'field_worker';
   const isTeamOwner = membership?.role === 'owner';
+  const isAdmin = membership?.role === 'admin';
 
   return (
     <TeamContext.Provider
@@ -122,6 +124,7 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
         pendingInvitations,
         isFieldWorker,
         isTeamOwner,
+        isAdmin,
         loading,
         acceptInvitation,
         declineInvitation,

@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
 
     const fromEmail = Deno.env.get("SENDGRID_FROM_EMAIL") || "noreply@tradesync.info";
     const appUrl = Deno.env.get("APP_URL") || "https://tradesync.info";
-    const roleLabel = body.role === "field_worker" ? "Field Worker" : body.role;
+    const roleLabel = body.role === "field_worker" ? "Field Worker" : body.role === "admin" ? "Admin" : body.role;
 
     const html = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
