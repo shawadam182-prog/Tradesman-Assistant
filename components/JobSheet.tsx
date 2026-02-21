@@ -2,11 +2,13 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { JobPack, Customer, Quote, AppSettings, JobSheetHours, SitePhoto } from '../types';
 import {
   Clock, Plus, Trash2, Camera, Image as ImageIcon, Loader2,
-  FileText, Users, Mic, MicOff, ChevronDown, ChevronUp, X
+  FileText, Users, Mic, MicOff, ChevronDown, ChevronUp, X,
+  Download, Send, Mail, MessageSquare, FileDown, Share2
 } from 'lucide-react';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
 import { useToast } from '../src/contexts/ToastContext';
 import { sitePhotosService } from '../src/services/dataService';
+import { generatePDFFromElement, downloadPDF } from '../src/services/pdfService';
 
 interface JobSheetProps {
   project: JobPack;
@@ -26,11 +28,14 @@ export const JobSheet: React.FC<JobSheetProps> = ({
   const [newHours, setNewHours] = useState('');
   const [newHoursDesc, setNewHoursDesc] = useState('');
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
   const descSaveRef = useRef<NodeJS.Timeout | null>(null);
   const descLocalRef = useRef(false);
   const descRef = useRef<HTMLTextAreaElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const printableRef = useRef<HTMLDivElement>(null);
 
   const hours = project.jobSheetHours || [];
   const photos = project.jobSheetPhotos || [];
@@ -164,62 +169,236 @@ export const JobSheet: React.FC<JobSheetProps> = ({
     return sum + sectionTotal;
   }, 0);
 
+  // PDF / Share handlers
+  const jobSheetFilename = `JobSheet_${project.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+
+  const handleDownloadPDF = async () => {
+    if (!printableRef.current) return;
+    setIsGeneratingPdf(true);
+    try {
+      const isMobile = window.innerWidth < 768;
+      await downloadPDF(printableRef.current, jobSheetFilename, { scale: isMobile ? 3 : 5 });
+      toast.success('PDF Downloaded', jobSheetFilename);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+      toast.error('PDF Failed', 'Could not generate PDF. Please try again.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleEmailShare = async () => {
+    if (!printableRef.current) return;
+    setIsGeneratingPdf(true);
+    setShowShareMenu(false);
+    try {
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const blob = await generatePDFFromElement(printableRef.current, { scale: isMobile ? 2.5 : 4 });
+
+      if (isMobile && navigator.share && navigator.canShare) {
+        try {
+          const pdfFile = new File([blob], jobSheetFilename, { type: 'application/pdf' });
+          const shareData = {
+            files: [pdfFile],
+            title: `Job Sheet - ${project.title}`,
+            text: `Job Sheet for ${project.title}${customer ? ` - ${customer.name}` : ''}`,
+          };
+          if (navigator.canShare(shareData)) {
+            await navigator.share(shareData);
+            return;
+          }
+        } catch (shareErr) {
+          if ((shareErr as Error).name === 'AbortError') return;
+        }
+      }
+
+      // Desktop fallback: download PDF + open mailto
+      const downloadUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = jobSheetFilename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(downloadUrl);
+
+      const subject = encodeURIComponent(`Job Sheet - ${project.title}`);
+      const body = encodeURIComponent(`Please find the job sheet for ${project.title} attached.\n\nKind regards,\n${settings.companyName || ''}`);
+      const mailto = `mailto:${customer?.email || ''}?subject=${subject}&body=${body}`;
+      await new Promise(resolve => setTimeout(resolve, 300));
+      window.location.href = mailto;
+    } catch (err) {
+      console.error('Email share failed:', err);
+      toast.error('Share Failed', 'Could not prepare email. Try downloading the PDF instead.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleWhatsAppShare = () => {
+    setShowShareMenu(false);
+    const lines = [
+      `*Job Sheet - ${project.title}*`,
+      '',
+      customer ? `Client: ${customer.name}` : '',
+      project.siteAddress ? `Site: ${project.siteAddress}` : '',
+      description ? `\nDescription: ${description}` : '',
+      totalHours > 0 ? `\nHours logged: ${totalHours}h` : '',
+      materialsCount > 0 ? `Materials: ${deliveredCount}/${materialsCount} delivered` : '',
+      '',
+      settings.companyName || '',
+    ].filter(Boolean).join('\n');
+
+    const url = `https://wa.me/${customer?.phone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(lines)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleSmsShare = () => {
+    setShowShareMenu(false);
+    const text = `Job Sheet - ${project.title}. ${project.siteAddress ? `Site: ${project.siteAddress}. ` : ''}${totalHours > 0 ? `${totalHours}h logged. ` : ''}${settings.companyName || ''}`;
+    const smsUrl = `sms:${customer?.phone || ''}?body=${encodeURIComponent(text)}`;
+    window.location.href = smsUrl;
+  };
+
   return (
     <div className="max-w-3xl mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-2">
-      {/* Auto-generated Job Sheet Header */}
-      <div className="bg-white rounded-2xl border-2 border-slate-100 p-5 space-y-3 shadow-sm">
-        <div className="flex items-center gap-2 mb-2">
-          <FileText size={16} className="text-amber-500" />
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Job Sheet</h3>
+      {/* Send / PDF action bar */}
+      <div className="flex gap-2 justify-end relative">
+        <button
+          onClick={handleDownloadPDF}
+          disabled={isGeneratingPdf}
+          className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase shadow-lg hover:bg-slate-800 transition-all disabled:opacity-50"
+        >
+          {isGeneratingPdf ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+          PDF
+        </button>
+        <div className="relative">
+          <button
+            onClick={() => setShowShareMenu(!showShareMenu)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-teal-500 text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-teal-200 hover:bg-teal-600 transition-all"
+          >
+            <Send size={14} /> Send
+          </button>
+          {showShareMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowShareMenu(false)} />
+              <div className="absolute right-0 top-full mt-2 bg-white border-2 border-slate-100 rounded-2xl shadow-2xl z-50 min-w-[200px] overflow-hidden animate-in fade-in zoom-in-95">
+                <button
+                  onClick={handleEmailShare}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 transition-all text-sm font-bold text-slate-900 border-b border-slate-50"
+                >
+                  <Mail size={16} className="text-teal-500" /> Email with PDF
+                </button>
+                <button
+                  onClick={handleWhatsAppShare}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-50 transition-all text-sm font-bold text-slate-900 border-b border-slate-50"
+                >
+                  <MessageSquare size={16} className="text-green-500" /> WhatsApp
+                </button>
+                <button
+                  onClick={handleSmsShare}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition-all text-sm font-bold text-slate-900"
+                >
+                  <Send size={16} className="text-blue-500" /> SMS
+                </button>
+              </div>
+            </>
+          )}
         </div>
+      </div>
 
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Job</span>
-            <span className="font-bold text-slate-900">{project.title}</span>
+      {/* Printable Job Sheet (used for PDF generation) */}
+      <div ref={printableRef} className="bg-white rounded-2xl border-2 border-slate-100 shadow-sm overflow-hidden">
+        {/* Auto-generated Job Sheet Header */}
+        <div className="p-5 space-y-3">
+          <div className="flex items-center gap-2 mb-2">
+            <FileText size={16} className="text-amber-500" />
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Job Sheet</h3>
+            {settings.companyName && (
+              <span className="ml-auto text-[10px] font-black text-slate-400 uppercase tracking-widest">{settings.companyName}</span>
+            )}
           </div>
-          <div>
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Client</span>
-            <span className="font-bold text-slate-900">{customer?.name || 'N/A'}</span>
-          </div>
-          <div>
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Site Address</span>
-            <span className="font-bold text-slate-900">{project.siteAddress || customer?.address || 'N/A'}</span>
-          </div>
-          <div>
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Status</span>
-            <span className={`font-bold capitalize ${project.status === 'active' ? 'text-green-600' : project.status === 'completed' ? 'text-blue-600' : 'text-slate-500'}`}>{project.status}</span>
-          </div>
-          {customer?.phone && (
+
+          <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Contact</span>
-              <a href={`tel:${customer.phone}`} className="font-bold text-teal-600">{customer.phone}</a>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Job</span>
+              <span className="font-bold text-slate-900">{project.title}</span>
+            </div>
+            <div>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Client</span>
+              <span className="font-bold text-slate-900">{customer?.name || 'N/A'}</span>
+            </div>
+            <div>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Site Address</span>
+              <span className="font-bold text-slate-900">{project.siteAddress || customer?.address || 'N/A'}</span>
+            </div>
+            <div>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Status</span>
+              <span className={`font-bold capitalize ${project.status === 'active' ? 'text-green-600' : project.status === 'completed' ? 'text-blue-600' : 'text-slate-500'}`}>{project.status}</span>
+            </div>
+            {customer?.phone && (
+              <div>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Contact</span>
+                <span className="font-bold text-teal-600">{customer.phone}</span>
+              </div>
+            )}
+            <div>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Date</span>
+              <span className="font-bold text-slate-900">{new Date().toLocaleDateString()}</span>
+            </div>
+          </div>
+
+          {/* Materials summary */}
+          {materialsCount > 0 && (
+            <div className="pt-2 border-t border-slate-100">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Materials</span>
+              <span className="text-sm font-bold text-slate-700">{deliveredCount}/{materialsCount} delivered</span>
             </div>
           )}
-          <div>
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Created</span>
-            <span className="font-bold text-slate-900">{new Date(project.createdAt).toLocaleDateString()}</span>
-          </div>
+
+          {/* Financial summary */}
+          {linkedQuotes.length > 0 && (
+            <div className="pt-2 border-t border-slate-100">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Quotes/Invoices</span>
+              <span className="text-sm font-bold text-slate-700">{linkedQuotes.length} document{linkedQuotes.length !== 1 ? 's' : ''}</span>
+            </div>
+          )}
         </div>
 
-        {/* Materials summary */}
-        {materialsCount > 0 && (
-          <div className="pt-2 border-t border-slate-100">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Materials</span>
-            <span className="text-sm font-bold text-slate-700">{deliveredCount}/{materialsCount} delivered</span>
+        {/* Description in printable area */}
+        {description && (
+          <div className="px-5 pb-4 border-t border-slate-100 pt-4">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Job Description</span>
+            <p className="text-sm font-medium text-slate-800 whitespace-pre-wrap leading-relaxed">{description}</p>
           </div>
         )}
 
-        {/* Financial summary */}
-        {linkedQuotes.length > 0 && (
-          <div className="pt-2 border-t border-slate-100">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Quotes/Invoices</span>
-            <span className="text-sm font-bold text-slate-700">{linkedQuotes.length} document{linkedQuotes.length !== 1 ? 's' : ''}</span>
+        {/* Hours in printable area */}
+        {hours.length > 0 && (
+          <div className="px-5 pb-4 border-t border-slate-100 pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Hours Logged</span>
+              <span className="text-sm font-black text-amber-600">{totalHours}h total</span>
+            </div>
+            <div className="space-y-1.5">
+              {hours.map((entry) => (
+                <div key={entry.id} className="flex items-center justify-between text-sm bg-slate-50 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-900">{entry.teamMember}</span>
+                    {entry.description && <span className="text-slate-500">- {entry.description}</span>}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[9px] text-slate-400">{entry.date}</span>
+                    <span className="font-black text-amber-600">{entry.hours}h</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Job Description */}
+      {/* Editable Job Description (separate from printable) */}
       <div className="bg-white rounded-2xl border-2 border-slate-100 p-5 space-y-3 shadow-sm">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">

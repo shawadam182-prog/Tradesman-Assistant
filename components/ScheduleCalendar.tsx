@@ -58,6 +58,7 @@ interface ScheduleCalendarProps {
   onUpdateEntry: (id: string, updates: Partial<ScheduleEntry>) => Promise<void>;
   onDeleteEntry: (id: string) => Promise<void>;
   onBack?: () => void;
+  initialDraft?: Partial<ScheduleEntry>;
 }
 
 export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
@@ -69,7 +70,8 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   onAddEntry,
   onUpdateEntry,
   onDeleteEntry,
-  onBack
+  onBack,
+  initialDraft
 }) => {
   const toast = useToast();
   const { settings } = useData();
@@ -250,6 +252,19 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
       }
     } catch { /* sessionStorage not available */ }
   }, [isAddingManual, isReviewingAI, editingId, isAddingCustomer, linkType]);
+
+  // Open form pre-filled when initialDraft is provided (e.g. from Job Pack "Schedule" button)
+  const initialDraftApplied = useRef(false);
+  useEffect(() => {
+    if (initialDraft && !initialDraftApplied.current) {
+      initialDraftApplied.current = true;
+      setDraft(initialDraft);
+      setLinkType(initialDraft.projectId ? 'job' : 'none');
+      setIsAddingManual(true);
+      setEditingId(null);
+      setIsReviewingAI(false);
+    }
+  }, [initialDraft]);
 
   // Voice input start functions with iOS support
   const startBookingVoice = () => {
