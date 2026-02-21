@@ -37,6 +37,7 @@ export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
   // Order List state (simple notepad-style list)
   const [orderListContent, setOrderListContent] = useState(project.orderList || '');
   const [isOrderListExpanded, setIsOrderListExpanded] = useState(true);
+  const [isOrderListRecording, setIsOrderListRecording] = useState(false);
   const orderListRef = useRef<HTMLTextAreaElement>(null);
   const orderListSaveRef = useRef<NodeJS.Timeout | null>(null);
   const orderListLocalRef = useRef(false);
@@ -84,6 +85,31 @@ export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
     onResult: handleVoiceResult,
     onError: handleVoiceError,
   });
+
+  // Voice input for order list
+  const handleOrderListVoiceResult = useCallback((text: string) => {
+    setOrderListContent(prev => {
+      const updated = prev ? `${prev}\n${text}` : text;
+      handleSaveOrderList(updated);
+      return updated;
+    });
+    setIsOrderListRecording(false);
+  }, [handleSaveOrderList]);
+
+  const { isListening: isOrderListListening, startListening: startOrderListVoice, stopListening: stopOrderListVoice } = useVoiceInput({
+    onResult: handleOrderListVoiceResult,
+    onError: handleVoiceError,
+  });
+
+  const toggleOrderListRecording = () => {
+    if (isOrderListRecording || isOrderListListening) {
+      stopOrderListVoice();
+      setIsOrderListRecording(false);
+    } else {
+      setIsOrderListRecording(true);
+      startOrderListVoice();
+    }
+  };
 
   const startListening = (target: 'quick' | 'scratch') => {
     if (!isSupported) {
@@ -327,7 +353,16 @@ export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
               <span className="text-[9px] font-bold text-slate-300">{orderListContent.split('\n').filter(l => l.trim()).length} items</span>
             )}
           </div>
-          {isOrderListExpanded ? <ChevronUp size={16} className="text-slate-300" /> : <ChevronDown size={16} className="text-slate-300" />}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); toggleOrderListRecording(); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase transition-all ${isOrderListRecording || isOrderListListening ? 'bg-red-500 text-white animate-pulse' : 'bg-teal-500 text-white shadow-sm'}`}
+            >
+              {isOrderListRecording || isOrderListListening ? <MicOff size={12} /> : <Mic size={12} />}
+              {isOrderListRecording || isOrderListListening ? 'Listening' : 'Dictate'}
+            </button>
+            {isOrderListExpanded ? <ChevronUp size={16} className="text-slate-300" /> : <ChevronDown size={16} className="text-slate-300" />}
+          </div>
         </button>
 
         {isOrderListExpanded && (

@@ -165,6 +165,14 @@ export interface ProjectMaterial {
   status: 'pending' | 'ordered' | 'delivered' | 'partially_delivered';
 }
 
+export interface JobSheetHours {
+  id: string;
+  teamMember: string;
+  hours: number;
+  date: string;
+  description?: string;
+}
+
 export interface JobPack {
   id: string;
   title: string;
@@ -180,6 +188,9 @@ export interface JobPack {
   documents: SiteDocument[];
   materials?: ProjectMaterial[];
   orderList?: string;
+  jobSheetDescription?: string;
+  jobSheetHours?: JobSheetHours[];
+  jobSheetPhotos?: SitePhoto[];
 }
 
 // Document template options - 3 professional templates

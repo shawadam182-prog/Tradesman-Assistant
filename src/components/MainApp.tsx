@@ -221,6 +221,30 @@ const App: React.FC = () => {
     setActiveTab('quote_edit');
   };
 
+  const handleAddToSchedule = async (project: any) => {
+    const customer = customers.find(c => c.id === project.customerId);
+    const defaultStart = new Date();
+    defaultStart.setHours(8, 0, 0, 0);
+    // Default to tomorrow at 8am
+    defaultStart.setDate(defaultStart.getDate() + 1);
+    const defaultEnd = new Date(defaultStart.getTime() + 8 * 3600000); // 8 hours
+
+    try {
+      await addScheduleEntry({
+        title: project.title,
+        start: defaultStart.toISOString(),
+        end: defaultEnd.toISOString(),
+        projectId: project.id,
+        customerId: project.customerId,
+        location: project.siteAddress || customer?.address || '',
+        description: project.jobSheetDescription || '',
+      });
+      toast.success('Added to Schedule', `"${project.title}" scheduled for tomorrow`);
+    } catch (err) {
+      toast.error('Schedule Error', 'Could not add to schedule');
+    }
+  };
+
   const handleAIQuoteComplete = useCallback((draft: Partial<Quote>) => {
     setAiGeneratedDraft(draft);
     setEditingQuoteId(null);
@@ -430,7 +454,7 @@ const App: React.FC = () => {
 
         <Suspense fallback={<PageLoader />}>
           {activeTab === 'schedule' && <ScheduleCalendar entries={schedule} projects={projects} customers={customers} onAddCustomer={handleAddCustomer} onAddProject={(project) => handleAddProject(project, false)} onAddEntry={addScheduleEntry} onUpdateEntry={updateScheduleEntry} onDeleteEntry={deleteScheduleEntry} onBack={() => setActiveTab('home')} />}
-          {activeTab === 'jobpack_detail' && activeProjectId && (activeProject ? <JobPackView key={activeProjectId} project={activeProject} customers={customers} quotes={quotes.filter(q => q.projectId === activeProjectId)} settings={settings} onSaveProject={handleSaveProject} onViewQuote={(id) => { setJobpackReturnTab('finance'); handleViewQuote(id); }} onCreateQuote={() => handleCreateQuote(activeProjectId)} onBack={() => { setJobpackReturnTab(null); setActiveTab('jobpacks'); }} onDeleteProject={deleteProject} onRefresh={refresh} onUpdateCustomer={async (c) => { await updateCustomer(c.id, c); }} initialTab={(jobpackReturnTab as any) || undefined} /> : <div className="flex flex-col items-center justify-center py-20 text-slate-400"><AlertCircle size={48} className="text-teal-500 mb-4" /><p>Job Pack Not Found</p><button onClick={() => setActiveTab('jobpacks')} className="mt-4 bg-slate-900 text-white px-4 py-2 rounded">Back</button></div>)}
+          {activeTab === 'jobpack_detail' && activeProjectId && (activeProject ? <JobPackView key={activeProjectId} project={activeProject} customers={customers} quotes={quotes.filter(q => q.projectId === activeProjectId)} settings={settings} onSaveProject={handleSaveProject} onViewQuote={(id) => { setJobpackReturnTab('finance'); handleViewQuote(id); }} onCreateQuote={() => handleCreateQuote(activeProjectId)} onBack={() => { setJobpackReturnTab(null); setActiveTab('jobpacks'); }} onDeleteProject={deleteProject} onRefresh={refresh} onUpdateCustomer={async (c) => { await updateCustomer(c.id, c); }} onAddToSchedule={handleAddToSchedule} initialTab={(jobpackReturnTab as any) || undefined} /> : <div className="flex flex-col items-center justify-center py-20 text-slate-400"><AlertCircle size={48} className="text-teal-500 mb-4" /><p>Job Pack Not Found</p><button onClick={() => setActiveTab('jobpacks')} className="mt-4 bg-slate-900 text-white px-4 py-2 rounded">Back</button></div>)}
           {activeTab === 'quotes' && <QuotesList quotes={[...quotes].filter(q => q.type === 'estimate' || q.type === 'quotation').sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())} customers={customers} settings={settings} onViewQuote={handleViewQuote} onEditQuote={handleEditQuote} onCreateQuote={() => handleCreateQuote()} onDeleteQuote={deleteQuote} onBack={() => setActiveTab('home')} />}
           {activeTab === 'invoices' && <InvoicesList quotes={[...quotes].filter(q => q.type === 'invoice').sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())} customers={customers} settings={settings} onViewQuote={handleViewQuote} onCreateInvoice={handleCreateInvoice} onDeleteInvoice={deleteQuote} onBack={() => setActiveTab('home')} />}
           {activeTab === 'aged_receivables' && <AgedReceivablesPage onBack={() => setActiveTab('home')} onViewInvoice={handleViewQuote} />}
