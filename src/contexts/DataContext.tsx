@@ -201,10 +201,13 @@ async function dbJobPackToApp(dbPack: any): Promise<JobPack> {
     id: dbPack.id,
     title: dbPack.title,
     customerId: dbPack.customer_id || '',
+    siteAddress: dbPack.site_address || undefined,
     status: dbPack.status,
     createdAt: dbPack.created_at,
     updatedAt: dbPack.updated_at,
     notepad: dbPack.notepad || '',
+    jobSheetDescription: dbPack.job_sheet_description || undefined,
+    jobSheetHours: Array.isArray(dbPack.job_sheet_hours) ? dbPack.job_sheet_hours : [],
     notes: (dbPack.site_notes || []).map((n: any) => ({
       id: n.id,
       text: n.text,
@@ -773,12 +776,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const saveProject = async (project: JobPack) => {
-    // Update job pack basic fields
+    // Update job pack basic fields (including site address and job sheet data)
     await jobPacksService.update(project.id, {
       customer_id: project.customerId || null,
       title: project.title,
       status: project.status,
       notepad: project.notepad || null,
+      site_address: project.siteAddress || null,
+      job_sheet_description: project.jobSheetDescription || null,
+      job_sheet_hours: (project.jobSheetHours || []) as any,
     });
 
     // Get current project from state to compare for changes
