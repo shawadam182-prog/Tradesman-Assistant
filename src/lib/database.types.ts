@@ -518,7 +518,10 @@ export type Database = {
           created_at: string | null
           customer_id: string | null
           id: string
+          job_sheet_description: string | null
+          job_sheet_hours: Json | null
           notepad: string | null
+          site_address: string | null
           status: string | null
           title: string
           updated_at: string | null
@@ -528,7 +531,10 @@ export type Database = {
           created_at?: string | null
           customer_id?: string | null
           id?: string
+          job_sheet_description?: string | null
+          job_sheet_hours?: Json | null
           notepad?: string | null
+          site_address?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
@@ -538,7 +544,10 @@ export type Database = {
           created_at?: string | null
           customer_id?: string | null
           id?: string
+          job_sheet_description?: string | null
+          job_sheet_hours?: Json | null
           notepad?: string | null
+          site_address?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null
