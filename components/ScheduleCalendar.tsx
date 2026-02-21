@@ -43,6 +43,11 @@ const scheduleVoiceFields: VoiceFieldConfig[] = [
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
+// SessionStorage keys for persisting form state across tab switches (PWA state loss)
+const SCHEDULE_DRAFT_KEY = 'scheduleDraft';
+const SCHEDULE_CUSTOMER_DRAFT_KEY = 'scheduleCustomerDraft';
+const SCHEDULE_FORM_STATE_KEY = 'scheduleFormState';
+
 interface ScheduleCalendarProps {
   entries: ScheduleEntry[];
   projects: JobPack[];
@@ -79,15 +84,28 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [isAddingManual, setIsAddingManual] = useState(false);
-  const [isReviewingAI, setIsReviewingAI] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Partial<ScheduleEntry>>({});
+  // Restore form state from sessionStorage (survives PWA tab switch / state loss)
+  const [isAddingManual, setIsAddingManual] = useState(() => {
+    try { const s = sessionStorage.getItem(SCHEDULE_FORM_STATE_KEY); return s ? JSON.parse(s).isAddingManual ?? false : false; } catch { return false; }
+  });
+  const [isReviewingAI, setIsReviewingAI] = useState(() => {
+    try { const s = sessionStorage.getItem(SCHEDULE_FORM_STATE_KEY); return s ? JSON.parse(s).isReviewingAI ?? false : false; } catch { return false; }
+  });
+  const [editingId, setEditingId] = useState<string | null>(() => {
+    try { const s = sessionStorage.getItem(SCHEDULE_FORM_STATE_KEY); return s ? JSON.parse(s).editingId ?? null : null; } catch { return null; }
+  });
+  const [draft, setDraft] = useState<Partial<ScheduleEntry>>(() => {
+    try { const saved = sessionStorage.getItem(SCHEDULE_DRAFT_KEY); return saved ? JSON.parse(saved) : {}; } catch { return {}; }
+  });
   const [isListeningTitle, setIsListeningTitle] = useState(false);
 
-  // Customer Quick Add States
-  const [isAddingCustomer, setIsAddingCustomer] = useState(false);
-  const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({});
+  // Customer Quick Add States - restore from sessionStorage
+  const [isAddingCustomer, setIsAddingCustomer] = useState(() => {
+    try { const s = sessionStorage.getItem(SCHEDULE_FORM_STATE_KEY); return s ? JSON.parse(s).isAddingCustomer ?? false : false; } catch { return false; }
+  });
+  const [newCustomer, setNewCustomer] = useState<Partial<Customer>>(() => {
+    try { const saved = sessionStorage.getItem(SCHEDULE_CUSTOMER_DRAFT_KEY); return saved ? JSON.parse(saved) : {}; } catch { return {}; }
+  });
   const [isListeningCustomer, setIsListeningCustomer] = useState(false);
   const [isProcessingCustomer, setIsProcessingCustomer] = useState(false);
   const [customerError, setCustomerError] = useState<string | null>(null);
@@ -100,8 +118,10 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   const [newJobPackCustomerId, setNewJobPackCustomerId] = useState<string>('');
   const [jobPackError, setJobPackError] = useState<string | null>(null);
 
-  // Schedule entry location and linking
-  const [linkType, setLinkType] = useState<'none' | 'job' | 'customer'>('none');
+  // Schedule entry location and linking - restore from sessionStorage
+  const [linkType, setLinkType] = useState<'none' | 'job' | 'customer'>(() => {
+    try { const s = sessionStorage.getItem(SCHEDULE_FORM_STATE_KEY); return s ? JSON.parse(s).linkType ?? 'none' : 'none'; } catch { return 'none'; }
+  });
 
   const recognitionRef = useRef<any>(null);
   const customerRecognitionRef = useRef<any>(null);
@@ -190,6 +210,46 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
       titleRecognitionRef.current?.abort();
     };
   }, []);
+
+  // Persist draft to sessionStorage so form data survives tab switch on mobile
+  useEffect(() => {
+    try {
+      if (isAddingManual || isReviewingAI) {
+        sessionStorage.setItem(SCHEDULE_DRAFT_KEY, JSON.stringify(draft));
+      } else {
+        sessionStorage.removeItem(SCHEDULE_DRAFT_KEY);
+      }
+    } catch { /* sessionStorage not available */ }
+  }, [draft, isAddingManual, isReviewingAI]);
+
+  // Persist customer quick-add draft to sessionStorage
+  useEffect(() => {
+    try {
+      if (isAddingCustomer) {
+        sessionStorage.setItem(SCHEDULE_CUSTOMER_DRAFT_KEY, JSON.stringify(newCustomer));
+      } else {
+        sessionStorage.removeItem(SCHEDULE_CUSTOMER_DRAFT_KEY);
+      }
+    } catch { /* sessionStorage not available */ }
+  }, [newCustomer, isAddingCustomer]);
+
+  // Persist form open/editing state flags to sessionStorage
+  useEffect(() => {
+    try {
+      if (isAddingManual || isReviewingAI) {
+        sessionStorage.setItem(SCHEDULE_FORM_STATE_KEY, JSON.stringify({
+          isAddingManual,
+          isReviewingAI,
+          editingId,
+          isAddingCustomer,
+          linkType,
+        }));
+      } else {
+        sessionStorage.removeItem(SCHEDULE_FORM_STATE_KEY);
+        sessionStorage.removeItem(SCHEDULE_CUSTOMER_DRAFT_KEY);
+      }
+    } catch { /* sessionStorage not available */ }
+  }, [isAddingManual, isReviewingAI, editingId, isAddingCustomer, linkType]);
 
   // Voice input start functions with iOS support
   const startBookingVoice = () => {
