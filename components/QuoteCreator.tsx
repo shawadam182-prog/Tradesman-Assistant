@@ -41,6 +41,7 @@ interface QuoteCreatorProps {
   existingQuote?: Quote;
   projectId?: string;
   projectTitle?: string;
+  projectCustomerId?: string;
   initialType?: 'estimate' | 'quotation' | 'invoice';
   customers: Customer[];
   settings: AppSettings;
@@ -50,7 +51,7 @@ interface QuoteCreatorProps {
 }
 
 export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
-  existingQuote, projectId, projectTitle, initialType = 'estimate', customers, settings, onSave, onAddCustomer, onCancel
+  existingQuote, projectId, projectTitle, projectCustomerId, initialType = 'estimate', customers, settings, onSave, onAddCustomer, onCancel
 }) => {
   const { services, saveQuote } = useData();
   const toast = useToast();
@@ -146,7 +147,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         date: new Date().toISOString().split('T')[0],
         updatedAt: new Date().toISOString(),
         title: projectTitle || '',
-        customerId: '',
+        customerId: projectCustomerId || '',
         sections: [{ id: Math.random().toString(36).substr(2, 9), title: 'Work Section 1', items: [], labourHours: 0 }],
         labourRate: settings.defaultLabourRate,
         markupPercent: settings.defaultMarkupPercent ?? 0,
@@ -285,7 +286,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       date: new Date().toISOString().split('T')[0],
       updatedAt: new Date().toISOString(),
       title: projectTitle || '',
-      customerId: '',
+      customerId: projectCustomerId || '',
       sections: [{ id: Math.random().toString(36).substr(2, 9), title: 'Work Section 1', items: [], labourHours: 0 }],
       labourRate: settings.defaultLabourRate,
       markupPercent: settings.defaultMarkupPercent ?? 0,
