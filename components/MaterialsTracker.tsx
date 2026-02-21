@@ -1,10 +1,10 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { JobPack, ProjectMaterial, Quote, AppSettings } from '../types';
 import {
   ShoppingCart, Loader2, Sparkles,
   Mic, MicOff, CheckCircle2, Trash2,
   Plus, Minus, X, Send, ListPlus, PencilLine,
-  Info
+  Info, ClipboardList, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { parseVoiceCommandForItems } from '../src/services/geminiService';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
@@ -33,6 +33,35 @@ export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
   const [scratchpadText, setScratchpadText] = useState('');
   const [quickInput, setQuickInput] = useState('');
   const voiceTargetRef = useRef<'quick' | 'scratch'>('quick');
+
+  // Order List state (simple notepad-style list)
+  const [orderListContent, setOrderListContent] = useState(project.orderList || '');
+  const [isOrderListExpanded, setIsOrderListExpanded] = useState(true);
+  const orderListRef = useRef<HTMLTextAreaElement>(null);
+  const orderListSaveRef = useRef<NodeJS.Timeout | null>(null);
+  const orderListLocalRef = useRef(false);
+
+  // Sync order list from prop when changed externally
+  useEffect(() => {
+    if (!orderListLocalRef.current) {
+      setOrderListContent(project.orderList || '');
+    }
+    orderListLocalRef.current = false;
+  }, [project.orderList]);
+
+  const handleSaveOrderList = useCallback((content: string) => {
+    if (orderListSaveRef.current) clearTimeout(orderListSaveRef.current);
+    orderListSaveRef.current = setTimeout(() => {
+      orderListLocalRef.current = true;
+      onSaveProject({ ...project, orderList: content, updatedAt: new Date().toISOString() });
+    }, 800);
+  }, [project, onSaveProject]);
+
+  // Auto-resize order list textarea
+  useEffect(() => {
+    const el = orderListRef.current;
+    if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+  }, [orderListContent, isOrderListExpanded]);
 
   // Quick pick materials from settings (with fallback)
   const quickPickItems = settings.quickPickMaterials || DEFAULT_QUICK_PICKS;
@@ -281,6 +310,46 @@ export const MaterialsTracker: React.FC<MaterialsTrackerProps> = ({
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Order List - simple notepad-style list */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <button
+          onClick={() => setIsOrderListExpanded(!isOrderListExpanded)}
+          className="w-full flex items-center justify-between p-4"
+        >
+          <div className="flex items-center gap-2">
+            <ClipboardList size={16} className="text-amber-500" />
+            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Order List</h5>
+            {orderListContent && (
+              <span className="text-[9px] font-bold text-slate-300">{orderListContent.split('\n').filter(l => l.trim()).length} items</span>
+            )}
+          </div>
+          {isOrderListExpanded ? <ChevronUp size={16} className="text-slate-300" /> : <ChevronDown size={16} className="text-slate-300" />}
+        </button>
+
+        {isOrderListExpanded && (
+          <div className="px-4 pb-4 space-y-2">
+            <textarea
+              ref={orderListRef}
+              className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm font-medium text-slate-800 outline-none resize-none min-h-[120px] overflow-hidden focus:border-amber-400 transition-all placeholder:text-slate-300 placeholder:italic leading-relaxed"
+              placeholder={"Items to order...\ne.g.\n- 50x C24 timber\n- 10 bags cement\n- Box of 100mm screws"}
+              value={orderListContent}
+              onChange={(e) => {
+                setOrderListContent(e.target.value);
+                handleSaveOrderList(e.target.value);
+              }}
+            />
+            {orderListContent && (
+              <button
+                onClick={() => { if (confirm('Clear order list?')) { setOrderListContent(''); handleSaveOrderList(''); } }}
+                className="text-[9px] font-black text-slate-300 uppercase tracking-widest hover:text-red-500 transition-colors"
+              >
+                Clear List
+              </button>
+            )}
           </div>
         )}
       </div>

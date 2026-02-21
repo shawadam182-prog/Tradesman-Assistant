@@ -179,6 +179,7 @@ export interface JobPack {
   drawings?: SitePhoto[];
   documents: SiteDocument[];
   materials?: ProjectMaterial[];
+  orderList?: string;
 }
 
 // Document template options - 3 professional templates

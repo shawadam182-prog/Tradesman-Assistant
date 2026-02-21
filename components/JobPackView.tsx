@@ -6,13 +6,15 @@ import {
   MessageSquare, History, FileDown, Paperclip, Loader2, Send,
   FileCheck, ReceiptText, FolderOpen, Sparkles, PackageSearch, Navigation,
   StickyNote, Eraser, MicOff, Ruler, X, RotateCw, Pencil, Check,
-  ZoomIn, ZoomOut, Maximize2, Users
+  ZoomIn, ZoomOut, Maximize2, Users, ChevronDown, ChevronUp,
+  MapPin, Phone, Mail, Edit3, Save, List
 } from 'lucide-react';
 import { MaterialsTracker } from './MaterialsTracker';
 import { JobProfitSummary } from './JobProfitSummary';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { sitePhotosService } from '../src/services/dataService';
+import { MapPinIcon } from 'lucide-react';
 import { ConfirmDialog } from './ConfirmDialog';
 import { JobAssignmentModal } from './JobAssignmentModal';
 import { teamService } from '../src/services/teamService';
@@ -22,6 +24,94 @@ import { useVoiceInput } from '../src/hooks/useVoiceInput';
 // Detect iOS for voice input fallback
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+// Read GPS coordinates from image EXIF data
+const readExifGps = (file: File): Promise<{ lat: number; lng: number } | null> =>
+  new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const view = new DataView(e.target!.result as ArrayBuffer);
+        // Check for JPEG
+        if (view.getUint16(0) !== 0xFFD8) { resolve(null); return; }
+        let offset = 2;
+        while (offset < view.byteLength - 2) {
+          const marker = view.getUint16(offset);
+          if (marker === 0xFFE1) { // APP1 (EXIF)
+            const exifData = parseExifGps(view, offset + 4);
+            resolve(exifData);
+            return;
+          }
+          offset += 2 + view.getUint16(offset + 2);
+        }
+        resolve(null);
+      } catch { resolve(null); }
+    };
+    reader.onerror = () => resolve(null);
+    reader.readAsArrayBuffer(file.slice(0, 128 * 1024)); // Read first 128KB for EXIF
+  });
+
+const parseExifGps = (view: DataView, start: number): { lat: number; lng: number } | null => {
+  try {
+    // Check for "Exif\0\0"
+    const exifHeader = String.fromCharCode(view.getUint8(start), view.getUint8(start+1), view.getUint8(start+2), view.getUint8(start+3));
+    if (exifHeader !== 'Exif') return null;
+    const tiffStart = start + 6;
+    const bigEndian = view.getUint16(tiffStart) === 0x4D4D;
+    const get16 = (o: number) => bigEndian ? view.getUint16(o) : view.getUint16(o, true);
+    const get32 = (o: number) => bigEndian ? view.getUint32(o) : view.getUint32(o, true);
+
+    // Find GPS IFD
+    let ifdOffset = tiffStart + get32(tiffStart + 4);
+    const entries = get16(ifdOffset);
+    let gpsOffset = 0;
+    for (let i = 0; i < entries; i++) {
+      const tag = get16(ifdOffset + 2 + i * 12);
+      if (tag === 0x8825) { // GPSInfo
+        gpsOffset = tiffStart + get32(ifdOffset + 2 + i * 12 + 8);
+        break;
+      }
+    }
+    if (!gpsOffset) return null;
+
+    const gpsEntries = get16(gpsOffset);
+    let latRef = '', lngRef = '';
+    let latRational: number[] = [], lngRational: number[] = [];
+
+    const readRational = (offset: number): number => {
+      const num = get32(offset);
+      const den = get32(offset + 4);
+      return den ? num / den : 0;
+    };
+
+    for (let i = 0; i < gpsEntries; i++) {
+      const tag = get16(gpsOffset + 2 + i * 12);
+      const valueOffset = tiffStart + get32(gpsOffset + 2 + i * 12 + 8);
+      if (tag === 1) latRef = String.fromCharCode(view.getUint8(gpsOffset + 2 + i * 12 + 8));
+      if (tag === 3) lngRef = String.fromCharCode(view.getUint8(gpsOffset + 2 + i * 12 + 8));
+      if (tag === 2) latRational = [readRational(valueOffset), readRational(valueOffset + 8), readRational(valueOffset + 16)];
+      if (tag === 4) lngRational = [readRational(valueOffset), readRational(valueOffset + 8), readRational(valueOffset + 16)];
+    }
+
+    if (latRational.length === 3 && lngRational.length === 3) {
+      let lat = latRational[0] + latRational[1] / 60 + latRational[2] / 3600;
+      let lng = lngRational[0] + lngRational[1] / 60 + lngRational[2] / 3600;
+      if (latRef === 'S') lat = -lat;
+      if (lngRef === 'W') lng = -lng;
+      if (lat !== 0 || lng !== 0) return { lat, lng };
+    }
+    return null;
+  } catch { return null; }
+};
+
+// Calculate distance between two GPS coordinates in meters (Haversine formula)
+const gpsDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng/2) * Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+};
 
 interface JobPackViewProps {
   project: JobPack;
@@ -34,12 +124,14 @@ interface JobPackViewProps {
   onBack: () => void;
   onDeleteProject?: (id: string) => Promise<void>;
   onRefresh?: () => Promise<void>;
+  onUpdateCustomer?: (customer: Customer) => Promise<void>;
+  initialTab?: 'log' | 'photos' | 'drawings' | 'materials' | 'finance';
 }
 
 export const JobPackView: React.FC<JobPackViewProps> = ({
-  project, customers, quotes, settings, onSaveProject, onViewQuote, onCreateQuote, onBack, onDeleteProject, onRefresh
+  project, customers, quotes, settings, onSaveProject, onViewQuote, onCreateQuote, onBack, onDeleteProject, onRefresh, onUpdateCustomer, initialTab
 }) => {
-  const [activeTab, setActiveTab] = useState<'log' | 'photos' | 'drawings' | 'materials' | 'finance'>('log');
+  const [activeTab, setActiveTab] = useState<'log' | 'photos' | 'drawings' | 'materials' | 'finance'>(initialTab || 'log');
   const [isRecording, setIsRecording] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -60,6 +152,8 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   useEffect(() => { refreshAssignmentCount(); }, [refreshAssignmentCount]);
 
   const [notepadContent, setNotepadContent] = useState(project.notepad || '');
+  const [isNotepadExpanded, setIsNotepadExpanded] = useState(true);
+  const notepadTextareaRef = useRef<HTMLTextAreaElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const notepadContentRef = useRef(notepadContent);
   const isLocalChangeRef = useRef(false);
@@ -69,6 +163,13 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   const photoInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const drawingInputRef = useRef<HTMLInputElement>(null);
+  const galleryFinderInputRef = useRef<HTMLInputElement>(null);
+
+  // Gallery geodata finder state
+  const [galleryResults, setGalleryResults] = useState<{ file: File; preview: string; distance: number | null; hasGps: boolean }[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const [showGalleryFinder, setShowGalleryFinder] = useState(false);
+  const [jobCoords, setJobCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   // Modal states
   const [selectedImage, setSelectedImage] = useState<{ item: SitePhoto, type: 'photo' | 'drawing' } | null>(null);
@@ -113,6 +214,19 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
     }
     isLocalChangeRef.current = false;
   }, [project.notepad]);
+
+  // Auto-resize notepad textarea to fit content
+  useEffect(() => {
+    const el = notepadTextareaRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    }
+  }, [notepadContent, isNotepadExpanded]);
+
+  // Customer editing state
+  const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+  const [editCustomerData, setEditCustomerData] = useState<Partial<Customer>>({});
 
   // Sync temp title when project changes
   useEffect(() => {
@@ -275,6 +389,65 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
     for (let i = 0; i < files.length; i++) {
       await handlePhotoUpload(files[i], isDrawing);
     }
+  };
+
+  // Gallery geodata finder: geocode job address then scan selected photos
+  const startGalleryFinder = async () => {
+    const address = project.siteAddress || customer?.address;
+    if (!address) {
+      toast.error('No Address', 'Set a site or client address to use this feature.');
+      return;
+    }
+    // Geocode the address using Nominatim (free)
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`);
+      const data = await res.json();
+      if (data.length > 0) {
+        setJobCoords({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+        setShowGalleryFinder(true);
+        galleryFinderInputRef.current?.click();
+      } else {
+        toast.error('Address Not Found', 'Could not geocode the job address.');
+      }
+    } catch {
+      toast.error('Network Error', 'Could not look up the address location.');
+    }
+  };
+
+  const handleGalleryFinderFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !jobCoords) return;
+    setIsScanning(true);
+    const results: typeof galleryResults = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const gps = await readExifGps(file);
+      const preview = URL.createObjectURL(file);
+      if (gps) {
+        const dist = gpsDistance(jobCoords.lat, jobCoords.lng, gps.lat, gps.lng);
+        results.push({ file, preview, distance: dist, hasGps: true });
+      } else {
+        results.push({ file, preview, distance: null, hasGps: false });
+      }
+    }
+
+    // Sort: nearby first (within 500m), then no GPS, then far away
+    results.sort((a, b) => {
+      if (a.distance !== null && b.distance !== null) return a.distance - b.distance;
+      if (a.distance !== null) return -1;
+      if (b.distance !== null) return 1;
+      return 0;
+    });
+
+    setGalleryResults(results);
+    setIsScanning(false);
+    if (galleryFinderInputRef.current) galleryFinderInputRef.current.value = '';
+  };
+
+  const addGalleryPhoto = async (file: File) => {
+    await handlePhotoUpload(file, false);
+    setGalleryResults(prev => prev.filter(r => r.file !== file));
   };
 
   const openImageViewer = (item: SitePhoto, type: 'photo' | 'drawing') => {
@@ -458,9 +631,9 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           </div>
 
           {/* Main Viewport */}
-          <div className="flex-1 flex flex-col md:flex-row items-center justify-center p-4 md:p-8 gap-8 overflow-hidden">
+          <div className={`flex-1 flex flex-col md:flex-row items-center justify-center gap-8 overflow-hidden ${zoomLevel > 1 ? 'p-0' : 'p-4 md:p-8'}`}>
             <div
-              className={`flex-1 w-full h-full flex items-center justify-center relative overflow-hidden bg-slate-950/50 rounded-[40px] border border-white/5 ${zoomLevel > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-zoom-in'}`}
+              className={`flex-1 w-full h-full flex items-center justify-center relative overflow-hidden bg-slate-950/50 transition-all ${zoomLevel > 1 ? 'rounded-none' : 'rounded-[40px] border border-white/5'} ${zoomLevel > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-zoom-in'}`}
               style={{ touchAction: 'none' }}
               onDoubleClick={() => {
                 if (zoomLevel === 1) {
@@ -492,8 +665,8 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
               />
             </div>
 
-            {/* Annotation Sidebar */}
-            <div className="w-full md:w-80 bg-white/5 p-4 md:p-8 rounded-[40px] border border-white/10 flex flex-col gap-3 md:gap-6">
+            {/* Annotation Sidebar - hidden when zoomed in */}
+            <div className={`w-full md:w-80 bg-white/5 p-4 md:p-8 rounded-[40px] border border-white/10 flex flex-col gap-3 md:gap-6 ${zoomLevel > 1 ? 'hidden' : ''}`}>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Annotations</h4>
@@ -567,7 +740,18 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
                 {project.title}
               </h1>
             )}
-            <p className="text-xs text-slate-500">{customer?.name || 'No Client'}</p>
+            <button
+              onClick={() => {
+                if (customer && onUpdateCustomer) {
+                  setEditCustomerData({ ...customer });
+                  setIsEditingCustomer(true);
+                }
+              }}
+              className="text-xs text-slate-500 hover:text-teal-600 flex items-center gap-1 transition-colors"
+            >
+              {customer?.name || 'No Client'}
+              {customer && onUpdateCustomer && <Edit3 size={10} />}
+            </button>
           </div>
         </div>
         <div className="flex gap-2">
@@ -593,6 +777,42 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           {onDeleteProject && <button onClick={handleDeleteProject} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><Trash2 size={18} /></button>}
         </div>
       </div>
+
+      {/* Address Info - Client vs Site */}
+      {(customer?.address || project.siteAddress) && (
+        <div className="px-2 pb-2 flex flex-col gap-1.5">
+          {customer?.address && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(customer.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl border border-blue-100 text-xs hover:bg-blue-100 transition-all"
+            >
+              <MapPin size={12} className="text-blue-500 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block">Client Address</span>
+                <span className="text-blue-700 font-bold truncate block">{customer.address}</span>
+              </div>
+              <Navigation size={12} className="text-blue-400 shrink-0" />
+            </a>
+          )}
+          {project.siteAddress && project.siteAddress !== customer?.address && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(project.siteAddress)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-3 py-2 bg-amber-50 rounded-xl border border-amber-100 text-xs hover:bg-amber-100 transition-all"
+            >
+              <MapPin size={12} className="text-amber-500 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="text-[8px] font-black text-amber-400 uppercase tracking-widest block">Site Address</span>
+                <span className="text-amber-700 font-bold truncate block">{project.siteAddress}</span>
+              </div>
+              <Navigation size={12} className="text-amber-400 shrink-0" />
+            </a>
+          )}
+        </div>
+      )}
 
       <div className="px-2 pb-4">
         <div className="flex flex-wrap gap-1.5 bg-slate-100 p-1 rounded-xl w-full">
@@ -643,18 +863,37 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
         </div>
 
         <div className="bg-[#fffdf2] rounded-[24px] border border-amber-100 shadow-xl relative">
-          {/* Notepad lines decoration */}
-          <div className="absolute inset-0 pointer-events-none opacity-[0.03] rounded-[24px]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px)', backgroundSize: '100% 2.5rem' }}></div>
+          {/* Collapsible header */}
+          <button
+            onClick={() => setIsNotepadExpanded(!isNotepadExpanded)}
+            className="w-full flex items-center justify-between p-4 md:px-10 md:pt-6 md:pb-2 relative z-10"
+          >
+            <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest">
+              {notepadContent ? `${notepadContent.split('\n').length} lines` : 'Empty'}
+            </span>
+            <div className="flex items-center gap-1.5 text-amber-400">
+              <span className="text-[9px] font-black uppercase">{isNotepadExpanded ? 'Collapse' : 'Expand'}</span>
+              {isNotepadExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </div>
+          </button>
 
-          <textarea
-            className="w-full bg-transparent p-4 md:p-10 text-base md:text-lg font-medium text-slate-800 outline-none resize-y leading-[2.5rem] relative z-10 placeholder:text-amber-200 placeholder:italic min-h-[250px] md:min-h-[400px] max-h-[60vh]"
-            placeholder="Start typing your site notes here, or use the mic to dictate..."
-            value={notepadContent}
-            onChange={(e) => {
-              setNotepadContent(e.target.value);
-              handleSaveNotepad(e.target.value);
-            }}
-          />
+          {isNotepadExpanded && (
+            <>
+              {/* Notepad lines decoration */}
+              <div className="absolute inset-0 pointer-events-none opacity-[0.03] rounded-[24px]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px)', backgroundSize: '100% 2.5rem' }}></div>
+
+              <textarea
+                ref={notepadTextareaRef}
+                className="w-full bg-transparent px-4 pb-4 md:px-10 md:pb-10 text-base md:text-lg font-medium text-slate-800 outline-none resize-none leading-[2.5rem] relative z-10 placeholder:text-amber-200 placeholder:italic min-h-[200px] overflow-hidden"
+                placeholder="Start typing your site notes here, or use the mic to dictate..."
+                value={notepadContent}
+                onChange={(e) => {
+                  setNotepadContent(e.target.value);
+                  handleSaveNotepad(e.target.value);
+                }}
+              />
+            </>
+          )}
 
           <div className="p-3 border-t border-amber-50 bg-[#fffef7] flex justify-between items-center text-[8px] font-black text-amber-300 uppercase tracking-widest italic relative z-10 px-4 md:px-10 rounded-b-[24px]">
             <span>Ref: {project.id.substr(0, 8)}</span>
@@ -690,6 +929,14 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           className="hidden"
           onChange={(e) => handleFileInputChange(e, false)}
         />
+        <input
+          ref={galleryFinderInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={handleGalleryFinderFiles}
+        />
 
         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4">
           {/* Camera button */}
@@ -710,6 +957,15 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
             {isUploadingPhoto ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />}
             <span className="text-[9px] font-bold mt-1">{isUploadingPhoto ? 'Uploading...' : 'Add'}</span>
           </button>
+          {/* Find from Gallery by location */}
+          <button
+            onClick={startGalleryFinder}
+            disabled={isScanning}
+            className="aspect-square border-2 border-dashed border-teal-300 rounded-xl flex flex-col items-center justify-center text-teal-500 hover:border-teal-400 hover:bg-teal-50 transition-all bg-teal-50/50 disabled:opacity-50"
+          >
+            {isScanning ? <Loader2 size={24} className="animate-spin" /> : <MapPin size={24} />}
+            <span className="text-[9px] font-bold mt-1 text-center leading-tight">{isScanning ? 'Scanning...' : 'Find by\nLocation'}</span>
+          </button>
           {(project.photos || []).map(photo => (
             <div
               key={photo.id}
@@ -726,6 +982,40 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
             </div>
           ))}
         </div>
+
+        {/* Gallery Finder Results */}
+        {galleryResults.length > 0 && (
+          <div className="bg-teal-50 rounded-2xl border border-teal-200 p-4 space-y-3 animate-in fade-in">
+            <div className="flex justify-between items-center">
+              <h4 className="text-[10px] font-black text-teal-700 uppercase tracking-widest flex items-center gap-1.5">
+                <MapPin size={12} /> Gallery Photos ({galleryResults.length})
+              </h4>
+              <button onClick={() => { setGalleryResults([]); setShowGalleryFinder(false); }} className="text-[9px] font-black text-teal-400 uppercase hover:text-red-500">Close</button>
+            </div>
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+              {galleryResults.map((r, i) => (
+                <div key={i} className="relative rounded-xl overflow-hidden border-2 border-white shadow-sm">
+                  <img src={r.preview} className="w-full aspect-square object-cover" alt="Gallery" />
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-1.5">
+                    {r.hasGps && r.distance !== null ? (
+                      <span className={`text-[8px] font-black uppercase ${r.distance < 500 ? 'text-green-400' : r.distance < 2000 ? 'text-amber-400' : 'text-red-400'}`}>
+                        {r.distance < 1000 ? `${Math.round(r.distance)}m away` : `${(r.distance / 1000).toFixed(1)}km away`}
+                      </span>
+                    ) : (
+                      <span className="text-[8px] font-bold text-slate-300">No GPS data</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => addGalleryPhoto(r.file)}
+                    className="absolute top-1 right-1 p-1 bg-teal-500 text-white rounded-lg shadow-lg"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -830,6 +1120,52 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           onClose={() => setShowAssignModal(false)}
           onAssignmentChange={refreshAssignmentCount}
         />
+      )}
+
+      {/* Customer Edit Modal */}
+      {isEditingCustomer && customer && onUpdateCustomer && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in zoom-in-95">
+            <h3 className="font-black text-lg text-slate-900 uppercase tracking-tight">Edit Client Details</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Name</label>
+                <input className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-teal-400" value={editCustomerData.name || ''} onChange={e => setEditCustomerData({ ...editCustomerData, name: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Company</label>
+                <input className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-teal-400" value={editCustomerData.company || ''} onChange={e => setEditCustomerData({ ...editCustomerData, company: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Phone</label>
+                <input type="tel" className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-teal-400" value={editCustomerData.phone || ''} onChange={e => setEditCustomerData({ ...editCustomerData, phone: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Email</label>
+                <input type="email" className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-teal-400" value={editCustomerData.email || ''} onChange={e => setEditCustomerData({ ...editCustomerData, email: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Address</label>
+                <input className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-teal-400" value={editCustomerData.address || ''} onChange={e => setEditCustomerData({ ...editCustomerData, address: e.target.value })} />
+              </div>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={async () => {
+                  if (editCustomerData.name?.trim()) {
+                    await onUpdateCustomer(editCustomerData as Customer);
+                    setIsEditingCustomer(false);
+                    toast.success('Client Updated', editCustomerData.name);
+                  }
+                }}
+                className="flex-1 bg-teal-500 text-white py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg"
+              >
+                Save Changes
+              </button>
+              <button onClick={() => setIsEditingCustomer(false)} className="px-6 bg-slate-50 text-slate-400 py-3 rounded-xl font-black text-xs uppercase">Cancel</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
