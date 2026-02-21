@@ -230,6 +230,25 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
   const [editCustomerData, setEditCustomerData] = useState<Partial<Customer>>({});
 
+  // Site address editing state
+  const [isEditingSiteAddress, setIsEditingSiteAddress] = useState(false);
+  const [tempSiteAddress, setTempSiteAddress] = useState(project.siteAddress || '');
+
+  // Sync site address when project changes
+  useEffect(() => {
+    setTempSiteAddress(project.siteAddress || '');
+  }, [project.siteAddress]);
+
+  const handleSaveSiteAddress = () => {
+    onSaveProject({
+      ...project,
+      siteAddress: tempSiteAddress.trim() || undefined,
+      updatedAt: new Date().toISOString()
+    });
+    setIsEditingSiteAddress(false);
+    toast.success('Site Address Updated', tempSiteAddress.trim() || 'Address removed');
+  };
+
   // Sync temp title when project changes
   useEffect(() => {
     setTempTitle(project.title);
@@ -741,58 +760,71 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
       </div>
 
       {/* Address Info - Site address primary (blue), Client address secondary */}
-      {(customer?.address || project.siteAddress) && (
-        <div className="px-2 pb-2 flex flex-col gap-1.5">
-          {/* Site Address - shown in blue as primary address */}
-          {project.siteAddress && (
+      <div className="px-2 pb-2 flex flex-col gap-1.5">
+        {/* Site Address editing inline */}
+        {isEditingSiteAddress ? (
+          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl border-2 border-blue-300 text-xs animate-in fade-in">
+            <MapPin size={12} className="text-blue-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block">Site Address</span>
+              <input
+                autoFocus
+                className="w-full bg-white border border-blue-200 rounded-lg px-2 py-1.5 text-sm font-bold text-blue-700 outline-none focus:border-blue-400 mt-1"
+                value={tempSiteAddress}
+                onChange={(e) => setTempSiteAddress(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSaveSiteAddress(); if (e.key === 'Escape') setIsEditingSiteAddress(false); }}
+                placeholder="Enter site address..."
+              />
+            </div>
+            <div className="flex flex-col gap-1 shrink-0">
+              <button onClick={handleSaveSiteAddress} className="p-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"><Check size={12} /></button>
+              <button onClick={() => { setIsEditingSiteAddress(false); setTempSiteAddress(project.siteAddress || ''); }} className="p-1.5 bg-slate-200 text-slate-500 rounded-lg hover:bg-slate-300 transition-all"><X size={12} /></button>
+            </div>
+          </div>
+        ) : project.siteAddress ? (
+          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl border border-blue-100 text-xs hover:bg-blue-100 transition-all">
+            <MapPin size={12} className="text-blue-500 shrink-0" />
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(project.siteAddress)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl border border-blue-100 text-xs hover:bg-blue-100 transition-all"
+              className="flex-1 min-w-0"
             >
-              <MapPin size={12} className="text-blue-500 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block">Site Address</span>
-                <span className="text-blue-700 font-bold truncate block">{project.siteAddress}</span>
-              </div>
-              <Navigation size={12} className="text-blue-400 shrink-0" />
+              <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block">Site Address</span>
+              <span className="text-blue-700 font-bold truncate block">{project.siteAddress}</span>
             </a>
-          )}
-          {/* Client Address - secondary, only shown if different from site address */}
-          {customer?.address && customer.address !== project.siteAddress && (
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(customer.address)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100 text-xs hover:bg-slate-100 transition-all"
-            >
-              <MapPin size={12} className="text-slate-400 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Client Address</span>
-                <span className="text-slate-600 font-bold truncate block">{customer.address}</span>
-              </div>
-              <Navigation size={12} className="text-slate-400 shrink-0" />
+            <button onClick={() => setIsEditingSiteAddress(true)} className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-all shrink-0"><Edit3 size={12} /></button>
+            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(project.siteAddress)}`} target="_blank" rel="noopener noreferrer" className="shrink-0">
+              <Navigation size={12} className="text-blue-400" />
             </a>
-          )}
-          {/* If no site address set, show client address as blue primary */}
-          {!project.siteAddress && customer?.address && (
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(customer.address)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl border border-blue-100 text-xs hover:bg-blue-100 transition-all"
-            >
-              <MapPin size={12} className="text-blue-500 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block">Client Address</span>
-                <span className="text-blue-700 font-bold truncate block">{customer.address}</span>
-              </div>
-              <Navigation size={12} className="text-blue-400 shrink-0" />
-            </a>
-          )}
-        </div>
-      )}
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsEditingSiteAddress(true)}
+            className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl border border-dashed border-blue-200 text-xs hover:bg-blue-100 transition-all"
+          >
+            <MapPin size={12} className="text-blue-400" />
+            <span className="text-blue-500 font-bold">+ Add Site Address</span>
+          </button>
+        )}
+
+        {/* Client Address - secondary, only shown if different from site address */}
+        {customer?.address && customer.address !== project.siteAddress && (
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(customer.address)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100 text-xs hover:bg-slate-100 transition-all"
+          >
+            <MapPin size={12} className="text-slate-400 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Client Address</span>
+              <span className="text-slate-600 font-bold truncate block">{customer.address}</span>
+            </div>
+            <Navigation size={12} className="text-slate-400 shrink-0" />
+          </a>
+        )}
+      </div>
 
       <div className="px-2 pb-4">
         <div className="flex flex-wrap gap-1.5 bg-slate-100 p-1 rounded-xl w-full">
