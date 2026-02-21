@@ -7,9 +7,10 @@ import {
   FileCheck, ReceiptText, FolderOpen, Sparkles, PackageSearch, Navigation,
   StickyNote, Eraser, MicOff, Ruler, X, RotateCw, Pencil, Check,
   ZoomIn, ZoomOut, Maximize2, Users, ChevronDown, ChevronUp,
-  MapPin, Phone, Mail, Edit3, Save, List
+  MapPin, Phone, Mail, Edit3, Save, List, ClipboardList, CalendarPlus
 } from 'lucide-react';
 import { MaterialsTracker } from './MaterialsTracker';
+import { JobSheet } from './JobSheet';
 import { JobProfitSummary } from './JobProfitSummary';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
@@ -125,13 +126,14 @@ interface JobPackViewProps {
   onDeleteProject?: (id: string) => Promise<void>;
   onRefresh?: () => Promise<void>;
   onUpdateCustomer?: (customer: Customer) => Promise<void>;
-  initialTab?: 'log' | 'photos' | 'drawings' | 'materials' | 'finance';
+  onAddToSchedule?: (project: JobPack) => void;
+  initialTab?: 'log' | 'photos' | 'drawings' | 'materials' | 'jobsheet' | 'finance';
 }
 
 export const JobPackView: React.FC<JobPackViewProps> = ({
-  project, customers, quotes, settings, onSaveProject, onViewQuote, onCreateQuote, onBack, onDeleteProject, onRefresh, onUpdateCustomer, initialTab
+  project, customers, quotes, settings, onSaveProject, onViewQuote, onCreateQuote, onBack, onDeleteProject, onRefresh, onUpdateCustomer, onAddToSchedule, initialTab
 }) => {
-  const [activeTab, setActiveTab] = useState<'log' | 'photos' | 'drawings' | 'materials' | 'finance'>(initialTab || 'log');
+  const [activeTab, setActiveTab] = useState<'log' | 'photos' | 'drawings' | 'materials' | 'jobsheet' | 'finance'>(initialTab || 'log');
   const [isRecording, setIsRecording] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -227,6 +229,25 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   // Customer editing state
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
   const [editCustomerData, setEditCustomerData] = useState<Partial<Customer>>({});
+
+  // Site address editing state
+  const [isEditingSiteAddress, setIsEditingSiteAddress] = useState(false);
+  const [tempSiteAddress, setTempSiteAddress] = useState(project.siteAddress || '');
+
+  // Sync site address when project changes
+  useEffect(() => {
+    setTempSiteAddress(project.siteAddress || '');
+  }, [project.siteAddress]);
+
+  const handleSaveSiteAddress = () => {
+    onSaveProject({
+      ...project,
+      siteAddress: tempSiteAddress.trim() || undefined,
+      updatedAt: new Date().toISOString()
+    });
+    setIsEditingSiteAddress(false);
+    toast.success('Site Address Updated', tempSiteAddress.trim() || 'Address removed');
+  };
 
   // Sync temp title when project changes
   useEffect(() => {
@@ -573,62 +594,13 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
       {/* Large View Modal */}
       {selectedImage && (
         <div className="fixed inset-0 z-[1000] bg-slate-900/90 backdrop-blur-xl flex flex-col animate-in fade-in duration-300">
-          {/* Header Controls */}
-          <div className="flex items-center justify-between p-3 md:p-6 bg-slate-900/50 border-b border-white/10">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/10 rounded-2xl text-white">
-                {selectedImage.type === 'photo' ? <ImageIcon size={24} /> : <Ruler size={24} />}
-              </div>
-              <div className="text-left">
-                <h3 className="text-white font-black text-lg leading-none uppercase tracking-tight">
-                  {selectedImage.type === 'photo' ? 'Site Photo' : 'Technical Drawing'}
-                </h3>
-                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">
-                  Captured: {new Date(selectedImage.item.timestamp).toLocaleString()}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 md:gap-3">
-              {/* Zoom controls */}
-              <button
-                onClick={handleZoomOut}
-                className="p-3 md:p-4 bg-white/10 hover:bg-white/20 text-white rounded-xl md:rounded-2xl transition-all disabled:opacity-30"
-                title="Zoom Out"
-                disabled={zoomLevel <= 0.5}
-              >
-                <ZoomOut size={20} className="md:w-6 md:h-6" />
-              </button>
-              <button
-                onClick={handleResetZoom}
-                className="px-3 py-2 md:px-4 md:py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl md:rounded-2xl transition-all text-xs md:text-sm font-bold min-w-[50px] md:min-w-[60px]"
-                title="Reset Zoom"
-              >
-                {Math.round(zoomLevel * 100)}%
-              </button>
-              <button
-                onClick={handleZoomIn}
-                className="p-3 md:p-4 bg-white/10 hover:bg-white/20 text-white rounded-xl md:rounded-2xl transition-all disabled:opacity-30"
-                title="Zoom In"
-                disabled={zoomLevel >= 4}
-              >
-                <ZoomIn size={20} className="md:w-6 md:h-6" />
-              </button>
-              <div className="w-px h-8 bg-white/20 mx-1 md:mx-2" />
-              <button
-                onClick={handleRotate}
-                className="p-3 md:p-4 bg-white/10 hover:bg-white/20 text-white rounded-xl md:rounded-2xl transition-all"
-                title="Rotate 90°"
-              >
-                <RotateCw size={20} className="md:w-6 md:h-6" />
-              </button>
-              <button
-                onClick={closeImageViewer}
-                className="p-3 md:p-4 bg-white/10 hover:bg-white/20 text-white rounded-xl md:rounded-2xl transition-all"
-              >
-                <X size={20} className="md:w-6 md:h-6" />
-              </button>
-            </div>
-          </div>
+          {/* Close button only - floating top-right */}
+          <button
+            onClick={closeImageViewer}
+            className="absolute top-4 right-4 z-50 p-3 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all backdrop-blur-sm shadow-lg"
+          >
+            <X size={24} />
+          </button>
 
           {/* Main Viewport */}
           <div className={`flex-1 flex flex-col md:flex-row items-center justify-center gap-8 overflow-hidden ${zoomLevel > 1 ? 'p-0' : 'p-4 md:p-8'}`}>
@@ -755,9 +727,9 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           </div>
         </div>
         <div className="flex gap-2">
-          {customer?.address && (
+          {(project.siteAddress || customer?.address) && (
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(customer.address)}`}
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(project.siteAddress || customer?.address || '')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100"
@@ -774,45 +746,85 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
               <span>{assignmentCount > 0 ? `Team (${assignmentCount})` : 'Assign'}</span>
             </button>
           )}
+          {onAddToSchedule && (
+            <button
+              onClick={() => onAddToSchedule(project)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 text-xs font-bold"
+            >
+              <CalendarPlus size={16} />
+              <span className="hidden sm:inline">Schedule</span>
+            </button>
+          )}
           {onDeleteProject && <button onClick={handleDeleteProject} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><Trash2 size={18} /></button>}
         </div>
       </div>
 
-      {/* Address Info - Client vs Site */}
-      {(customer?.address || project.siteAddress) && (
-        <div className="px-2 pb-2 flex flex-col gap-1.5">
-          {customer?.address && (
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(customer.address)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl border border-blue-100 text-xs hover:bg-blue-100 transition-all"
-            >
-              <MapPin size={12} className="text-blue-500 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block">Client Address</span>
-                <span className="text-blue-700 font-bold truncate block">{customer.address}</span>
-              </div>
-              <Navigation size={12} className="text-blue-400 shrink-0" />
-            </a>
-          )}
-          {project.siteAddress && project.siteAddress !== customer?.address && (
+      {/* Address Info - Site address primary (blue), Client address secondary */}
+      <div className="px-2 pb-2 flex flex-col gap-1.5">
+        {/* Site Address editing inline */}
+        {isEditingSiteAddress ? (
+          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl border-2 border-blue-300 text-xs animate-in fade-in">
+            <MapPin size={12} className="text-blue-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block">Site Address</span>
+              <input
+                autoFocus
+                className="w-full bg-white border border-blue-200 rounded-lg px-2 py-1.5 text-sm font-bold text-blue-700 outline-none focus:border-blue-400 mt-1"
+                value={tempSiteAddress}
+                onChange={(e) => setTempSiteAddress(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSaveSiteAddress(); if (e.key === 'Escape') setIsEditingSiteAddress(false); }}
+                placeholder="Enter site address..."
+              />
+            </div>
+            <div className="flex flex-col gap-1 shrink-0">
+              <button onClick={handleSaveSiteAddress} className="p-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"><Check size={12} /></button>
+              <button onClick={() => { setIsEditingSiteAddress(false); setTempSiteAddress(project.siteAddress || ''); }} className="p-1.5 bg-slate-200 text-slate-500 rounded-lg hover:bg-slate-300 transition-all"><X size={12} /></button>
+            </div>
+          </div>
+        ) : project.siteAddress ? (
+          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl border border-blue-100 text-xs hover:bg-blue-100 transition-all">
+            <MapPin size={12} className="text-blue-500 shrink-0" />
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(project.siteAddress)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 bg-amber-50 rounded-xl border border-amber-100 text-xs hover:bg-amber-100 transition-all"
+              className="flex-1 min-w-0"
             >
-              <MapPin size={12} className="text-amber-500 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="text-[8px] font-black text-amber-400 uppercase tracking-widest block">Site Address</span>
-                <span className="text-amber-700 font-bold truncate block">{project.siteAddress}</span>
-              </div>
-              <Navigation size={12} className="text-amber-400 shrink-0" />
+              <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block">Site Address</span>
+              <span className="text-blue-700 font-bold truncate block">{project.siteAddress}</span>
             </a>
-          )}
-        </div>
-      )}
+            <button onClick={() => setIsEditingSiteAddress(true)} className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-all shrink-0"><Edit3 size={12} /></button>
+            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(project.siteAddress)}`} target="_blank" rel="noopener noreferrer" className="shrink-0">
+              <Navigation size={12} className="text-blue-400" />
+            </a>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsEditingSiteAddress(true)}
+            className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl border border-dashed border-blue-200 text-xs hover:bg-blue-100 transition-all"
+          >
+            <MapPin size={12} className="text-blue-400" />
+            <span className="text-blue-500 font-bold">+ Add Site Address</span>
+          </button>
+        )}
+
+        {/* Client Address - secondary, only shown if different from site address */}
+        {customer?.address && customer.address !== project.siteAddress && (
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(customer.address)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100 text-xs hover:bg-slate-100 transition-all"
+          >
+            <MapPin size={12} className="text-slate-400 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Client Address</span>
+              <span className="text-slate-600 font-bold truncate block">{customer.address}</span>
+            </div>
+            <Navigation size={12} className="text-slate-400 shrink-0" />
+          </a>
+        )}
+      </div>
 
       <div className="px-2 pb-4">
         <div className="flex flex-wrap gap-1.5 bg-slate-100 p-1 rounded-xl w-full">
@@ -821,6 +833,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
             { id: 'photos', label: 'Photos', icon: ImageIcon },
             { id: 'drawings', label: 'Drawings', icon: Ruler },
             { id: 'materials', label: 'Materials', icon: PackageSearch },
+            { id: 'jobsheet', label: 'Job Sheet', icon: ClipboardList },
             { id: 'finance', label: 'Finance', icon: ReceiptText },
           ].map(tab => (
             <button
@@ -1068,6 +1081,19 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   {
     activeTab === 'materials' && (
       <MaterialsTracker project={project} quotes={quotes} settings={settings} onSaveProject={onSaveProject} />
+    )
+  }
+
+  {
+    activeTab === 'jobsheet' && (
+      <JobSheet
+        project={project}
+        customer={customer}
+        quotes={quotes}
+        settings={settings}
+        onSaveProject={onSaveProject}
+        onRefresh={onRefresh}
+      />
     )
   }
 
