@@ -556,15 +556,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchData();
   }, [fetchData]);
 
-  // Cross-device sync: Refresh data when tab regains focus
+  // Cross-device sync: Refresh data when tab regains focus or window gets focus
+  // This ensures data stays in sync across desktop and mobile (PWA)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && !loading && user) {
         fetchData();
       }
     };
+    const handleFocus = () => {
+      if (!loading && user) fetchData();
+    };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [fetchData, loading, user]);
 
   // Customer actions
