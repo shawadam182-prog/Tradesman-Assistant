@@ -29,12 +29,40 @@ interface CustomerManagerProps {
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
+// Session storage keys for form draft persistence
+const FORM_DRAFT_KEY = 'bq_customer_form_draft';
+const EDITING_ID_KEY = 'bq_customer_editing_id';
+
 export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, addCustomer: addCustomerProp, updateCustomer: updateCustomerProp, deleteCustomer: deleteCustomerProp, onBack }) => {
   const toast = useToast();
   const { quotes, projects } = useData();
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [editingId, setEditingId] = useState<string | 'new' | null>(null);
-  const [customerForm, setCustomerForm] = useState<Partial<Customer>>({});
+
+  // Restore form draft from sessionStorage (survives navigation away and back)
+  const [editingId, setEditingId] = useState<string | 'new' | null>(() => {
+    try {
+      return sessionStorage.getItem(EDITING_ID_KEY) as string | 'new' | null;
+    } catch { return null; }
+  });
+  const [customerForm, setCustomerForm] = useState<Partial<Customer>>(() => {
+    try {
+      const saved = sessionStorage.getItem(FORM_DRAFT_KEY);
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
+
+  // Persist form draft to sessionStorage so it survives navigation away
+  useEffect(() => {
+    try {
+      if (editingId) {
+        sessionStorage.setItem(EDITING_ID_KEY, editingId);
+        sessionStorage.setItem(FORM_DRAFT_KEY, JSON.stringify(customerForm));
+      } else {
+        sessionStorage.removeItem(EDITING_ID_KEY);
+        sessionStorage.removeItem(FORM_DRAFT_KEY);
+      }
+    } catch { /* sessionStorage not available */ }
+  }, [editingId, customerForm]);
 
   // Get customer history (jobs, quotes, invoices)
   const getCustomerHistory = useCallback((customerId: string) => {

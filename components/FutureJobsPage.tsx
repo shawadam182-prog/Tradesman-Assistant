@@ -1,10 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ArrowLeft, Plus, CheckCircle2, ArrowRightCircle,
-  Trash2, ClipboardList, ChevronDown, ChevronUp, X, Check
+  Trash2, ClipboardList, ChevronDown, ChevronUp, X, Check,
+  Mic, MicOff, Loader2
 } from 'lucide-react';
-import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
+import { hapticTap, hapticSuccess, hapticError } from '../src/hooks/useHaptic';
 import { futureJobsService } from '../src/services/dataService';
+import { useVoiceInput } from '../src/hooks/useVoiceInput';
+
+// Detect iOS for voice input fallback
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 interface FutureJob {
   id: string;
@@ -30,10 +36,71 @@ export const FutureJobsPage: React.FC<FutureJobsPageProps> = ({
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editNotes, setEditNotes] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const loaded = useRef(false);
 
+  // Voice input hook (iOS fallback)
+  const handleVoiceResult = useCallback((text: string) => {
+    setNewFutureJobName(prev => prev ? `${prev} ${text}` : text);
+    setIsListening(false);
+  }, []);
+
+  const handleVoiceError = useCallback((error: string) => {
+    console.warn('Voice input error:', error);
+    setIsListening(false);
+    hapticError();
+  }, []);
+
+  const { startListening: startHookListening, stopListening: stopHookListening } = useVoiceInput({
+    onResult: handleVoiceResult,
+    onError: handleVoiceError,
+  });
+
+  // Native speech recognition (non-iOS)
+  useEffect(() => {
+    if (isIOS) return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-GB';
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => { setIsListening(false); hapticError(); };
+    recognition.onresult = (event: any) => {
+      if (event.results?.[0]?.[0]?.transcript) {
+        const text = event.results[0][0].transcript.trim();
+        setNewFutureJobName(prev => prev ? `${prev} ${text}` : text);
+        hapticSuccess();
+      }
+    };
+
+    recognitionRef.current = recognition;
+    return () => { recognitionRef.current?.abort(); };
+  }, []);
+
+  const toggleVoice = () => {
+    if (isListening) {
+      if (isIOS) stopHookListening();
+      else recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    hapticTap();
+    if (isIOS) {
+      setIsListening(true);
+      startHookListening();
+    } else {
+      try { recognitionRef.current?.start(); } catch (e) { console.error('Mic start failed', e); }
+    }
+  };
+
   // Load from Supabase (fallback to localStorage)
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const dbJobs = await futureJobsService.getAll();
       const mapped: FutureJob[] = dbJobs.map((j: any) => ({
@@ -55,23 +122,30 @@ export const FutureJobsPage: React.FC<FutureJobsPageProps> = ({
       }
     }
     loaded.current = true;
-  };
+  }, []);
 
   // Initial load
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
-  // Refresh on tab focus (cross-device sync)
+  // Refresh on tab/window focus (cross-device sync)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && loaded.current) {
         loadData();
       }
     };
+    const handleFocus = () => {
+      if (loaded.current) loadData();
+    };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [loadData]);
 
   // Save to localStorage as offline cache
   useEffect(() => {
@@ -198,6 +272,17 @@ export const FutureJobsPage: React.FC<FutureJobsPageProps> = ({
               onChange={e => setNewFutureJobName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && addFutureJob()}
             />
+            <button
+              onClick={toggleVoice}
+              className={`px-3 rounded-xl transition-all active:scale-95 ${
+                isListening
+                  ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-200'
+                  : 'bg-blue-500 text-white hover:bg-blue-600 shadow-lg'
+              }`}
+              title={isListening ? 'Stop listening' : 'Voice input'}
+            >
+              {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+            </button>
             <button
               onClick={() => { hapticTap(); addFutureJob(); }}
               disabled={!newFutureJobName.trim()}
