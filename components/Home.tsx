@@ -1259,25 +1259,27 @@ export const Home: React.FC<HomeProps> = ({
         <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 p-3 md:p-4 shadow-sm">
           {/* Quick Add Form */}
           <div className="flex gap-2 mb-3">
-            <input
-              type="text"
-              placeholder="Add enquiry..."
-              className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 font-bold text-sm text-slate-900 outline-none focus:border-teal-400 transition-all placeholder:text-slate-300"
-              value={newFutureJobName}
-              onChange={e => setNewFutureJobName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && addFutureJob()}
-            />
-            <button
-              onClick={startVoiceEnquiry}
-              className={`px-2 rounded-xl transition-all active:scale-95 ${
-                isListeningEnquiry
-                  ? 'bg-red-500 text-white animate-pulse'
-                  : 'bg-blue-500 text-white hover:bg-blue-600'
-              }`}
-              title={isListeningEnquiry ? 'Stop listening' : 'Voice input'}
-            >
-              {isListeningEnquiry ? <MicOff size={16} /> : <Mic size={16} />}
-            </button>
+            <div className="flex-1 flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl focus-within:border-teal-400 transition-all">
+              <input
+                type="text"
+                placeholder="Add enquiry..."
+                className="flex-1 bg-transparent px-3 py-2 font-bold text-sm text-slate-900 outline-none placeholder:text-slate-300"
+                value={newFutureJobName}
+                onChange={e => setNewFutureJobName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addFutureJob()}
+              />
+              <button
+                onClick={startVoiceEnquiry}
+                className={`mr-1 p-1.5 rounded-lg transition-all active:scale-95 ${
+                  isListeningEnquiry
+                    ? 'bg-red-500 text-white animate-pulse'
+                    : 'text-blue-500 hover:bg-blue-50'
+                }`}
+                title={isListeningEnquiry ? 'Stop listening' : 'Voice input'}
+              >
+                {isListeningEnquiry ? <MicOff size={16} /> : <Mic size={16} />}
+              </button>
+            </div>
             <button
               onClick={() => { hapticTap(); addFutureJob(); }}
               disabled={!newFutureJobName.trim()}
