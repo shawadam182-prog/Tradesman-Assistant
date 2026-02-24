@@ -1,183 +1,127 @@
-# Quote/Invoice UI Improvements - Implementation Plan
+# Quote/Invoice Improvement Plan
 
-## 1. Customer Name & Address Shown in Quote Editor (Editable, Non-Destructive)
+## Issue 1: Customer name & address shown in full and editable in quote edit (without affecting saved customer)
 
-**Problem:** When editing a quote, only a customer search/selector is shown — the full name and address are not displayed or editable inline on the quote.
+**Current behaviour:** In `QuoteCreator.tsx` (~line 947-963), the customer selector is a search/dropdown that only shows the customer name in the input. The full address is not displayed or editable within the quote editor.
 
-**Files:** `components/QuoteCreator.tsx` (~line 946-963)
+**Proposed change:** After a customer is selected, display the customer's full name, company, phone, email, and address below the selector as read-only initial values. Add an optional "Job Contact" override section (name + address fields) stored on the quote itself (not the customer record). This keeps the saved customer details untouched.
 
-**Plan:**
-- After a customer is selected (when `formData.customerId` resolves to a customer), display their full name, email, phone, and address below the client selector.
-- Add local state fields (`quoteCustomerName`, `quoteCustomerAddress`) that are initialized from the selected customer but stored **only on the quote** (not written back to the Customer record).
-- These override fields would be saved as `customerNameOverride` / `customerAddressOverride` on the Quote object (add to `types.ts` Quote interface).
-- The PDF/QuoteDocument already uses `customer.name` and `customer.address` — it would check for overrides first.
-- This means editing the name/address on a quote does NOT change the saved customer details.
-
-**Changes:**
-- `types.ts`: Add `customerNameOverride?: string` and `customerAddressOverride?: string` to Quote interface.
-- `components/QuoteCreator.tsx`: Below the client selector, render editable fields showing the resolved customer name + address, bound to override fields.
-- `components/quote-view/QuoteDocument.tsx`: Use override fields if present, otherwise fall back to customer record.
-- PDF templates (`src/lib/invoiceTemplates.ts`, `src/utils/invoicePdfExportV2.ts`): Same override logic.
+**Files to change:**
+- `types.ts` — Add optional `contactName` and `contactAddress` fields to the `Quote` interface
+- `components/QuoteCreator.tsx` (~line 947-963) — After customer selection, show full customer details and editable override fields
 
 ---
 
-## 2. "Mark as Sent" — Confirm After PDF Download; Fix Buttons Hidden Below Tabs
+## Issue 2: "Mark as Sent" should confirm after PDF download; buttons hiding below tabs
 
-**Problem:** "Mark as Sent" should only confirm after the user has downloaded the PDF. Currently the status buttons and action buttons can overlap or be hidden by the tabs.
+**Current behaviour:** In `QuoteView.tsx` (~lines 370-498), the "Mark as Sent" button in the status stepper uses a simple `confirm()` dialog. The action buttons (status + secondary actions) sit below the stepper and can be hidden behind scrolling tabs. There's also a separate "Confirm Sent" button at ~line 489-498.
 
-**Files:** `components/QuoteView.tsx` (~lines 342-575)
+**Proposed change:**
+1. When clicking "Mark as Sent" on a draft, first trigger the PDF download, then show a confirmation dialog asking "PDF downloaded. Mark as Sent?"
+2. Fix the button visibility by ensuring the action buttons have proper spacing/padding and are not obscured by tab overflow. Add `overflow-visible` and remove `pb-2` constraints where they clip the content.
 
-**Plan:**
-- **Confirm after PDF:** Change the "Mark as Sent" / "Confirm Sent" button (line ~489-498) to first trigger a PDF download, and then show a confirm dialog asking "PDF downloaded — mark as sent?". Only update status on confirm.
-- **Buttons hidden below tabs:** The status stepper (lines 344-484) and action buttons (lines 486-575) are stacked inside `flex flex-col gap-2`. The secondary actions row at line 578 uses `overflow-x-auto` but may overflow below tabs on small screens. Fix by ensuring the action rows have adequate z-index and are not clipped by the tab container. Add `overflow-visible` or adjust padding/scroll to make all buttons accessible.
-
-**Changes:**
-- `components/QuoteView.tsx`: Refactor "Confirm Sent" button to trigger PDF download first, then show a confirmation dialog. Add a `ConfirmDialog` for "Mark as Sent" flow.
-- Adjust CSS classes on the action button containers to prevent clipping.
+**Files to change:**
+- `components/QuoteView.tsx` (~lines 370-498) — Wire PDF download before "sent" status change; fix overflow/spacing on action button rows
 
 ---
 
-## 3. Labour Unit Selector Dropdown (hrs/days/week/custom)
+## Issue 3: Labour unit dropdown selector (hrs/days/week/custom)
 
-**Problem:** Labour items currently only support hours (`hrs`). Need a dropdown to switch units between hrs/days/week/custom (custom units editable in settings).
+**Current behaviour:** In `LabourItemRow.tsx` (~line 88), the unit is hardcoded as `hrs` text. The `LabourItem` type in `types.ts` has no `unit` field — it only has `hours` (a number) and `rate`.
 
-**Files:**
-- `types.ts` (LabourItem interface)
-- `components/quote/LabourItemRow.tsx`
-- `components/quote/QuoteSectionEditor.tsx`
-- `components/SettingsPage.tsx`
-- `src/utils/quoteCalculations.ts`
+**Proposed change:**
+1. Add a `unit` field to the `LabourItem` interface (default: `'hrs'`), with options: `hrs`, `days`, `week`, `custom`.
+2. In `LabourItemRow.tsx`, replace the static `hrs` label with a small dropdown selector showing the available units.
+3. In `SettingsPage.tsx`, add a "Custom Labour Units" setting where users can define their own unit labels.
+4. Add `customLabourUnits` to `AppSettings` in `types.ts`.
+5. Pass available units through from settings to the section editor and labour row.
 
-**Plan:**
-- Add `unit?: string` to the `LabourItem` interface (default `'hrs'`).
-- Add `labourUnitPresets?: string[]` to `AppSettings` (default `['hrs', 'days', 'week']`).
-- In `LabourItemRow.tsx`, add a unit dropdown next to the hours input that shows the current unit and allows switching between hrs/days/week/custom.
-- In `SettingsPage.tsx`, add a section under labour settings for managing custom labour units.
-- In `quoteCalculations.ts`, the calculation `hours * rate` remains the same — `hours` is really "quantity" and the rate is per-unit. The label just changes. No calculation logic change needed.
-
-**Changes:**
-- `types.ts`: Add `unit` field to `LabourItem`, add `labourUnitPresets` to `AppSettings`.
-- `components/quote/LabourItemRow.tsx`: Add unit dropdown next to the `hrs` label (line ~88).
-- `components/quote/QuoteSectionEditor.tsx`: Update labour summary text to use the item's unit.
-- `components/SettingsPage.tsx`: Add custom labour units editor.
+**Files to change:**
+- `types.ts` — Add `unit?: string` to `LabourItem`; add `customLabourUnits?: string[]` to `AppSettings`
+- `components/quote/LabourItemRow.tsx` — Replace hardcoded `hrs` with a dropdown
+- `components/quote/QuoteSectionEditor.tsx` — Pass unit options through
+- `components/SettingsPage.tsx` — Add custom labour units config
+- `src/utils/quoteCalculations.ts` — No change needed (calculation stays the same, unit is display-only; the `hours` field represents the quantity)
 
 ---
 
-## 4. Larger Description Area for Work Sections
+## Issue 4: More space for work section descriptions
 
-**Problem:** The description textarea in QuoteSectionEditor is too small and squashed.
+**Current behaviour:** In `QuoteSectionEditor.tsx` (~lines 123-161), the description starts collapsed as a single truncated line (`text-[9px]` on mobile). When expanded, the textarea has `minHeight: '3em'` and auto-resizes, but the collapsed placeholder is very small and easy to miss.
 
-**Files:** `components/quote/QuoteSectionEditor.tsx` (~lines 123-161)
+**Proposed change:**
+1. Make the description always start expanded (not collapsed) with a larger min-height of `5em` on mobile and `6em` on desktop.
+2. Increase the font size from `text-xs md:text-sm` to `text-sm md:text-base` when expanded.
+3. Keep the auto-resize behaviour but with a more generous starting height.
 
-**Plan:**
-- Increase the `minHeight` of the description textarea from `3em` to `5em` or `6em`.
-- When collapsed, show more of the text (remove truncation or increase visible lines).
-- Make the collapsed preview taller (change from `text-[9px]` to larger text).
-- Auto-expand: start expanded by default instead of collapsed.
-
-**Changes:**
-- `components/quote/QuoteSectionEditor.tsx`: Increase textarea min-height, start expanded by default, make collapsed preview larger.
+**Files to change:**
+- `components/quote/QuoteSectionEditor.tsx` (~lines 87, 123-161) — Increase default expansion, min-height, and font size
 
 ---
 
-## 5. Add Design Section (Colours, Layout) to Quote Editor
+## Issue 5: Add a Design section (colours, layout) in quote edit
 
-**Problem:** User wants a design section for specifying colours, layout preferences, etc.
+**Current behaviour:** There's no design/appearance section in the QuoteCreator. Layout/display customisation only exists in QuoteView's "Layout Options" customiser panel.
 
-**Files:** `components/QuoteCreator.tsx`, `types.ts`
+**Proposed change:** Add a collapsible "Design & Layout" section in `QuoteCreator.tsx` (between the Document Terms section and the Discount section). This would include:
+- Document template selector (professional/spacious/classic)
+- Colour scheme picker (the existing `invoiceColorScheme`/`quoteColorScheme` options)
+- This stores the chosen template/colour on the quote's settings or uses the global settings
 
-**Plan:**
-- Add `designNotes?: string` to the `Quote` interface.
-- Add a "Design" card section in QuoteCreator (between the sections and the "Document Terms" card) with a textarea for colours, layout notes, etc.
-- This would appear on the PDF/QuoteDocument in a dedicated "Design Specification" section.
-
-**Changes:**
-- `types.ts`: Add `designNotes?: string` to Quote.
-- `components/QuoteCreator.tsx`: Add a design section card with textarea.
-- `components/quote-view/QuoteDocument.tsx`: Render design notes if present.
-- PDF templates: Include design notes in output.
+**Files to change:**
+- `components/QuoteCreator.tsx` — Add a collapsible Design & Layout section after Document Terms
 
 ---
 
-## 6. Smaller Material Item Boxes (Less Height, More Horizontal Writing)
+## Issue 6: Smaller material item boxes (less height, more horizontal writing)
 
-**Problem:** Material item rows are too tall, making the quote unusable with large material lists.
+**Current behaviour:** In `MaterialItemRow.tsx`, each material row has a full card layout with generous padding (`p-0.5 md:p-3`), a name+description block, and a Qty/Price/Total grid that uses tall input boxes (`h-6 md:h-11`).
 
-**Files:** `components/quote/MaterialItemRow.tsx`
+**Proposed change:**
+1. Reduce vertical padding on the material card from `p-0.5 md:p-3` to `p-0.5 md:p-2`.
+2. Make the name/description inputs single-line and inline rather than stacked vertically, using a more horizontal layout.
+3. Reduce the Qty/Price/Total row heights from `h-6 md:h-11` to `h-5 md:h-9`.
+4. Reduce overall spacing between material rows.
 
-**Plan:**
-- Reduce vertical padding and spacing in material rows.
-- Currently: Name input + Description input stacked vertically, then a row of Qty/Price/Total boxes in `bg-slate-50` with generous padding.
-- Change to a more compact layout: single-line name + description side-by-side (or name above, description as smaller text), with Qty/Price/Total more compact.
-- Reduce the `p-3`, `py-3`, heights (`h-11`) to smaller values on mobile.
-- The key is less vertical space per item while maintaining readability and allowing wider text input.
-
-**Changes:**
-- `components/quote/MaterialItemRow.tsx`: Reduce padding, make inputs more compact, possibly put name+description on same line on desktop.
+**Files to change:**
+- `components/quote/MaterialItemRow.tsx` — Reduce padding, heights, and make layout more compact/horizontal
+- `components/quote/QuoteSectionEditor.tsx` — Reduce spacing between material items if needed
 
 ---
 
-## 7. Labour Rate Preset Name as Default Description
+## Issue 7: Labour rate preset names should pre-fill the description box
 
-**Problem:** When selecting a labour rate preset (e.g. "Callout 1st Hour"), the description box should auto-fill with that preset name instead of being blank. Currently defaults to empty or "Labour work".
+**Current behaviour:** In `LabourItemRow.tsx` (~line 34), when a user selects a rate preset, only `item.rate` is updated via `onUpdate(sectionId, item.id, { rate: preset.rate })`. The description stays empty (defaults to empty string from `addLabourItem` at QuoteCreator.tsx:737).
 
-**Files:** `components/quote/LabourItemRow.tsx`, `components/QuoteCreator.tsx`
+**Proposed change:**
+1. When a labour rate preset is selected, also set the description to the preset's name (e.g., "Callout 1st Hour") if the description is currently empty or still the default.
+2. In `addLabourItem` (QuoteCreator.tsx:737), change the default description from `''` to `'Labour Work'` so there's always a sensible default.
 
-**Plan:**
-- In `LabourItemRow.tsx`, when a preset is selected via `handlePresetSelect`, also update the description if it's currently empty (or still the default).
-- In `QuoteCreator.tsx` `addLabourItem`, set default description to "Labour" instead of empty string.
-- When a user selects a preset rate, auto-fill description with the preset name (e.g. "Callout 1st Hour").
-
-**Changes:**
-- `components/quote/LabourItemRow.tsx`: In `handlePresetSelect`, call `onUpdate` with both `rate` AND `description` (if description is empty or default).
-- `components/QuoteCreator.tsx`: Default labour item description to "Labour" or leave empty but let preset selection fill it.
+**Files to change:**
+- `components/quote/LabourItemRow.tsx` (~line 34-37) — When preset selected, also update description if empty
+- `components/QuoteCreator.tsx` (~line 737) — Set default description to `'Labour Work'`
 
 ---
 
-## 8. Fix Labour Rate Description Mismatch
+## Issue 8: Labour summary description doesn't match the rate preset selection
 
-**Problem:** Small description under the labour rates doesn't match the selected rate preset.
+**Current behaviour:** In `QuoteSectionEditor.tsx` (~line 283-284), the labour summary shows `Total: {hours} hours × £{sectionRate}` — this always uses the section-level default rate, which may not match individual items that have different preset rates.
 
-**Files:** `components/quote/QuoteSectionEditor.tsx` (~line 250-252), `components/quote/LabourItemRow.tsx`
+**Proposed change:** When labour items exist with mixed rates, show a more accurate summary. If all items share the same rate, show `Total: X hours × £Y`. If rates vary, show just `Total: X hours` without the rate, since the total cost already reflects the per-item rates.
 
-**Plan:**
-- The labour summary line (line 284) shows `Total: {hours} hours × £{sectionRate}` — but this doesn't reflect per-item rates or preset names.
-- Fix by showing a more accurate summary when items have mixed rates, or showing the preset name alongside the rate.
-- Also check the rate display at line 251 (`Rate: £{sectionRate}/hr`) — this shows the section default rate but individual items may have different rates.
-
-**Changes:**
-- `components/quote/QuoteSectionEditor.tsx`: Update the labour summary to properly reflect mixed rates, or show "varies" when items have different rates.
+**Files to change:**
+- `components/quote/QuoteSectionEditor.tsx` (~lines 280-289) — Fix the labour summary to reflect actual item rates
 
 ---
 
-## 9. Quote/Invoice List Price — Pence Accurate
+## Issue 9: Quote/invoice price in list view should show pence (not rounded to pound)
 
-**Problem:** Prices in the list view round to the nearest pound (£0 decimal places).
+**Current behaviour:**
+- `QuotesList.tsx` (~line 343): `minimumFractionDigits: 0, maximumFractionDigits: 0` — rounds to nearest pound
+- `InvoicesList.tsx` (~line 414): `minimumFractionDigits: 0, maximumFractionDigits: 0` — rounds to nearest pound
 
-**Files:**
-- `components/QuotesList.tsx` (line 343)
-- `components/InvoicesList.tsx` (line 414)
+**Proposed change:** Change both to `minimumFractionDigits: 2, maximumFractionDigits: 2` so prices show as e.g. "£1,234.56" instead of "£1,235".
 
-**Plan:**
-- In `QuotesList.tsx` line 343: Change `{ minimumFractionDigits: 0, maximumFractionDigits: 0 }` to `{ minimumFractionDigits: 2, maximumFractionDigits: 2 }`.
-- In `InvoicesList.tsx` line 414: Same change.
-
-**Changes:**
-- Both files: Update `toLocaleString` format options to show 2 decimal places.
-
----
-
-## Summary of Files to Modify
-
-| File | Changes |
-|------|---------|
-| `types.ts` | Add `customerNameOverride`, `customerAddressOverride`, `designNotes` to Quote; add `unit` to LabourItem; add `labourUnitPresets` to AppSettings |
-| `components/QuoteCreator.tsx` | Customer details display, design section, labour default description |
-| `components/QuoteView.tsx` | Mark as sent flow, button visibility fix, debug removal |
-| `components/quote/QuoteSectionEditor.tsx` | Description area size, labour summary accuracy |
-| `components/quote/MaterialItemRow.tsx` | Compact height |
-| `components/quote/LabourItemRow.tsx` | Unit dropdown, preset name → description, rate display |
-| `components/QuotesList.tsx` | Price formatting (2 decimal places) |
-| `components/InvoicesList.tsx` | Price formatting (2 decimal places) |
-| `components/SettingsPage.tsx` | Custom labour units editor |
-| `components/quote-view/QuoteDocument.tsx` | Customer overrides, design notes rendering |
+**Files to change:**
+- `components/QuotesList.tsx` (~line 343) — Change fraction digits to 2
+- `components/InvoicesList.tsx` (~line 414) — Change fraction digits to 2
