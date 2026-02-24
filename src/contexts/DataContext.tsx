@@ -289,6 +289,11 @@ function dbQuoteToApp(dbQuote: any): Quote {
     isCreditNote: dbQuote.is_credit_note || false,
     originalInvoiceId: dbQuote.original_invoice_id || undefined,
     creditNoteReason: dbQuote.credit_note_reason || undefined,
+    // Customer detail overrides
+    customerNameOverride: dbQuote.customer_name_override || undefined,
+    customerAddressOverride: dbQuote.customer_address_override || undefined,
+    // Design notes
+    designNotes: dbQuote.design_notes || undefined,
   };
 }
 
@@ -663,6 +668,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         part_payment_label: quote.partPaymentLabel || null,
         // Job address
         job_address: quote.jobAddress || null,
+        // Customer detail overrides
+        customer_name_override: quote.customerNameOverride || null,
+        customer_address_override: quote.customerAddressOverride || null,
+        // Design notes
+        design_notes: quote.designNotes || null,
         // Recurring invoice fields (not in generated types yet)
         ...(quote.isRecurring ? {
           is_recurring: true,
@@ -714,6 +724,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         part_payment_label: quote.partPaymentLabel || null,
         // Job address
         job_address: quote.jobAddress || null,
+        // Customer detail overrides
+        customer_name_override: quote.customerNameOverride || null,
+        customer_address_override: quote.customerAddressOverride || null,
+        // Design notes
+        design_notes: quote.designNotes || null,
         // Recurring invoice fields (not in generated types yet)
         ...(quote.isRecurring !== undefined ? {
           is_recurring: quote.isRecurring || false,
