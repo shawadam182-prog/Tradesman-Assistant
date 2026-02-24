@@ -27,6 +27,10 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
   partPaymentAmount,
   documentRef,
 }) => {
+  // Resolve customer details — use quote-level overrides if present
+  const resolvedCustomerName = quote.customerNameOverride || customer?.name;
+  const resolvedCustomerAddress = quote.customerAddressOverride || customer?.address;
+
   // Template configuration
   const templateConfig = getTemplateConfig(settings.documentTemplate);
   const colorSchemeToUse = quote.type === 'invoice' ? settings.invoiceColorScheme : settings.quoteColorScheme;
@@ -325,9 +329,9 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                   <div className="grid grid-cols-2 gap-4 mb-3">
                     <div>
                       <div className="text-[10px] font-bold text-slate-900 mb-1">Bill To</div>
-                      <p className="text-sm font-bold text-slate-900">{customer?.name}</p>
+                      <p className="text-sm font-bold text-slate-900">{resolvedCustomerName}</p>
                       {customer?.company && <p className="text-[10px] text-slate-600">{customer.company}</p>}
-                      {customer?.address && <p className="text-[10px] text-slate-600 leading-snug">{customer.address}</p>}
+                      {resolvedCustomerAddress && <p className="text-[10px] text-slate-600 leading-snug">{resolvedCustomerAddress}</p>}
                     </div>
                     <div className="space-y-0.5">
                       <div className="flex justify-between text-[10px]">
@@ -382,9 +386,9 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                   <div className={`grid grid-cols-2 gap-4 ${templateConfig.sectionGap.replace('space-y-', 'mb-')}`}>
                     <div>
                       <div className={`${templateConfig.fontSize} font-bold text-slate-900 mb-1`}>Bill To</div>
-                      <p className={`${templateConfig.headerFontSize} font-bold text-slate-900`}>{customer?.name}</p>
+                      <p className={`${templateConfig.headerFontSize} font-bold text-slate-900`}>{resolvedCustomerName}</p>
                       {customer?.company && <p className={`${templateConfig.fontSize} text-slate-600`}>{customer.company}</p>}
-                      {customer?.address && <p className={`${templateConfig.fontSize} text-slate-600 leading-snug`}>{customer.address}</p>}
+                      {resolvedCustomerAddress && <p className={`${templateConfig.fontSize} text-slate-600 leading-snug`}>{resolvedCustomerAddress}</p>}
                     </div>
                     <div className="space-y-0.5">
                       <div className={`flex justify-between ${templateConfig.fontSize}`}>
@@ -461,10 +465,10 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 mb-0.5">
                           <User size={9} /> To
                         </p>
-                        <p className="text-sm font-bold text-slate-900">{customer?.name}</p>
+                        <p className="text-sm font-bold text-slate-900">{resolvedCustomerName}</p>
                         {customer?.company && <p className="text-[11px] text-slate-600">{customer.company}</p>}
-                        {customer?.address && (
-                          <p className="text-[11px] text-slate-500 leading-snug">{customer.address}</p>
+                        {resolvedCustomerAddress && (
+                          <p className="text-[11px] text-slate-500 leading-snug">{resolvedCustomerAddress}</p>
                         )}
                       </div>
 
@@ -1007,6 +1011,14 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* Design Notes section */}
+              {quote?.designNotes && (
+                <div className="px-4 py-3 border-t border-slate-200">
+                  <div className="text-[10px] font-bold text-slate-900 mb-1">Design Specification</div>
+                  <div className="text-[10px] text-slate-600 leading-relaxed whitespace-pre-wrap">{quote.designNotes}</div>
                 </div>
               )}
 

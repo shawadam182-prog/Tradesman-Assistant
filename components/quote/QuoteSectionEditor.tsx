@@ -83,8 +83,8 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
     section.subsectionPrice !== undefined ? String(section.subsectionPrice) : ''
   );
   const [isEditingSubsectionPrice, setIsEditingSubsectionPrice] = useState(false);
-  // Start expanded if there's already a description
-  const [isExpanded, setIsExpanded] = useState(!!section.description);
+  // Always start expanded so the description area is prominent
+  const [isExpanded, setIsExpanded] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea when expanded or content changes
@@ -124,7 +124,7 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
             {isExpanded ? (
               <textarea
                 ref={textareaRef}
-                className="w-full bg-transparent outline-none transition-all resize-none font-medium placeholder:text-slate-300 placeholder:italic text-xs md:text-sm text-slate-700"
+                className="w-full bg-slate-50 rounded-lg p-2 md:p-3 outline-none transition-all resize-none font-medium placeholder:text-slate-300 placeholder:italic text-sm md:text-base text-slate-700 border border-slate-100 focus:border-teal-300"
                 value={section.description || ''}
                 onChange={e => {
                   onUpdateDescription(section.id, e.target.value);
@@ -132,22 +132,15 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
                   target.style.height = 'auto';
                   target.style.height = `${target.scrollHeight}px`;
                 }}
-                onBlur={() => {
-                  // Only collapse when empty - keep expanded if has content
-                  if (!section.description || section.description.length === 0) {
-                    setIsExpanded(false);
-                  }
-                }}
-                placeholder="Add a description of this work..."
-                autoFocus
-                style={{ minHeight: '3em' }}
+                placeholder="Describe the work for this section — this appears on the quote/invoice..."
+                style={{ minHeight: '5em' }}
               />
             ) : (
               <div
                 onClick={() => setIsExpanded(true)}
-                className="cursor-text text-[9px] md:text-xs text-slate-500 font-medium truncate pr-6"
+                className="cursor-text text-xs md:text-sm text-slate-500 font-medium pr-6 bg-slate-50 rounded-lg p-2 md:p-3 border border-dashed border-slate-200 hover:border-teal-300 transition-colors"
               >
-                {section.description || <span className="italic text-slate-300">Add a description of this work...</span>}
+                {section.description || <span className="italic text-slate-300">Tap to add a description of this work...</span>}
               </div>
             )}
             {section.description && section.description.length > 50 && !isExpanded && (
@@ -195,18 +188,20 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
           </div>
         </div>
 
-        {section.items.map((item) => (
-          <MaterialItemRow
-            key={item.id}
-            item={item}
-            sectionId={section.id}
-            onUpdate={onUpdateItem}
-            onRemove={onRemoveItem}
-            onIncrement={onIncrementQuantity}
-            onDecrement={onDecrementQuantity}
-            onSaveToLibrary={onSaveItemToLibrary}
-          />
-        ))}
+        <div className="space-y-0.5 md:space-y-1">
+          {section.items.map((item) => (
+            <MaterialItemRow
+              key={item.id}
+              item={item}
+              sectionId={section.id}
+              onUpdate={onUpdateItem}
+              onRemove={onRemoveItem}
+              onIncrement={onIncrementQuantity}
+              onDecrement={onDecrementQuantity}
+              onSaveToLibrary={onSaveItemToLibrary}
+            />
+          ))}
+        </div>
 
         {/* Action buttons for materials */}
         <div className="flex gap-1 md:gap-2 pt-1 md:pt-3 mt-1 md:mt-2">
@@ -260,6 +255,7 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
             sectionId={section.id}
             defaultRate={sectionRate}
             labourRatePresets={settings.labourRatePresets}
+            labourUnitPresets={settings.labourUnitPresets}
             onUpdate={onUpdateLabourItem}
             onRemove={onRemoveLabourItem}
             onIncrement={onIncrementLabourHours}
@@ -278,16 +274,24 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
         </button>
 
         {/* Labour Summary */}
-        {(section.labourItems && section.labourItems.length > 0) && (
-          <div className="flex justify-between items-center mt-1 md:mt-3 pt-1 md:pt-3 border-t border-blue-100">
-            <span className="text-[9px] md:text-sm text-slate-500">
-              Total: {getTotalLabourHours(section)} hours × £{sectionRate}
-            </span>
-            <span className="font-black text-blue-600 text-[11px] md:text-lg">
-              £{labourTotal.toFixed(2)}
-            </span>
-          </div>
-        )}
+        {(section.labourItems && section.labourItems.length > 0) && (() => {
+          const rates = section.labourItems.map(li => li.rate || sectionRate);
+          const allSameRate = rates.every(r => r === rates[0]);
+          const totalHours = getTotalLabourHours(section);
+          return (
+            <div className="flex justify-between items-center mt-1 md:mt-3 pt-1 md:pt-3 border-t border-blue-100">
+              <span className="text-[9px] md:text-sm text-slate-500">
+                {allSameRate
+                  ? `Total: ${totalHours} hrs × £${rates[0]}/hr`
+                  : `Total: ${totalHours} hrs (mixed rates)`
+                }
+              </span>
+              <span className="font-black text-blue-600 text-[11px] md:text-lg">
+                £{labourTotal.toFixed(2)}
+              </span>
+            </div>
+          );
+        })()}
 
         {/* Fallback: Direct labour cost input if no itemized labour */}
         {(!section.labourItems || section.labourItems.length === 0) && (

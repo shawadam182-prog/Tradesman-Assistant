@@ -24,6 +24,9 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
   quote, customer, settings, totals, reference, displayOptions: passedDisplayOptions
 }) => {
   const markupMultiplier = 1 + ((quote.markupPercent || 0) / 100);
+  // Resolve customer details — use quote-level overrides if present
+  const resolvedCustomerName = quote.customerNameOverride || customer?.name;
+  const resolvedCustomerAddress = quote.customerAddressOverride || customer?.address;
   // Use passed displayOptions if provided (for live toggle updates), otherwise fall back to quote/settings
   const displayOptions = passedDisplayOptions || quote.displayOptions || settings.defaultDisplayOptions;
 
@@ -279,9 +282,9 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6mm', marginBottom: '6mm' }}>
         <div>
           <div style={{ fontSize: '9px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1mm' }}>Bill To</div>
-          <div style={{ fontSize: '12px', fontWeight: 'bold' }}>{customer?.name}</div>
+          <div style={{ fontSize: '12px', fontWeight: 'bold' }}>{resolvedCustomerName}</div>
           {customer?.company && <div style={{ fontSize: '10px', color: '#475569' }}>{customer.company}</div>}
-          {customer?.address && <div style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.4 }}>{customer.address}</div>}
+          {resolvedCustomerAddress && <div style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.4 }}>{resolvedCustomerAddress}</div>}
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '9px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1mm' }}>Project</div>

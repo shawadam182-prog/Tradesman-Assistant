@@ -367,10 +367,14 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
                   <div className={`w-4 h-0.5 ${['sent', 'accepted', 'declined', 'invoiced'].includes(activeQuote.status) ? 'bg-blue-400' : 'bg-slate-200'}`} />
                   <button
                     type="button"
-                    onClick={() => {
-                      if (activeQuote.status === 'draft' && confirm('Mark as Sent?')) {
-                        onUpdateStatus('sent');
-                        hapticSuccess();
+                    onClick={async () => {
+                      if (activeQuote.status === 'draft') {
+                        // Download PDF first, then confirm mark as sent
+                        await sharing.handleDownloadPDF();
+                        if (confirm('PDF downloaded. Mark as Sent?')) {
+                          onUpdateStatus('sent');
+                          hapticSuccess();
+                        }
                       } else if (activeQuote.status !== 'sent' && activeQuote.status !== 'draft' && confirm('Revert to Sent?')) {
                         onUpdateStatus('sent');
                         hapticSuccess();
@@ -447,10 +451,13 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
                   <div className={`w-6 h-0.5 ${['sent', 'paid'].includes(activeQuote.status) ? 'bg-blue-400' : 'bg-slate-200'}`} />
                   <button
                     type="button"
-                    onClick={() => {
-                      if (activeQuote.status === 'draft' && confirm('Mark as Sent?')) {
-                        onUpdateStatus('sent');
-                        hapticSuccess();
+                    onClick={async () => {
+                      if (activeQuote.status === 'draft') {
+                        await sharing.handleDownloadPDF();
+                        if (confirm('PDF downloaded. Mark as Sent?')) {
+                          onUpdateStatus('sent');
+                          hapticSuccess();
+                        }
                       } else if (activeQuote.status === 'paid' && confirm('Revert to Sent (Awaiting Payment)?')) {
                         onUpdateStatus('sent');
                         hapticSuccess();
@@ -485,16 +492,20 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
 
         {/* Status Action Buttons for Quotes */}
         {activeQuote.type !== 'invoice' && (
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+          <div className="flex gap-2 flex-wrap pb-2">
             {activeQuote.status === 'draft' && (
               <button
-                onClick={() => {
-                  onUpdateStatus('sent');
-                  hapticSuccess();
+                onClick={async () => {
+                  await sharing.handleDownloadPDF();
+                  if (confirm('PDF downloaded. Mark as Sent?')) {
+                    onUpdateStatus('sent');
+                    hapticSuccess();
+                  }
                 }}
-                className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-xl bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-colors"
+                disabled={sharing.isDownloading}
+                className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-xl bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                <Check size={14} /> Confirm Sent ✓
+                {sharing.isDownloading ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Download & Mark Sent
               </button>
             )}
             {activeQuote.status === 'sent' && (
@@ -549,16 +560,20 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
 
         {/* Status Action Buttons for Invoices */}
         {activeQuote.type === 'invoice' && (
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+          <div className="flex gap-2 flex-wrap pb-2">
             {activeQuote.status === 'draft' && (
               <button
-                onClick={() => {
-                  onUpdateStatus('sent');
-                  hapticSuccess();
+                onClick={async () => {
+                  await sharing.handleDownloadPDF();
+                  if (confirm('PDF downloaded. Mark as Sent?')) {
+                    onUpdateStatus('sent');
+                    hapticSuccess();
+                  }
                 }}
-                className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-xl bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-colors"
+                disabled={sharing.isDownloading}
+                className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-xl bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                <Check size={14} /> Confirm Sent ✓
+                {sharing.isDownloading ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Download & Mark Sent
               </button>
             )}
             {activeQuote.status === 'sent' && (
@@ -692,15 +707,6 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
 
         {showCustomiser && (
           <div className="bg-white p-5 rounded-[28px] border border-slate-200 shadow-2xl animate-in slide-in-from-top-4">
-            {/* DEBUG: Show actual values */}
-            <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded-lg text-[8px] font-mono">
-              <div className="font-bold text-red-600 mb-1">DEBUG VALUES:</div>
-              <div>showMaterials: <span className={displayOptions.showMaterials ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{String(displayOptions.showMaterials)}</span></div>
-              <div>showMaterialItems: <span className={displayOptions.showMaterialItems ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{String(displayOptions.showMaterialItems)}</span></div>
-              <div>showLabour: <span className={displayOptions.showLabour ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{String(displayOptions.showLabour)}</span></div>
-              <div>showLabourItems: <span className={displayOptions.showLabourItems ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{String(displayOptions.showLabourItems)}</span></div>
-              <div>localDisplayOptions set: <span className={localDisplayOptions ? 'text-green-600' : 'text-red-600'}>{String(!!localDisplayOptions)}</span></div>
-            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div className="space-y-1 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100"><Package size={12} className="text-amber-500" /><span className="text-[9px] font-black uppercase tracking-widest text-slate-700">Materials</span></div>
