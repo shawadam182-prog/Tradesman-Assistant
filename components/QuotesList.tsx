@@ -340,7 +340,7 @@ export const QuotesList: React.FC<QuotesListProps> = ({
                   <div className="flex items-center gap-3">
                     <div className="text-right">
                       <p className="font-black text-base text-slate-900">
-                        £{getQuoteGrandTotal(quote, settings).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        £{getQuoteGrandTotal(quote, settings).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                       <p className="text-[10px] text-slate-400 font-medium">
                         {new Date(quote.updatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
