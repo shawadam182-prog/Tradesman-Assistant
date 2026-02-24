@@ -977,7 +977,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                       <input
                         type="text"
                         className="w-full text-sm font-medium text-slate-900 border-b border-slate-200 pb-1 outline-none focus:border-teal-500 transition-colors bg-transparent"
-                        value={formData.customerNameOverride ?? selectedCustomer.name}
+                        value={formData.customerNameOverride ?? selectedCustomer.name ?? ''}
                         onChange={e => setFormData(prev => ({ ...prev, customerNameOverride: e.target.value }))}
                       />
                     </div>
@@ -986,7 +986,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                       <input
                         type="text"
                         className="w-full text-sm font-medium text-slate-900 border-b border-slate-200 pb-1 outline-none focus:border-teal-500 transition-colors bg-transparent"
-                        value={formData.customerAddressOverride ?? selectedCustomer.address}
+                        value={formData.customerAddressOverride ?? selectedCustomer.address ?? ''}
                         onChange={e => setFormData(prev => ({ ...prev, customerAddressOverride: e.target.value }))}
                       />
                     </div>

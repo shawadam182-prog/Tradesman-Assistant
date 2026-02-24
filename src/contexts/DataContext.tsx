@@ -1014,7 +1014,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       default_tax_rate: updates.defaultTaxRate,
       default_cis_rate: updates.defaultCisRate,
       labour_rate_presets: updates.labourRatePresets || null,
-      labour_unit_presets: updates.labourUnitPresets || null,
+      // labour_unit_presets: updates.labourUnitPresets || null, // Column not yet in DB — store in sections JSON or add migration
       company_name: updates.companyName || null,
       company_address: updates.companyAddress || null,
       phone: updates.phone || null,
