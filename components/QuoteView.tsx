@@ -6,8 +6,10 @@ import {
   Landmark, Package, HardHat, FileDown, Loader2,
   Settings2, Eye, EyeOff, ChevronDown, List,
   ReceiptText, Share2, Copy, MessageCircle, MapPin, Mail, Banknote, Check, X, Clock, Link2, Phone,
-  RefreshCw, Play, Pen
+  RefreshCw, Play, Pen, Palette
 } from 'lucide-react';
+import { TEMPLATE_METADATA, COLOR_SCHEMES } from '../src/lib/invoiceTemplates';
+import type { ColorScheme } from '../src/lib/invoiceTemplates';
 import { hapticSuccess } from '../src/hooks/useHaptic';
 import {
   calculateQuoteTotals,
@@ -59,6 +61,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   const [generatedInvoices, setGeneratedInvoices] = useState<any[]>([]);
   const [isGeneratingRecurring, setIsGeneratingRecurring] = useState(false);
   const [showOnSiteSignature, setShowOnSiteSignature] = useState(false);
+  const [showDesignLayout, setShowDesignLayout] = useState(false);
   const { services, refresh, quotes: allQuotes } = useData();
   const documentRef = useRef<HTMLDivElement>(null);
   const shareMenuRef = useRef<HTMLDivElement>(null);
@@ -667,6 +670,12 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
                 >
                   <Settings2 size={16} className="text-slate-500" /> Layout Options
                 </button>
+                <button
+                  onClick={() => { setShowDesignLayout(!showDesignLayout); setShowMoreMenu(false); }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                >
+                  <Palette size={16} className="text-violet-500" /> Design & Layout
+                </button>
                 {onDuplicate && (
                   <button
                     onClick={() => { onDuplicate(); setShowMoreMenu(false); }}
@@ -750,6 +759,73 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
             <div className="flex justify-end mt-4 pt-3 border-t border-slate-100">
               <button
                 onClick={() => setShowCustomiser(false)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-lg hover:bg-slate-800 transition-colors"
+              >
+                <Check size={14} /> Done
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Design & Layout Panel */}
+        {showDesignLayout && (
+          <div className="bg-white p-5 rounded-[28px] border border-slate-200 shadow-2xl animate-in slide-in-from-top-4">
+            <div className="space-y-4">
+              {/* Design Notes */}
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-1 block">Design Notes (colours, finishes, layout preferences)</label>
+                <textarea
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 text-slate-900 font-medium text-sm outline-none focus:border-violet-400 transition-all min-h-[80px]"
+                  value={activeQuote.designNotes || ''}
+                  onChange={e => onUpdateQuote({ ...activeQuote, designNotes: e.target.value })}
+                  placeholder="e.g. White gloss finish, modern minimalist layout, client prefers navy blue accents..."
+                />
+              </div>
+
+              {/* Colour Scheme */}
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2 block">Document Colour Scheme</label>
+                <div className="flex flex-wrap gap-2">
+                  {(Object.entries(COLOR_SCHEMES) as [ColorScheme, { id: string; name: string; headerBgHex: string; accentBgHex: string }][]).map(([key, scheme]) => {
+                    const isQuote = activeQuote.type !== 'invoice';
+                    const currentScheme = isQuote ? settings.quoteColorScheme : settings.invoiceColorScheme;
+                    const isSelected = currentScheme === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => {}}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${isSelected ? 'ring-2 ring-violet-400 border-violet-300 bg-violet-50' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
+                      >
+                        <div className="w-3 h-3 rounded-full border border-slate-200" style={{ backgroundColor: scheme.headerBgHex }} />
+                        <span>{scheme.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[8px] text-slate-400 italic mt-1">Colour scheme can be changed in Settings for all documents.</p>
+              </div>
+
+              {/* Template */}
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2 block">Document Template</label>
+                <div className="flex flex-wrap gap-2">
+                  {TEMPLATE_METADATA.filter(t => !['trade-pro', 'statement', 'compact', 'minimal', 'detailed'].includes(t.id)).map(template => (
+                    <div
+                      key={template.id}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border ${settings.documentTemplate === template.id ? 'ring-2 ring-violet-400 border-violet-300 bg-violet-50' : 'border-slate-200 bg-white'}`}
+                    >
+                      {template.name}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[8px] text-slate-400 italic mt-1">Template can be changed in Settings.</p>
+              </div>
+            </div>
+            {/* Done button */}
+            <div className="flex justify-end mt-4 pt-3 border-t border-slate-100">
+              <button
+                onClick={() => setShowDesignLayout(false)}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-lg hover:bg-slate-800 transition-colors"
               >
                 <Check size={14} /> Done

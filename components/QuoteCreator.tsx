@@ -9,10 +9,8 @@ import {
   ArrowLeft, Mic, Sparkles, Plus,
   Loader2, Camera, UserPlus, ChevronDown, X, MicOff,
   PoundSterling, Percent, FileText,
-  Calendar, Layers, Tag, MapPin, Banknote, Palette
+  Calendar, Layers, Tag, MapPin, Banknote
 } from 'lucide-react';
-import { TEMPLATE_METADATA, COLOR_SCHEMES } from '../src/lib/invoiceTemplates';
-import type { ColorScheme } from '../src/lib/invoiceTemplates';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 import { MaterialsLibrary } from './MaterialsLibrary';
@@ -1146,72 +1144,6 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
           </div>
           <div className="pt-2 space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><FileText size={14} className="text-teal-500" /> Document Footer / Terms</label><textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] p-3 md:p-4 text-slate-900 font-medium text-sm outline-none focus:border-teal-400 transition-all min-h-[100px]" value={formData.notes || ''} onChange={e => setFormData({ ...formData, notes: e.target.value })} placeholder="Final notes, bank details etc..." /></div>
         </div>
-
-        {/* Design & Layout Section */}
-        <details className="group bg-white p-4 rounded-[24px] border border-slate-200 shadow-sm">
-          <summary className="flex items-center justify-between cursor-pointer list-none">
-            <div className="flex items-center gap-2">
-              <Palette size={16} className="text-violet-500" />
-              <span className="text-xs font-black text-slate-600 uppercase tracking-widest">Design & Layout</span>
-            </div>
-            <ChevronDown size={16} className="text-slate-400 transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="mt-4 space-y-4">
-            {/* Design Notes */}
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-1 block">Design Notes (colours, finishes, layout preferences)</label>
-              <textarea
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 text-slate-900 font-medium text-sm outline-none focus:border-violet-400 transition-all min-h-[80px]"
-                value={formData.designNotes || ''}
-                onChange={e => setFormData({ ...formData, designNotes: e.target.value })}
-                placeholder="e.g. White gloss finish, modern minimalist layout, client prefers navy blue accents..."
-              />
-            </div>
-
-            {/* Colour Scheme */}
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2 block">Document Colour Scheme</label>
-              <div className="flex flex-wrap gap-2">
-                {(Object.entries(COLOR_SCHEMES) as [ColorScheme, { id: string; name: string; headerBgHex: string; accentBgHex: string }][]).map(([key, scheme]) => {
-                  const isQuote = formData.type !== 'invoice';
-                  const currentScheme = isQuote ? settings.quoteColorScheme : settings.invoiceColorScheme;
-                  const isSelected = currentScheme === key;
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => {
-                        // Store the colour preference — this is preview only, actual setting is in SettingsPage
-                        // For now we just show the available schemes
-                      }}
-                      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${isSelected ? 'ring-2 ring-violet-400 border-violet-300 bg-violet-50' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
-                    >
-                      <div className="w-3 h-3 rounded-full border border-slate-200" style={{ backgroundColor: scheme.headerBgHex }} />
-                      <span>{scheme.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="text-[8px] text-slate-400 italic mt-1">Colour scheme can be changed in Settings for all documents.</p>
-            </div>
-
-            {/* Template */}
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2 block">Document Template</label>
-              <div className="flex flex-wrap gap-2">
-                {TEMPLATE_METADATA.filter(t => !['trade-pro', 'statement', 'compact', 'minimal', 'detailed'].includes(t.id)).map(template => (
-                  <div
-                    key={template.id}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border ${settings.documentTemplate === template.id ? 'ring-2 ring-violet-400 border-violet-300 bg-violet-50' : 'border-slate-200 bg-white'}`}
-                  >
-                    {template.name}
-                  </div>
-                ))}
-              </div>
-              <p className="text-[8px] text-slate-400 italic mt-1">Template can be changed in Settings.</p>
-            </div>
-          </div>
-        </details>
 
         {/* Discount Section */}
         <div className="bg-white p-4 rounded-[24px] border border-slate-200 shadow-sm">
