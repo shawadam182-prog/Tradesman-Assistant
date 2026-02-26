@@ -41,6 +41,7 @@ interface QuoteCreatorProps {
   existingQuote?: Quote;
   projectId?: string;
   projectTitle?: string;
+  projectCustomerId?: string;
   initialType?: 'estimate' | 'quotation' | 'invoice';
   customers: Customer[];
   settings: AppSettings;
@@ -50,7 +51,7 @@ interface QuoteCreatorProps {
 }
 
 export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
-  existingQuote, projectId, projectTitle, initialType = 'estimate', customers, settings, onSave, onAddCustomer, onCancel
+  existingQuote, projectId, projectTitle, projectCustomerId, initialType = 'estimate', customers, settings, onSave, onAddCustomer, onCancel
 }) => {
   const { services, saveQuote } = useData();
   const toast = useToast();
@@ -146,7 +147,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         date: new Date().toISOString().split('T')[0],
         updatedAt: new Date().toISOString(),
         title: projectTitle || '',
-        customerId: '',
+        customerId: projectCustomerId || '',
         sections: [{ id: Math.random().toString(36).substr(2, 9), title: 'Work Section 1', items: [], labourHours: 0 }],
         labourRate: settings.defaultLabourRate,
         markupPercent: settings.defaultMarkupPercent ?? 0,
@@ -288,7 +289,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
       date: new Date().toISOString().split('T')[0],
       updatedAt: new Date().toISOString(),
       title: projectTitle || '',
-      customerId: '',
+      customerId: projectCustomerId || '',
       sections: [{ id: Math.random().toString(36).substr(2, 9), title: 'Work Section 1', items: [], labourHours: 0 }],
       labourRate: settings.defaultLabourRate,
       markupPercent: settings.defaultMarkupPercent ?? 0,
@@ -990,7 +991,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               )}
             </div>
 
-            {/* 5. Customer Details (collapsible) */}
+            {/* 5. Customer Details (collapsible with editable overrides) */}
             {formData.customerId && (() => {
               const selectedCustomer = customers.find(c => c.id === formData.customerId);
               if (!selectedCustomer) return null;
@@ -1003,13 +1004,34 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                     </div>
                     <ChevronDown size={14} className="text-slate-400 transition-transform group-open:rotate-180" />
                   </summary>
-                  <div className="px-3 pb-3 space-y-1.5 text-sm text-slate-700">
-                    <p className="font-bold text-slate-900">{selectedCustomer.name}</p>
-                    {selectedCustomer.company && <p className="text-slate-500">{selectedCustomer.company}</p>}
-                    {selectedCustomer.email && <p className="text-slate-500">{selectedCustomer.email}</p>}
-                    {selectedCustomer.phone && <p className="text-slate-500">{selectedCustomer.phone}</p>}
-                    {selectedCustomer.address && (
-                      <p className="text-slate-500 whitespace-pre-line">{selectedCustomer.address}</p>
+                  <div className="px-3 pb-3 space-y-2">
+                    <p className="text-[8px] text-slate-400 italic">Changes here only apply to this document, not the saved customer record.</p>
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Name</label>
+                      <input
+                        type="text"
+                        className="w-full text-sm font-medium text-slate-900 border-b border-slate-200 pb-1 outline-none focus:border-teal-500 transition-colors bg-transparent"
+                        value={formData.customerNameOverride ?? selectedCustomer.name}
+                        onChange={e => setFormData(prev => ({ ...prev, customerNameOverride: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Address</label>
+                      <input
+                        type="text"
+                        className="w-full text-sm font-medium text-slate-900 border-b border-slate-200 pb-1 outline-none focus:border-teal-500 transition-colors bg-transparent"
+                        value={formData.customerAddressOverride ?? selectedCustomer.address}
+                        onChange={e => setFormData(prev => ({ ...prev, customerAddressOverride: e.target.value }))}
+                      />
+                    </div>
+                    {(formData.customerNameOverride || formData.customerAddressOverride) && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, customerNameOverride: undefined, customerAddressOverride: undefined }))}
+                        className="text-[9px] text-teal-600 font-bold hover:underline"
+                      >
+                        Reset to saved customer details
+                      </button>
                     )}
                   </div>
                 </details>

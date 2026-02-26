@@ -115,6 +115,7 @@ export const Home: React.FC<HomeProps> = ({
   const [futureJobs, setFutureJobs] = useState<FutureJob[]>([]);
   const [isListeningReminder, setIsListeningReminder] = useState(false);
   const [isListeningNote, setIsListeningNote] = useState(false);
+  const [isListeningEnquiry, setIsListeningEnquiry] = useState(false);
   const [showClearNotesConfirm, setShowClearNotesConfirm] = useState(false);
   const [isProcessingReminder, setIsProcessingReminder] = useState(false);
   const [showPhotoJobPicker, setShowPhotoJobPicker] = useState(false);
@@ -148,6 +149,7 @@ export const Home: React.FC<HomeProps> = ({
 
   const recognitionRef = useRef<any>(null);
   const noteRecognitionRef = useRef<any>(null);
+  const enquiryRecognitionRef = useRef<any>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Track whether initial load from Supabase is done (to avoid saving back localStorage defaults)
@@ -235,20 +237,26 @@ export const Home: React.FC<HomeProps> = ({
     }
   };
 
-  // Refresh on tab focus (cross-device sync)
+  // Refresh on tab/window focus (cross-device sync)
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        if (futureJobsLoaded.current) reloadFutureJobs();
-        if (permissions.canApproveTimesheets) {
-          teamService.getTeamTimesheets()
-            .then(ts => setPendingTimesheets(ts.filter((t: any) => t.status === 'submitted').length))
-            .catch(() => {});
-        }
+    const refreshData = () => {
+      if (futureJobsLoaded.current) reloadFutureJobs();
+      if (permissions.canApproveTimesheets) {
+        teamService.getTeamTimesheets()
+          .then(ts => setPendingTimesheets(ts.filter((t: any) => t.status === 'submitted').length))
+          .catch(() => {});
       }
     };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshData();
+    };
+    const handleFocus = () => refreshData();
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [permissions.canApproveTimesheets]);
 
   // Save reminders to localStorage as offline cache
@@ -299,22 +307,26 @@ export const Home: React.FC<HomeProps> = ({
   }, []);
 
   // Voice input hook for iOS fallback
-  const voiceTargetRef = useRef<'reminder' | 'note'>('reminder');
+  const voiceTargetRef = useRef<'reminder' | 'note' | 'enquiry'>('reminder');
 
   const handleVoiceResult = useCallback((text: string) => {
     if (voiceTargetRef.current === 'reminder') {
       handleVoiceReminder(text);
+    } else if (voiceTargetRef.current === 'enquiry') {
+      setNewFutureJobName(prev => prev ? `${prev} ${text}` : text);
     } else {
       setQuickNotes(prev => (prev ? `${prev}\n${text}` : text));
     }
     setIsListeningReminder(false);
     setIsListeningNote(false);
+    setIsListeningEnquiry(false);
   }, []);
 
   const handleVoiceError = useCallback((error: string) => {
     toast.error('Voice Input', error);
     setIsListeningReminder(false);
     setIsListeningNote(false);
+    setIsListeningEnquiry(false);
   }, [toast]);
 
   const { isListening: isHookListening, startListening: startHookListening, stopListening: stopHookListening } = useVoiceInput({
@@ -356,12 +368,44 @@ export const Home: React.FC<HomeProps> = ({
         }
       };
       noteRecognitionRef.current = noteRecognition;
+
+      // Setup for Enquiry voice input
+      const enquiryRecognition = new SpeechRecognition();
+      enquiryRecognition.continuous = false;
+      enquiryRecognition.lang = 'en-GB';
+      enquiryRecognition.onstart = () => setIsListeningEnquiry(true);
+      enquiryRecognition.onend = () => setIsListeningEnquiry(false);
+      enquiryRecognition.onerror = () => setIsListeningEnquiry(false);
+      enquiryRecognition.onresult = (event: any) => {
+        if (event.results?.[0]?.[0]?.transcript) {
+          const transcript = event.results[0][0].transcript;
+          setNewFutureJobName(prev => prev ? `${prev} ${transcript}` : transcript);
+          hapticSuccess();
+        }
+      };
+      enquiryRecognitionRef.current = enquiryRecognition;
     }
     return () => {
       recognitionRef.current?.abort();
       noteRecognitionRef.current?.abort();
+      enquiryRecognitionRef.current?.abort();
     };
   }, []);
+
+  const startVoiceEnquiry = () => {
+    if (isListeningEnquiry || isHookListening) {
+      if (isIOS) stopHookListening();
+      else enquiryRecognitionRef.current?.stop();
+      return;
+    }
+    voiceTargetRef.current = 'enquiry';
+    if (isIOS) {
+      setIsListeningEnquiry(true);
+      startHookListening();
+    } else {
+      try { enquiryRecognitionRef.current?.start(); } catch (e) { console.error("Enquiry mic start failed", e); }
+    }
+  };
 
   const startVoiceReminder = () => {
     if (isListeningReminder || isHookListening) {
@@ -1215,14 +1259,27 @@ export const Home: React.FC<HomeProps> = ({
         <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 p-3 md:p-4 shadow-sm">
           {/* Quick Add Form */}
           <div className="flex gap-2 mb-3">
-            <input
-              type="text"
-              placeholder="Add enquiry..."
-              className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 font-bold text-sm text-slate-900 outline-none focus:border-teal-400 transition-all placeholder:text-slate-300"
-              value={newFutureJobName}
-              onChange={e => setNewFutureJobName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && addFutureJob()}
-            />
+            <div className="flex-1 flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl focus-within:border-teal-400 transition-all">
+              <input
+                type="text"
+                placeholder="Add enquiry..."
+                className="flex-1 bg-transparent px-3 py-2 font-bold text-sm text-slate-900 outline-none placeholder:text-slate-300"
+                value={newFutureJobName}
+                onChange={e => setNewFutureJobName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addFutureJob()}
+              />
+              <button
+                onClick={startVoiceEnquiry}
+                className={`mr-1 p-1.5 rounded-lg transition-all active:scale-95 ${
+                  isListeningEnquiry
+                    ? 'bg-red-500 text-white animate-pulse'
+                    : 'text-blue-500 hover:bg-blue-50'
+                }`}
+                title={isListeningEnquiry ? 'Stop listening' : 'Voice input'}
+              >
+                {isListeningEnquiry ? <MicOff size={16} /> : <Mic size={16} />}
+              </button>
+            </div>
             <button
               onClick={() => { hapticTap(); addFutureJob(); }}
               disabled={!newFutureJobName.trim()}

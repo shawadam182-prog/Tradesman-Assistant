@@ -201,10 +201,13 @@ async function dbJobPackToApp(dbPack: any): Promise<JobPack> {
     id: dbPack.id,
     title: dbPack.title,
     customerId: dbPack.customer_id || '',
+    siteAddress: dbPack.site_address || undefined,
     status: dbPack.status,
     createdAt: dbPack.created_at,
     updatedAt: dbPack.updated_at,
     notepad: dbPack.notepad || '',
+    jobSheetDescription: dbPack.job_sheet_description || undefined,
+    jobSheetHours: Array.isArray(dbPack.job_sheet_hours) ? dbPack.job_sheet_hours : [],
     notes: (dbPack.site_notes || []).map((n: any) => ({
       id: n.id,
       text: n.text,
@@ -286,6 +289,11 @@ function dbQuoteToApp(dbQuote: any): Quote {
     isCreditNote: dbQuote.is_credit_note || false,
     originalInvoiceId: dbQuote.original_invoice_id || undefined,
     creditNoteReason: dbQuote.credit_note_reason || undefined,
+    // Customer detail overrides
+    customerNameOverride: dbQuote.customer_name_override || undefined,
+    customerAddressOverride: dbQuote.customer_address_override || undefined,
+    // Design notes
+    designNotes: dbQuote.design_notes || undefined,
   };
 }
 
@@ -311,6 +319,7 @@ function dbSettingsToApp(dbSettings: any): AppSettings {
     defaultTaxRate: Number(dbSettings.default_tax_rate) || 20,
     defaultCisRate: Number(dbSettings.default_cis_rate) || 20,
     labourRatePresets: dbSettings.labour_rate_presets || DEFAULT_LABOUR_RATE_PRESETS,
+    labourUnitPresets: dbSettings.labour_unit_presets || ['hrs', 'days', 'week'],
     companyName: dbSettings.company_name || '',
     companyAddress: dbSettings.company_address || '',
     phone: dbSettings.phone || undefined,
@@ -556,15 +565,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchData();
   }, [fetchData]);
 
-  // Cross-device sync: Refresh data when tab regains focus
+  // Cross-device sync: Refresh data when tab regains focus or window gets focus
+  // This ensures data stays in sync across desktop and mobile (PWA)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && !loading && user) {
         fetchData();
       }
     };
+    const handleFocus = () => {
+      if (!loading && user) fetchData();
+    };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [fetchData, loading, user]);
 
   // Customer actions
@@ -651,6 +668,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         part_payment_label: quote.partPaymentLabel || null,
         // Job address
         job_address: quote.jobAddress || null,
+        // Customer detail overrides
+        customer_name_override: quote.customerNameOverride || null,
+        customer_address_override: quote.customerAddressOverride || null,
+        // Design notes
+        design_notes: quote.designNotes || null,
         // Recurring invoice fields (not in generated types yet)
         ...(quote.isRecurring ? {
           is_recurring: true,
@@ -702,6 +724,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         part_payment_label: quote.partPaymentLabel || null,
         // Job address
         job_address: quote.jobAddress || null,
+        // Customer detail overrides
+        customer_name_override: quote.customerNameOverride || null,
+        customer_address_override: quote.customerAddressOverride || null,
+        // Design notes
+        design_notes: quote.designNotes || null,
         // Recurring invoice fields (not in generated types yet)
         ...(quote.isRecurring !== undefined ? {
           is_recurring: quote.isRecurring || false,
@@ -765,12 +792,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const saveProject = async (project: JobPack) => {
-    // Update job pack basic fields
+    // Update job pack basic fields (including site address and job sheet data)
     await jobPacksService.update(project.id, {
       customer_id: project.customerId || null,
       title: project.title,
       status: project.status,
       notepad: project.notepad || null,
+      site_address: project.siteAddress || null,
+      job_sheet_description: project.jobSheetDescription || null,
+      job_sheet_hours: (project.jobSheetHours || []) as any,
     });
 
     // Get current project from state to compare for changes
@@ -999,6 +1029,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       default_tax_rate: updates.defaultTaxRate,
       default_cis_rate: updates.defaultCisRate,
       labour_rate_presets: updates.labourRatePresets || null,
+      labour_unit_presets: updates.labourUnitPresets || null,
       company_name: updates.companyName || null,
       company_address: updates.companyAddress || null,
       phone: updates.phone || null,

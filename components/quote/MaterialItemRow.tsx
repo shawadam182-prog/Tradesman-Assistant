@@ -58,12 +58,13 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
   }
 
   return (
-    <div className={`bg-white p-0.5 md:p-3 rounded-md md:rounded-xl shadow-sm border relative group overflow-hidden ${item.isAIProposed ? 'border-l-2 border-l-teal-400 border-slate-100 md:border-slate-200' : 'border-slate-100 md:border-slate-200'}`}>
-      <div className="flex justify-between items-center gap-1 md:gap-3 mb-0.5 md:mb-2">
+    <div className={`bg-white p-0.5 md:p-2 rounded-md md:rounded-lg shadow-sm border relative group overflow-hidden ${item.isAIProposed ? 'border-l-2 border-l-teal-400 border-slate-100 md:border-slate-200' : 'border-slate-100 md:border-slate-200'}`}>
+      {/* Name + Actions row */}
+      <div className="flex items-center gap-1 md:gap-2 mb-0.5 md:mb-1">
         <div className="flex-1 min-w-0 flex items-center gap-1">
           <input
             type="text"
-            className="w-full h-4 md:h-auto font-bold text-[10px] md:text-base text-slate-900 outline-none placeholder:text-slate-300 bg-transparent leading-none md:leading-normal p-0 m-0 md:pb-1 md:border-b md:border-transparent md:focus:border-teal-400 md:transition-colors"
+            className="flex-1 min-w-0 h-4 md:h-7 font-bold text-[10px] md:text-sm text-slate-900 outline-none placeholder:text-slate-300 bg-transparent leading-none md:leading-normal p-0 m-0"
             value={item.name}
             onChange={e => onUpdate(sectionId, item.id, { name: e.target.value })}
             placeholder="Item Name"
@@ -72,43 +73,43 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
             <Sparkles size={10} className="text-teal-400 shrink-0" />
           )}
         </div>
-        <div className="flex gap-0.5 md:gap-2 shrink-0">
+        <div className="flex gap-0.5 shrink-0">
           {item.name && onSaveToLibrary && (
             <button
               onClick={() => onSaveToLibrary(item)}
-              className="p-1 md:p-2 bg-slate-50 text-slate-300 rounded md:rounded-lg hover:bg-teal-50 hover:text-teal-500 transition-colors touch-manipulation"
+              className="p-0.5 md:p-1.5 text-slate-300 rounded hover:bg-teal-50 hover:text-teal-500 transition-colors touch-manipulation"
               title="Save to price list"
             >
               <BookmarkPlus size={10} className="md:hidden" />
-              <BookmarkPlus size={16} className="hidden md:block" />
+              <BookmarkPlus size={14} className="hidden md:block" />
             </button>
           )}
           <button
             onClick={() => onRemove(sectionId, item.id)}
-            className="p-1 md:p-2 bg-slate-50 text-slate-300 rounded md:rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors touch-manipulation"
+            className="p-0.5 md:p-1.5 text-slate-300 rounded hover:bg-red-50 hover:text-red-500 transition-colors touch-manipulation"
           >
             <Trash2 size={10} className="md:hidden" />
-            <Trash2 size={16} className="hidden md:block" />
+            <Trash2 size={14} className="hidden md:block" />
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-0.5 md:gap-3 bg-slate-50 p-0.5 md:p-3 rounded md:rounded-xl">
-        {/* Quantity with +/- buttons */}
+      {/* Qty / Price / Total — uniform grid */}
+      <div className="grid grid-cols-3 gap-0.5 md:gap-2 bg-slate-50 p-0.5 md:p-1.5 rounded md:rounded-lg">
         <div>
-          <label className="text-[6px] md:text-xs font-bold text-slate-400 uppercase tracking-wider block leading-none mb-0.5 md:mb-1.5">Qty</label>
-          <div className="flex items-center bg-white rounded md:rounded-lg shadow-sm border border-slate-100 md:border-slate-200 h-7 md:h-11">
+          <label className="text-[6px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-none mb-0.5">Qty</label>
+          <div className="flex items-center bg-white rounded md:rounded-lg shadow-sm border border-slate-100 h-6 md:h-8">
             <button
               type="button"
               onClick={() => onDecrement(sectionId, item.id)}
               className="px-1 md:px-2 h-full hover:bg-slate-50 rounded-l md:rounded-l-lg transition-colors touch-manipulation active:bg-slate-100"
             >
               <Minus size={10} className="text-slate-400 md:hidden" />
-              <Minus size={16} className="text-slate-400 hidden md:block" />
+              <Minus size={14} className="text-slate-400 hidden md:block" />
             </button>
             <input
               type="number"
-              className="flex-1 min-w-0 h-full bg-transparent text-[10px] md:text-lg font-black text-center outline-none text-slate-900"
+              className="flex-1 min-w-0 h-full bg-transparent text-xs md:text-sm font-black text-center outline-none text-slate-900"
               value={item.quantity || ''}
               onChange={e => onUpdate(sectionId, item.id, { quantity: parseFloat(e.target.value) || 0 })}
               placeholder="0"
@@ -119,16 +120,16 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
               className="px-1 md:px-2 h-full hover:bg-slate-50 rounded-r md:rounded-r-lg transition-colors touch-manipulation active:bg-slate-100"
             >
               <Plus size={10} className="text-slate-400 md:hidden" />
-              <Plus size={16} className="text-slate-400 hidden md:block" />
+              <Plus size={14} className="text-slate-400 hidden md:block" />
             </button>
           </div>
         </div>
         <div>
-          <label className="text-[6px] md:text-xs font-bold text-slate-400 uppercase tracking-wider block leading-none mb-0.5 md:mb-1.5">Price (£)</label>
+          <label className="text-[6px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-none mb-0.5">Price (£)</label>
           <input
             type="text"
             inputMode="decimal"
-            className="w-full h-7 md:h-11 bg-white rounded md:rounded-lg text-[10px] md:text-lg font-bold px-0.5 md:px-3 text-center shadow-sm outline-none focus:ring-1 focus:ring-teal-100 md:focus:ring-2 md:focus:ring-teal-200 border border-slate-100 md:border-slate-200"
+            className="w-full h-6 md:h-8 bg-white rounded md:rounded-lg text-[10px] md:text-sm font-bold px-0.5 md:px-2 text-center shadow-sm outline-none focus:ring-1 focus:ring-teal-100 border border-slate-100"
             value={isEditingPrice ? priceInput : (item.unitPrice || '')}
             onFocus={() => {
               setIsEditingPrice(true);
@@ -136,7 +137,6 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
             }}
             onChange={e => {
               const inputValue = e.target.value;
-              // Allow empty, digits, and one decimal point
               if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
                 setPriceInput(inputValue);
               }
@@ -150,9 +150,9 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
           />
         </div>
         <div>
-          <label className="text-[6px] md:text-xs font-bold text-slate-400 uppercase tracking-wider block leading-none mb-0.5 md:mb-1.5">Total</label>
-          <div className="w-full h-7 md:h-11 bg-slate-900 rounded md:rounded-lg px-0.5 md:px-3 text-center flex items-center justify-center">
-            <span className="text-white text-[10px] md:text-lg font-bold leading-none">£{item.totalPrice.toFixed(2)}</span>
+          <label className="text-[6px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-none mb-0.5">Total</label>
+          <div className="w-full h-6 md:h-8 bg-slate-900 rounded md:rounded-lg px-0.5 md:px-2 text-center flex items-center justify-center">
+            <span className="text-white text-[10px] md:text-sm font-bold leading-none">£{item.totalPrice.toFixed(2)}</span>
           </div>
         </div>
       </div>

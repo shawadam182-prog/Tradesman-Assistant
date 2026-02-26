@@ -518,7 +518,10 @@ export type Database = {
           created_at: string | null
           customer_id: string | null
           id: string
+          job_sheet_description: string | null
+          job_sheet_hours: Json | null
           notepad: string | null
+          site_address: string | null
           status: string | null
           title: string
           updated_at: string | null
@@ -528,7 +531,10 @@ export type Database = {
           created_at?: string | null
           customer_id?: string | null
           id?: string
+          job_sheet_description?: string | null
+          job_sheet_hours?: Json | null
           notepad?: string | null
+          site_address?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
@@ -538,7 +544,10 @@ export type Database = {
           created_at?: string | null
           customer_id?: string | null
           id?: string
+          job_sheet_description?: string | null
+          job_sheet_hours?: Json | null
           notepad?: string | null
+          site_address?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null
@@ -936,11 +945,14 @@ export type Database = {
           cis_percent: number | null
           created_at: string | null
           credit_note_reason: string | null
+          customer_address_override: string | null
           customer_id: string | null
+          customer_name_override: string | null
           customer_response_ip: string | null
           customer_response_user_agent: string | null
           date: string | null
           declined_at: string | null
+          design_notes: string | null
           discount_description: string | null
           discount_type: string | null
           discount_value: number | null
@@ -992,11 +1004,14 @@ export type Database = {
           cis_percent?: number | null
           created_at?: string | null
           credit_note_reason?: string | null
+          customer_address_override?: string | null
           customer_id?: string | null
+          customer_name_override?: string | null
           customer_response_ip?: string | null
           customer_response_user_agent?: string | null
           date?: string | null
           declined_at?: string | null
+          design_notes?: string | null
           discount_description?: string | null
           discount_type?: string | null
           discount_value?: number | null
@@ -1048,11 +1063,14 @@ export type Database = {
           cis_percent?: number | null
           created_at?: string | null
           credit_note_reason?: string | null
+          customer_address_override?: string | null
           customer_id?: string | null
+          customer_name_override?: string | null
           customer_response_ip?: string | null
           customer_response_user_agent?: string | null
           date?: string | null
           declined_at?: string | null
+          design_notes?: string | null
           discount_description?: string | null
           discount_type?: string | null
           discount_value?: number | null
@@ -1728,6 +1746,7 @@ export type Database = {
           invoice_prefix: string | null
           is_vat_registered: boolean | null
           labour_rate_presets: Json | null
+          labour_unit_presets: Json | null
           phone: string | null
           quick_pick_materials: string[] | null
           quote_color_scheme: string | null
@@ -1795,6 +1814,7 @@ export type Database = {
           invoice_prefix?: string | null
           is_vat_registered?: boolean | null
           labour_rate_presets?: Json | null
+          labour_unit_presets?: Json | null
           phone?: string | null
           quick_pick_materials?: string[] | null
           quote_color_scheme?: string | null
@@ -1862,6 +1882,7 @@ export type Database = {
           invoice_prefix?: string | null
           is_vat_registered?: boolean | null
           labour_rate_presets?: Json | null
+          labour_unit_presets?: Json | null
           phone?: string | null
           quick_pick_materials?: string[] | null
           quote_color_scheme?: string | null

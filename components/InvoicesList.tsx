@@ -411,7 +411,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                   <div className="flex items-center gap-3">
                     <div className="text-right">
                       <p className={`font-black text-base ${isCN ? 'text-red-600' : overdue ? 'text-red-700' : 'text-slate-900'}`}>
-                        {isCN ? '-' : ''}£{calculateQuoteTotal(invoice).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        {isCN ? '-' : ''}£{calculateQuoteTotal(invoice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                       <div className={`text-[10px] font-bold uppercase ${
                         isCN ? 'text-red-500' : isPaid ? 'text-emerald-600' : overdue ? 'text-red-500' : invoice.status === 'sent' || invoice.status === 'accepted' ? 'text-blue-600' : invoice.status === 'draft' ? 'text-amber-600' : 'text-slate-400'

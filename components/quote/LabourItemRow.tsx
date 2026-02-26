@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { LabourItem, LabourRatePreset } from '../../types';
 import { Plus, Minus, Trash2, ChevronDown, Sparkles } from 'lucide-react';
 
+const DEFAULT_LABOUR_UNITS = ['hrs', 'days', 'week'];
+
 interface LabourItemRowProps {
   item: LabourItem;
   sectionId: string;
   defaultRate: number;
   labourRatePresets?: LabourRatePreset[];
+  labourUnitPresets?: string[];
   onUpdate: (sectionId: string, itemId: string, updates: Partial<LabourItem>) => void;
   onRemove: (sectionId: string, itemId: string) => void;
   onIncrement: (sectionId: string, itemId: string) => void;
@@ -18,6 +21,7 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
   sectionId,
   defaultRate,
   labourRatePresets = [],
+  labourUnitPresets,
   onUpdate,
   onRemove,
   onIncrement,
@@ -32,7 +36,12 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
   const isCustomRate = item.rate !== undefined && !currentPreset;
 
   const handlePresetSelect = (preset: LabourRatePreset) => {
-    onUpdate(sectionId, item.id, { rate: preset.rate });
+    const updates: Partial<LabourItem> = { rate: preset.rate };
+    // Auto-fill description with preset name if description is empty or default
+    if (!item.description || item.description === 'Labour' || item.description === 'Labour Work' || item.description === 'Labour work') {
+      updates.description = preset.name;
+    }
+    onUpdate(sectionId, item.id, updates);
     setShowRateDropdown(false);
   };
 
@@ -85,7 +94,15 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
             className="w-12 md:w-16 h-full text-center font-black text-xs md:text-lg bg-transparent outline-none text-slate-900"
             step="0.5"
           />
-          <span className="text-[8px] md:text-sm text-slate-400 font-bold">hrs</span>
+          <select
+            value={item.unit || 'hrs'}
+            onChange={e => onUpdate(sectionId, item.id, { unit: e.target.value })}
+            className="text-[8px] md:text-sm text-slate-400 font-bold bg-transparent outline-none cursor-pointer appearance-none pr-1"
+          >
+            {(labourUnitPresets || DEFAULT_LABOUR_UNITS).map(u => (
+              <option key={u} value={u}>{u}</option>
+            ))}
+          </select>
           <button
             type="button"
             onClick={() => onIncrement(sectionId, item.id)}
@@ -111,7 +128,7 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
               <span className="font-bold">
                 {currentPreset ? currentPreset.name : isCustomRate ? 'Custom' : 'Default'}
               </span>
-              <span className="text-slate-400">£{rate}/hr</span>
+              <span className="text-slate-400">£{rate}/{item.unit || 'hr'}</span>
               <ChevronDown size={10} className="md:hidden" />
               <ChevronDown size={14} className="hidden md:block" />
             </button>
@@ -132,7 +149,7 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
                   >
                     <div className="flex justify-between items-center">
                       <span>Default</span>
-                      <span className="text-slate-400">£{defaultRate}/hr</span>
+                      <span className="text-slate-400">£{defaultRate}/{item.unit || 'hr'}</span>
                     </div>
                   </button>
 
@@ -180,7 +197,7 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
                           }
                         }}
                       />
-                      <span className="text-slate-400 text-[10px] md:text-sm">/hr</span>
+                      <span className="text-slate-400 text-[10px] md:text-sm">/{item.unit || 'hr'}</span>
                     </div>
                   </div>
                 </div>

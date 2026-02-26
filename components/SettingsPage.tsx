@@ -895,6 +895,57 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 </div>
               </CollapsibleSection>
 
+              {/* Labour Units Section */}
+              <CollapsibleSection
+                title="Labour Units"
+                icon={<Clock size={16} className="md:w-5 md:h-5" />}
+                iconBg="bg-blue-100 text-blue-600"
+                isExpanded={expandedQuoteSections['labourUnits'] || false}
+                onToggle={() => toggleQuoteSection('labourUnits')}
+              >
+                <p className="text-[10px] text-slate-500 italic mb-3">
+                  Define the time units available when adding labour items (e.g., hrs, days, week).
+                </p>
+                <div className="space-y-2">
+                  {(settings.labourUnitPresets || ['hrs', 'days', 'week']).map((unit, index) => (
+                    <div key={index} className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl p-2 md:p-3">
+                      <input
+                        type="text"
+                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-blue-400 transition-colors"
+                        value={unit}
+                        onChange={e => {
+                          const newUnits = [...(settings.labourUnitPresets || ['hrs', 'days', 'week'])];
+                          newUnits[index] = e.target.value;
+                          setSettings({ ...settings, labourUnitPresets: newUnits });
+                        }}
+                        placeholder="Unit label"
+                      />
+                      <button
+                        onClick={() => {
+                          const newUnits = (settings.labourUnitPresets || ['hrs', 'days', 'week']).filter((_, i) => i !== index);
+                          setSettings({ ...settings, labourUnitPresets: newUnits });
+                        }}
+                        className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Remove unit"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+
+                  <button
+                    onClick={() => {
+                      const newUnits = [...(settings.labourUnitPresets || ['hrs', 'days', 'week']), ''];
+                      setSettings({ ...settings, labourUnitPresets: newUnits });
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-50 border-2 border-dashed border-blue-200 rounded-xl text-blue-600 font-bold text-xs uppercase tracking-wider hover:bg-blue-100 transition-colors"
+                  >
+                    <Plus size={16} />
+                    Add Unit
+                  </button>
+                </div>
+              </CollapsibleSection>
+
               {/* Default Visibility Section */}
               <CollapsibleSection
                 title="Default Visibility"

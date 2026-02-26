@@ -26,6 +26,7 @@ export interface LabourItem {
   description: string;
   hours: number;
   rate?: number; // Optional per-item rate override
+  unit?: string; // Labour unit: 'hrs', 'days', 'week', or custom
   isAIProposed?: boolean; // Flag for AI-generated items
 }
 
@@ -117,6 +118,11 @@ export interface Quote {
   shareToken?: string;
   acceptedAt?: string;
   declinedAt?: string;
+  // Customer detail overrides (stored on quote, doesn't affect saved customer)
+  customerNameOverride?: string;
+  customerAddressOverride?: string;
+  // Design notes
+  designNotes?: string;
 }
 
 export interface ScheduleEntry {
@@ -165,6 +171,14 @@ export interface ProjectMaterial {
   status: 'pending' | 'ordered' | 'delivered' | 'partially_delivered';
 }
 
+export interface JobSheetHours {
+  id: string;
+  teamMember: string;
+  hours: number;
+  date: string;
+  description?: string;
+}
+
 export interface JobPack {
   id: string;
   title: string;
@@ -179,6 +193,10 @@ export interface JobPack {
   drawings?: SitePhoto[];
   documents: SiteDocument[];
   materials?: ProjectMaterial[];
+  orderList?: string;
+  jobSheetDescription?: string;
+  jobSheetHours?: JobSheetHours[];
+  jobSheetPhotos?: SitePhoto[];
 }
 
 // Document template options - 3 professional templates
@@ -209,6 +227,7 @@ export interface AppSettings {
   defaultTaxRate: number;
   defaultCisRate: number;
   labourRatePresets?: LabourRatePreset[];
+  labourUnitPresets?: string[]; // Custom labour units e.g. ['hrs', 'days', 'week']
   companyName: string;
   companyLogo?: string;
   companyLogoPath?: string;  // Storage path for logo persistence
