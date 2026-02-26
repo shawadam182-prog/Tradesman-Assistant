@@ -58,6 +58,7 @@ interface ScheduleCalendarProps {
   onUpdateEntry: (id: string, updates: Partial<ScheduleEntry>) => Promise<void>;
   onDeleteEntry: (id: string) => Promise<void>;
   onBack?: () => void;
+  onViewJob?: (jobId: string) => void;
   initialDraft?: Partial<ScheduleEntry>;
 }
 
@@ -71,6 +72,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   onUpdateEntry,
   onDeleteEntry,
   onBack,
+  onViewJob,
   initialDraft
 }) => {
   const toast = useToast();
@@ -119,6 +121,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   const [newJobPackTitle, setNewJobPackTitle] = useState('');
   const [newJobPackCustomerId, setNewJobPackCustomerId] = useState<string>('');
   const [jobPackError, setJobPackError] = useState<string | null>(null);
+  const [jobPackSearch, setJobPackSearch] = useState('');
 
   // Schedule entry location and linking - restore from sessionStorage
   const [linkType, setLinkType] = useState<'none' | 'job' | 'customer'>(() => {
@@ -597,17 +600,20 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
             ))}
           </div>
 
-          <button
-            onClick={() => {
-              const defaultDate = new Date();
-              defaultDate.setHours(8, 0, 0, 0);
-              setDraft({ start: defaultDate.toISOString() });
-              setIsAddingManual(true);
-            }}
-            className="h-12 px-6 rounded-2xl flex items-center gap-2 bg-white border-2 border-slate-100 text-slate-900 font-black uppercase text-[10px] tracking-widest hover:border-teal-400 transition-all shadow-sm"
-          >
-            <Plus size={18} /> Book Site
-          </button>
+          {viewType !== 'day' && (
+            <button
+              onClick={() => {
+                const defaultDate = new Date();
+                defaultDate.setHours(8, 0, 0, 0);
+                const defaultEnd = new Date(defaultDate.getTime() + 3600000);
+                setDraft({ start: defaultDate.toISOString(), end: defaultEnd.toISOString() });
+                setIsAddingManual(true);
+              }}
+              className="h-12 px-6 rounded-2xl flex items-center gap-2 bg-white border-2 border-slate-100 text-slate-900 font-black uppercase text-[10px] tracking-widest hover:border-teal-400 transition-all shadow-sm"
+            >
+              <Plus size={18} /> Book Site
+            </button>
+          )}
 
           <button
             onClick={() => { hapticTap(); setShowScheduleVoiceFill(true); }}
@@ -808,7 +814,8 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                     onClick={() => {
                       const defaultDate = new Date(selectedDay);
                       defaultDate.setHours(8, 0, 0, 0);
-                      setDraft({ start: defaultDate.toISOString() });
+                      const defaultEnd = new Date(defaultDate.getTime() + 3600000);
+                      setDraft({ start: defaultDate.toISOString(), end: defaultEnd.toISOString() });
                       setIsAddingManual(true);
                     }}
                     className="mt-3 md:mt-5 bg-slate-900 text-teal-500 px-5 md:px-6 py-2 md:py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95"
@@ -874,19 +881,25 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                                   </a>
                                 )}
                                 {entry.location && (
-                                  <a
-                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(entry.location)}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="flex items-center gap-1 md:gap-1.5 bg-teal-500 text-white px-2 md:px-3 py-1 md:py-1.5 rounded-md md:rounded-lg font-black text-[9px] md:text-[10px] uppercase tracking-wide hover:bg-teal-600 transition-all shadow-md group/map"
-                                  >
-                                    <MapPin size={10} className="md:w-3 md:h-3" />
-                                    <span className="max-w-[120px] md:max-w-[150px] truncate">Navigate</span>
-                                    <div className="h-4 w-4 md:h-5 md:w-5 bg-slate-900 rounded flex items-center justify-center text-teal-500 ml-0.5 md:ml-1">
-                                      <ArrowRight size={8} className="md:w-2.5 md:h-2.5 group-hover/map:translate-x-0.5 transition-transform" />
+                                  <>
+                                    <div className="flex items-center gap-1 md:gap-1.5 bg-slate-100 text-slate-600 px-2 md:px-2.5 py-1 md:py-1.5 rounded-md md:rounded-lg text-[9px] md:text-[10px] font-medium">
+                                      <MapPin size={10} className="md:w-3 md:h-3 text-slate-400 shrink-0" />
+                                      <span className="truncate max-w-[200px] md:max-w-[300px]">{entry.location}</span>
                                     </div>
-                                  </a>
+                                    <a
+                                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(entry.location)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="flex items-center gap-1 md:gap-1.5 bg-teal-500 text-white px-2 md:px-3 py-1 md:py-1.5 rounded-md md:rounded-lg font-black text-[9px] md:text-[10px] uppercase tracking-wide hover:bg-teal-600 transition-all shadow-md group/map"
+                                    >
+                                      <MapPin size={10} className="md:w-3 md:h-3" />
+                                      <span>Navigate</span>
+                                      <div className="h-4 w-4 md:h-5 md:w-5 bg-slate-900 rounded flex items-center justify-center text-teal-500 ml-0.5 md:ml-1">
+                                        <ArrowRight size={8} className="md:w-2.5 md:h-2.5 group-hover/map:translate-x-0.5 transition-transform" />
+                                      </div>
+                                    </a>
+                                  </>
                                 )}
                               </div>
                             </div>
@@ -899,6 +912,15 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                           </div>
 
                           <div className="flex flex-row md:flex-col gap-1.5 md:gap-2 shrink-0">
+                            {(entry as any).projectId && onViewJob && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); onViewJob((entry as any).projectId); }}
+                                className="p-2 md:p-3 bg-blue-50 text-blue-500 rounded-lg md:rounded-xl hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                                title="View Job Pack"
+                              >
+                                <Briefcase size={14} className="md:w-4 md:h-4"/>
+                              </button>
+                            )}
                             {customer?.email && (
                               <>
                                 <button
@@ -948,7 +970,8 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                       hapticTap();
                       const defaultDate = new Date(selectedDay);
                       defaultDate.setHours(8, 0, 0, 0);
-                      setDraft({ start: defaultDate.toISOString() });
+                      const defaultEnd = new Date(defaultDate.getTime() + 3600000);
+                      setDraft({ start: defaultDate.toISOString(), end: defaultEnd.toISOString() });
                       setIsAddingManual(true);
                     }}
                     className="w-full py-4 md:py-5 bg-slate-50 hover:bg-slate-900 border-2 border-dashed border-slate-200 hover:border-slate-900 rounded-xl md:rounded-2xl text-slate-400 hover:text-teal-500 font-black text-[10px] md:text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-[0.98] group"
@@ -1175,7 +1198,18 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                   <div className="space-y-2 md:space-y-3">
                     <label className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic">Booking Reference *</label>
                     <div className="flex gap-2">
-                      <input className="flex-1 min-w-0 bg-slate-50 border-2 border-slate-100 rounded-[24px] md:rounded-[36px] px-4 py-3 md:px-6 md:py-5 font-black text-lg md:text-2xl text-slate-950 outline-none focus:border-teal-400 focus:bg-white transition-all shadow-inner" value={draft.title || ''} onChange={e => setDraft({...draft, title: e.target.value})} placeholder="e.g. Groundworks" />
+                      <div className="flex-1 min-w-0 relative">
+                        <input className="w-full bg-slate-50 border-2 border-slate-100 rounded-[24px] md:rounded-[36px] px-4 py-3 md:px-6 md:py-5 pr-10 md:pr-14 font-black text-lg md:text-2xl text-slate-950 outline-none focus:border-teal-400 focus:bg-white transition-all shadow-inner" value={draft.title || ''} onChange={e => setDraft({...draft, title: e.target.value})} placeholder="e.g. Groundworks" />
+                        {draft.title && (
+                          <button
+                            type="button"
+                            onClick={() => setDraft({...draft, title: ''})}
+                            className="absolute right-3 md:right-5 top-1/2 -translate-y-1/2 p-1 text-slate-300 hover:text-red-400 transition-colors"
+                          >
+                            <X size={16} className="md:w-5 md:h-5" />
+                          </button>
+                        )}
+                      </div>
                       <button
                         type="button"
                         onClick={startTitleVoice}
@@ -1193,20 +1227,10 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                     <label className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic flex items-center gap-2">
                       <Link2 className="w-3 h-3 md:w-3.5 md:h-3.5" /> Link To
                     </label>
-                    <div className="grid grid-cols-3 gap-2 md:gap-3">
+                    <div className="grid grid-cols-2 gap-2 md:gap-3">
                       <button
                         type="button"
-                        onClick={() => { hapticTap(); setLinkType('none'); setDraft(prev => ({ ...prev, projectId: undefined })); }}
-                        className={`p-2 md:p-4 rounded-xl md:rounded-2xl font-black text-sm uppercase tracking-wide flex flex-col items-center gap-1 md:gap-2 min-h-[55px] md:min-h-[80px] justify-center transition-all ${
-                          linkType === 'none' ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
-                        }`}
-                      >
-                        <CalendarIcon className="w-4 h-4 md:w-5 md:h-5" />
-                        <span className="text-[9px] md:text-[10px]">Standalone</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { hapticTap(); setLinkType('job'); }}
+                        onClick={() => { hapticTap(); setLinkType(linkType === 'job' ? 'none' : 'job'); if (linkType === 'job') setDraft(prev => ({ ...prev, projectId: undefined })); }}
                         className={`p-2 md:p-4 rounded-xl md:rounded-2xl font-black text-sm uppercase tracking-wide flex flex-col items-center gap-1 md:gap-2 min-h-[55px] md:min-h-[80px] justify-center transition-all ${
                           linkType === 'job' ? 'bg-blue-500 text-white' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
                         }`}
@@ -1216,7 +1240,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                       </button>
                       <button
                         type="button"
-                        onClick={() => { hapticTap(); setLinkType('customer'); }}
+                        onClick={() => { hapticTap(); setLinkType(linkType === 'customer' ? 'none' : 'customer'); }}
                         className={`p-2 md:p-4 rounded-xl md:rounded-2xl font-black text-sm uppercase tracking-wide flex flex-col items-center gap-1 md:gap-2 min-h-[55px] md:min-h-[80px] justify-center transition-all ${
                           linkType === 'customer' ? 'bg-purple-500 text-white' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
                         }`}
@@ -1235,22 +1259,22 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                       </label>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
-                          <select
-                            className="w-full bg-blue-50 border-2 border-blue-200 rounded-[24px] md:rounded-[36px] p-4 md:p-7 font-bold text-base md:text-xl text-slate-950 outline-none focus:border-blue-400 focus:bg-white transition-all appearance-none cursor-pointer"
-                            value={(draft as any).projectId || ''}
-                            onChange={e => handleLinkToJob(e.target.value)}
-                          >
-                            <option value="">Select Job Pack...</option>
-                            {projects.map(p => {
-                              const customer = customers.find(c => c.id === p.customerId);
-                              return (
-                                <option key={p.id} value={p.id}>
-                                  {p.title} {customer ? `- ${customer.name}` : ''}
-                                </option>
-                              );
-                            })}
-                          </select>
-                          <ChevronDown className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 text-blue-300 pointer-events-none w-6 h-6 md:w-8 md:h-8" />
+                          <input
+                            type="text"
+                            className="w-full bg-blue-50 border-2 border-blue-200 rounded-[24px] md:rounded-[36px] p-4 md:p-7 font-bold text-base md:text-xl text-slate-950 outline-none focus:border-blue-400 focus:bg-white transition-all placeholder:text-blue-300"
+                            value={jobPackSearch}
+                            onChange={e => setJobPackSearch(e.target.value)}
+                            placeholder="Search job packs..."
+                          />
+                          {jobPackSearch && (
+                            <button
+                              type="button"
+                              onClick={() => setJobPackSearch('')}
+                              className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-1 text-slate-300 hover:text-red-400"
+                            >
+                              <X size={18} className="md:w-6 md:h-6" />
+                            </button>
+                          )}
                         </div>
                         <button
                           onClick={() => { hapticTap(); setIsCreatingJobPack(true); }}
@@ -1260,6 +1284,62 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                           <Plus className="w-6 h-6 md:w-8 md:h-8" />
                         </button>
                       </div>
+                      {/* Selected job pack indicator */}
+                      {(draft as any).projectId && (() => {
+                        const linked = projects.find(p => p.id === (draft as any).projectId);
+                        const linkedCust = linked ? customers.find(c => c.id === linked.customerId) : null;
+                        if (!linked) return null;
+                        return (
+                          <div className="flex items-center gap-2 bg-blue-100 border border-blue-200 rounded-2xl p-3 md:p-4">
+                            <Briefcase size={14} className="text-blue-600 shrink-0 md:w-4 md:h-4" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm md:text-base font-bold text-blue-900 truncate">{linked.title}</p>
+                              {linkedCust && <p className="text-[10px] md:text-xs text-blue-600">{linkedCust.name}</p>}
+                            </div>
+                            <button type="button" onClick={() => setDraft(prev => ({ ...prev, projectId: undefined, customerId: undefined }))} className="p-1 text-blue-400 hover:text-red-400">
+                              <X size={16} className="md:w-5 md:h-5" />
+                            </button>
+                          </div>
+                        );
+                      })()}
+                      {/* Filtered job pack list */}
+                      {!(draft as any).projectId && (
+                        <div className="max-h-[200px] md:max-h-[250px] overflow-y-auto rounded-2xl border-2 border-blue-100 bg-white">
+                          {projects
+                            .filter(p => {
+                              if (!jobPackSearch) return true;
+                              const cust = customers.find(c => c.id === p.customerId);
+                              const searchLower = jobPackSearch.toLowerCase();
+                              return p.title.toLowerCase().includes(searchLower) || (cust?.name || '').toLowerCase().includes(searchLower);
+                            })
+                            .map(p => {
+                              const cust = customers.find(c => c.id === p.customerId);
+                              return (
+                                <button
+                                  key={p.id}
+                                  type="button"
+                                  onClick={() => { handleLinkToJob(p.id); setJobPackSearch(''); }}
+                                  className="w-full text-left p-3 md:p-4 hover:bg-blue-50 border-b border-blue-50 flex items-center gap-3 transition-colors"
+                                >
+                                  <Briefcase size={14} className="text-blue-400 shrink-0 md:w-4 md:h-4" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-sm md:text-base text-slate-900 truncate">{p.title}</p>
+                                    {cust && <p className="text-[10px] md:text-xs text-slate-500">{cust.name}</p>}
+                                  </div>
+                                </button>
+                              );
+                            })
+                          }
+                          {projects.filter(p => {
+                            if (!jobPackSearch) return true;
+                            const cust = customers.find(c => c.id === p.customerId);
+                            const searchLower = jobPackSearch.toLowerCase();
+                            return p.title.toLowerCase().includes(searchLower) || (cust?.name || '').toLowerCase().includes(searchLower);
+                          }).length === 0 && (
+                            <p className="text-center text-sm text-slate-400 italic py-6">No job packs found</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -1300,17 +1380,29 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                   <div className="space-y-2 md:space-y-3">
                     <div className="flex flex-wrap justify-between items-center px-1 gap-2">
                       <label className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-widest italic">Project Site Address</label>
-                      {selectedCustomer?.address && (
-                        <button
-                          type="button"
-                          onClick={() => { hapticTap(); setDraft({ ...draft, location: selectedCustomer.address }); }}
-                          className="min-h-[36px] md:min-h-[44px] px-3 md:px-4 text-[9px] md:text-[10px] font-black uppercase text-teal-600 hover:text-teal-700 flex items-center gap-1.5 md:gap-2 bg-teal-50 rounded-xl active:scale-95"
-                        >
-                          <MapPinned className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                          <span className="hidden sm:inline">Use Client Address</span>
-                          <span className="sm:hidden">Client</span>
-                        </button>
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        {draft.location && (
+                          <button
+                            type="button"
+                            onClick={() => { hapticTap(); setDraft({ ...draft, location: '' }); }}
+                            className="min-h-[36px] md:min-h-[44px] px-3 md:px-4 text-[9px] md:text-[10px] font-black uppercase text-red-400 hover:text-red-500 flex items-center gap-1.5 bg-red-50 rounded-xl active:scale-95"
+                          >
+                            <X size={12} className="md:w-3.5 md:h-3.5" />
+                            <span>Clear</span>
+                          </button>
+                        )}
+                        {selectedCustomer?.address && (
+                          <button
+                            type="button"
+                            onClick={() => { hapticTap(); setDraft({ ...draft, location: selectedCustomer.address }); }}
+                            className="min-h-[36px] md:min-h-[44px] px-3 md:px-4 text-[9px] md:text-[10px] font-black uppercase text-teal-600 hover:text-teal-700 flex items-center gap-1.5 md:gap-2 bg-teal-50 rounded-xl active:scale-95"
+                          >
+                            <MapPinned className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                            <span className="hidden sm:inline">Use Client Address</span>
+                            <span className="sm:hidden">Client</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <AddressAutocomplete
                       value={draft.location || ''}
@@ -1327,7 +1419,6 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                         className="w-full bg-white border-2 border-slate-100 rounded-2xl md:rounded-3xl p-3 md:p-6 font-black text-sm md:text-lg text-slate-950 outline-none focus:border-teal-400 transition-all"
                         value={draft.start ? (() => {
                           const d = new Date(draft.start);
-                          // Format as local datetime (not UTC) for datetime-local input
                           const year = d.getFullYear();
                           const month = String(d.getMonth() + 1).padStart(2, '0');
                           const day = String(d.getDate()).padStart(2, '0');
@@ -1337,15 +1428,18 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                         })() : ''}
                         onChange={e => {
                           const newStart = new Date(e.target.value);
-                          // Calculate duration from current start/end to maintain it
                           const currentStart = draft.start ? new Date(draft.start) : newStart;
                           const currentEnd = draft.end ? new Date(draft.end) : new Date(newStart.getTime() + 3600000);
                           const duration = currentEnd.getTime() - currentStart.getTime();
-                          // Adjust end time to maintain the same duration
                           const newEnd = new Date(newStart.getTime() + duration);
                           setDraft({...draft, start: newStart.toISOString(), end: newEnd.toISOString()});
                         }}
                       />
+                      {draft.start && (
+                        <p className="text-[10px] md:text-xs font-bold text-teal-600 px-2">
+                          {new Date(draft.start).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2 md:space-y-3">
                       <label className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic">Departure At</label>
@@ -1354,7 +1448,6 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                         className="w-full bg-white border-2 border-slate-100 rounded-2xl md:rounded-3xl p-3 md:p-6 font-black text-sm md:text-lg text-slate-950 outline-none focus:border-teal-400 transition-all"
                         value={draft.end ? (() => {
                           const d = new Date(draft.end);
-                          // Format as local datetime (not UTC) for datetime-local input
                           const year = d.getFullYear();
                           const month = String(d.getMonth() + 1).padStart(2, '0');
                           const day = String(d.getDate()).padStart(2, '0');
@@ -1364,6 +1457,11 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                         })() : ''}
                         onChange={e => setDraft({...draft, end: new Date(e.target.value).toISOString()})}
                       />
+                      {draft.end && (
+                        <p className="text-[10px] md:text-xs font-bold text-slate-500 px-2">
+                          {new Date(draft.end).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
