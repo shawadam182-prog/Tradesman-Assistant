@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Quote, Customer, AppSettings, MaterialItem, QuoteSection, LabourItem, DBMaterialLibraryItem } from '../types';
 import {
   analyzeJobRequirements,
@@ -258,7 +258,10 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
             })));
           }
         })
-        .catch(err => console.warn('Failed to load milestones:', err));
+        .catch(err => {
+          console.warn('Failed to load milestones:', err);
+          toast.error('Could not load payment milestones');
+        });
     }
   }, [existingQuote?.id, services.paymentMilestones]);
 
@@ -780,7 +783,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   };
 
   // Calculate totals
-  const totals = (() => {
+  const totals = useMemo(() => {
     const sections = formData.sections || [];
     let materialsTotal = 0, labourTotal = 0, sectionsTotal = 0;
 
@@ -806,7 +809,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     const total = afterDiscount + tax - cis;
 
     return { materialsTotal, labourTotal, subtotal, markup, discount, tax, cis, total };
-  })();
+  }, [formData.sections, formData.markupPercent, formData.discountValue, formData.discountType, formData.taxPercent, formData.cisPercent, settings.defaultLabourRate]);
 
   // Customer handlers
   const handleQuickAddCustomer = async () => {
@@ -855,6 +858,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         );
       } catch (err) {
         console.warn('Failed to save milestones:', err);
+        toast.error('Payment milestones could not be saved');
       }
     }
   };
@@ -920,14 +924,15 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
 
         {/* Document Info Card */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div className="col-span-1 md:col-span-2">
+          <div className="space-y-4">
+            {/* 1. Project Title */}
+            <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Project Title</label>
               <input type="text" className="w-full text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors placeholder:text-slate-300" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Enter title..." />
             </div>
 
-            {/* Document Type Selector */}
-            <div className="col-span-1 md:col-span-2">
+            {/* 2. Document Type Selector */}
+            <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Document Type</label>
               <div className="flex gap-1.5 sm:gap-2">
                 {(['estimate', 'quotation', 'invoice'] as const).map(type => (
@@ -942,9 +947,33 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               </div>
             </div>
 
-            {/* Client Selector */}
+            {/* 3. Date field(s) - side-by-side for invoices */}
+            {formData.type === 'invoice' ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Invoice Date</label>
+                  <input type="date" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1 flex items-center gap-1"><Calendar size={12} /> Due Date</label>
+                  <input type="date" className="w-full font-medium text-slate-900 border-b border-emerald-200 pb-2 outline-none focus:border-emerald-400 transition-colors" value={formData.dueDate || ''} onChange={e => setFormData({ ...formData, dueDate: e.target.value })} />
+                  {formData.dueDate && formData.date && (
+                    <div className="text-xs text-emerald-600 font-bold mt-1">
+                      Payment due in {Math.ceil((new Date(formData.dueDate).getTime() - new Date(formData.date).getTime()) / (1000 * 60 * 60 * 24))} days
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Date</label>
+                <input type="date" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
+              </div>
+            )}
+
+            {/* 4. Client Selector */}
             <div className="relative" ref={dropdownRef}>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Client</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Customer</label>
               <div className="flex items-center gap-2">
                 <input type="text" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors placeholder:text-slate-300" value={customerSearch} onFocus={() => setShowCustomerDropdown(true)} onChange={e => setCustomerSearch(e.target.value)} placeholder="Select client" />
                 <button onClick={() => setIsAddingCustomer(true)} className="p-1 bg-slate-50 text-teal-600 rounded-md"><UserPlus size={14} /></button>
@@ -961,41 +990,46 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               )}
             </div>
 
-            {/* Date field(s) - side-by-side for invoices */}
-            {formData.type === 'invoice' ? (
-              <div className="col-span-1 md:col-span-2">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Invoice Date</label>
-                    <input type="date" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1 flex items-center gap-1"><Calendar size={12} /> Due Date</label>
-                    <input type="date" className="w-full font-medium text-slate-900 border-b border-emerald-200 pb-2 outline-none focus:border-emerald-400 transition-colors" value={formData.dueDate || ''} onChange={e => setFormData({ ...formData, dueDate: e.target.value })} />
-                    {formData.dueDate && formData.date && (
-                      <div className="text-xs text-emerald-600 font-bold mt-1">
-                        Payment due in {Math.ceil((new Date(formData.dueDate).getTime() - new Date(formData.date).getTime()) / (1000 * 60 * 60 * 24))} days
-                      </div>
+            {/* 5. Customer Details (collapsible) */}
+            {formData.customerId && (() => {
+              const selectedCustomer = customers.find(c => c.id === formData.customerId);
+              if (!selectedCustomer) return null;
+              return (
+                <details className="group bg-slate-50 rounded-xl border border-slate-100">
+                  <summary className="flex items-center justify-between cursor-pointer list-none p-3">
+                    <div className="flex items-center gap-2">
+                      <UserPlus size={12} className="text-teal-500" />
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Customer Details</span>
+                    </div>
+                    <ChevronDown size={14} className="text-slate-400 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <div className="px-3 pb-3 space-y-1.5 text-sm text-slate-700">
+                    <p className="font-bold text-slate-900">{selectedCustomer.name}</p>
+                    {selectedCustomer.company && <p className="text-slate-500">{selectedCustomer.company}</p>}
+                    {selectedCustomer.email && <p className="text-slate-500">{selectedCustomer.email}</p>}
+                    {selectedCustomer.phone && <p className="text-slate-500">{selectedCustomer.phone}</p>}
+                    {selectedCustomer.address && (
+                      <p className="text-slate-500 whitespace-pre-line">{selectedCustomer.address}</p>
                     )}
                   </div>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Date</label>
-                <input type="date" className="w-full font-medium text-slate-900 border-b border-slate-100 pb-2 outline-none focus:border-teal-500 transition-colors" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
-              </div>
-            )}
+                </details>
+              );
+            })()}
 
-            {/* Job Address */}
-            <div className="col-span-1 md:col-span-2 mt-2">
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                  <MapPin size={12} className="text-teal-500" /> Job Site Address <span className="text-slate-300 font-normal normal-case">(if different from client)</span>
-                </label>
-                <AddressAutocomplete value={formData.jobAddress || ''} onChange={(address) => setFormData(prev => ({ ...prev, jobAddress: address }))} placeholder="Enter job site address if different from client..." showLabel={false} />
+            {/* 6. Site Address (collapsible) */}
+            <details className="group bg-slate-50 rounded-xl border border-slate-100">
+              <summary className="flex items-center justify-between cursor-pointer list-none p-3">
+                <div className="flex items-center gap-2">
+                  <MapPin size={12} className="text-teal-500" />
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Site Address</span>
+                  {formData.jobAddress && <span className="text-[10px] text-teal-600 font-medium truncate max-w-[150px]">{formData.jobAddress.split(',')[0]}</span>}
+                </div>
+                <ChevronDown size={14} className="text-slate-400 transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="px-3 pb-3">
+                <AddressAutocomplete value={formData.jobAddress || ''} onChange={(address) => setFormData(prev => ({ ...prev, jobAddress: address }))} placeholder="Enter job site address..." showLabel={false} />
               </div>
-            </div>
+            </details>
           </div>
         </div>
 
