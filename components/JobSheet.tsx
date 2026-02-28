@@ -3,7 +3,7 @@ import { JobPack, Customer, Quote, AppSettings, JobSheetHours, SitePhoto } from 
 import {
   Clock, Plus, Trash2, Camera, Image as ImageIcon, Loader2,
   FileText, Users, Mic, MicOff, ChevronDown, ChevronUp, X,
-  Download, Send, Mail, MessageSquare, FileDown, Share2
+  Download, Send, Mail, MessageSquare, FileDown, Share2, ReceiptText
 } from 'lucide-react';
 import { useVoiceInput } from '../src/hooks/useVoiceInput';
 import { useToast } from '../src/contexts/ToastContext';
@@ -17,10 +17,11 @@ interface JobSheetProps {
   settings: AppSettings;
   onSaveProject: (project: JobPack) => void;
   onRefresh?: () => Promise<void>;
+  onCreateInvoice?: (draftData: { projectId: string; projectTitle: string; projectCustomerId?: string; projectSiteAddress?: string; labourItems: any[] }) => void;
 }
 
 export const JobSheet: React.FC<JobSheetProps> = ({
-  project, customer, quotes, settings, onSaveProject, onRefresh
+  project, customer, quotes, settings, onSaveProject, onRefresh, onCreateInvoice
 }) => {
   const toast = useToast();
   const [description, setDescription] = useState(project.jobSheetDescription || '');
@@ -263,7 +264,30 @@ export const JobSheet: React.FC<JobSheetProps> = ({
   return (
     <div className="max-w-3xl mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-2">
       {/* Send / PDF action bar */}
-      <div className="flex gap-2 justify-end relative">
+      <div className="flex gap-2 justify-end relative flex-wrap">
+        {onCreateInvoice && hours.length > 0 && (
+          <button
+            onClick={() => {
+              const labourItems = hours.map(h => ({
+                id: h.id,
+                description: `${h.teamMember}${h.description ? ` — ${h.description}` : ''}`,
+                hours: h.hours,
+                rate: settings.defaultLabourRate,
+                unit: 'hrs',
+              }));
+              onCreateInvoice({
+                projectId: project.id,
+                projectTitle: project.title,
+                projectCustomerId: project.customerId,
+                projectSiteAddress: project.siteAddress,
+                labourItems,
+              });
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-all"
+          >
+            <ReceiptText size={14} /> Create Invoice
+          </button>
+        )}
         <button
           onClick={handleDownloadPDF}
           disabled={isGeneratingPdf}

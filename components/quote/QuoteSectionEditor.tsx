@@ -124,7 +124,7 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
             {isExpanded ? (
               <textarea
                 ref={textareaRef}
-                className="w-full bg-slate-50 rounded-lg p-2 md:p-3 outline-none transition-all resize-none font-medium placeholder:text-slate-300 placeholder:italic text-sm md:text-base text-slate-700 border border-slate-100 focus:border-teal-300"
+                className="w-full bg-slate-50 rounded-lg p-2 md:p-3 outline-none transition-all resize-none font-medium placeholder:text-slate-300 placeholder:italic text-xs md:text-sm text-slate-700 border border-slate-100 focus:border-teal-300"
                 value={section.description || ''}
                 onChange={e => {
                   onUpdateDescription(section.id, e.target.value);
@@ -138,7 +138,7 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
             ) : (
               <div
                 onClick={() => setIsExpanded(true)}
-                className="cursor-text text-xs md:text-sm text-slate-500 font-medium pr-6 bg-slate-50 rounded-lg p-2 md:p-3 border border-dashed border-slate-200 hover:border-teal-300 transition-colors"
+                className="cursor-text text-xs md:text-sm text-slate-500 font-medium pr-6 bg-slate-50 rounded-lg p-2 md:p-3 border border-dashed border-slate-200 hover:border-teal-300 transition-colors whitespace-pre-line"
               >
                 {section.description || <span className="italic text-slate-300">Tap to add a description of this work...</span>}
               </div>

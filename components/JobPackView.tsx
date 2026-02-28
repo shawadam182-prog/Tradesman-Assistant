@@ -128,11 +128,12 @@ interface JobPackViewProps {
   onRefresh?: () => Promise<void>;
   onUpdateCustomer?: (customer: Customer) => Promise<void>;
   onAddToSchedule?: (project: JobPack) => void;
+  onCreateInvoiceFromSheet?: (draftData: { projectId: string; projectTitle: string; projectCustomerId?: string; projectSiteAddress?: string; labourItems: any[] }) => void;
   initialTab?: 'log' | 'photos' | 'drawings' | 'materials' | 'jobsheet' | 'finance';
 }
 
 export const JobPackView: React.FC<JobPackViewProps> = ({
-  project, customers, quotes, settings, onSaveProject, onViewQuote, onCreateQuote, onBack, onDeleteProject, onRefresh, onUpdateCustomer, onAddToSchedule, initialTab
+  project, customers, quotes, settings, onSaveProject, onViewQuote, onCreateQuote, onBack, onDeleteProject, onRefresh, onUpdateCustomer, onAddToSchedule, onCreateInvoiceFromSheet, initialTab
 }) => {
   const [activeTab, setActiveTab] = useState<'log' | 'photos' | 'drawings' | 'materials' | 'jobsheet' | 'finance'>(initialTab || 'log');
   const [isRecording, setIsRecording] = useState(false);
@@ -173,6 +174,24 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   const [isScanning, setIsScanning] = useState(false);
   const [showGalleryFinder, setShowGalleryFinder] = useState(false);
   const [jobCoords, setJobCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [addingAllNearby, setAddingAllNearby] = useState(false);
+
+  // Auto-geocode when Photos tab opens (pre-cache coordinates)
+  useEffect(() => {
+    if (activeTab === 'photos' && !jobCoords) {
+      const address = project.siteAddress || customer?.address;
+      if (address) {
+        fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.length > 0) {
+              setJobCoords({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+            }
+          })
+          .catch(() => {}); // Silent fail — will geocode on demand if needed
+      }
+    }
+  }, [activeTab]);
 
   // Modal states
   const [selectedImage, setSelectedImage] = useState<{ item: SitePhoto, type: 'photo' | 'drawing' } | null>(null);
@@ -470,6 +489,18 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
   const addGalleryPhoto = async (file: File) => {
     await handlePhotoUpload(file, false);
     setGalleryResults(prev => prev.filter(r => r.file !== file));
+  };
+
+  const addAllNearbyPhotos = async () => {
+    const nearby = galleryResults.filter(r => r.hasGps && r.distance !== null && r.distance < 500);
+    if (nearby.length === 0) return;
+    setAddingAllNearby(true);
+    for (const r of nearby) {
+      await handlePhotoUpload(r.file, false);
+    }
+    setGalleryResults(prev => prev.filter(r => !nearby.includes(r)));
+    setAddingAllNearby(false);
+    toast.success('Photos Added', `${nearby.length} nearby photo${nearby.length > 1 ? 's' : ''} added.`);
   };
 
   const openImageViewer = (item: SitePhoto, type: 'photo' | 'drawing') => {
@@ -1000,6 +1031,23 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
           ))}
         </div>
 
+        {/* Location suggestion when no photos yet */}
+        {(project.photos || []).length === 0 && galleryResults.length === 0 && (project.siteAddress || customer?.address) && (
+          <button
+            onClick={startGalleryFinder}
+            disabled={isScanning}
+            className="w-full flex items-center gap-3 p-4 bg-teal-50 rounded-2xl border border-teal-200 hover:bg-teal-100 transition-colors text-left"
+          >
+            <div className="p-2.5 bg-teal-100 rounded-xl shrink-0">
+              <MapPin size={20} className="text-teal-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-black text-teal-800">Have photos from this job site?</p>
+              <p className="text-[10px] text-teal-600 mt-0.5">Tap to scan your gallery — we'll find photos taken near <span className="font-bold">{project.siteAddress || customer?.address}</span></p>
+            </div>
+          </button>
+        )}
+
         {/* Gallery Finder Results */}
         {galleryResults.length > 0 && (
           <div className="bg-teal-50 rounded-2xl border border-teal-200 p-4 space-y-3 animate-in fade-in">
@@ -1007,7 +1055,19 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
               <h4 className="text-[10px] font-black text-teal-700 uppercase tracking-widest flex items-center gap-1.5">
                 <MapPin size={12} /> Gallery Photos ({galleryResults.length})
               </h4>
-              <button onClick={() => { setGalleryResults([]); setShowGalleryFinder(false); }} className="text-[9px] font-black text-teal-400 uppercase hover:text-red-500">Close</button>
+              <div className="flex items-center gap-2">
+                {galleryResults.filter(r => r.hasGps && r.distance !== null && r.distance < 500).length > 1 && (
+                  <button
+                    onClick={addAllNearbyPhotos}
+                    disabled={addingAllNearby}
+                    className="text-[9px] font-black text-white bg-teal-500 px-2 py-1 rounded-lg uppercase hover:bg-teal-600 disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {addingAllNearby ? <Loader2 size={10} className="animate-spin" /> : <Plus size={10} />}
+                    Add All Nearby
+                  </button>
+                )}
+                <button onClick={() => { setGalleryResults([]); setShowGalleryFinder(false); }} className="text-[9px] font-black text-teal-400 uppercase hover:text-red-500">Close</button>
+              </div>
             </div>
             <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
               {galleryResults.map((r, i) => (
@@ -1097,6 +1157,7 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
         settings={settings}
         onSaveProject={onSaveProject}
         onRefresh={onRefresh}
+        onCreateInvoice={onCreateInvoiceFromSheet}
       />
     )
   }

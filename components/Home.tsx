@@ -13,7 +13,7 @@ import {
   ClipboardList, ArrowRightCircle, X, FolderPlus, Check
 } from 'lucide-react';
 import { parseReminderVoiceInput } from '../src/services/geminiService';
-import { sitePhotosService, remindersService, futureJobsService } from '../src/services/dataService';
+import { sitePhotosService, remindersService, futureJobsService, quickNotesService } from '../src/services/dataService';
 import { hapticTap, hapticSuccess } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { FinancialOverview } from './FinancialOverview';
@@ -155,15 +155,30 @@ export const Home: React.FC<HomeProps> = ({
   // Track whether initial load from Supabase is done (to avoid saving back localStorage defaults)
   const remindersLoaded = useRef(false);
   const futureJobsLoaded = useRef(false);
+  const quickNotesLoaded = useRef(false);
+  const quickNotesSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load data: try Supabase first, fallback to localStorage
   useEffect(() => {
     const loadData = async () => {
-      // Load quick notes from localStorage (always local-only)
+      // Load quick notes from Supabase, fallback to localStorage
       try {
-        const savedNotes = localStorage.getItem('bq_home_quick_notes');
-        if (savedNotes) setQuickNotes(savedNotes);
-      } catch (e) { console.error("Failed to parse localStorage notes:", e); }
+        const dbNote = await quickNotesService.get();
+        if (dbNote) {
+          setQuickNotes(dbNote.content);
+          localStorage.setItem('bq_home_quick_notes', dbNote.content);
+        } else {
+          const savedNotes = localStorage.getItem('bq_home_quick_notes');
+          if (savedNotes) setQuickNotes(savedNotes);
+        }
+      } catch (e) {
+        console.warn("Supabase quick notes load failed, using localStorage:", e);
+        try {
+          const savedNotes = localStorage.getItem('bq_home_quick_notes');
+          if (savedNotes) setQuickNotes(savedNotes);
+        } catch {}
+      }
+      quickNotesLoaded.current = true;
 
       // Load reminders from Supabase
       try {
@@ -268,6 +283,15 @@ export const Home: React.FC<HomeProps> = ({
 
   useEffect(() => {
     localStorage.setItem('bq_home_quick_notes', quickNotes);
+    // Debounced save to Supabase
+    if (quickNotesLoaded.current) {
+      if (quickNotesSaveTimer.current) clearTimeout(quickNotesSaveTimer.current);
+      quickNotesSaveTimer.current = setTimeout(() => {
+        quickNotesService.upsert(quickNotes).catch(e =>
+          console.warn("Failed to sync quick notes to Supabase:", e)
+        );
+      }, 1000);
+    }
   }, [quickNotes]);
 
   // Save future jobs to localStorage as offline cache

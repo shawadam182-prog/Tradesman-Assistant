@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Customer } from '../../types';
-import { User, Hammer, Mail, Phone, AlertCircle, Mic, MapPin } from 'lucide-react';
+import { User, Hammer, Mail, Phone, AlertCircle, Mic, MapPin, BookUser } from 'lucide-react';
 import { AddressAutocomplete } from '../AddressAutocomplete';
 import { LiveVoiceFill, VoiceFieldConfig } from '../LiveVoiceFill';
 import { parseCustomerVoiceInput } from '../../src/services/geminiService';
@@ -53,6 +53,28 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
               <Mic size={14} className="md:w-4 md:h-4" />
               <span>Voice</span>
             </button>
+            {'contacts' in navigator && (
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const contacts = await (navigator as any).contacts.select(['name', 'tel', 'email'], { multiple: false });
+                    if (contacts?.[0]) {
+                      const c = contacts[0];
+                      const updates: Partial<Customer> = {};
+                      if (c.name?.[0]) updates.name = c.name[0];
+                      if (c.tel?.[0]) updates.phone = c.tel[0];
+                      if (c.email?.[0]) updates.email = c.email[0];
+                      onCustomerChange(updates);
+                    }
+                  } catch {}
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full font-black text-[10px] md:text-xs uppercase transition-all bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 active:scale-95"
+              >
+                <BookUser size={14} className="md:w-4 md:h-4" />
+                <span>Contacts</span>
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-6">

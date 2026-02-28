@@ -123,6 +123,8 @@ export interface Quote {
   customerAddressOverride?: string;
   // Design notes
   designNotes?: string;
+  // Attached company documents (IDs from company_documents table)
+  attachedDocumentIds?: string[];
 }
 
 export interface ScheduleEntry {

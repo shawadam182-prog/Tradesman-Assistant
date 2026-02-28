@@ -252,7 +252,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
         width: '100%',
         maxWidth: '750px',
         padding: '24px',
-        fontSize: '9px',
+        fontSize: '10px',
         boxSizing: 'border-box'
       }}
     >
@@ -263,10 +263,10 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             <img src={settings.companyLogo} alt="" style={{ height: '12mm', marginBottom: '2mm' }} />
           )}
           <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{settings.companyName}</div>
-          <div style={{ fontSize: '10px', color: '#64748b' }}>{settings.companyAddress?.split('\n').join(' • ')}</div>
-          <div style={{ fontSize: '10px', color: '#94a3b8' }}>{[settings.phone, settings.email].filter(Boolean).join(' • ')}</div>
+          <div style={{ fontSize: '11px', color: '#64748b' }}>{settings.companyAddress?.split('\n').join(' • ')}</div>
+          <div style={{ fontSize: '11px', color: '#94a3b8' }}>{[settings.phone, settings.email].filter(Boolean).join(' • ')}</div>
           {settings.vatNumber && (
-            <div style={{ fontSize: '9px', color: '#94a3b8' }}>VAT: {settings.vatNumber}</div>
+            <div style={{ fontSize: '10px', color: '#94a3b8' }}>VAT: {settings.vatNumber}</div>
           )}
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -274,23 +274,29 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             {quote.isCreditNote ? 'Credit Note' : quote.type === 'invoice' ? 'Invoice' : 'Quote'}
           </div>
           <div style={{ fontSize: '11px', fontWeight: 'bold' }}>{reference}</div>
-          <div style={{ fontSize: '10px', color: '#64748b' }}>{quote.date ? new Date(quote.date).toLocaleDateString('en-GB') : ''}</div>
+          <div style={{ fontSize: '11px', color: '#64748b' }}>{quote.date ? new Date(quote.date).toLocaleDateString('en-GB') : ''}</div>
         </div>
       </div>
 
       {/* CLIENT + JOB */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6mm', marginBottom: '6mm' }}>
         <div>
-          <div style={{ fontSize: '9px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1mm' }}>Bill To</div>
+          <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1mm' }}>Bill To</div>
           <div style={{ fontSize: '12px', fontWeight: 'bold' }}>{resolvedCustomerName}</div>
-          {customer?.company && <div style={{ fontSize: '10px', color: '#475569' }}>{customer.company}</div>}
-          {resolvedCustomerAddress && <div style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.4 }}>{resolvedCustomerAddress}</div>}
+          {customer?.company && <div style={{ fontSize: '11px', color: '#475569' }}>{customer.company}</div>}
+          {resolvedCustomerAddress && <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.4, whiteSpace: 'pre-line' }}>{resolvedCustomerAddress}</div>}
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '9px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1mm' }}>Project</div>
+          <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1mm' }}>Project</div>
           <div style={{ fontSize: '12px', fontWeight: 'bold' }}>{quote.title}</div>
+          {quote.jobAddress && quote.jobAddress !== resolvedCustomerAddress && (
+            <div style={{ marginTop: '2mm' }}>
+              <div style={{ fontSize: '10px', color: '#d97706', textTransform: 'uppercase', fontWeight: 'bold' }}>Job Site</div>
+              <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.4, whiteSpace: 'pre-line' }}>{quote.jobAddress}</div>
+            </div>
+          )}
           {quote.dueDate && (
-            <div style={{ fontSize: '10px', color: '#d97706', fontWeight: 'bold', marginTop: '2mm' }}>
+            <div style={{ fontSize: '11px', color: '#d97706', fontWeight: 'bold', marginTop: '2mm' }}>
               Due: {new Date(quote.dueDate).toLocaleDateString('en-GB')}
             </div>
           )}
@@ -498,7 +504,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
 
       {/* BANK DETAILS */}
       {settings.bankAccountName && (
-        <div style={{ marginTop: '6mm', paddingTop: '3mm', borderTop: '1px solid #e2e8f0', fontSize: '10px', color: '#64748b' }}>
+        <div style={{ marginTop: '6mm', paddingTop: '3mm', borderTop: '1px solid #e2e8f0', fontSize: '11px', color: '#64748b' }}>
           <div style={{ fontWeight: 'bold', marginBottom: '2mm' }}>Payment Details</div>
           <div>
             {settings.bankAccountName} | {settings.bankAccountNumber} | {settings.bankSortCode}
@@ -509,7 +515,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
 
       {/* NOTES */}
       {displayOptions.showNotes && (quote.notes || settings.defaultInvoiceNotes) && (
-        <div style={{ marginTop: '4mm', fontSize: '10px', color: '#64748b', lineHeight: 1.5 }}>
+        <div style={{ marginTop: '4mm', fontSize: '11px', color: '#64748b', lineHeight: 1.5 }}>
           <div style={{ fontWeight: 'bold', marginBottom: '2mm' }}>Notes</div>
           <div style={{ whiteSpace: 'pre-line' }}>{quote.notes || settings.defaultInvoiceNotes}</div>
         </div>

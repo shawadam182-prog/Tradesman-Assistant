@@ -55,7 +55,7 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
   };
 
   return (
-    <div className={`p-0.5 md:p-3 rounded md:rounded-xl mb-1 md:mb-2 ${item.isAIProposed ? 'bg-teal-50 border-l-2 border-l-teal-400' : 'bg-blue-50'}`}>
+    <div className={`p-0.5 md:p-3 rounded md:rounded-xl mb-1 md:mb-2 overflow-hidden ${item.isAIProposed ? 'bg-teal-50 border-l-2 border-l-teal-400' : 'bg-blue-50'}`}>
       {/* Top row: Description and delete button */}
       <div className="flex items-center gap-1 md:gap-3 mb-0.5 md:mb-2">
         <input
@@ -77,8 +77,8 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
         </button>
       </div>
       {/* Bottom row: Hours controls and price */}
-      <div className="flex items-center justify-between gap-2 md:gap-4">
-        <div className="flex items-center gap-0.5 md:gap-1 bg-white rounded md:rounded-lg px-1 md:px-2 py-0.5 md:py-1 border border-blue-200 h-6 md:h-11">
+      <div className="flex items-center justify-between gap-1 md:gap-4 overflow-hidden">
+        <div className="flex items-center gap-0.5 md:gap-1 bg-white rounded md:rounded-lg px-1 md:px-2 py-0.5 md:py-1 border border-blue-200 h-6 md:h-11 shrink-0">
           <button
             type="button"
             onClick={() => onDecrement(sectionId, item.id)}
@@ -112,7 +112,7 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
             <Plus size={16} className="text-blue-500 hidden md:block" />
           </button>
         </div>
-        <div className="flex items-center gap-1 md:gap-2">
+        <div className="flex items-center gap-1 md:gap-2 min-w-0 shrink">
           {/* Rate selector dropdown */}
           <div className="relative">
             <button
@@ -205,7 +205,7 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
             )}
           </div>
 
-          <div className="bg-blue-600 text-white px-2 md:px-3 py-0.5 md:py-1.5 rounded md:rounded-lg font-black text-[10px] md:text-base">
+          <div className="bg-blue-600 text-white px-2 md:px-3 py-0.5 md:py-1.5 rounded md:rounded-lg font-black text-[10px] md:text-base shrink-0 whitespace-nowrap">
             £{total.toFixed(2)}
           </div>
         </div>

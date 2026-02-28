@@ -4,7 +4,7 @@ import {
   Search, UserPlus, Phone, Mail, MapPin, Trash2, Edit2, X,
   AlertCircle, CheckCircle2, Mic, MicOff, Sparkles, Loader2,
   Building, User as UserIcon, Pencil, Navigation, Briefcase, ChevronDown,
-  FileText, Receipt, FolderOpen, Clock
+  FileText, Receipt, FolderOpen, Clock, BookUser
 } from 'lucide-react';
 import { parseCustomerVoiceInput } from '../src/services/geminiService';
 import { useToast } from '../src/contexts/ToastContext';
@@ -373,6 +373,29 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
                 <Mic size={16} className="md:w-5 md:h-5" />
                 <span>Voice Fill</span>
               </button>
+              {'contacts' in navigator && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const contacts = await (navigator as any).contacts.select(['name', 'tel', 'email'], { multiple: false });
+                      if (contacts?.[0]) {
+                        const c = contacts[0];
+                        setCustomerForm(prev => ({
+                          ...prev,
+                          ...(c.name?.[0] ? { name: c.name[0] } : {}),
+                          ...(c.tel?.[0] ? { phone: c.tel[0] } : {}),
+                          ...(c.email?.[0] ? { email: c.email[0] } : {}),
+                        }));
+                      }
+                    } catch {}
+                  }}
+                  className="h-10 md:h-12 px-5 md:px-6 rounded-2xl flex items-center gap-2 md:gap-3 font-black uppercase text-[10px] tracking-widest transition-all bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 active:scale-95"
+                >
+                  <BookUser size={16} className="md:w-5 md:h-5" />
+                  <span>Contacts</span>
+                </button>
+              )}
             </div>
 
           <form id="customer-form" onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 md:space-y-6">

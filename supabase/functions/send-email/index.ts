@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,6 +18,7 @@ interface SendEmailRequest {
   attachment_base64?: string;
   attachment_filename?: string;
   attachment_type?: string;
+  company_document_ids?: string[];
 }
 
 Deno.serve(async (req) => {
@@ -81,16 +83,54 @@ Deno.serve(async (req) => {
       payload.categories = body.tags.slice(0, 10); // SendGrid max 10 categories
     }
 
-    // Attachment
+    // Attachments array
+    const attachments: Array<{ content: string; filename: string; type: string; disposition: string }> = [];
+
+    // Primary PDF attachment
     if (body.attachment_base64 && body.attachment_filename) {
-      payload.attachments = [
-        {
-          content: body.attachment_base64,
-          filename: body.attachment_filename,
-          type: body.attachment_type || "application/pdf",
-          disposition: "attachment",
-        },
-      ];
+      attachments.push({
+        content: body.attachment_base64,
+        filename: body.attachment_filename,
+        type: body.attachment_type || "application/pdf",
+        disposition: "attachment",
+      });
+    }
+
+    // Company documents from storage
+    if (body.company_document_ids && body.company_document_ids.length > 0) {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+      // Fetch document records
+      const { data: docs } = await supabaseAdmin
+        .from("company_documents")
+        .select("id, name, storage_path, file_type")
+        .in("id", body.company_document_ids);
+
+      if (docs) {
+        for (const doc of docs) {
+          const { data: fileData } = await supabaseAdmin.storage
+            .from("documents")
+            .download(doc.storage_path);
+          if (fileData) {
+            const buffer = await fileData.arrayBuffer();
+            const base64 = btoa(
+              new Uint8Array(buffer).reduce((s, b) => s + String.fromCharCode(b), "")
+            );
+            attachments.push({
+              content: base64,
+              filename: doc.name,
+              type: doc.file_type || "application/octet-stream",
+              disposition: "attachment",
+            });
+          }
+        }
+      }
+    }
+
+    if (attachments.length > 0) {
+      payload.attachments = attachments;
     }
 
     // Send via SendGrid v3 API

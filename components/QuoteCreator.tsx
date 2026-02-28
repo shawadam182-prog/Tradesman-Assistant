@@ -42,7 +42,9 @@ interface QuoteCreatorProps {
   projectId?: string;
   projectTitle?: string;
   projectCustomerId?: string;
+  projectSiteAddress?: string;
   initialType?: 'estimate' | 'quotation' | 'invoice';
+  initialLabourItems?: { id: string; description: string; hours: number; rate?: number; unit?: string }[];
   customers: Customer[];
   settings: AppSettings;
   onSave: (quote: Quote) => void;
@@ -51,7 +53,7 @@ interface QuoteCreatorProps {
 }
 
 export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
-  existingQuote, projectId, projectTitle, projectCustomerId, initialType = 'estimate', customers, settings, onSave, onAddCustomer, onCancel
+  existingQuote, projectId, projectTitle, projectCustomerId, projectSiteAddress, initialType = 'estimate', initialLabourItems, customers, settings, onSave, onAddCustomer, onCancel
 }) => {
   const { services, saveQuote } = useData();
   const toast = useToast();
@@ -148,7 +150,8 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         updatedAt: new Date().toISOString(),
         title: projectTitle || '',
         customerId: projectCustomerId || '',
-        sections: [{ id: Math.random().toString(36).substr(2, 9), title: 'Work Section 1', items: [], labourHours: 0 }],
+        jobAddress: projectSiteAddress || '',
+        sections: [{ id: Math.random().toString(36).substr(2, 9), title: 'Work Section 1', items: [], labourHours: 0, ...(initialLabourItems?.length ? { labourItems: initialLabourItems } : {}) }],
         labourRate: settings.defaultLabourRate,
         markupPercent: settings.defaultMarkupPercent ?? 0,
         taxPercent: settings.enableVat ? settings.defaultTaxRate : 0,
@@ -1152,9 +1155,15 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
             <div className="h-10 w-10 bg-slate-900 text-teal-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg"><FileText size={20} /></div>
             <div><h3 className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-widest">Document Terms & Document-wide Rates</h3><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Apply to all sections</p></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 md:gap-4">
             <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><PoundSterling size={12} className="text-teal-500" /> Default Hourly Rate</label><input type="number" className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 text-slate-950 font-black text-sm outline-none focus:border-teal-400 transition-all" value={formData.labourRate || ''} onChange={e => setFormData({ ...formData, labourRate: parseFloat(e.target.value) || 0 })} placeholder="65.00" /></div>
             <div className="space-y-1"><label className="text-[10px] font-black text-teal-600 uppercase tracking-widest px-1 flex items-center gap-2 italic"><Percent size={12} className="text-teal-500" /> Global Markup %</label><input type="number" min="0" className="w-full bg-teal-50 border-2 border-teal-100 rounded-xl p-3 text-teal-900 font-black text-sm outline-none focus:border-teal-400 transition-all" value={formData.markupPercent ?? ''} onChange={e => setFormData({ ...formData, markupPercent: e.target.value === '' ? 0 : parseFloat(e.target.value) })} placeholder="0" /></div>
+            {settings.enableVat && (
+              <div className="space-y-1"><label className="text-[10px] font-black text-amber-600 uppercase tracking-widest px-1 flex items-center gap-2 italic"><Percent size={12} className="text-amber-500" /> VAT %</label><input type="number" min="0" className="w-full bg-amber-50 border-2 border-amber-100 rounded-xl p-3 text-amber-900 font-black text-sm outline-none focus:border-amber-400 transition-all" value={formData.taxPercent ?? ''} onChange={e => setFormData({ ...formData, taxPercent: e.target.value === '' ? 0 : parseFloat(e.target.value) })} placeholder="20" /></div>
+            )}
+            {settings.enableCis && (
+              <div className="space-y-1"><label className="text-[10px] font-black text-rose-600 uppercase tracking-widest px-1 flex items-center gap-2 italic"><Percent size={12} className="text-rose-500" /> CIS Deduction %</label><input type="number" min="0" className="w-full bg-rose-50 border-2 border-rose-100 rounded-xl p-3 text-rose-900 font-black text-sm outline-none focus:border-rose-400 transition-all" value={formData.cisPercent ?? ''} onChange={e => setFormData({ ...formData, cisPercent: e.target.value === '' ? 0 : parseFloat(e.target.value) })} placeholder="20" /></div>
+            )}
           </div>
           <div className="pt-2 space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><FileText size={14} className="text-teal-500" /> Document Footer / Terms</label><textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] p-3 md:p-4 text-slate-900 font-medium text-sm outline-none focus:border-teal-400 transition-all min-h-[100px]" value={formData.notes || ''} onChange={e => setFormData({ ...formData, notes: e.target.value })} placeholder="Final notes, bank details etc..." /></div>
         </div>

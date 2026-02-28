@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, Paperclip, FileText, Loader2 } from 'lucide-react';
+import { X, Send, Paperclip, FileText, Loader2, FileBox, Check } from 'lucide-react';
 import { emailService } from '../../src/services/emailService';
 import { emailTemplateService } from '../../src/services/emailTemplateService';
+import { companyDocumentsService } from '../../src/services/dataService';
 import type { Quote, Customer, AppSettings } from '../../types';
 
 interface EmailComposerProps {
@@ -30,6 +31,17 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
+  const [companyDocs, setCompanyDocs] = useState<any[]>([]);
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>(quote.attachedDocumentIds || []);
+
+  // Load company documents
+  useEffect(() => {
+    companyDocumentsService.getAll().then(setCompanyDocs).catch(() => {});
+  }, []);
+
+  const toggleDocId = (id: string) => {
+    setSelectedDocIds(prev => prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]);
+  };
 
   // Load and render template
   useEffect(() => {
@@ -94,6 +106,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         attachmentFilename: attachPdf ? pdfFilename : undefined,
         quoteId: quote.id,
         templateType: quote.type === 'invoice' ? 'invoice_send' : 'quote_send',
+        companyDocumentIds: selectedDocIds.length > 0 ? selectedDocIds : undefined,
       });
 
       setSent(true);
@@ -194,6 +207,36 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
             </div>
             <FileText size={16} />
           </button>
+        )}
+
+        {/* Company Documents */}
+        {companyDocs.length > 0 && (
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <FileBox size={14} /> Company Documents
+            </label>
+            <div className="space-y-1">
+              {companyDocs.map((doc: any) => (
+                <button
+                  key={doc.id}
+                  onClick={() => toggleDocId(doc.id)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors w-full text-left text-xs ${
+                    selectedDocIds.includes(doc.id)
+                      ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                      : 'bg-slate-50 border-slate-100 text-slate-500'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${
+                    selectedDocIds.includes(doc.id) ? 'bg-indigo-500 border-indigo-500' : 'border-slate-300'
+                  }`}>
+                    {selectedDocIds.includes(doc.id) && <Check size={10} className="text-white" />}
+                  </div>
+                  <span className="font-bold truncate flex-1">{doc.name}</span>
+                  <span className="text-[9px] text-slate-400 shrink-0 capitalize">{doc.category?.replace('_', ' ')}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 

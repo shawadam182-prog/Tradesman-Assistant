@@ -1748,6 +1748,37 @@ export const remindersService = {
 };
 
 // ============================================
+// QUICK NOTES
+// ============================================
+
+export const quickNotesService = {
+  async get() {
+    const { data, error } = await supabase
+      .from('quick_notes')
+      .select('*')
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+
+  async upsert(content: string) {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('quick_notes')
+      .upsert(
+        { user_id: user.id, content, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+};
+
+// ============================================
 // FUTURE JOBS
 // ============================================
 
@@ -1788,6 +1819,85 @@ export const futureJobsService = {
   async delete(id: string) {
     const { error } = await supabase
       .from('future_jobs')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+};
+
+// ============================================
+// COMPANY DOCUMENTS
+// ============================================
+
+export const companyDocumentsService = {
+  async upload(file: File, category: string, expiryDate?: string, notes?: string) {
+    const validation = validateDocumentFile(file);
+    if (!validation.valid) {
+      throw new Error(validation.error || 'Invalid file');
+    }
+
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) throw new Error('Not authenticated');
+
+    const fileName = `${user.id}/company/${Date.now()}-${file.name}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('documents')
+      .upload(fileName, file);
+    if (uploadError) throw uploadError;
+
+    const { data, error } = await supabase
+      .from('company_documents')
+      .insert({
+        user_id: user.id,
+        name: file.name,
+        category,
+        storage_path: fileName,
+        file_type: file.type,
+        file_size: file.size,
+        expiry_date: expiryDate || null,
+        notes: notes || null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+
+    return data;
+  },
+
+  async getAll() {
+    const { data, error } = await supabase
+      .from('company_documents')
+      .select('*')
+      .order('category')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getUrl(storagePath: string) {
+    const { data } = await supabase.storage
+      .from('documents')
+      .createSignedUrl(storagePath, 3600);
+    return data?.signedUrl;
+  },
+
+  async update(id: string, updates: { category?: string; expiry_date?: string | null; notes?: string | null }) {
+    const { data, error } = await supabase
+      .from('company_documents')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async delete(id: string, storagePath: string) {
+    await supabase.storage.from('documents').remove([storagePath]);
+
+    const { error } = await supabase
+      .from('company_documents')
       .delete()
       .eq('id', id);
     if (error) throw error;

@@ -122,6 +122,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   const [newJobPackCustomerId, setNewJobPackCustomerId] = useState<string>('');
   const [jobPackError, setJobPackError] = useState<string | null>(null);
   const [jobPackSearch, setJobPackSearch] = useState('');
+  const [customerSearch, setCustomerSearch] = useState('');
 
   // Schedule entry location and linking - restore from sessionStorage
   const [linkType, setLinkType] = useState<'none' | 'job' | 'customer'>(() => {
@@ -1349,22 +1350,22 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                       <label className="text-[10px] md:text-[12px] font-black text-slate-400 uppercase tracking-widest px-1 italic">Assign Client</label>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
-                          <select
-                            className="w-full bg-purple-50 border-2 border-purple-200 rounded-[24px] md:rounded-[36px] p-4 md:p-7 font-bold text-base md:text-xl text-slate-950 outline-none focus:border-purple-400 focus:bg-white transition-all appearance-none cursor-pointer"
-                            value={draft.customerId || ''}
-                            onChange={e => {
-                              const cust = customers.find(c => c.id === e.target.value);
-                              setDraft({
-                                ...draft,
-                                customerId: e.target.value,
-                                location: draft.location || cust?.address || ''
-                              });
-                            }}
-                          >
-                            <option value="">Select Client...</option>
-                            {customers.map(c => <option key={c.id} value={c.id}>{c.name} {c.company ? `(${c.company})` : ''}</option>)}
-                          </select>
-                          <ChevronDown className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 text-purple-300 pointer-events-none w-6 h-6 md:w-8 md:h-8" />
+                          <input
+                            type="text"
+                            className="w-full bg-purple-50 border-2 border-purple-200 rounded-[24px] md:rounded-[36px] p-4 md:p-7 font-bold text-base md:text-xl text-slate-950 outline-none focus:border-purple-400 focus:bg-white transition-all placeholder:text-purple-300"
+                            value={customerSearch}
+                            onChange={e => setCustomerSearch(e.target.value)}
+                            placeholder="Search clients..."
+                          />
+                          {customerSearch && (
+                            <button
+                              type="button"
+                              onClick={() => setCustomerSearch('')}
+                              className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-1 text-slate-300 hover:text-red-400"
+                            >
+                              <X size={18} className="md:w-6 md:h-6" />
+                            </button>
+                          )}
                         </div>
                         <button
                           onClick={() => { hapticTap(); setIsAddingCustomer(true); }}
@@ -1373,6 +1374,59 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                           <UserPlus className="w-6 h-6 md:w-8 md:h-8" />
                         </button>
                       </div>
+                      {/* Selected customer indicator */}
+                      {draft.customerId && (() => {
+                        const selected = customers.find(c => c.id === draft.customerId);
+                        if (!selected) return null;
+                        return (
+                          <div className="flex items-center gap-2 bg-purple-100 border border-purple-200 rounded-2xl p-3 md:p-4">
+                            <User size={14} className="text-purple-600 shrink-0 md:w-4 md:h-4" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm md:text-base font-bold text-purple-900 truncate">{selected.name}</p>
+                              {selected.company && <p className="text-[10px] md:text-xs text-purple-600">{selected.company}</p>}
+                            </div>
+                            <button type="button" onClick={() => setDraft(prev => ({ ...prev, customerId: undefined }))} className="p-1 text-purple-400 hover:text-red-400">
+                              <X size={16} className="md:w-5 md:h-5" />
+                            </button>
+                          </div>
+                        );
+                      })()}
+                      {/* Filtered customer list */}
+                      {!draft.customerId && (
+                        <div className="max-h-[200px] md:max-h-[250px] overflow-y-auto rounded-2xl border-2 border-purple-100 bg-white">
+                          {customers
+                            .filter(c => {
+                              if (!customerSearch) return true;
+                              const s = customerSearch.toLowerCase();
+                              return c.name.toLowerCase().includes(s) || (c.company || '').toLowerCase().includes(s) || (c.phone || '').toLowerCase().includes(s);
+                            })
+                            .map(c => (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  setDraft(prev => ({ ...prev, customerId: c.id, location: prev.location || c.address || '' }));
+                                  setCustomerSearch('');
+                                }}
+                                className="w-full text-left p-3 md:p-4 hover:bg-purple-50 border-b border-purple-50 flex items-center gap-3 transition-colors"
+                              >
+                                <User size={14} className="text-purple-400 shrink-0 md:w-4 md:h-4" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-bold text-sm md:text-base text-slate-900 truncate">{c.name}</p>
+                                  {c.company && <p className="text-[10px] md:text-xs text-slate-500">{c.company}</p>}
+                                </div>
+                              </button>
+                            ))
+                          }
+                          {customers.filter(c => {
+                            if (!customerSearch) return true;
+                            const s = customerSearch.toLowerCase();
+                            return c.name.toLowerCase().includes(s) || (c.company || '').toLowerCase().includes(s);
+                          }).length === 0 && (
+                            <p className="text-center text-sm text-slate-400 italic py-6">No clients found</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
 

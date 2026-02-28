@@ -62,6 +62,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   const [isGeneratingRecurring, setIsGeneratingRecurring] = useState(false);
   const [showOnSiteSignature, setShowOnSiteSignature] = useState(false);
   const [showDesignLayout, setShowDesignLayout] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const { services, refresh, quotes: allQuotes } = useData();
   const documentRef = useRef<HTMLDivElement>(null);
   const shareMenuRef = useRef<HTMLDivElement>(null);
@@ -663,7 +664,8 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
               <ChevronDown size={12} className={`transition-transform ${showMoreMenu ? 'rotate-180' : ''}`} />
             </button>
             {showMoreMenu && (
-              <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-100 py-1 min-w-[140px] z-50">
+              <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-100 py-1 min-w-[160px] z-50">
+                <p className="px-3 py-1 text-[8px] font-black text-slate-300 uppercase tracking-[0.2em]">Appearance</p>
                 <button
                   onClick={() => { setShowCustomiser(!showCustomiser); setShowMoreMenu(false); }}
                   className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-slate-700"
@@ -676,6 +678,8 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
                 >
                   <Palette size={16} className="text-violet-500" /> Design & Layout
                 </button>
+                <div className="border-t border-slate-100 my-1" />
+                <p className="px-3 py-1 text-[8px] font-black text-slate-300 uppercase tracking-[0.2em]">Actions</p>
                 {onDuplicate && (
                   <button
                     onClick={() => { onDuplicate(); setShowMoreMenu(false); }}
@@ -989,17 +993,45 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
         </div>
       )}
 
-      {/* Document Preview */}
-      <QuoteDocument
-        quote={activeQuote}
-        customer={customer}
-        settings={settings}
-        totals={totals}
-        displayOptions={displayOptions}
-        reference={reference}
-        partPaymentAmount={partPaymentAmount}
-        documentRef={documentRef}
-      />
+      {/* Document Preview with Zoom */}
+      <div className="relative print:contents">
+        <div className="flex items-center justify-end gap-1 mb-2 print:hidden">
+          <button
+            onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.25))}
+            className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 text-sm font-black transition-colors"
+            title="Zoom out"
+          >
+            −
+          </button>
+          <button
+            onClick={() => setZoomLevel(1)}
+            className="px-2 h-7 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 text-[10px] font-bold transition-colors min-w-[40px]"
+          >
+            {Math.round(zoomLevel * 100)}%
+          </button>
+          <button
+            onClick={() => setZoomLevel(z => Math.min(2, z + 0.25))}
+            className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 text-sm font-black transition-colors"
+            title="Zoom in"
+          >
+            +
+          </button>
+        </div>
+        <div className="overflow-auto print:overflow-visible" style={{ maxHeight: zoomLevel > 1 ? '80vh' : undefined }}>
+          <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center', transition: 'transform 0.2s ease' }} className="print:!transform-none">
+            <QuoteDocument
+              quote={activeQuote}
+              customer={customer}
+              settings={settings}
+              totals={totals}
+              displayOptions={displayOptions}
+              reference={reference}
+              partPaymentAmount={partPaymentAmount}
+              documentRef={documentRef}
+            />
+          </div>
+        </div>
+      </div>
 
       <div className="flex justify-center pt-4 print:hidden">
         <div className={`px-6 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm flex items-center gap-2.5 ${statusColors[activeQuote.status || 'draft']}`}>Status: {activeQuote.status || 'draft'}</div>

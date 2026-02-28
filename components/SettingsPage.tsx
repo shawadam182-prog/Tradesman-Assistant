@@ -16,7 +16,7 @@ import { TEMPLATE_METADATA, TEMPLATE_DESCRIPTIONS, COLOR_SCHEMES, getTemplateCon
 import { useToast } from '../src/contexts/ToastContext';
 import { hapticSuccess } from '../src/hooks/useHaptic';
 import { handleApiError } from '../src/utils/errorHandler';
-import { userSettingsService } from '../src/services/dataService';
+import { userSettingsService, companyDocumentsService } from '../src/services/dataService';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
 import { redirectToCheckout, redirectToPortal } from '../src/lib/stripe';
 import { useData } from '../src/contexts/DataContext';
@@ -34,7 +34,7 @@ interface SettingsPageProps {
   onBack?: () => void;
 }
 
-type SettingsCategory = 'company' | 'quotes' | 'invoices' | 'materials' | 'communications' | 'subscription' | 'help';
+type SettingsCategory = 'company' | 'quotes' | 'invoices' | 'materials' | 'documents' | 'communications' | 'subscription' | 'help';
 
 // Collapsible Section Component for Quote/Invoice Preferences
 const CollapsibleSection: React.FC<{
@@ -100,6 +100,73 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   };
   const toggleInvoiceSection = (section: string) => {
     setExpandedInvoiceSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  // Company Documents state
+  const [companyDocs, setCompanyDocs] = useState<any[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [docCategory, setDocCategory] = useState('insurance');
+  const [docExpiry, setDocExpiry] = useState('');
+  const [docNotes, setDocNotes] = useState('');
+  const docFileRef = React.useRef<HTMLInputElement>(null);
+
+  const DOC_CATEGORIES = [
+    { value: 'insurance', label: 'Insurance' },
+    { value: 'certificate', label: 'Certificate' },
+    { value: 'id', label: 'ID / Licence' },
+    { value: 'health_safety', label: 'Health & Safety' },
+    { value: 'terms', label: 'Terms & Conditions' },
+    { value: 'other', label: 'Other' },
+  ];
+
+  // Load company documents when section is active
+  useEffect(() => {
+    if (activeCategory === 'documents') {
+      setLoadingDocs(true);
+      companyDocumentsService.getAll()
+        .then(setCompanyDocs)
+        .catch(() => toast.showError('Failed to load documents'))
+        .finally(() => setLoadingDocs(false));
+    }
+  }, [activeCategory]);
+
+  const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingDoc(true);
+    try {
+      const doc = await companyDocumentsService.upload(file, docCategory, docExpiry || undefined, docNotes || undefined);
+      setCompanyDocs(prev => [doc, ...prev]);
+      setDocExpiry('');
+      setDocNotes('');
+      toast.showSuccess('Document uploaded');
+      hapticSuccess();
+    } catch (err) {
+      toast.showError(handleApiError(err));
+    } finally {
+      setUploadingDoc(false);
+      if (docFileRef.current) docFileRef.current.value = '';
+    }
+  };
+
+  const handleDocDelete = async (id: string, storagePath: string) => {
+    try {
+      await companyDocumentsService.delete(id, storagePath);
+      setCompanyDocs(prev => prev.filter(d => d.id !== id));
+      toast.showSuccess('Document deleted');
+    } catch (err) {
+      toast.showError(handleApiError(err));
+    }
+  };
+
+  const handleDocView = async (storagePath: string) => {
+    try {
+      const url = await companyDocumentsService.getUrl(storagePath);
+      if (url) window.open(url, '_blank');
+    } catch (err) {
+      toast.showError(handleApiError(err));
+    }
   };
 
   // Calculate current usage for limits display
@@ -305,7 +372,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
         <div>
           <span className="font-black text-[10px] sm:text-[11px] uppercase tracking-wide sm:tracking-widest block truncate">{label}</span>
           <span className={`text-[8px] sm:text-[9px] font-bold hidden sm:block ${activeCategory === id ? 'text-white/70' : 'text-slate-400'}`}>
-            {id === 'company' ? 'Profile' : id === 'quotes' ? 'Rates' : id === 'help' ? 'Support' : 'Payment'}
+            {id === 'company' ? 'Profile' : id === 'quotes' ? 'Rates' : id === 'documents' ? 'Files' : id === 'help' ? 'Support' : 'Payment'}
           </span>
         </div>
       </div>
@@ -339,10 +406,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
 
           <div className="space-y-2 md:space-y-3">
             <CategoryButton id="subscription" label="Subscription" icon={Crown} color="bg-purple-500 text-white" />
+
+            <p className="text-[8px] md:text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] px-2 pt-2">Business</p>
             <CategoryButton id="company" label="My Company" icon={Building} color="bg-amber-500 text-slate-900" />
+
+            <p className="text-[8px] md:text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] px-2 pt-2">Documents</p>
             <CategoryButton id="quotes" label="Quote Preferences" icon={FileText} color="bg-blue-500 text-white" />
             <CategoryButton id="invoices" label="Invoice Preferences" icon={ReceiptText} color="bg-emerald-500 text-white" />
             <CategoryButton id="materials" label="Materials Library" icon={Package} color="bg-amber-500 text-white" />
+            <CategoryButton id="documents" label="Company Documents" icon={FileBox} color="bg-indigo-500 text-white" />
+
+            <p className="text-[8px] md:text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] px-2 pt-2">Support</p>
             <CategoryButton id="communications" label="Communications" icon={Send} color="bg-blue-500 text-white" />
             <CategoryButton id="help" label="Help & Contact" icon={HelpCircle} color="bg-teal-500 text-white" />
           </div>
@@ -1178,6 +1252,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                   </p>
                 </div>
               </CollapsibleSection>
+
+              {/* Default Quote Footer/Notes */}
+              <CollapsibleSection
+                title="Default Quote Footer"
+                icon={<FileText size={16} className="md:w-5 md:h-5" />}
+                iconBg="bg-slate-200 text-slate-600"
+                isExpanded={expandedQuoteSections['footer'] || false}
+                onToggle={() => toggleQuoteSection('footer')}
+              >
+                <p className="text-[10px] text-slate-500 italic mb-3">Default terms and notes that appear at the bottom of new quotes.</p>
+                <textarea
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] p-4 text-slate-900 font-medium text-sm outline-none focus:bg-white focus:border-teal-500 transition-all min-h-[100px] md:min-h-[150px] leading-relaxed"
+                  value={settings.defaultQuoteNotes || ''}
+                  onChange={e => setSettings({ ...settings, defaultQuoteNotes: e.target.value })}
+                  placeholder="e.g. This quote is valid for 30 days from the date above..."
+                />
+              </CollapsibleSection>
             </div>
           )}
 
@@ -1313,6 +1404,118 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         Add Rate Preset
                       </button>
                     </div>
+                  </div>
+
+                  {/* Labour Units - Shared */}
+                  <div className="space-y-2 md:space-y-4 pt-4 md:pt-6 border-t border-slate-100">
+                    <div className="flex items-center gap-2 px-1">
+                      <Clock size={14} className="md:w-4 md:h-4 text-blue-500" />
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Labour Units</label>
+                    </div>
+                    <p className="text-[10px] text-slate-500 italic px-1">
+                      Time units for labour items (shared with Quote Preferences).
+                    </p>
+                    <div className="space-y-2">
+                      {(settings.labourUnitPresets || ['hrs', 'days', 'week']).map((unit, index) => (
+                        <div key={index} className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl p-2 md:p-3">
+                          <input
+                            type="text"
+                            className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-emerald-400 transition-colors"
+                            value={unit}
+                            onChange={e => {
+                              const newUnits = [...(settings.labourUnitPresets || ['hrs', 'days', 'week'])];
+                              newUnits[index] = e.target.value;
+                              setSettings({ ...settings, labourUnitPresets: newUnits });
+                            }}
+                            placeholder="Unit label"
+                          />
+                          <button
+                            onClick={() => {
+                              const newUnits = (settings.labourUnitPresets || ['hrs', 'days', 'week']).filter((_, i) => i !== index);
+                              setSettings({ ...settings, labourUnitPresets: newUnits });
+                            }}
+                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => {
+                          const newUnits = [...(settings.labourUnitPresets || ['hrs', 'days', 'week']), ''];
+                          setSettings({ ...settings, labourUnitPresets: newUnits });
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-blue-50 border-2 border-dashed border-blue-200 rounded-xl text-blue-600 font-bold text-xs uppercase tracking-wider hover:bg-blue-100 transition-colors"
+                      >
+                        <Plus size={16} />
+                        Add Unit
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </CollapsibleSection>
+
+              {/* Default Visibility - Shared */}
+              <CollapsibleSection
+                title="Default Visibility"
+                icon={<Eye size={16} className="md:w-5 md:h-5" />}
+                iconBg="bg-purple-100 text-purple-600"
+                isExpanded={expandedInvoiceSections['visibility'] || false}
+                onToggle={() => toggleInvoiceSection('visibility')}
+              >
+                <p className="text-[10px] text-slate-500 italic mb-3">What clients see on invoices (shared with Quote Preferences).</p>
+                <div className="grid grid-cols-2 gap-x-4 md:gap-x-12 gap-y-2 md:gap-y-6">
+                  <div className="space-y-1 md:space-y-4">
+                    <div className="flex items-center gap-1 md:gap-2 px-1 md:px-2 pb-1 md:pb-2 border-b border-slate-100">
+                      <Package size={10} className="md:w-4 md:h-4 text-teal-500" />
+                      <h4 className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-900">Materials</h4>
+                    </div>
+                    {[
+                      { key: 'showMaterials', label: 'Section', mobileLabel: 'Show' },
+                      { key: 'showMaterialQty', label: 'Quantities', mobileLabel: 'Qty' },
+                      { key: 'showMaterialUnitPrice', label: 'Unit Prices', mobileLabel: 'Price' },
+                      { key: 'showMaterialLineTotals', label: 'Line Totals', mobileLabel: 'Lines' },
+                      { key: 'showMaterialSectionTotal', label: 'Section Total', mobileLabel: 'Total' }
+                    ].map(option => (
+                      <div key={option.key} className="flex items-center justify-between py-0">
+                        <p className="text-[8px] md:text-[10px] font-black text-slate-900 uppercase tracking-tight">
+                          <span className="md:hidden">{option.mobileLabel}</span>
+                          <span className="hidden md:inline">{option.label}</span>
+                        </p>
+                        <button
+                          onClick={() => toggleDisplayOption(option.key as keyof QuoteDisplayOptions)}
+                          className={`w-8 md:w-10 h-4 md:h-6 rounded-full relative transition-all duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'bg-purple-500' : 'bg-slate-200'}`}
+                        >
+                          <div className={`absolute top-0.5 md:top-1 left-0.5 md:left-1 bg-white w-3 md:w-4 h-3 md:h-4 rounded-full transition-transform duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'translate-x-3.5 md:translate-x-4' : 'translate-x-0'}`} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-1 md:space-y-4">
+                    <div className="flex items-center gap-1 md:gap-2 px-1 md:px-2 pb-1 md:pb-2 border-b border-slate-100">
+                      <HardHat size={10} className="md:w-4 md:h-4 text-blue-500" />
+                      <h4 className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-900">Labour</h4>
+                    </div>
+                    {[
+                      { key: 'showLabour', label: 'Section', mobileLabel: 'Show' },
+                      { key: 'showLabourQty', label: 'Hours', mobileLabel: 'Hrs' },
+                      { key: 'showLabourUnitPrice', label: 'Hourly Rate', mobileLabel: 'Rate' },
+                      { key: 'showLabourLineTotals', label: 'Subtotals', mobileLabel: 'Lines' },
+                      { key: 'showLabourSectionTotal', label: 'Section Total', mobileLabel: 'Total' }
+                    ].map(option => (
+                      <div key={option.key} className="flex items-center justify-between py-0">
+                        <p className="text-[8px] md:text-[10px] font-black text-slate-900 uppercase tracking-tight">
+                          <span className="md:hidden">{option.mobileLabel}</span>
+                          <span className="hidden md:inline">{option.label}</span>
+                        </p>
+                        <button
+                          onClick={() => toggleDisplayOption(option.key as keyof QuoteDisplayOptions)}
+                          className={`w-8 md:w-10 h-4 md:h-6 rounded-full relative transition-all duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'bg-blue-500' : 'bg-slate-200'}`}
+                        >
+                          <div className={`absolute top-0.5 md:top-1 left-0.5 md:left-1 bg-white w-3 md:w-4 h-3 md:h-4 rounded-full transition-transform duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'translate-x-3.5 md:translate-x-4' : 'translate-x-0'}`} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </CollapsibleSection>
@@ -1637,6 +1840,151 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     </div>
                   </div>
 
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeCategory === 'documents' && (
+            <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
+                <div className="p-4 md:p-10 border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-slate-50">
+                  <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                    <div className="p-2 md:p-3 bg-indigo-100 text-indigo-600 rounded-xl md:rounded-2xl"><FileBox size={20} className="md:w-6 md:h-6" /></div>
+                    <h3 className="text-base md:text-xl font-black text-slate-900 uppercase tracking-tight">Company Documents</h3>
+                  </div>
+                  <p className="text-slate-500 text-xs md:text-sm font-medium italic hidden md:block">Upload insurances, certificates, ID, H&S docs, and T&Cs to attach to quotes and invoices.</p>
+                </div>
+
+                <div className="p-4 md:p-10 space-y-6">
+                  {/* Upload Section */}
+                  <div className="bg-indigo-50/50 rounded-2xl p-4 md:p-6 border border-indigo-100 space-y-4">
+                    <h4 className="text-xs font-black text-indigo-800 uppercase tracking-widest flex items-center gap-2">
+                      <Upload size={14} /> Upload Document
+                    </h4>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest px-1">Category</label>
+                        <select
+                          value={docCategory}
+                          onChange={e => setDocCategory(e.target.value)}
+                          className="w-full bg-white border-2 border-indigo-100 rounded-xl p-2.5 text-slate-900 font-bold text-xs outline-none focus:border-indigo-400 transition-all"
+                        >
+                          {DOC_CATEGORIES.map(c => (
+                            <option key={c.value} value={c.value}>{c.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest px-1">Expiry Date</label>
+                        <input
+                          type="date"
+                          value={docExpiry}
+                          onChange={e => setDocExpiry(e.target.value)}
+                          className="w-full bg-white border-2 border-indigo-100 rounded-xl p-2.5 text-slate-900 font-bold text-xs outline-none focus:border-indigo-400 transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest px-1">Notes (optional)</label>
+                      <input
+                        type="text"
+                        value={docNotes}
+                        onChange={e => setDocNotes(e.target.value)}
+                        placeholder="e.g. Public liability, £5m cover"
+                        className="w-full bg-white border-2 border-indigo-100 rounded-xl p-2.5 text-slate-900 font-bold text-xs outline-none focus:border-indigo-400 transition-all placeholder:text-slate-300"
+                      />
+                    </div>
+
+                    <input
+                      ref={docFileRef}
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      onChange={handleDocUpload}
+                    />
+                    <button
+                      onClick={() => docFileRef.current?.click()}
+                      disabled={uploadingDoc}
+                      className="w-full flex items-center justify-center gap-2 p-3 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                    >
+                      {uploadingDoc ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                      {uploadingDoc ? 'Uploading...' : 'Choose File & Upload'}
+                    </button>
+                  </div>
+
+                  {/* Documents List */}
+                  {loadingDocs ? (
+                    <div className="flex items-center justify-center py-10">
+                      <Loader2 size={24} className="animate-spin text-indigo-400" />
+                    </div>
+                  ) : companyDocs.length === 0 ? (
+                    <div className="text-center py-10">
+                      <FileBox size={32} className="mx-auto text-slate-200 mb-2" />
+                      <p className="text-xs text-slate-400 font-medium">No documents uploaded yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {DOC_CATEGORIES.map(cat => {
+                        const catDocs = companyDocs.filter(d => d.category === cat.value);
+                        if (catDocs.length === 0) return null;
+                        return (
+                          <div key={cat.value}>
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2">{cat.label}</h4>
+                            <div className="space-y-2">
+                              {catDocs.map((doc: any) => {
+                                const isExpired = doc.expiry_date && new Date(doc.expiry_date) < new Date();
+                                const expiringSoon = doc.expiry_date && !isExpired && new Date(doc.expiry_date) < new Date(Date.now() + 30 * 86400000);
+                                return (
+                                  <div
+                                    key={doc.id}
+                                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                                      isExpired ? 'bg-red-50 border-red-200' : expiringSoon ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-100'
+                                    }`}
+                                  >
+                                    <div className={`p-2 rounded-lg shrink-0 ${isExpired ? 'bg-red-100 text-red-500' : expiringSoon ? 'bg-amber-100 text-amber-500' : 'bg-indigo-100 text-indigo-500'}`}>
+                                      <FileText size={16} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-bold text-slate-900 truncate">{doc.name}</p>
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        {doc.notes && <p className="text-[10px] text-slate-500 truncate">{doc.notes}</p>}
+                                        {doc.expiry_date && (
+                                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                                            isExpired ? 'bg-red-200 text-red-700' : expiringSoon ? 'bg-amber-200 text-amber-700' : 'bg-slate-100 text-slate-500'
+                                          }`}>
+                                            {isExpired ? 'EXPIRED' : expiringSoon ? 'EXPIRING SOON' : `Exp: ${new Date(doc.expiry_date).toLocaleDateString()}`}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <button
+                                        onClick={() => handleDocView(doc.storage_path)}
+                                        className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
+                                        title="View"
+                                      >
+                                        <ExternalLink size={14} />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDocDelete(doc.id, doc.storage_path)}
+                                        className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Delete"
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

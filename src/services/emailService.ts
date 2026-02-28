@@ -34,6 +34,7 @@ interface SendEmailParams {
   attachmentFilename?: string;
   quoteId?: string;
   templateType?: string;
+  companyDocumentIds?: string[];
 }
 
 export const emailService = {
@@ -52,6 +53,7 @@ export const emailService = {
         attachment_filename: params.attachmentFilename,
         quote_id: params.quoteId,
         template_type: params.templateType,
+        company_document_ids: params.companyDocumentIds,
       },
     });
 
