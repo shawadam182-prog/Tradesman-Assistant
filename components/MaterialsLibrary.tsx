@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Package, Search, Star, Filter, Plus, Edit2, Trash2,
-  Upload, ChevronDown, X, Check, AlertCircle, Loader2,
-  Building2, Tag, PoundSterling, ArrowLeft, MoreVertical, Layers
+  Package, Search, Star, Plus, Edit2, Trash2,
+  Upload, Download, ChevronDown, X, Check, AlertCircle, Loader2,
+  ArrowLeft,
 } from 'lucide-react';
 import { useData } from '../src/contexts/DataContext';
+import { useToast } from '../src/contexts/ToastContext';
 import { WholesalerImportPage } from './WholesalerImportPage';
-import { MaterialKitEditor } from './materials/MaterialKitEditor';
-import type { DBMaterialLibraryItem, MaterialKit } from '../types';
+import { TRADE_MATERIALS, TRADE_OPTIONS } from '../src/data/genericMaterials';
+import type { DBMaterialLibraryItem } from '../types';
 
 interface MaterialsLibraryProps {
   onSelectMaterial?: (material: DBMaterialLibraryItem) => void;
@@ -21,17 +22,14 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
   onBack,
 }) => {
   const { services } = useData();
-  const [view, setView] = useState<'library' | 'import' | 'kits'>('library');
+  const toast = useToast();
+  const [showImport, setShowImport] = useState(false);
   const [materials, setMaterials] = useState<DBMaterialLibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSupplier, setSelectedSupplier] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [showFavouritesOnly, setShowFavouritesOnly] = useState(false);
-  const [suppliers, setSuppliers] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [stats, setStats] = useState({ totalItems: 0, suppliers: 0, categories: 0, favourites: 0 });
 
   // Edit modal state
   const [editingMaterial, setEditingMaterial] = useState<DBMaterialLibraryItem | null>(null);
@@ -45,29 +43,34 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
   });
   const [saving, setSaving] = useState(false);
 
+  // Add new material state
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addForm, setAddForm] = useState({
+    name: '',
+    description: '',
+    unit: 'pc',
+    cost_price: '',
+    sell_price: '',
+    category: '',
+  });
+
   // Delete confirmation
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Kits state
-  const [kits, setKits] = useState<MaterialKit[]>([]);
-  const [kitsLoading, setKitsLoading] = useState(false);
-  const [editingKit, setEditingKit] = useState<MaterialKit | null | 'new'>(null);
-  const [deletingKitId, setDeletingKitId] = useState<string | null>(null);
+  // Generic list download state
+  const [showTradeDropdown, setShowTradeDropdown] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const loadMaterials = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [materialsData, suppliersData, categoriesData, statsData] = await Promise.all([
+      const [materialsData, categoriesData] = await Promise.all([
         services.materialsLibrary.getAll(),
-        services.materialsLibrary.getSuppliers(),
         services.materialsLibrary.getCategories(),
-        services.materialsLibrary.getStats(),
       ]);
       setMaterials(materialsData || []);
-      setSuppliers(suppliersData || []);
       setCategories(categoriesData || []);
-      setStats(statsData);
     } catch (err: any) {
       console.error('Failed to load materials:', err);
       setError(err.message || 'Failed to load materials');
@@ -80,25 +83,8 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
     loadMaterials();
   }, [loadMaterials]);
 
-  const loadKits = useCallback(async () => {
-    setKitsLoading(true);
-    try {
-      const data = await services.materialKits.getAll();
-      setKits(data);
-    } catch (err) {
-      console.error('Failed to load kits:', err);
-    } finally {
-      setKitsLoading(false);
-    }
-  }, [services.materialKits]);
-
-  useEffect(() => {
-    if (view === 'kits') loadKits();
-  }, [view, loadKits]);
-
   // Filter materials
   const filteredMaterials = materials.filter(m => {
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       const matchesSearch =
@@ -107,16 +93,7 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
         m.description?.toLowerCase().includes(query);
       if (!matchesSearch) return false;
     }
-
-    // Supplier filter
-    if (selectedSupplier !== 'all' && m.supplier !== selectedSupplier) return false;
-
-    // Category filter
     if (selectedCategory !== 'all' && m.category !== selectedCategory) return false;
-
-    // Favourites filter
-    if (showFavouritesOnly && !m.is_favourite) return false;
-
     return true;
   });
 
@@ -167,8 +144,10 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
         } : m)
       );
       setEditingMaterial(null);
+      toast.success('Updated', 'Material saved');
     } catch (err) {
       console.error('Failed to save:', err);
+      toast.error('Failed', 'Could not save changes');
     } finally {
       setSaving(false);
     }
@@ -179,8 +158,33 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
       await services.materialsLibrary.delete(id);
       setMaterials(prev => prev.filter(m => m.id !== id));
       setDeletingId(null);
+      toast.success('Deleted', 'Material removed from list');
     } catch (err) {
       console.error('Failed to delete:', err);
+    }
+  };
+
+  const handleAddMaterial = async () => {
+    if (!addForm.name.trim()) return;
+    setSaving(true);
+    try {
+      const created = await services.materialsLibrary.create({
+        name: addForm.name.trim(),
+        description: addForm.description || undefined,
+        unit: addForm.unit || 'pc',
+        cost_price: addForm.cost_price ? parseFloat(addForm.cost_price) : undefined,
+        sell_price: addForm.sell_price ? parseFloat(addForm.sell_price) : undefined,
+        category: addForm.category || undefined,
+      });
+      setMaterials(prev => [...prev, created]);
+      setAddForm({ name: '', description: '', unit: 'pc', cost_price: '', sell_price: '', category: '' });
+      setShowAddForm(false);
+      toast.success('Added', `${addForm.name} added to your list`);
+    } catch (err) {
+      console.error('Failed to add material:', err);
+      toast.error('Failed', 'Could not add material');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -190,36 +194,47 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
     }
   };
 
-  if (view === 'import') {
+  // Download a generic trade list into the user's materials library
+  const handleDownloadTradeList = async (tradeId: string) => {
+    const trade = TRADE_MATERIALS.find(t => t.id === tradeId);
+    if (!trade) return;
+
+    setDownloading(true);
+    setShowTradeDropdown(false);
+    try {
+      let added = 0;
+      for (const mat of trade.materials) {
+        try {
+          await services.materialsLibrary.create({
+            name: mat.name,
+            unit: mat.unit,
+            sell_price: mat.price,
+            category: mat.category,
+            supplier: `Generic (${trade.label})`,
+          });
+          added++;
+        } catch {
+          // skip duplicates / errors
+        }
+      }
+      toast.success('List Downloaded', `${added} ${trade.label} materials added to your list`);
+      await loadMaterials();
+    } catch (err) {
+      console.error('Failed to download trade list:', err);
+      toast.error('Failed', 'Could not download trade list');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  if (showImport) {
     return (
       <WholesalerImportPage
         onBack={() => {
-          setView('library');
+          setShowImport(false);
           loadMaterials();
         }}
       />
-    );
-  }
-
-  // Kit editor modal (shown over both library and kits views)
-  if (editingKit) {
-    return (
-      <div className="max-w-2xl mx-auto">
-        <MaterialKitEditor
-          kit={editingKit === 'new' ? undefined : editingKit}
-          onSave={async (data) => {
-            if (editingKit === 'new') {
-              const created = await services.materialKits.create(data);
-              setKits(prev => [...prev, created]);
-            } else {
-              const updated = await services.materialKits.update(editingKit.id, data);
-              setKits(prev => prev.map(k => k.id === updated.id ? updated : k));
-            }
-            setEditingKit(null);
-          }}
-          onCancel={() => setEditingKit(null)}
-        />
-      </div>
     );
   }
 
@@ -237,242 +252,100 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
             </button>
           )}
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Materials Library</h1>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Materials</h1>
             <p className="text-slate-500 text-sm font-medium">
-              {stats.totalItems} materials from {stats.suppliers} suppliers
+              {materials.length} material{materials.length !== 1 ? 's' : ''} in your list
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {view === 'library' && (
+
+        {/* Action Buttons */}
+        {!selectionMode && (
+          <div className="flex items-center gap-2">
+            {/* Add Material */}
             <button
-              onClick={() => setView('import')}
-              className="flex items-center gap-2 px-4 py-3 bg-teal-500 text-white rounded-2xl font-black hover:bg-teal-400 transition-colors"
+              onClick={() => setShowAddForm(true)}
+              className="flex items-center gap-2 px-3 py-2.5 bg-teal-500 text-white rounded-2xl font-black text-sm hover:bg-teal-400 transition-colors"
             >
-              <Upload size={18} />
-              Import CSV
+              <Plus size={16} />
+              <span className="hidden sm:inline">Add</span>
             </button>
-          )}
-          {view === 'kits' && (
+
+            {/* Import Own List */}
             <button
-              onClick={() => setEditingKit('new')}
-              className="flex items-center gap-2 px-4 py-3 bg-purple-500 text-white rounded-2xl font-black hover:bg-purple-400 transition-colors"
+              onClick={() => setShowImport(true)}
+              className="flex items-center gap-2 px-3 py-2.5 border border-slate-200 text-slate-700 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-colors"
             >
-              <Plus size={18} />
-              New Kit
+              <Upload size={16} />
+              <span className="hidden sm:inline">Import CSV</span>
             </button>
-          )}
-        </div>
+
+            {/* Download Generic List */}
+            <div className="relative">
+              <button
+                onClick={() => setShowTradeDropdown(!showTradeDropdown)}
+                disabled={downloading}
+                className="flex items-center gap-2 px-3 py-2.5 border border-slate-200 text-slate-700 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                {downloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+                <span className="hidden sm:inline">Generic List</span>
+                <ChevronDown size={14} />
+              </button>
+
+              {/* Trade Dropdown */}
+              {showTradeDropdown && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowTradeDropdown(false)} />
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 max-h-80 overflow-auto">
+                    <div className="p-3 border-b border-slate-100">
+                      <p className="text-xs font-bold text-slate-500 uppercase">Select Trade</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Adds a starter list with approximate UK prices</p>
+                    </div>
+                    {TRADE_OPTIONS.map(trade => (
+                      <button
+                        key={trade.id}
+                        onClick={() => handleDownloadTradeList(trade.id)}
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors text-sm font-medium text-slate-700 border-b border-slate-50 last:border-0"
+                      >
+                        {trade.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Tab Bar */}
-      {!selectionMode && (
-        <div className="flex gap-1 mb-6 bg-slate-100 rounded-2xl p-1">
-          <button
-            onClick={() => setView('library')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-colors ${
-              view === 'library' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Package size={16} />
-            Materials
-          </button>
-          <button
-            onClick={() => setView('kits')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-colors ${
-              view === 'kits' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Layers size={16} />
-            Kits
-            {kits.length > 0 && (
-              <span className="px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded-full text-[10px] font-black">
-                {kits.length}
-              </span>
-            )}
-          </button>
-        </div>
-      )}
-
-      {/* Kits View */}
-      {view === 'kits' && (
-        <div className="space-y-4">
-          {kitsLoading ? (
-            <div className="text-center py-12 text-slate-400"><Loader2 size={24} className="animate-spin mx-auto mb-2" />Loading kits...</div>
-          ) : kits.length === 0 ? (
-            <div className="text-center py-12">
-              <Layers size={48} className="mx-auto text-slate-300 mb-3" />
-              <h3 className="text-lg font-bold text-slate-700 mb-1">No Material Kits Yet</h3>
-              <p className="text-sm text-slate-500 mb-4">Create reusable kits of materials you use together frequently.</p>
-              <button
-                onClick={() => setEditingKit('new')}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-purple-500 text-white rounded-2xl font-black hover:bg-purple-400 transition-colors"
-              >
-                <Plus size={18} />
-                Create First Kit
-              </button>
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {kits.map(kit => (
-                <div key={kit.id} className="bg-white rounded-2xl border border-slate-200 p-4 hover:border-purple-200 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-slate-900">{kit.name}</h3>
-                        {kit.isFavourite && <Star size={14} className="text-amber-400 fill-amber-400" />}
-                        {kit.category && (
-                          <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-bold">{kit.category}</span>
-                        )}
-                      </div>
-                      {kit.description && <p className="text-xs text-slate-500 mt-0.5">{kit.description}</p>}
-                      <div className="flex items-center gap-3 mt-2">
-                        <span className="text-xs text-slate-400">{kit.items.length} item{kit.items.length !== 1 ? 's' : ''}</span>
-                        <span className="text-xs font-bold text-teal-600">
-                          £{kit.items.reduce((s, i) => s + i.totalPrice, 0).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={async () => {
-                          const updated = await services.materialKits.toggleFavourite(kit.id);
-                          setKits(prev => prev.map(k => k.id === updated.id ? updated : k));
-                        }}
-                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                      >
-                        <Star size={16} className={kit.isFavourite ? 'text-amber-400 fill-amber-400' : 'text-slate-300'} />
-                      </button>
-                      <button
-                        onClick={() => setEditingKit(kit)}
-                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                      >
-                        <Edit2 size={16} className="text-slate-400" />
-                      </button>
-                      <button
-                        onClick={() => setDeletingKitId(kit.id)}
-                        className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 size={16} className="text-slate-400 hover:text-red-500" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Kit Delete Confirmation */}
-          {deletingKitId && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
-                <h3 className="text-xl font-black text-slate-900 mb-2">Delete Kit?</h3>
-                <p className="text-sm text-slate-500 mb-4">This action cannot be undone.</p>
-                <div className="flex gap-3">
-                  <button onClick={() => setDeletingKitId(null)} className="flex-1 py-2.5 bg-slate-100 rounded-xl font-bold text-sm">Cancel</button>
-                  <button
-                    onClick={async () => {
-                      await services.materialKits.delete(deletingKitId);
-                      setKits(prev => prev.filter(k => k.id !== deletingKitId));
-                      setDeletingKitId(null);
-                    }}
-                    className="flex-1 py-2.5 bg-red-500 text-white rounded-xl font-bold text-sm"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Stats Cards */}
-      {!selectionMode && view === 'library' && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-2xl border border-slate-200 p-4">
-            <Package size={20} className="text-slate-400 mb-2" />
-            <p className="text-2xl font-black text-slate-900">{stats.totalItems}</p>
-            <p className="text-xs text-slate-500 font-medium">Total Materials</p>
-          </div>
-          <div className="bg-white rounded-2xl border border-slate-200 p-4">
-            <Building2 size={20} className="text-slate-400 mb-2" />
-            <p className="text-2xl font-black text-slate-900">{stats.suppliers}</p>
-            <p className="text-xs text-slate-500 font-medium">Suppliers</p>
-          </div>
-          <div className="bg-white rounded-2xl border border-slate-200 p-4">
-            <Tag size={20} className="text-slate-400 mb-2" />
-            <p className="text-2xl font-black text-slate-900">{stats.categories}</p>
-            <p className="text-xs text-slate-500 font-medium">Categories</p>
-          </div>
-          <div className="bg-white rounded-2xl border border-slate-200 p-4">
-            <Star size={20} className="text-amber-400 mb-2" />
-            <p className="text-2xl font-black text-slate-900">{stats.favourites}</p>
-            <p className="text-xs text-slate-500 font-medium">Favourites</p>
-          </div>
-        </div>
-      )}
-
-      {/* Library Content (search, table, modals) */}
-      {view === 'library' && (<>
-
-      {/* Search and Filters */}
+      {/* Search and Category Filter */}
       <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search */}
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hidden sm:block" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, code, or description..."
+              placeholder="Search materials..."
               className="w-full px-4 sm:pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
             />
           </div>
-
-          {/* Supplier Filter */}
-          <div className="relative">
-            <select
-              value={selectedSupplier}
-              onChange={(e) => setSelectedSupplier(e.target.value)}
-              className="appearance-none pl-4 pr-10 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium text-sm"
-            >
-              <option value="all">All Suppliers</option>
-              {suppliers.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          </div>
-
-          {/* Category Filter */}
-          <div className="relative">
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="appearance-none pl-4 pr-10 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium text-sm capitalize"
-            >
-              <option value="all">All Categories</option>
-              {categories.map(c => (
-                <option key={c} value={c} className="capitalize">{c}</option>
-              ))}
-            </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          </div>
-
-          {/* Favourites Toggle */}
-          <button
-            onClick={() => setShowFavouritesOnly(!showFavouritesOnly)}
-            className={`flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-colors ${
-              showFavouritesOnly
-                ? 'bg-amber-100 text-amber-700 border-2 border-amber-500'
-                : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            <Star size={16} className={showFavouritesOnly ? 'fill-amber-500' : ''} />
-            Favourites
-          </button>
+          {categories.length > 0 && (
+            <div className="relative">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="appearance-none pl-4 pr-10 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium text-sm capitalize"
+              >
+                <option value="all">All Categories</option>
+                {categories.map(c => (
+                  <option key={c} value={c} className="capitalize">{c}</option>
+                ))}
+              </select>
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            </div>
+          )}
         </div>
       </div>
 
@@ -487,7 +360,7 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
       {/* Loading */}
       {loading && (
         <div className="text-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-500 mx-auto mb-4" />
+          <Loader2 className="w-8 h-8 animate-spin text-teal-500 mx-auto mb-4" />
           <p className="text-slate-500">Loading materials...</p>
         </div>
       )}
@@ -497,14 +370,47 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
         <div className="text-center py-12 bg-white rounded-3xl border border-slate-200">
           <Package className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <h3 className="text-xl font-black text-slate-900 mb-2">No Materials Yet</h3>
-          <p className="text-slate-500 text-sm mb-6">Import a price list from your wholesaler to get started</p>
-          <button
-            onClick={() => setView('import')}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 text-slate-900 rounded-2xl font-black hover:bg-amber-400 transition-colors"
-          >
-            <Upload size={18} />
-            Import CSV
-          </button>
+          <p className="text-slate-500 text-sm mb-6 max-w-sm mx-auto">
+            Get started by downloading a generic trade list, importing your own CSV, or adding materials one by one.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="relative inline-block">
+              <button
+                onClick={() => setShowTradeDropdown(!showTradeDropdown)}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-teal-500 text-white rounded-2xl font-black hover:bg-teal-400 transition-colors"
+              >
+                <Download size={18} />
+                Download Trade List
+                <ChevronDown size={14} />
+              </button>
+              {showTradeDropdown && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowTradeDropdown(false)} />
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 max-h-80 overflow-auto">
+                    <div className="p-3 border-b border-slate-100">
+                      <p className="text-xs font-bold text-slate-500 uppercase">Select Trade</p>
+                    </div>
+                    {TRADE_OPTIONS.map(trade => (
+                      <button
+                        key={trade.id}
+                        onClick={() => handleDownloadTradeList(trade.id)}
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors text-sm font-medium text-slate-700 border-b border-slate-50 last:border-0"
+                      >
+                        {trade.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            <button
+              onClick={() => setShowImport(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-slate-200 text-slate-700 rounded-2xl font-black hover:bg-slate-50 transition-colors"
+            >
+              <Upload size={18} />
+              Import CSV
+            </button>
+          </div>
         </div>
       )}
 
@@ -515,13 +421,11 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
             <table className="w-full text-sm">
               <thead className="bg-slate-50 sticky top-0">
                 <tr>
-                  {!selectionMode && <th className="w-12 p-4"></th>}
-                  <th className="text-left p-4 font-black text-slate-600 text-xs uppercase">Material</th>
-                  <th className="text-left p-4 font-black text-slate-600 text-xs uppercase hidden sm:table-cell">Supplier</th>
-                  <th className="text-left p-4 font-black text-slate-600 text-xs uppercase hidden md:table-cell">Unit</th>
-                  <th className="text-right p-4 font-black text-slate-600 text-xs uppercase">Cost</th>
-                  <th className="text-right p-4 font-black text-slate-600 text-xs uppercase">Sell</th>
-                  <th className="w-12 p-4"></th>
+                  {!selectionMode && <th className="w-10 p-3"></th>}
+                  <th className="text-left p-3 font-black text-slate-600 text-xs uppercase">Material</th>
+                  <th className="text-left p-3 font-black text-slate-600 text-xs uppercase hidden md:table-cell">Unit</th>
+                  <th className="text-right p-3 font-black text-slate-600 text-xs uppercase">Price</th>
+                  <th className="w-20 p-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -532,7 +436,7 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
                     onClick={() => selectionMode && handleSelectMaterial(material)}
                   >
                     {!selectionMode && (
-                      <td className="p-4">
+                      <td className="p-3">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -541,7 +445,7 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
                           className="p-1 hover:bg-amber-50 rounded-lg transition-colors"
                         >
                           <Star
-                            size={18}
+                            size={16}
                             className={material.is_favourite
                               ? 'text-amber-500 fill-amber-500'
                               : 'text-slate-300 hover:text-amber-400'
@@ -550,51 +454,46 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
                         </button>
                       </td>
                     )}
-                    <td className="p-4">
+                    <td className="p-3">
                       <p className="font-bold text-slate-900">{material.name}</p>
-                      {material.product_code && (
-                        <p className="text-xs text-slate-400 font-mono">{material.product_code}</p>
-                      )}
                       {material.category && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-slate-100 text-slate-500 text-xs rounded-full capitalize">
+                        <span className="inline-block mt-0.5 px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] rounded-full capitalize">
                           {material.category}
                         </span>
                       )}
                     </td>
-                    <td className="p-4 text-slate-600 hidden sm:table-cell">{material.supplier || '-'}</td>
-                    <td className="p-4 text-slate-600 hidden md:table-cell">{material.unit || 'pc'}</td>
-                    <td className="p-4 text-right text-slate-600">
-                      {material.cost_price ? `£${Number(material.cost_price).toFixed(2)}` : '-'}
+                    <td className="p-3 text-slate-600 hidden md:table-cell">{material.unit || 'pc'}</td>
+                    <td className="p-3 text-right font-bold text-slate-900">
+                      {(material.sell_price || material.cost_price)
+                        ? `£${Number(material.sell_price || material.cost_price).toFixed(2)}`
+                        : '-'}
                     </td>
-                    <td className="p-4 text-right font-bold text-emerald-600">
-                      {material.sell_price ? `£${Number(material.sell_price).toFixed(2)}` : '-'}
-                    </td>
-                    <td className="p-4">
+                    <td className="p-3">
                       {!selectionMode ? (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-0.5">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleEdit(material);
                             }}
-                            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                            className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
                           >
-                            <Edit2 size={16} className="text-slate-400" />
+                            <Edit2 size={14} className="text-slate-400" />
                           </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setDeletingId(material.id);
                             }}
-                            className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
                           >
-                            <Trash2 size={16} className="text-slate-400 hover:text-red-500" />
+                            <Trash2 size={14} className="text-slate-400 hover:text-red-500" />
                           </button>
                         </div>
                       ) : (
                         <button
                           onClick={() => handleSelectMaterial(material)}
-                          className="px-3 py-1 bg-amber-500 text-slate-900 rounded-lg font-bold text-xs hover:bg-amber-400 transition-colors"
+                          className="px-3 py-1 bg-teal-500 text-white rounded-lg font-bold text-xs hover:bg-teal-400 transition-colors"
                         >
                           Add
                         </button>
@@ -605,8 +504,8 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
               </tbody>
             </table>
           </div>
-          <div className="p-4 border-t border-slate-100 bg-slate-50">
-            <p className="text-sm text-slate-500">
+          <div className="p-3 border-t border-slate-100 bg-slate-50">
+            <p className="text-xs text-slate-500">
               Showing {filteredMaterials.length} of {materials.length} materials
             </p>
           </div>
@@ -619,6 +518,104 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
           <Search className="w-12 h-12 text-slate-300 mx-auto mb-4" />
           <h3 className="text-lg font-black text-slate-900 mb-2">No Results Found</h3>
           <p className="text-slate-500 text-sm">Try adjusting your search or filters</p>
+        </div>
+      )}
+
+      {/* Add Material Modal */}
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-black text-slate-900">Add Material</h3>
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+              >
+                <X size={20} className="text-slate-400" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Name *</label>
+                <input
+                  type="text"
+                  value={addForm.name}
+                  onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
+                  placeholder="e.g. 15mm Copper Pipe"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl"
+                  autoFocus
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Unit</label>
+                  <select
+                    value={addForm.unit}
+                    onChange={(e) => setAddForm({ ...addForm, unit: e.target.value })}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl"
+                  >
+                    <option value="pc">pc</option>
+                    <option value="m">m</option>
+                    <option value="sqm">sqm</option>
+                    <option value="bag">bag</option>
+                    <option value="sheet">sheet</option>
+                    <option value="pack">pack</option>
+                    <option value="roll">roll</option>
+                    <option value="tin">tin</option>
+                    <option value="tube">tube</option>
+                    <option value="length">length</option>
+                    <option value="pair">pair</option>
+                    <option value="box">box</option>
+                    <option value="set">set</option>
+                    <option value="kit">kit</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Price</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">£</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={addForm.sell_price}
+                      onChange={(e) => setAddForm({ ...addForm, sell_price: e.target.value })}
+                      className="w-full pl-8 pr-4 py-3 border border-slate-200 rounded-xl"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Category</label>
+                  <input
+                    type="text"
+                    value={addForm.category}
+                    onChange={(e) => setAddForm({ ...addForm, category: e.target.value })}
+                    placeholder="e.g. plumbing"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-6">
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddMaterial}
+                disabled={saving || !addForm.name.trim()}
+                className="flex-1 px-4 py-3 bg-teal-500 text-white rounded-xl font-black hover:bg-teal-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check size={18} />}
+                Add Material
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -647,16 +644,6 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
                 />
               </div>
 
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Description</label>
-                <input
-                  type="text"
-                  value={editForm.description}
-                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl"
-                />
-              </div>
-
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Unit</label>
@@ -676,6 +663,9 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
                     <option value="tube">tube</option>
                     <option value="length">length</option>
                     <option value="pair">pair</option>
+                    <option value="box">box</option>
+                    <option value="set">set</option>
+                    <option value="kit">kit</option>
                   </select>
                 </div>
                 <div>
@@ -728,7 +718,7 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
               <button
                 onClick={handleSaveEdit}
                 disabled={saving || !editForm.name}
-                className="flex-1 px-4 py-3 bg-amber-500 text-slate-900 rounded-xl font-black hover:bg-amber-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 bg-teal-500 text-white rounded-xl font-black hover:bg-teal-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check size={18} />}
                 Save Changes
@@ -764,8 +754,6 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
           </div>
         </div>
       )}
-
-      </>)}
     </div>
   );
 };

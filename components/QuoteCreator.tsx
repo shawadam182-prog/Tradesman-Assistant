@@ -732,10 +732,18 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
 
   const saveItemToLibrary = async (item: MaterialItem) => {
     try {
-      await services.materialsLibrary.create({ name: item.name, description: item.description, unit: item.unit, sell_price: item.unitPrice });
-      toast.success('Saved', `${item.name} added to price list`);
+      // Check if a material with this name already exists — if so, update its price
+      const allMaterials = await services.materialsLibrary.getAll();
+      const existing = allMaterials.find((m: any) => m.name.toLowerCase() === item.name.toLowerCase());
+      if (existing) {
+        await services.materialsLibrary.update(existing.id, { sell_price: item.unitPrice, unit: item.unit });
+        toast.success('Updated', `${item.name} price updated in your list`);
+      } else {
+        await services.materialsLibrary.create({ name: item.name, description: item.description, unit: item.unit, sell_price: item.unitPrice });
+        toast.success('Saved', `${item.name} added to your list`);
+      }
       hapticSuccess();
-    } catch (err) { toast.error('Failed', 'Could not save to price list'); }
+    } catch (err) { toast.error('Failed', 'Could not save to materials list'); }
   };
 
   // Labour item handlers

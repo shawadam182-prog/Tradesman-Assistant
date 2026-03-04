@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MaterialItem } from '../../types';
-import { Plus, Minus, Trash2, BookmarkPlus, Type, Sparkles } from 'lucide-react';
+import { Plus, Minus, Trash2, BookmarkPlus, Type, Sparkles, Check, X } from 'lucide-react';
 
 interface MaterialItemRowProps {
   item: MaterialItem;
@@ -21,6 +21,10 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
   onDecrement,
   onSaveToLibrary,
 }) => {
+  // Track whether to show "Save to materials list?" prompt
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
+  const initialNameRef = useRef(item.name);
+  const promptDismissedRef = useRef(false);
   // Local state for price input to allow typing decimals
   const [priceInput, setPriceInput] = useState<string>(
     item.unitPrice !== undefined && item.unitPrice !== 0 ? String(item.unitPrice) : ''
@@ -67,6 +71,12 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
             className="flex-1 min-w-0 h-4 md:h-7 font-bold text-[10px] md:text-sm text-slate-900 outline-none placeholder:text-slate-300 bg-transparent leading-none md:leading-normal p-0 m-0"
             value={item.name}
             onChange={e => onUpdate(sectionId, item.id, { name: e.target.value })}
+            onBlur={() => {
+              // Show save prompt when user finishes typing a new material name
+              if (item.name.trim() && item.name !== initialNameRef.current && onSaveToLibrary && !promptDismissedRef.current) {
+                setShowSavePrompt(true);
+              }
+            }}
             placeholder="Item Name"
           />
           {item.isAIProposed && (
@@ -156,6 +166,37 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Save to materials list prompt */}
+      {showSavePrompt && onSaveToLibrary && (
+        <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1 px-1 md:px-2 py-0.5 md:py-1 bg-teal-50 border border-teal-200 rounded md:rounded-lg">
+          <BookmarkPlus size={10} className="text-teal-500 shrink-0 md:hidden" />
+          <BookmarkPlus size={14} className="text-teal-500 shrink-0 hidden md:block" />
+          <span className="text-[8px] md:text-xs font-bold text-teal-700 flex-1">Save to materials list?</span>
+          <button
+            onClick={() => {
+              onSaveToLibrary(item);
+              setShowSavePrompt(false);
+              promptDismissedRef.current = true;
+              initialNameRef.current = item.name;
+            }}
+            className="p-0.5 md:p-1 bg-teal-500 text-white rounded md:rounded-md hover:bg-teal-400 transition-colors"
+          >
+            <Check size={10} className="md:hidden" />
+            <Check size={12} className="hidden md:block" />
+          </button>
+          <button
+            onClick={() => {
+              setShowSavePrompt(false);
+              promptDismissedRef.current = true;
+            }}
+            className="p-0.5 md:p-1 text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <X size={10} className="md:hidden" />
+            <X size={12} className="hidden md:block" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
