@@ -66,6 +66,11 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
     } catch { /* sessionStorage not available */ }
   }, [editingId, customerForm]);
 
+  // Activity log state (must be before callbacks that reference it)
+  const [activityLogCustomerId, setActivityLogCustomerId] = useState<string | null>(null);
+  const [activitySearchTerm, setActivitySearchTerm] = useState('');
+  const [customerEmails, setCustomerEmails] = useState<Record<string, EmailLogEntry[]>>({});
+
   // Get customer history (jobs, quotes, invoices)
   const getCustomerHistory = useCallback((customerId: string) => {
     const customerJobs = projects.filter(p => p.customerId === customerId);
@@ -172,10 +177,6 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
   const [showLiveVoiceFill, setShowLiveVoiceFill] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
 
-  // Activity log state
-  const [activityLogCustomerId, setActivityLogCustomerId] = useState<string | null>(null);
-  const [activitySearchTerm, setActivitySearchTerm] = useState('');
-  const [customerEmails, setCustomerEmails] = useState<Record<string, EmailLogEntry[]>>({});
 
   // Field configuration for LiveVoiceFill
   const voiceFields: VoiceFieldConfig[] = [
