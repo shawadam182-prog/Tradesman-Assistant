@@ -35,64 +35,93 @@ const readExifGps = (file: File): Promise<{ lat: number; lng: number } | null> =
       try {
         const view = new DataView(e.target!.result as ArrayBuffer);
         // Check for JPEG
-        if (view.getUint16(0) !== 0xFFD8) { resolve(null); return; }
+        if (view.byteLength < 4 || view.getUint16(0) !== 0xFFD8) { resolve(null); return; }
         let offset = 2;
-        while (offset < view.byteLength - 2) {
+        while (offset < view.byteLength - 4) {
           const marker = view.getUint16(offset);
           if (marker === 0xFFE1) { // APP1 (EXIF)
             const exifData = parseExifGps(view, offset + 4);
             resolve(exifData);
             return;
           }
-          offset += 2 + view.getUint16(offset + 2);
+          // Safety: ensure segment length is valid to prevent infinite loops
+          const segmentLen = view.getUint16(offset + 2);
+          if (segmentLen < 2) break;
+          offset += 2 + segmentLen;
         }
         resolve(null);
       } catch { resolve(null); }
     };
     reader.onerror = () => resolve(null);
-    reader.readAsArrayBuffer(file.slice(0, 128 * 1024)); // Read first 128KB for EXIF
+    reader.readAsArrayBuffer(file.slice(0, 512 * 1024)); // Read first 512KB for EXIF (covers large metadata blocks)
   });
 
 const parseExifGps = (view: DataView, start: number): { lat: number; lng: number } | null => {
   try {
+    if (start + 10 >= view.byteLength) return null;
     // Check for "Exif\0\0"
     const exifHeader = String.fromCharCode(view.getUint8(start), view.getUint8(start+1), view.getUint8(start+2), view.getUint8(start+3));
     if (exifHeader !== 'Exif') return null;
     const tiffStart = start + 6;
+    if (tiffStart + 8 >= view.byteLength) return null;
     const bigEndian = view.getUint16(tiffStart) === 0x4D4D;
-    const get16 = (o: number) => bigEndian ? view.getUint16(o) : view.getUint16(o, true);
-    const get32 = (o: number) => bigEndian ? view.getUint32(o) : view.getUint32(o, true);
+    const get16 = (o: number) => o + 2 > view.byteLength ? 0 : (bigEndian ? view.getUint16(o) : view.getUint16(o, true));
+    const get32 = (o: number) => o + 4 > view.byteLength ? 0 : (bigEndian ? view.getUint32(o) : view.getUint32(o, true));
 
-    // Find GPS IFD
+    // Find GPS IFD — search both IFD0 and IFD1 (some cameras store GPS in sub-IFDs)
+    const searchIfd = (ifdOffset: number): number => {
+      if (ifdOffset + 2 >= view.byteLength || ifdOffset < tiffStart) return 0;
+      const entries = get16(ifdOffset);
+      if (entries > 500) return 0; // Sanity check
+      for (let i = 0; i < entries; i++) {
+        const entryStart = ifdOffset + 2 + i * 12;
+        if (entryStart + 12 > view.byteLength) break;
+        const tag = get16(entryStart);
+        if (tag === 0x8825) { // GPSInfo
+          return tiffStart + get32(entryStart + 8);
+        }
+      }
+      return 0;
+    };
+
     let ifdOffset = tiffStart + get32(tiffStart + 4);
-    const entries = get16(ifdOffset);
-    let gpsOffset = 0;
-    for (let i = 0; i < entries; i++) {
-      const tag = get16(ifdOffset + 2 + i * 12);
-      if (tag === 0x8825) { // GPSInfo
-        gpsOffset = tiffStart + get32(ifdOffset + 2 + i * 12 + 8);
-        break;
+    let gpsOffset = searchIfd(ifdOffset);
+
+    // Try IFD1 if GPS not found in IFD0
+    if (!gpsOffset) {
+      const ifd0Entries = get16(ifdOffset);
+      const nextIfdPointer = ifdOffset + 2 + ifd0Entries * 12;
+      if (nextIfdPointer + 4 <= view.byteLength) {
+        const ifd1Offset = tiffStart + get32(nextIfdPointer);
+        if (ifd1Offset > tiffStart && ifd1Offset < view.byteLength) {
+          gpsOffset = searchIfd(ifd1Offset);
+        }
       }
     }
-    if (!gpsOffset) return null;
+
+    if (!gpsOffset || gpsOffset + 2 >= view.byteLength) return null;
 
     const gpsEntries = get16(gpsOffset);
+    if (gpsEntries > 500) return null; // Sanity check
     let latRef = '', lngRef = '';
     let latRational: number[] = [], lngRational: number[] = [];
 
     const readRational = (offset: number): number => {
+      if (offset + 8 > view.byteLength) return 0;
       const num = get32(offset);
       const den = get32(offset + 4);
       return den ? num / den : 0;
     };
 
     for (let i = 0; i < gpsEntries; i++) {
-      const tag = get16(gpsOffset + 2 + i * 12);
-      const valueOffset = tiffStart + get32(gpsOffset + 2 + i * 12 + 8);
-      if (tag === 1) latRef = String.fromCharCode(view.getUint8(gpsOffset + 2 + i * 12 + 8));
-      if (tag === 3) lngRef = String.fromCharCode(view.getUint8(gpsOffset + 2 + i * 12 + 8));
-      if (tag === 2) latRational = [readRational(valueOffset), readRational(valueOffset + 8), readRational(valueOffset + 16)];
-      if (tag === 4) lngRational = [readRational(valueOffset), readRational(valueOffset + 8), readRational(valueOffset + 16)];
+      const entryStart = gpsOffset + 2 + i * 12;
+      if (entryStart + 12 > view.byteLength) break;
+      const tag = get16(entryStart);
+      const valueOffset = tiffStart + get32(entryStart + 8);
+      if (tag === 1) latRef = String.fromCharCode(view.getUint8(entryStart + 8));
+      if (tag === 3) lngRef = String.fromCharCode(view.getUint8(entryStart + 8));
+      if (tag === 2 && valueOffset + 24 <= view.byteLength) latRational = [readRational(valueOffset), readRational(valueOffset + 8), readRational(valueOffset + 16)];
+      if (tag === 4 && valueOffset + 24 <= view.byteLength) lngRational = [readRational(valueOffset), readRational(valueOffset + 8), readRational(valueOffset + 16)];
     }
 
     if (latRational.length === 3 && lngRational.length === 3) {
@@ -509,14 +538,35 @@ export const JobPackView: React.FC<JobPackViewProps> = ({
     setZoomLevel(1);
     setTempCaption(item.caption || '');
     setIsEditingCaption(false);
+    // Push history state so back button closes the viewer instead of navigating away
+    window.history.pushState({ imageViewer: true }, '', window.location.pathname);
   };
 
-  const closeImageViewer = () => {
+  // Internal close — only resets state, called from popstate handler
+  const closeImageViewerInternal = () => {
     setSelectedImage(null);
     setZoomLevel(1);
     setPanPosition({ x: 0, y: 0 });
     setRotation(0);
   };
+
+  // Public close — pops the history entry we pushed (which triggers closeImageViewerInternal via popstate)
+  const closeImageViewer = () => {
+    if (selectedImage) {
+      window.history.back();
+    }
+  };
+
+  // Handle back button to close image viewer instead of navigating away
+  useEffect(() => {
+    const handlePopState = () => {
+      if (selectedImage) {
+        closeImageViewerInternal();
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [selectedImage]);
 
   const handleRotate = () => {
     setRotation(prev => (prev + 90) % 360);

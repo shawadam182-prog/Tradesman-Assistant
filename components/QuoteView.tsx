@@ -63,6 +63,10 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   const [showOnSiteSignature, setShowOnSiteSignature] = useState(false);
   const [showDesignLayout, setShowDesignLayout] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const lastPinchDistance = useRef<number | null>(null);
   const { services, refresh, quotes: allQuotes } = useData();
   const documentRef = useRef<HTMLDivElement>(null);
   const shareMenuRef = useRef<HTMLDivElement>(null);
@@ -218,6 +222,52 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
     onUpdateQuote,
     onUpdateStatus,
   });
+
+  // Touch handlers for pinch-to-zoom on document preview
+  const handleDocTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      lastPinchDistance.current = distance;
+    } else if (e.touches.length === 1 && zoomLevel > 1) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.touches[0].clientX - panPosition.x,
+        y: e.touches[0].clientY - panPosition.y
+      });
+    }
+  };
+
+  const handleDocTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && lastPinchDistance.current !== null) {
+      e.preventDefault();
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const scale = distance / lastPinchDistance.current;
+      setZoomLevel(prev => Math.min(Math.max(prev * scale, 0.5), 4));
+      lastPinchDistance.current = distance;
+    } else if (e.touches.length === 1 && isDragging && zoomLevel > 1) {
+      setPanPosition({
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleDocTouchEnd = () => {
+    lastPinchDistance.current = null;
+    setIsDragging(false);
+  };
+
+  const handleDocResetZoom = () => {
+    setZoomLevel(1);
+    setPanPosition({ x: 0, y: 0 });
+  };
 
   const statusColors: Record<string, string> = {
     draft: 'bg-slate-100 text-slate-600',
@@ -997,28 +1047,37 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       <div className="relative print:contents">
         <div className="flex items-center justify-end gap-1 mb-2 print:hidden">
           <button
-            onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.25))}
+            onClick={() => { setZoomLevel(z => Math.max(0.5, z - 0.25)); setPanPosition({ x: 0, y: 0 }); }}
             className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 text-sm font-black transition-colors"
             title="Zoom out"
           >
             −
           </button>
           <button
-            onClick={() => setZoomLevel(1)}
+            onClick={handleDocResetZoom}
             className="px-2 h-7 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 text-[10px] font-bold transition-colors min-w-[40px]"
           >
             {Math.round(zoomLevel * 100)}%
           </button>
           <button
-            onClick={() => setZoomLevel(z => Math.min(2, z + 0.25))}
+            onClick={() => setZoomLevel(z => Math.min(4, z + 0.25))}
             className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 text-sm font-black transition-colors"
             title="Zoom in"
           >
             +
           </button>
         </div>
-        <div className="overflow-auto print:overflow-visible" style={{ maxHeight: zoomLevel > 1 ? '80vh' : undefined }}>
-          <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center', transition: 'transform 0.2s ease' }} className="print:!transform-none">
+        <div
+          className="overflow-auto print:overflow-visible"
+          style={{ maxHeight: zoomLevel > 1 ? '80vh' : undefined, touchAction: zoomLevel > 1 ? 'none' : 'pan-y' }}
+          onTouchStart={handleDocTouchStart}
+          onTouchMove={handleDocTouchMove}
+          onTouchEnd={handleDocTouchEnd}
+          onDoubleClick={() => {
+            if (zoomLevel === 1) { setZoomLevel(2); } else { handleDocResetZoom(); }
+          }}
+        >
+          <div style={{ transform: `scale(${zoomLevel}) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px)`, transformOrigin: 'top center', transition: isDragging ? 'none' : 'transform 0.2s ease' }} className="print:!transform-none">
             <QuoteDocument
               quote={activeQuote}
               customer={customer}

@@ -1,13 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Customer } from '../types';
+import type { EmailLogEntry } from '../types';
 import {
   Search, UserPlus, Phone, Mail, MapPin, Trash2, Edit2, X,
   AlertCircle, CheckCircle2, Mic, MicOff, Sparkles, Loader2,
   Building, User as UserIcon, Pencil, Navigation, Briefcase, ChevronDown,
-  FileText, Receipt, FolderOpen, Clock, BookUser
+  FileText, Receipt, FolderOpen, Clock, BookUser, Send, History
 } from 'lucide-react';
 import { parseCustomerVoiceInput } from '../src/services/geminiService';
 import { useToast } from '../src/contexts/ToastContext';
+import { emailService } from '../src/services/emailService';
 import { useData } from '../src/contexts/DataContext';
 import { validateCustomerData } from '../src/utils/inputValidation';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -71,6 +73,90 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
     const customerInvoices = quotes.filter(q => q.customerId === customerId && q.type === 'invoice');
     return { jobs: customerJobs, quotes: customerQuotes, invoices: customerInvoices };
   }, [projects, quotes]);
+
+  // Build full activity timeline for a customer
+  const getActivityTimeline = useCallback((customerId: string) => {
+    const history = getCustomerHistory(customerId);
+    const emails = customerEmails[customerId] || [];
+
+    type ActivityItem = {
+      id: string;
+      type: 'job_created' | 'quote_created' | 'quote_sent' | 'quote_accepted' | 'invoice_created' | 'invoice_paid' | 'email_sent';
+      title: string;
+      detail?: string;
+      date: string;
+      status?: string;
+    };
+
+    const items: ActivityItem[] = [];
+
+    // Jobs
+    history.jobs.forEach(job => {
+      items.push({
+        id: `job-${job.id}`,
+        type: 'job_created',
+        title: `Job created: ${job.title}`,
+        detail: job.siteAddress || undefined,
+        date: job.createdAt,
+        status: job.status,
+      });
+    });
+
+    // Quotes
+    history.quotes.forEach(q => {
+      items.push({
+        id: `quote-${q.id}`,
+        type: q.status === 'accepted' ? 'quote_accepted' : q.status === 'sent' ? 'quote_sent' : 'quote_created',
+        title: `${q.type === 'quotation' ? 'Quotation' : 'Estimate'}: ${q.title}`,
+        detail: `Ref: ${q.referenceNumber || 'Draft'} · £${((q.sections || []).reduce((sum, s) => sum + (s.items || []).reduce((s2, i) => s2 + (i.totalPrice || 0), 0), 0)).toFixed(0)}`,
+        date: q.updatedAt,
+        status: q.status,
+      });
+    });
+
+    // Invoices
+    history.invoices.forEach(q => {
+      items.push({
+        id: `invoice-${q.id}`,
+        type: q.status === 'paid' ? 'invoice_paid' : 'invoice_created',
+        title: `Invoice: ${q.title}`,
+        detail: `Ref: ${q.referenceNumber || 'Draft'} · £${((q.sections || []).reduce((sum, s) => sum + (s.items || []).reduce((s2, i) => s2 + (i.totalPrice || 0), 0), 0)).toFixed(0)}`,
+        date: q.updatedAt,
+        status: q.status,
+      });
+    });
+
+    // Emails
+    emails.forEach(email => {
+      items.push({
+        id: `email-${email.id}`,
+        type: 'email_sent',
+        title: `Email: ${email.subject}`,
+        detail: `To: ${email.recipientEmail}`,
+        date: email.createdAt,
+        status: email.status,
+      });
+    });
+
+    // Sort by date descending
+    items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return items;
+  }, [getCustomerHistory, customerEmails]);
+
+  // Load emails when activity log is opened for a customer
+  const loadCustomerEmails = useCallback(async (customerId: string) => {
+    try {
+      const customerQuoteIds = quotes
+        .filter(q => q.customerId === customerId)
+        .map(q => q.id);
+      if (customerQuoteIds.length === 0) return;
+      const emails = await emailService.getLogForQuotes(customerQuoteIds);
+      setCustomerEmails(prev => ({ ...prev, [customerId]: emails }));
+    } catch {
+      // Silent fail — emails are supplementary
+    }
+  }, [quotes]);
+
   const [error, setError] = useState<string | null>(null);
 
   const [isListeningGlobal, setIsListeningGlobal] = useState(false);
@@ -85,6 +171,11 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
   const [expandedCustomers, setExpandedCustomers] = useState<Set<string>>(new Set());
   const [showLiveVoiceFill, setShowLiveVoiceFill] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
+
+  // Activity log state
+  const [activityLogCustomerId, setActivityLogCustomerId] = useState<string | null>(null);
+  const [activitySearchTerm, setActivitySearchTerm] = useState('');
+  const [customerEmails, setCustomerEmails] = useState<Record<string, EmailLogEntry[]>>({});
 
   // Field configuration for LiveVoiceFill
   const voiceFields: VoiceFieldConfig[] = [
@@ -638,15 +729,14 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
                           )}
                         </div>
 
-                        {/* Customer History Section */}
+                        {/* Customer History Summary */}
                         {(() => {
                           const history = getCustomerHistory(customer.id);
                           const hasHistory = history.jobs.length > 0 || history.quotes.length > 0 || history.invoices.length > 0;
                           if (!hasHistory) return null;
                           return (
                             <div className="pt-3 mt-2 border-t border-slate-100">
-                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">History</p>
-                              <div className="grid grid-cols-3 gap-2">
+                              <div className="grid grid-cols-3 gap-2 mb-2">
                                 {history.jobs.length > 0 && (
                                   <div className="bg-slate-50 rounded-lg p-2 text-center">
                                     <FolderOpen size={14} className="text-teal-500 mx-auto mb-1" />
@@ -669,26 +759,120 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
                                   </div>
                                 )}
                               </div>
-                              {/* Recent items list */}
-                              <div className="mt-2 space-y-1">
-                                {[...history.jobs.slice(0, 2), ...history.quotes.slice(0, 2), ...history.invoices.slice(0, 2)]
-                                  .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-                                  .slice(0, 3)
-                                  .map((item) => (
-                                    <div key={item.id} className="flex items-center gap-2 text-xs text-slate-500 bg-white rounded-lg px-2 py-1.5 border border-slate-100">
-                                      {'type' in item ? (
-                                        item.type === 'invoice' ? <Receipt size={10} className="text-amber-500" /> : <FileText size={10} className="text-blue-500" />
-                                      ) : (
-                                        <FolderOpen size={10} className="text-teal-500" />
-                                      )}
-                                      <span className="truncate flex-1 font-medium">{item.title}</span>
-                                      <span className="text-[9px] text-slate-400 flex items-center gap-1">
-                                        <Clock size={8} />
-                                        {new Date(item.updatedAt).toLocaleDateString()}
-                                      </span>
+                              {/* Activity Log Button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (activityLogCustomerId === customer.id) {
+                                    setActivityLogCustomerId(null);
+                                  } else {
+                                    setActivityLogCustomerId(customer.id);
+                                    setActivitySearchTerm('');
+                                    loadCustomerEmails(customer.id);
+                                  }
+                                }}
+                                className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                  activityLogCustomerId === customer.id
+                                    ? 'bg-teal-500 text-white'
+                                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                }`}
+                              >
+                                <History size={12} />
+                                Activity Log
+                              </button>
+
+                              {/* Activity Log Panel */}
+                              {activityLogCustomerId === customer.id && (() => {
+                                const timeline = getActivityTimeline(customer.id);
+                                const filtered = activitySearchTerm
+                                  ? timeline.filter(item =>
+                                      item.title.toLowerCase().includes(activitySearchTerm.toLowerCase()) ||
+                                      (item.detail && item.detail.toLowerCase().includes(activitySearchTerm.toLowerCase()))
+                                    )
+                                  : timeline;
+
+                                const getIcon = (type: string) => {
+                                  switch (type) {
+                                    case 'job_created': return <FolderOpen size={12} className="text-teal-500" />;
+                                    case 'quote_created': return <FileText size={12} className="text-blue-500" />;
+                                    case 'quote_sent': return <Send size={12} className="text-blue-600" />;
+                                    case 'quote_accepted': return <CheckCircle2 size={12} className="text-green-500" />;
+                                    case 'invoice_created': return <Receipt size={12} className="text-amber-500" />;
+                                    case 'invoice_paid': return <CheckCircle2 size={12} className="text-emerald-500" />;
+                                    case 'email_sent': return <Mail size={12} className="text-purple-500" />;
+                                    default: return <Clock size={12} className="text-slate-400" />;
+                                  }
+                                };
+
+                                const getStatusBadge = (status?: string) => {
+                                  if (!status) return null;
+                                  const styles: Record<string, string> = {
+                                    draft: 'bg-slate-100 text-slate-600',
+                                    sent: 'bg-blue-100 text-blue-600',
+                                    accepted: 'bg-green-100 text-green-600',
+                                    declined: 'bg-red-100 text-red-600',
+                                    active: 'bg-teal-100 text-teal-600',
+                                    completed: 'bg-emerald-100 text-emerald-600',
+                                    paid: 'bg-emerald-100 text-emerald-700',
+                                    invoiced: 'bg-amber-100 text-amber-600',
+                                    queued: 'bg-yellow-100 text-yellow-600',
+                                    failed: 'bg-red-100 text-red-600',
+                                    bounced: 'bg-red-100 text-red-600',
+                                  };
+                                  return (
+                                    <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${styles[status] || 'bg-slate-100 text-slate-500'}`}>
+                                      {status}
+                                    </span>
+                                  );
+                                };
+
+                                return (
+                                  <div className="mt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                    {/* Search bar */}
+                                    <div className="relative mb-2">
+                                      <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                      <input
+                                        type="search"
+                                        placeholder="Search activity..."
+                                        value={activitySearchTerm}
+                                        onChange={(e) => setActivitySearchTerm(e.target.value)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg py-1.5 pl-7 pr-3 text-[11px] text-slate-700 font-medium outline-none focus:border-teal-300 transition-colors"
+                                      />
                                     </div>
-                                  ))}
-                              </div>
+
+                                    {/* Timeline */}
+                                    <div className="max-h-60 overflow-y-auto space-y-0 border border-slate-100 rounded-lg bg-white">
+                                      {filtered.length === 0 ? (
+                                        <div className="py-4 text-center text-[10px] text-slate-400 italic">
+                                          {activitySearchTerm ? 'No matching activity' : 'No activity recorded'}
+                                        </div>
+                                      ) : (
+                                        filtered.map((item, idx) => (
+                                          <div
+                                            key={item.id}
+                                            className={`flex items-start gap-2 px-2.5 py-2 ${idx < filtered.length - 1 ? 'border-b border-slate-50' : ''}`}
+                                          >
+                                            <div className="mt-0.5 shrink-0">{getIcon(item.type)}</div>
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-[11px] font-bold text-slate-800 truncate">{item.title}</p>
+                                              {item.detail && (
+                                                <p className="text-[10px] text-slate-400 truncate">{item.detail}</p>
+                                              )}
+                                            </div>
+                                            <div className="shrink-0 text-right flex flex-col items-end gap-0.5">
+                                              <span className="text-[9px] text-slate-400 whitespace-nowrap">
+                                                {new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                              </span>
+                                              {getStatusBadge(item.status)}
+                                            </div>
+                                          </div>
+                                        ))
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </div>
                           );
                         })()}

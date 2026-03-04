@@ -252,7 +252,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
         width: '100%',
         maxWidth: '750px',
         padding: '24px',
-        fontSize: '10px',
+        fontSize: '13px',
         boxSizing: 'border-box'
       }}
     >
@@ -263,40 +263,40 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
             <img src={settings.companyLogo} alt="" style={{ height: '12mm', marginBottom: '2mm' }} />
           )}
           <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{settings.companyName}</div>
-          <div style={{ fontSize: '11px', color: '#64748b' }}>{settings.companyAddress?.split('\n').join(' • ')}</div>
-          <div style={{ fontSize: '11px', color: '#94a3b8' }}>{[settings.phone, settings.email].filter(Boolean).join(' • ')}</div>
+          <div style={{ fontSize: '13px', color: '#64748b' }}>{settings.companyAddress?.split('\n').join(' • ')}</div>
+          <div style={{ fontSize: '13px', color: '#94a3b8' }}>{[settings.phone, settings.email].filter(Boolean).join(' • ')}</div>
           {settings.vatNumber && (
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>VAT: {settings.vatNumber}</div>
+            <div style={{ fontSize: '13px', color: '#94a3b8' }}>VAT: {settings.vatNumber}</div>
           )}
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '13px', fontWeight: '300', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             {quote.isCreditNote ? 'Credit Note' : quote.type === 'invoice' ? 'Invoice' : 'Quote'}
           </div>
-          <div style={{ fontSize: '11px', fontWeight: 'bold' }}>{reference}</div>
-          <div style={{ fontSize: '11px', color: '#64748b' }}>{quote.date ? new Date(quote.date).toLocaleDateString('en-GB') : ''}</div>
+          <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{reference}</div>
+          <div style={{ fontSize: '13px', color: '#64748b' }}>{quote.date ? new Date(quote.date).toLocaleDateString('en-GB') : ''}</div>
         </div>
       </div>
 
       {/* CLIENT + JOB */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6mm', marginBottom: '6mm' }}>
         <div>
-          <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1mm' }}>Bill To</div>
-          <div style={{ fontSize: '12px', fontWeight: 'bold' }}>{resolvedCustomerName}</div>
-          {customer?.company && <div style={{ fontSize: '11px', color: '#475569' }}>{customer.company}</div>}
-          {resolvedCustomerAddress && <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.4, whiteSpace: 'pre-line' }}>{resolvedCustomerAddress}</div>}
+          <div style={{ fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1mm' }}>Bill To</div>
+          <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{resolvedCustomerName}</div>
+          {customer?.company && <div style={{ fontSize: '13px', color: '#475569' }}>{customer.company}</div>}
+          {resolvedCustomerAddress && <div style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.4, whiteSpace: 'pre-line' }}>{resolvedCustomerAddress}</div>}
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1mm' }}>Project</div>
-          <div style={{ fontSize: '12px', fontWeight: 'bold' }}>{quote.title}</div>
-          {quote.jobAddress && quote.jobAddress !== resolvedCustomerAddress && (
+          <div style={{ fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1mm' }}>Project</div>
+          <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{quote.title}</div>
+          {quote.jobAddress && (
             <div style={{ marginTop: '2mm' }}>
-              <div style={{ fontSize: '10px', color: '#d97706', textTransform: 'uppercase', fontWeight: 'bold' }}>Job Site</div>
-              <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.4, whiteSpace: 'pre-line' }}>{quote.jobAddress}</div>
+              <div style={{ fontSize: '13px', color: '#d97706', textTransform: 'uppercase', fontWeight: 'bold' }}>Site Address</div>
+              <div style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.4, whiteSpace: 'pre-line' }}>{quote.jobAddress}</div>
             </div>
           )}
           {quote.dueDate && (
-            <div style={{ fontSize: '11px', color: '#d97706', fontWeight: 'bold', marginTop: '2mm' }}>
+            <div style={{ fontSize: '13px', color: '#d97706', fontWeight: 'bold', marginTop: '2mm' }}>
               Due: {new Date(quote.dueDate).toLocaleDateString('en-GB')}
             </div>
           )}
@@ -390,7 +390,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
                         borderBottom: '1px solid #e2e8f0',
                       }}>
                         <div style={{
-                          fontSize: '12px',
+                          fontSize: '13px',
                           fontWeight: 'bold',
                           color: '#64748b',
                           textTransform: 'uppercase',
@@ -407,12 +407,12 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
                     <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
                       <td
                         colSpan={showQtyColumn && showRateColumn ? 3 : (showQtyColumn || showRateColumn ? 2 : 1)}
-                        style={{ padding: '6px 8px 6px 24px', fontSize: '12px', fontWeight: '600', color: '#475569', textAlign: 'right' }}
+                        style={{ padding: '6px 8px 6px 24px', fontSize: '13px', fontWeight: '600', color: '#475569', textAlign: 'right' }}
                       >
                         {item.description}
                       </td>
                       {showAmountColumn && (
-                        <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '700', fontSize: '12px', color: '#334155' }}>£{item.amount.toFixed(2)}</td>
+                        <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '700', fontSize: '13px', color: '#334155' }}>£{item.amount.toFixed(2)}</td>
                       )}
                     </tr>
                   );
@@ -504,7 +504,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
 
       {/* BANK DETAILS */}
       {settings.bankAccountName && (
-        <div style={{ marginTop: '6mm', paddingTop: '3mm', borderTop: '1px solid #e2e8f0', fontSize: '11px', color: '#64748b' }}>
+        <div style={{ marginTop: '6mm', paddingTop: '3mm', borderTop: '1px solid #e2e8f0', fontSize: '13px', color: '#64748b' }}>
           <div style={{ fontWeight: 'bold', marginBottom: '2mm' }}>Payment Details</div>
           <div>
             {settings.bankAccountName} | {settings.bankAccountNumber} | {settings.bankSortCode}
@@ -515,7 +515,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
 
       {/* NOTES */}
       {displayOptions.showNotes && (quote.notes || settings.defaultInvoiceNotes) && (
-        <div style={{ marginTop: '4mm', fontSize: '11px', color: '#64748b', lineHeight: 1.5 }}>
+        <div style={{ marginTop: '4mm', fontSize: '13px', color: '#64748b', lineHeight: 1.5 }}>
           <div style={{ fontWeight: 'bold', marginBottom: '2mm' }}>Notes</div>
           <div style={{ whiteSpace: 'pre-line' }}>{quote.notes || settings.defaultInvoiceNotes}</div>
         </div>
