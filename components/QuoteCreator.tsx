@@ -726,9 +726,27 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
   const addMaterialFromLibrary = (sectionId: string, material: DBMaterialLibraryItem) => {
     const newItem: MaterialItem = { id: Math.random().toString(36).substr(2, 9), name: material.name, description: material.description || '', quantity: 1, unit: material.unit || 'pc', unitPrice: material.sell_price || material.cost_price || 0, totalPrice: material.sell_price || material.cost_price || 0 };
     setFormData(prev => ({ ...prev, sections: prev.sections?.map(s => s.id === sectionId ? { ...s, items: [...s.items, newItem] } : s) }));
+    hapticSuccess();
+  };
+
+  const addMultipleMaterialsFromLibrary = (sectionId: string, materials: DBMaterialLibraryItem[]) => {
+    const newItems: MaterialItem[] = materials.map(material => ({
+      id: Math.random().toString(36).substr(2, 9),
+      name: material.name,
+      description: material.description || '',
+      quantity: 1,
+      unit: material.unit || 'pc',
+      unitPrice: material.sell_price || material.cost_price || 0,
+      totalPrice: material.sell_price || material.cost_price || 0,
+    }));
+    setFormData(prev => ({ ...prev, sections: prev.sections?.map(s => s.id === sectionId ? { ...s, items: [...s.items, ...newItems] } : s) }));
     setShowMaterialsLibrary(false);
     hapticSuccess();
   };
+
+  const searchMaterialsLibrary = useCallback(async (query: string) => {
+    return services.materialsLibrary.search(query);
+  }, [services.materialsLibrary]);
 
   const saveItemToLibrary = async (item: MaterialItem) => {
     try {
@@ -1105,8 +1123,8 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               </button>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.onchange = (e: any) => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = (ev) => setAttachedImage(ev.target?.result as string); r.readAsDataURL(f); } }; i.click(); }} className="flex-1 bg-white border border-teal-100 text-teal-600 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-teal-50 transition-all shadow-sm flex items-center justify-center gap-1.5">
-                <Camera size={12} /> {attachedImage ? 'Photo Attached' : 'Photo'}
+              <button onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*,application/pdf'; i.onchange = (e: any) => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = (ev) => setAttachedImage(ev.target?.result as string); r.readAsDataURL(f); } }; i.click(); }} className="flex-1 bg-white border border-teal-100 text-teal-600 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-teal-50 transition-all shadow-sm flex items-center justify-center gap-1.5">
+                <Camera size={12} /> {attachedImage ? 'File Attached' : 'Photo / PDF'}
               </button>
               <button onClick={runAIAnalysis} disabled={loading || (!aiInput && !attachedImage)} className="flex-1 bg-slate-900 text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-xl hover:bg-black disabled:opacity-30 flex items-center justify-center gap-1.5 transition-all">
                 {loading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} Generate
@@ -1147,6 +1165,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               calculateSectionLabour={calculateSectionLabour}
               getTotalLabourHours={getTotalLabourHours}
               onClearAIItems={clearAIItems}
+              onSearchMaterials={searchMaterialsLibrary}
             />
           ))}
 
@@ -1297,7 +1316,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               <button onClick={() => setShowMaterialsLibrary(false)} className="p-2 hover:bg-slate-200 rounded-lg transition-colors"><X size={20} className="text-slate-500" /></button>
             </div>
             <div className="overflow-auto max-h-[calc(85vh-60px)]">
-              <MaterialsLibrary selectionMode={true} onSelectMaterial={(material) => { if (targetSectionForMaterial) { addMaterialFromLibrary(targetSectionForMaterial, material); } }} onBack={() => setShowMaterialsLibrary(false)} />
+              <MaterialsLibrary selectionMode={true} onSelectMaterial={(material) => { if (targetSectionForMaterial) { addMaterialFromLibrary(targetSectionForMaterial, material); } }} onSelectMultipleMaterials={(materials) => { if (targetSectionForMaterial) { addMultipleMaterialsFromLibrary(targetSectionForMaterial, materials); } }} onBack={() => setShowMaterialsLibrary(false)} />
             </div>
           </div>
         </div>
