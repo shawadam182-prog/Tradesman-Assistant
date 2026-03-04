@@ -277,7 +277,7 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
               className="flex items-center gap-2 px-3 py-2.5 border border-slate-200 text-slate-700 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-colors"
             >
               <Upload size={16} />
-              <span className="hidden sm:inline">Import CSV</span>
+              <span className="hidden sm:inline">Import</span>
             </button>
 
             {/* Download Generic List */}
@@ -408,7 +408,7 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
               className="inline-flex items-center gap-2 px-6 py-3 border-2 border-slate-200 text-slate-700 rounded-2xl font-black hover:bg-slate-50 transition-colors"
             >
               <Upload size={18} />
-              Import CSV
+              Import CSV / PDF
             </button>
           </div>
         </div>

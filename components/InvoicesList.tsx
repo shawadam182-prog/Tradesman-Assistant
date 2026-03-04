@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Quote, Customer, AppSettings, TIER_LIMITS } from '../types';
-import { ReceiptText, Search, CheckCircle2, AlertCircle, Plus, Hash, ChevronRight, Trash2, Clock, AlertTriangle, ArrowUpDown, RefreshCw } from 'lucide-react';
+import { ReceiptText, Search, CheckCircle2, AlertCircle, Plus, Hash, ChevronRight, Trash2, Clock, AlertTriangle, ArrowUpDown, RefreshCw, Calendar } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useToast } from '../src/contexts/ToastContext';
 import { useSubscription } from '../src/hooks/useFeatureAccess';
@@ -10,6 +10,30 @@ import { useData } from '../src/contexts/DataContext';
 import { PageHeader } from './common/PageHeader';
 import { ConfirmDialog } from './ConfirmDialog';
 import { getQuoteGrandTotal } from '../src/utils/quoteCalculations';
+
+// UK tax year runs 6 April → 5 April
+const getTaxYear = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = date.getMonth(); // 0-indexed
+  const day = date.getDate();
+  // Before 6 April = previous tax year
+  if (month < 3 || (month === 3 && day < 6)) {
+    return `${year - 1}/${year.toString().slice(2)}`;
+  }
+  return `${year}/${(year + 1).toString().slice(2)}`;
+};
+
+type DateFilter = 'all' | 'this_month' | 'last_month' | 'this_quarter' | 'this_tax_year' | 'last_tax_year' | 'custom';
+
+const DATE_FILTER_OPTIONS: { value: DateFilter; label: string }[] = [
+  { value: 'all', label: 'All Time' },
+  { value: 'this_month', label: 'This Month' },
+  { value: 'last_month', label: 'Last Month' },
+  { value: 'this_quarter', label: 'This Quarter' },
+  { value: 'this_tax_year', label: 'This Tax Year' },
+  { value: 'last_tax_year', label: 'Last Tax Year' },
+  { value: 'custom', label: 'Custom Range' },
+];
 
 // Helper functions for overdue detection
 const isOverdue = (invoice: Quote): boolean => {
@@ -68,6 +92,10 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
   const [sortBy, setSortBy] = React.useState<SortOption>('updated_desc');
   const [showSortDropdown, setShowSortDropdown] = React.useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string; customerName: string } | null>(null);
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [showDateDropdown, setShowDateDropdown] = useState(false);
+  const [customDateFrom, setCustomDateFrom] = useState('');
+  const [customDateTo, setCustomDateTo] = useState('');
   const toast = useToast();
 
   // Get all invoices for limit checking
@@ -138,17 +166,61 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
     });
   };
 
+  // Date filter function
+  const filterByDate = (invoice: Quote): boolean => {
+    if (dateFilter === 'all') return true;
+
+    const now = new Date();
+    const invoiceDate = new Date(invoice.createdAt);
+
+    switch (dateFilter) {
+      case 'this_month': {
+        return invoiceDate.getMonth() === now.getMonth() && invoiceDate.getFullYear() === now.getFullYear();
+      }
+      case 'last_month': {
+        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        return invoiceDate.getMonth() === lastMonth.getMonth() && invoiceDate.getFullYear() === lastMonth.getFullYear();
+      }
+      case 'this_quarter': {
+        const qStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+        return invoiceDate >= qStart;
+      }
+      case 'this_tax_year': {
+        // UK tax year: 6 April to 5 April
+        const year = now.getMonth() < 3 || (now.getMonth() === 3 && now.getDate() < 6) ? now.getFullYear() - 1 : now.getFullYear();
+        const tyStart = new Date(year, 3, 6); // 6 April
+        return invoiceDate >= tyStart;
+      }
+      case 'last_tax_year': {
+        const year = now.getMonth() < 3 || (now.getMonth() === 3 && now.getDate() < 6) ? now.getFullYear() - 1 : now.getFullYear();
+        const lastTyStart = new Date(year - 1, 3, 6);
+        const lastTyEnd = new Date(year, 3, 5, 23, 59, 59);
+        return invoiceDate >= lastTyStart && invoiceDate <= lastTyEnd;
+      }
+      case 'custom': {
+        if (customDateFrom && invoiceDate < new Date(customDateFrom)) return false;
+        if (customDateTo) {
+          const toEnd = new Date(customDateTo);
+          toEnd.setHours(23, 59, 59, 999);
+          if (invoiceDate > toEnd) return false;
+        }
+        return true;
+      }
+      default:
+        return true;
+    }
+  };
+
   // Filter by tab status first
   const filterByTab = (invoice: Quote): boolean => {
     switch (activeTab) {
       case 'draft':
         return invoice.status === 'draft';
       case 'unpaid':
-        // Unpaid: sent or accepted, not paid, not draft, not declined, and not overdue
+        // Sent: all sent invoices regardless of due date (not paid, not draft, not declined)
         return invoice.status !== 'paid' &&
                invoice.status !== 'draft' &&
-               invoice.status !== 'declined' &&
-               !isOverdue(invoice);
+               invoice.status !== 'declined';
       case 'paid':
         return invoice.status === 'paid';
       case 'overdue':
@@ -165,12 +237,17 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
     }
   };
 
-  const filtered = sortInvoices(
-    quotes.filter(q => {
-      // First apply tab filter
-      if (!filterByTab(q)) return false;
+  // Status group ordering for the ALL tab: Draft=0, Sent=1, Paid=2
+  const statusGroupOrder = (invoice: Quote): number => {
+    if (invoice.status === 'draft') return 0;
+    if (invoice.status === 'paid') return 2;
+    return 1; // sent, accepted, invoiced, declined — all in "sent" group
+  };
 
-      // Then apply search filter
+  const filtered = useMemo(() => {
+    const baseFiltered = quotes.filter(q => {
+      if (!filterByTab(q)) return false;
+      if (!filterByDate(q)) return false;
       const searchLower = searchTerm.toLowerCase();
       const customer = customers.find(c => c.id === q.customerId);
       return (
@@ -178,14 +255,22 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
         (customer?.name?.toLowerCase().includes(searchLower) ?? false) ||
         (customer?.company?.toLowerCase().includes(searchLower) ?? false)
       );
-    })
-  );
+    });
+
+    // For the ALL tab, group by status (Drafts → Sent → Paid) then sort within groups
+    if (activeTab === 'all') {
+      const sorted = sortInvoices(baseFiltered);
+      return [...sorted].sort((a, b) => statusGroupOrder(a) - statusGroupOrder(b));
+    }
+
+    return sortInvoices(baseFiltered);
+  }, [quotes, activeTab, searchTerm, sortBy, dateFilter, customDateFrom, customDateTo, customers, settings]);
 
   // Count invoices for each tab (for badges)
   const tabCounts = {
     all: quotes.length,
     draft: quotes.filter(q => q.status === 'draft').length,
-    unpaid: quotes.filter(q => q.status !== 'paid' && q.status !== 'draft' && q.status !== 'declined' && !isOverdue(q)).length,
+    unpaid: quotes.filter(q => q.status !== 'paid' && q.status !== 'draft' && q.status !== 'declined').length,
     paid: quotes.filter(q => q.status === 'paid').length,
     overdue: quotes.filter(q => isOverdue(q)).length,
     recurring: quotes.filter(q => q.isRecurring === true).length,
@@ -227,7 +312,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
           .filter(tab => tab === 'all' || tab === 'draft' || tab === 'unpaid' || tab === 'paid' || tab === 'overdue' || tabCounts[tab] > 0)
           .map(tab => {
           const label: Record<InvoiceFilterTab, string> = {
-            all: 'All', draft: 'Draft', unpaid: 'Unpaid', paid: 'Paid', overdue: 'Due', recurring: 'Recur', credit_notes: 'Credits', cancelled: "Canc'd"
+            all: 'All', draft: 'Draft', unpaid: 'Sent', paid: 'Paid', overdue: 'O/Due', recurring: 'Recur', credit_notes: 'Credits', cancelled: "Canc'd"
           };
           return (
           <button
@@ -273,8 +358,8 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
         })}
       </div>
 
-      {/* Search and Sort Row */}
-      <div className="flex gap-3">
+      {/* Search, Date Filter, and Sort Row */}
+      <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hidden sm:block" size={20} />
           <input
@@ -286,14 +371,88 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
           />
         </div>
 
+        {/* Date / Tax Year Filter */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              hapticTap();
+              setShowDateDropdown(!showDateDropdown);
+              setShowSortDropdown(false);
+            }}
+            className={`flex items-center gap-2 bg-white border-2 hover:border-slate-200 rounded-2xl px-3 py-4 font-bold text-sm transition-all ${
+              dateFilter !== 'all' ? 'border-teal-300 text-teal-700' : 'border-slate-100 text-slate-700'
+            }`}
+          >
+            <Calendar size={18} className={dateFilter !== 'all' ? 'text-teal-500' : 'text-slate-400'} />
+            <span className="hidden sm:inline">{DATE_FILTER_OPTIONS.find(o => o.value === dateFilter)?.label}</span>
+          </button>
+
+          {showDateDropdown && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowDateDropdown(false)}
+              />
+              <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border-2 border-slate-100 py-2 z-50 min-w-[200px]">
+                {DATE_FILTER_OPTIONS.map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      hapticTap();
+                      setDateFilter(option.value);
+                      if (option.value !== 'custom') setShowDateDropdown(false);
+                    }}
+                    className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-all ${
+                      dateFilter === option.value
+                        ? 'bg-teal-50 text-teal-700'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+                {dateFilter === 'custom' && (
+                  <div className="px-4 py-3 border-t border-slate-100 space-y-2">
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase">From</label>
+                      <input
+                        type="date"
+                        value={customDateFrom}
+                        onChange={e => setCustomDateFrom(e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase">To</label>
+                      <input
+                        type="date"
+                        value={customDateTo}
+                        onChange={e => setCustomDateTo(e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-medium"
+                      />
+                    </div>
+                    <button
+                      onClick={() => setShowDateDropdown(false)}
+                      className="w-full py-2 bg-teal-500 text-white rounded-lg font-bold text-sm hover:bg-teal-400 transition-colors"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
         {/* Sort Dropdown */}
         <div className="relative">
           <button
             onClick={() => {
               hapticTap();
               setShowSortDropdown(!showSortDropdown);
+              setShowDateDropdown(false);
             }}
-            className="flex items-center gap-2 bg-white border-2 border-slate-100 hover:border-slate-200 rounded-2xl px-4 py-4 font-bold text-slate-700 transition-all"
+            className="flex items-center gap-2 bg-white border-2 border-slate-100 hover:border-slate-200 rounded-2xl px-3 py-4 font-bold text-slate-700 transition-all"
           >
             <ArrowUpDown size={18} className="text-slate-400" />
             <span className="hidden sm:inline text-sm">{SORT_OPTIONS.find(o => o.value === sortBy)?.label}</span>
@@ -355,7 +514,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
             <p className="text-slate-400 font-black uppercase tracking-widest text-sm italic">
               {activeTab === 'all' && 'No invoices recorded yet.'}
               {activeTab === 'draft' && 'No draft invoices.'}
-              {activeTab === 'unpaid' && 'No unpaid invoices.'}
+              {activeTab === 'unpaid' && 'No sent invoices.'}
               {activeTab === 'paid' && 'No paid invoices.'}
               {activeTab === 'overdue' && 'No overdue invoices.'}
               {activeTab === 'recurring' && 'No recurring invoices set up.'}
@@ -364,7 +523,16 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
             </p>
           </div>
         ) : (
-          filtered.map((invoice) => {
+          filtered.map((invoice, idx) => {
+            // Show group header in ALL tab
+            const groupLabel = activeTab === 'all' ? (() => {
+              const group = statusGroupOrder(invoice);
+              const prevGroup = idx > 0 ? statusGroupOrder(filtered[idx - 1]) : -1;
+              if (group !== prevGroup) {
+                return group === 0 ? 'Drafts' : group === 1 ? 'Sent' : 'Paid';
+              }
+              return null;
+            })() : null;
             const customer = customers.find(c => c.id === invoice.customerId);
             const isCN = invoice.isCreditNote === true;
             const prefix = isCN ? 'CN-' : (settings.invoicePrefix || 'INV-');
@@ -375,8 +543,16 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
             const daysOverdue = getDaysOverdue(invoice);
 
             return (
+              <React.Fragment key={invoice.id}>
+                {groupLabel && (
+                  <div className="flex items-center gap-3 pt-2 pb-1">
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${
+                      groupLabel === 'Drafts' ? 'text-amber-500' : groupLabel === 'Sent' ? 'text-blue-500' : 'text-emerald-500'
+                    }`}>{groupLabel}</span>
+                    <div className="flex-1 h-px bg-slate-100" />
+                  </div>
+                )}
               <div
-                key={invoice.id}
                 onClick={() => onViewQuote(invoice.id)}
                 className={`bg-white px-4 py-4 rounded-2xl border-2 transition-all group cursor-pointer shadow-sm hover:shadow-md ${
                   isCN
@@ -457,6 +633,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
                   )}
                 </div>
               </div>
+              </React.Fragment>
             );
           })
         )}
