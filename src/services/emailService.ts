@@ -99,6 +99,16 @@ export const emailService = {
     return (data || []).map(toEmailLogEntry);
   },
 
+  async getLogForQuotes(quoteIds: string[]): Promise<EmailLogEntry[]> {
+    if (quoteIds.length === 0) return [];
+    const { data, error } = await emailLogTable()
+      .select('*')
+      .in('quote_id', quoteIds)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data || []).map(toEmailLogEntry);
+  },
+
   async getLatestStatus(quoteId: string): Promise<EmailLogEntry | null> {
     const { data, error } = await emailLogTable()
       .select('*')

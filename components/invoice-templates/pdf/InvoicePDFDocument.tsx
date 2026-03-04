@@ -260,6 +260,12 @@ const ProfessionalTemplate: React.FC<InvoicePDFDocumentProps> = ({
           <Text style={professionalStyles.customerName}>{customer?.name}</Text>
           {customer?.company && <Text style={professionalStyles.customerDetails}>{customer.company}</Text>}
           {customer?.address && <Text style={professionalStyles.customerDetails}>{customer.address}</Text>}
+          {quote.jobAddress && (
+            <>
+              <Text style={[professionalStyles.sectionLabel, { marginTop: 4, color: '#d97706' }]}>Site Address</Text>
+              <Text style={professionalStyles.customerDetails}>{quote.jobAddress}</Text>
+            </>
+          )}
         </View>
         <View style={professionalStyles.datesSection}>
           <View style={professionalStyles.dateRow}>
@@ -476,6 +482,12 @@ const ClassicTemplate: React.FC<InvoicePDFDocumentProps> = ({
         <View style={classicStyles.projectSection}>
           <Text style={classicStyles.label}>Project</Text>
           <Text style={classicStyles.projectTitle}>{quote.title}</Text>
+          {quote.jobAddress && (
+            <>
+              <Text style={[classicStyles.label, { marginTop: 3, color: '#d97706' }]}>Site Address</Text>
+              <Text style={classicStyles.clientDetails}>{quote.jobAddress}</Text>
+            </>
+          )}
           {quote.dueDate && (
             <Text style={classicStyles.dueDate}>Due: {formatDate(quote.dueDate)}</Text>
           )}
@@ -634,6 +646,12 @@ const SpaciousTemplate: React.FC<InvoicePDFDocumentProps> = ({
           <Text style={spaciousStyles.customerName}>{customer?.name}</Text>
           {customer?.company && <Text style={spaciousStyles.customerDetails}>{customer.company}</Text>}
           {customer?.address && <Text style={spaciousStyles.customerDetails}>{customer.address}</Text>}
+          {quote.jobAddress && (
+            <>
+              <Text style={[spaciousStyles.sectionLabel, { marginTop: 4, color: '#d97706' }]}>Site Address</Text>
+              <Text style={spaciousStyles.customerDetails}>{quote.jobAddress}</Text>
+            </>
+          )}
         </View>
         <View style={spaciousStyles.datesSection}>
           <View style={spaciousStyles.dateRow}>
