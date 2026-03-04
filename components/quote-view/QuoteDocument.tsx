@@ -560,7 +560,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                               // Inline material heading
                               <tr key={`heading-${idx}`} className="bg-slate-50">
                                 <td colSpan={colSpan} className="py-1 px-2">
-                                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{item.description}</span>
+                                  <span className="text-[13px] font-bold uppercase tracking-wider text-slate-500">{item.description}</span>
                                 </td>
                               </tr>
                             ) : activeTemplate === 'spacious' ? (
@@ -591,7 +591,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                                 )}
                                 <td className="py-2 px-2 text-xs">
                                   <div className="text-slate-900 font-medium">{item.name}</div>
-                                  {item.subtext && <div className="text-[11px] text-slate-500 mt-0.5">{item.subtext}</div>}
+                                  {item.subtext && <div className="text-[13px] text-slate-500 mt-0.5">{item.subtext}</div>}
                                 </td>
                                 {showQtyColumn && (
                                   <td className="py-2 px-2 text-slate-900 text-xs text-center font-medium">{item.qty}</td>
@@ -630,7 +630,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                   return (
                     <div key={section.id} className={`${templateStyle.sectionPadding} ${idx % 2 === 1 ? 'bg-slate-50/30' : 'bg-white'} ${templateStyle.sectionSpacing}`}>
                       <div className="flex items-center gap-2.5">
-                        <span className={`${templateStyle.tableText} font-bold text-slate-400`}>{idx + 1}.</span>
+                        <span className={`text-[13px] font-bold text-slate-400`}>{idx + 1}.</span>
                         <h4 className={templateStyle.sectionTitle}>{section.title}</h4>
                       </div>
 
@@ -640,7 +640,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                           {templateConfig.showSectionHeaders && (
                             <div className={templateStyle.materialHeader}>
                               {templateConfig.showIcons && <Package size={12} className="text-amber-500" />}
-                              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Materials</span>
+                              <span className="text-[13px] font-bold text-slate-500 uppercase tracking-wider">Materials</span>
                             </div>
                           )}
 
@@ -650,10 +650,10 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                               <table className={`hidden md:table w-full text-left ${activeTemplate === 'minimal' ? 'border border-slate-300' : ''}`} style={{ borderCollapse: 'collapse' }}>
                                 <thead>
                                   <tr className={activeTemplate === 'minimal' ? 'border-b-2 border-slate-300 bg-slate-50' : 'border-b border-slate-100'}>
-                                    <th className={`${activeTemplate === 'minimal' ? 'py-1 px-2' : 'py-1 px-2'} text-[11px] font-bold ${activeTemplate === 'minimal' ? 'text-slate-700' : 'text-slate-400'} uppercase tracking-wider ${activeTemplate === 'minimal' ? 'border-r border-slate-300' : ''}`} style={{ lineHeight: '1.6' }}>Item & Description</th>
-                                    {displayOptions.showMaterialItems && displayOptions.showMaterialQty && <th className={`${activeTemplate === 'minimal' ? 'py-1 px-2' : 'py-1 px-2'} text-[11px] font-bold ${activeTemplate === 'minimal' ? 'text-slate-700' : 'text-slate-400'} uppercase tracking-wider text-center w-20 ${activeTemplate === 'minimal' ? 'border-r border-slate-300' : ''}`} style={{ lineHeight: '1.6' }}>Qty</th>}
-                                    {displayOptions.showMaterialItems && displayOptions.showMaterialUnitPrice && <th className={`${activeTemplate === 'minimal' ? 'py-1 px-2' : 'py-1 px-2'} text-[11px] font-bold ${activeTemplate === 'minimal' ? 'text-slate-700' : 'text-slate-400'} uppercase tracking-wider text-right w-24 ${activeTemplate === 'minimal' ? 'border-r border-slate-300' : ''}`} style={{ lineHeight: '1.6' }}>Rate</th>}
-                                    {displayOptions.showMaterialItems && displayOptions.showMaterialLineTotals && <th className={`${activeTemplate === 'minimal' ? 'py-1 px-2' : 'py-1 px-2'} text-[11px] font-bold ${activeTemplate === 'minimal' ? 'text-slate-700' : 'text-slate-400'} uppercase tracking-wider text-right w-24`} style={{ lineHeight: '1.6' }}>Amount</th>}
+                                    <th className={`${activeTemplate === 'minimal' ? 'py-1 px-2' : 'py-1 px-2'} text-[13px] font-bold ${activeTemplate === 'minimal' ? 'text-slate-700' : 'text-slate-400'} uppercase tracking-wider ${activeTemplate === 'minimal' ? 'border-r border-slate-300' : ''}`} style={{ lineHeight: '1.6' }}>Item & Description</th>
+                                    {displayOptions.showMaterialItems && displayOptions.showMaterialQty && <th className={`${activeTemplate === 'minimal' ? 'py-1 px-2' : 'py-1 px-2'} text-[13px] font-bold ${activeTemplate === 'minimal' ? 'text-slate-700' : 'text-slate-400'} uppercase tracking-wider text-center w-20 ${activeTemplate === 'minimal' ? 'border-r border-slate-300' : ''}`} style={{ lineHeight: '1.6' }}>Qty</th>}
+                                    {displayOptions.showMaterialItems && displayOptions.showMaterialUnitPrice && <th className={`${activeTemplate === 'minimal' ? 'py-1 px-2' : 'py-1 px-2'} text-[13px] font-bold ${activeTemplate === 'minimal' ? 'text-slate-700' : 'text-slate-400'} uppercase tracking-wider text-right w-24 ${activeTemplate === 'minimal' ? 'border-r border-slate-300' : ''}`} style={{ lineHeight: '1.6' }}>Rate</th>}
+                                    {displayOptions.showMaterialItems && displayOptions.showMaterialLineTotals && <th className={`${activeTemplate === 'minimal' ? 'py-1 px-2' : 'py-1 px-2'} text-[13px] font-bold ${activeTemplate === 'minimal' ? 'text-slate-700' : 'text-slate-400'} uppercase tracking-wider text-right w-24`} style={{ lineHeight: '1.6' }}>Amount</th>}
                                   </tr>
                                 </thead>
                                 <tbody className={activeTemplate === 'minimal' ? '' : 'divide-y divide-slate-50'}>
@@ -664,7 +664,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                                         <td colSpan={4} className={`${activeTemplate === 'minimal' ? 'py-1 px-2' : 'py-1 px-2'} ${activeTemplate === 'minimal' ? 'border-r border-slate-300' : ''}`}>
                                           <div className="flex items-center gap-1">
                                             <Type size={10} className="text-slate-400" />
-                                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{item.name || 'Section'}</span>
+                                            <span className="text-[13px] font-bold uppercase tracking-wider text-slate-500">{item.name || 'Section'}</span>
                                           </div>
                                         </td>
                                       </tr>
@@ -687,13 +687,13 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                                     // Heading row for mobile
                                     <div key={item.id} className="py-1 px-2 bg-slate-50 rounded my-0.5 flex items-center gap-1">
                                       <Type size={10} className="text-slate-400" />
-                                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{item.name || 'Section'}</span>
+                                      <span className="text-[13px] font-bold uppercase tracking-wider text-slate-500">{item.name || 'Section'}</span>
                                     </div>
                                   ) : (
                                     <div key={item.id} className="py-1 border-b border-slate-50 last:border-0 flex justify-between items-start gap-2">
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-1.5">
-                                          {displayOptions.showMaterialItems && displayOptions.showMaterialQty && <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-1 rounded">{item.quantity}{item.unit}</span>}
+                                          {displayOptions.showMaterialItems && displayOptions.showMaterialQty && <span className="text-[13px] font-medium text-slate-500 bg-slate-100 px-1 rounded">{item.quantity}{item.unit}</span>}
                                           <span className="font-medium text-slate-900 text-xs">{[item.name, item.description].filter(Boolean).join(' ')}</span>
                                         </div>
                                       </div>
@@ -713,7 +713,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                       {/* Materials Total — shown independently of showMaterials */}
                       {displayOptions.showMaterialSectionTotal && rawMaterialsTotal > 0 && (
                         <div className={`flex justify-between items-center py-1 ${templateConfig.showBackgrounds ? 'bg-slate-50 px-2 rounded-lg border border-slate-100/50' : 'border-t border-slate-100 px-1'}`}>
-                          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Materials Total</span>
+                          <span className="text-[13px] font-bold text-slate-500 uppercase tracking-wider">Materials Total</span>
                           <span className="font-bold text-xs text-slate-900">£{(rawMaterialsTotal * markupMultiplier).toFixed(2)}</span>
                         </div>
                       )}
@@ -724,7 +724,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                           {templateConfig.showSectionHeaders && (
                             <div className="flex items-center gap-1.5 border-b border-slate-100 pb-1">
                               {templateConfig.showIcons && <HardHat size={12} className="text-blue-500" />}
-                              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Labour & Site Support</span>
+                              <span className="text-[13px] font-bold text-slate-500 uppercase tracking-wider">Labour & Site Support</span>
                             </div>
                           )}
 
@@ -741,7 +741,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                                         <div className="flex-1">
                                           <p className="text-xs font-medium text-slate-900">{labourItem.description || 'Labour'}</p>
                                           {(displayOptions.showLabourQty || displayOptions.showLabourUnitPrice) && (
-                                            <span className="text-[11px] font-medium text-slate-500">
+                                            <span className="text-[13px] font-medium text-slate-500">
                                               {displayOptions.showLabourQty ? `${labourItem.hours} hrs` : ''}
                                               {displayOptions.showLabourQty && displayOptions.showLabourUnitPrice ? ' @ ' : ''}
                                               {displayOptions.showLabourUnitPrice ? `£${(rate * markupMultiplier).toFixed(2)}/hr` : ''}
@@ -761,7 +761,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                                   <div className="flex-1">
                                     <p className="text-xs font-medium text-slate-900">Technical Personnel & Site Resource</p>
                                     {totalLabourHours > 0 && (displayOptions.showLabourQty || displayOptions.showLabourUnitPrice) && (
-                                      <p className="text-[11px] font-medium text-slate-500">
+                                      <p className="text-[13px] font-medium text-slate-500">
                                         {displayOptions.showLabourQty ? `${totalLabourHours} hrs` : ''}
                                         {displayOptions.showLabourQty && displayOptions.showLabourUnitPrice ? ' @ ' : ''}
                                         {displayOptions.showLabourUnitPrice ? `£${((quote.labourRate || settings.defaultLabourRate) * markupMultiplier).toFixed(2)}/hr` : ''}
@@ -782,7 +782,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                       {/* Labour Total — shown independently of showLabour */}
                       {displayOptions.showLabourSectionTotal && rawLabourTotal > 0 && (
                         <div className={`flex justify-between items-center py-1 ${templateConfig.showBackgrounds ? 'bg-blue-50/50 px-2 rounded-lg border border-blue-100/50' : 'border-t border-slate-100 px-1'}`}>
-                          <span className="text-[11px] font-bold text-blue-500 uppercase tracking-wider">
+                          <span className="text-[13px] font-bold text-blue-500 uppercase tracking-wider">
                             Labour Total {totalLabourHours > 0 && `(${totalLabourHours} hrs)`}
                           </span>
                           <span className="font-bold text-xs text-blue-600">£{(rawLabourTotal * markupMultiplier).toFixed(2)}</span>
@@ -791,7 +791,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
 
                       {displayOptions.showWorkSectionTotal && (
                         <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-                          <span className="text-[8px] font-medium text-slate-400 uppercase tracking-wider">Section {idx + 1}</span>
+                          <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Section {idx + 1}</span>
                           <p className="text-xs font-bold text-slate-600">Section Total: <span className="text-slate-900 ml-1">£{(sectionTotal * markupMultiplier).toFixed(2)}</span></p>
                         </div>
                       )}
@@ -843,7 +843,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                           <span className="text-teal-700">{quote.partPaymentLabel || 'Due Now'}</span>
                           <span className="font-bold text-teal-700">£{partPaymentAmount.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between text-[11px] mt-1">
+                        <div className="flex justify-between text-[13px] mt-1">
                           <span className="text-slate-500">Remaining</span>
                           <span className="text-slate-700">£{(totals.grandTotal - partPaymentAmount).toFixed(2)}</span>
                         </div>
@@ -893,7 +893,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                           <span className="text-teal-700">{quote.partPaymentLabel || 'Due Now'}</span>
                           <span className="font-bold text-teal-700">£{partPaymentAmount.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between text-[11px] mt-1">
+                        <div className="flex justify-between text-[13px] mt-1">
                           <span className="text-slate-500">Remaining</span>
                           <span className="text-slate-700">£{(totals.grandTotal - partPaymentAmount).toFixed(2)}</span>
                         </div>
@@ -942,20 +942,20 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                         <div className="bg-white border border-teal-200 p-2 rounded-xl mt-2 shadow-sm">
                           <div className="flex justify-between items-center">
                             <div>
-                              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
+                              <p className="text-[13px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
                                 {quote.partPaymentLabel || 'Amount Due Now'}
                               </p>
                               <p className="text-lg font-black text-teal-600">
                                 £{partPaymentAmount.toFixed(2)}
                               </p>
                               {quote.partPaymentType === 'percentage' && (
-                                <p className="text-[11px] font-bold text-slate-400">
+                                <p className="text-[13px] font-bold text-slate-400">
                                   ({quote.partPaymentValue}% of £{totals.grandTotal.toFixed(2)})
                                 </p>
                               )}
                             </div>
                             <div className="text-right">
-                              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Balance</p>
+                              <p className="text-[13px] font-black text-slate-400 uppercase tracking-widest">Balance</p>
                               <p className="text-base font-black text-slate-700">
                                 £{(totals.grandTotal - partPaymentAmount).toFixed(2)}
                               </p>
@@ -978,25 +978,25 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                               {settings.bankAccountName && (
                                 <div>
-                                  <p className="text-[8px] font-bold text-emerald-700 uppercase">Account Name</p>
+                                  <p className="text-[10px] font-bold text-emerald-700 uppercase">Account Name</p>
                                   <p className="text-xs font-bold text-slate-900">{settings.bankAccountName}</p>
                                 </div>
                               )}
                               {settings.bankName && (
                                 <div>
-                                  <p className="text-[8px] font-bold text-emerald-700 uppercase">Bank</p>
+                                  <p className="text-[10px] font-bold text-emerald-700 uppercase">Bank</p>
                                   <p className="text-xs font-bold text-slate-900">{settings.bankName}</p>
                                 </div>
                               )}
                               {settings.bankAccountNumber && (
                                 <div>
-                                  <p className="text-[8px] font-bold text-emerald-700 uppercase">Account Number</p>
+                                  <p className="text-[10px] font-bold text-emerald-700 uppercase">Account Number</p>
                                   <p className="text-xs font-bold text-slate-900">{settings.bankAccountNumber}</p>
                                 </div>
                               )}
                               {settings.bankSortCode && (
                                 <div>
-                                  <p className="text-[8px] font-bold text-emerald-700 uppercase">Sort Code</p>
+                                  <p className="text-[10px] font-bold text-emerald-700 uppercase">Sort Code</p>
                                   <p className="text-xs font-bold text-slate-900">{settings.bankSortCode}</p>
                                 </div>
                               )}
@@ -1006,7 +1006,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                       )}
 
                     {displayOptions.showNotes && quote?.notes && (
-                      <div className="text-[8px] leading-snug opacity-60 mt-2">
+                      <div className="text-[10px] leading-snug opacity-60 mt-2">
                         {quote.notes}
                       </div>
                     )}
