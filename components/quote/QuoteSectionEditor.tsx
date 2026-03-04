@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { QuoteSection, MaterialItem, LabourItem, AppSettings, LabourRatePreset } from '../../types';
+import { QuoteSection, MaterialItem, LabourItem, AppSettings, LabourRatePreset, DBMaterialLibraryItem } from '../../types';
 import { MaterialItemRow } from './MaterialItemRow';
 import { LabourItemRow } from './LabourItemRow';
 import { Trash2, Plus, Package, HardHat, PoundSterling, ChevronDown, ChevronUp, Layers, Sparkles, X } from 'lucide-react';
@@ -37,6 +37,8 @@ interface QuoteSectionEditorProps {
   getTotalLabourHours: (section: QuoteSection) => number;
   // Clear AI items
   onClearAIItems?: (sectionId: string) => void;
+  // Material search for auto-suggest
+  onSearchMaterials?: (query: string) => Promise<DBMaterialLibraryItem[]>;
 }
 
 export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
@@ -67,6 +69,7 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
   calculateSectionLabour,
   getTotalLabourHours,
   onClearAIItems,
+  onSearchMaterials,
 }) => {
   const sectionRate = section.labourRate || defaultLabourRate;
   const materialsTotal = section.items.filter(i => !i.isHeading).reduce((s, i) => s + i.totalPrice, 0);
@@ -199,6 +202,7 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
               onIncrement={onIncrementQuantity}
               onDecrement={onDecrementQuantity}
               onSaveToLibrary={onSaveItemToLibrary}
+              onSearchMaterials={onSearchMaterials}
             />
           ))}
         </div>

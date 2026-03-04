@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Package, Search, Star, Plus, Edit2, Trash2,
   Upload, Download, ChevronDown, X, Check, AlertCircle, Loader2,
-  ArrowLeft,
+  ArrowLeft, CheckSquare, Square,
 } from 'lucide-react';
 import { useData } from '../src/contexts/DataContext';
 import { useToast } from '../src/contexts/ToastContext';
@@ -12,12 +12,14 @@ import type { DBMaterialLibraryItem } from '../types';
 
 interface MaterialsLibraryProps {
   onSelectMaterial?: (material: DBMaterialLibraryItem) => void;
+  onSelectMultipleMaterials?: (materials: DBMaterialLibraryItem[]) => void;
   selectionMode?: boolean;
   onBack?: () => void;
 }
 
 export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
   onSelectMaterial,
+  onSelectMultipleMaterials,
   selectionMode = false,
   onBack,
 }) => {
@@ -56,6 +58,13 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
 
   // Delete confirmation
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Multi-select state (for selection mode)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Delete all state
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
 
   // Generic list download state
   const [showTradeDropdown, setShowTradeDropdown] = useState(false);
@@ -194,6 +203,45 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
     }
   };
 
+  const toggleSelectMaterial = (materialId: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(materialId)) {
+        next.delete(materialId);
+      } else {
+        next.add(materialId);
+      }
+      return next;
+    });
+  };
+
+  const handleAddSelected = () => {
+    if (selectedIds.size === 0) return;
+    const selected = materials.filter(m => selectedIds.has(m.id));
+    if (onSelectMultipleMaterials) {
+      onSelectMultipleMaterials(selected);
+    } else if (onSelectMaterial) {
+      selected.forEach(m => onSelectMaterial(m));
+    }
+    setSelectedIds(new Set());
+  };
+
+  const handleDeleteAll = async () => {
+    setDeletingAll(true);
+    try {
+      await services.materialsLibrary.deleteAll();
+      setMaterials([]);
+      setCategories([]);
+      setShowDeleteAllConfirm(false);
+      toast.success('Cleared', 'All materials have been deleted');
+    } catch (err) {
+      console.error('Failed to delete all materials:', err);
+      toast.error('Failed', 'Could not delete all materials');
+    } finally {
+      setDeletingAll(false);
+    }
+  };
+
   // Download a generic trade list into the user's materials library
   const handleDownloadTradeList = async (tradeId: string) => {
     const trade = TRADE_MATERIALS.find(t => t.id === tradeId);
@@ -279,6 +327,17 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
               <Upload size={16} />
               <span className="hidden sm:inline">Import</span>
             </button>
+
+            {/* Delete All */}
+            {materials.length > 0 && (
+              <button
+                onClick={() => setShowDeleteAllConfirm(true)}
+                className="flex items-center gap-2 px-3 py-2.5 border border-red-200 text-red-600 rounded-2xl font-bold text-sm hover:bg-red-50 transition-colors"
+              >
+                <Trash2 size={16} />
+                <span className="hidden sm:inline">Delete All</span>
+              </button>
+            )}
 
             {/* Download Generic List */}
             <div className="relative">
@@ -417,10 +476,52 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
       {/* Materials List */}
       {!loading && filteredMaterials.length > 0 && (
         <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden">
+          {/* Multi-select action bar */}
+          {selectionMode && selectedIds.size > 0 && (
+            <div className="p-3 bg-teal-50 border-b border-teal-200 flex items-center justify-between">
+              <span className="text-sm font-bold text-teal-700">
+                {selectedIds.size} material{selectedIds.size !== 1 ? 's' : ''} selected
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedIds(new Set())}
+                  className="px-3 py-1.5 text-sm font-bold text-slate-600 hover:bg-white rounded-lg transition-colors"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={handleAddSelected}
+                  className="px-4 py-1.5 bg-teal-500 text-white rounded-lg font-black text-sm hover:bg-teal-400 transition-colors flex items-center gap-1.5"
+                >
+                  <Check size={14} />
+                  Add {selectedIds.size} Item{selectedIds.size !== 1 ? 's' : ''}
+                </button>
+              </div>
+            </div>
+          )}
           <div className="max-h-[600px] overflow-auto">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 sticky top-0">
                 <tr>
+                  {selectionMode && (
+                    <th className="w-10 p-3">
+                      <button
+                        onClick={() => {
+                          if (selectedIds.size === filteredMaterials.length) {
+                            setSelectedIds(new Set());
+                          } else {
+                            setSelectedIds(new Set(filteredMaterials.map(m => m.id)));
+                          }
+                        }}
+                        className="p-1 hover:bg-slate-200 rounded transition-colors"
+                      >
+                        {selectedIds.size === filteredMaterials.length && filteredMaterials.length > 0
+                          ? <CheckSquare size={16} className="text-teal-500" />
+                          : <Square size={16} className="text-slate-400" />
+                        }
+                      </button>
+                    </th>
+                  )}
                   {!selectionMode && <th className="w-10 p-3"></th>}
                   <th className="text-left p-3 font-black text-slate-600 text-xs uppercase">Material</th>
                   <th className="text-left p-3 font-black text-slate-600 text-xs uppercase hidden md:table-cell">Unit</th>
@@ -432,9 +533,25 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
                 {filteredMaterials.map((material) => (
                   <tr
                     key={material.id}
-                    className={`hover:bg-slate-50 ${selectionMode ? 'cursor-pointer' : ''}`}
-                    onClick={() => selectionMode && handleSelectMaterial(material)}
+                    className={`hover:bg-slate-50 ${selectionMode ? 'cursor-pointer' : ''} ${selectedIds.has(material.id) ? 'bg-teal-50' : ''}`}
+                    onClick={() => selectionMode && toggleSelectMaterial(material.id)}
                   >
+                    {selectionMode && (
+                      <td className="p-3">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSelectMaterial(material.id);
+                          }}
+                          className="p-1 hover:bg-slate-200 rounded transition-colors"
+                        >
+                          {selectedIds.has(material.id)
+                            ? <CheckSquare size={16} className="text-teal-500" />
+                            : <Square size={16} className="text-slate-300" />
+                          }
+                        </button>
+                      </td>
+                    )}
                     {!selectionMode && (
                       <td className="p-3">
                         <button
@@ -492,7 +609,10 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
                         </div>
                       ) : (
                         <button
-                          onClick={() => handleSelectMaterial(material)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectMaterial(material);
+                          }}
                           className="px-3 py-1 bg-teal-500 text-white rounded-lg font-bold text-xs hover:bg-teal-400 transition-colors"
                         >
                           Add
@@ -507,6 +627,7 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
           <div className="p-3 border-t border-slate-100 bg-slate-50">
             <p className="text-xs text-slate-500">
               Showing {filteredMaterials.length} of {materials.length} materials
+              {selectionMode && ' — tap to select, then add multiple at once'}
             </p>
           </div>
         </div>
@@ -749,6 +870,38 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
                 className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-black hover:bg-red-500 transition-colors"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete All Confirmation Modal */}
+      {showDeleteAllConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-xl font-black text-slate-900 mb-2">Delete All Materials?</h3>
+            <p className="text-slate-500 text-sm mb-6">
+              This will permanently remove all {materials.length} material{materials.length !== 1 ? 's' : ''} from your library. This cannot be undone.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowDeleteAllConfirm(false)}
+                disabled={deletingAll}
+                className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAll}
+                disabled={deletingAll}
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-black hover:bg-red-500 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {deletingAll ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                {deletingAll ? 'Deleting...' : 'Delete All'}
               </button>
             </div>
           </div>

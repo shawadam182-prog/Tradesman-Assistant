@@ -93,14 +93,23 @@ ${priceListHint ? `Match prices from this list where items match:\n${priceListHi
     });
 
     // Handle empty prompt for image-only requests
-    const effectivePrompt = prompt?.trim() || 'Analyze this image and provide a materials and labour breakdown for the work shown.';
+    const isPdf = imageBase64?.startsWith('data:application/pdf');
+    const effectivePrompt = prompt?.trim() || (isPdf
+      ? 'Analyze this PDF document and provide a materials and labour breakdown for the work described.'
+      : 'Analyze this image and provide a materials and labour breakdown for the work shown.');
 
     const parts: any[] = [{ text: effectivePrompt }];
     if (imageBase64) {
       const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+      // Detect mime type from data URL prefix
+      let mimeType = 'image/jpeg';
+      if (imageBase64.startsWith('data:')) {
+        const match = imageBase64.match(/^data:([^;,]+)/);
+        if (match) mimeType = match[1];
+      }
       parts.push({
         inlineData: {
-          mimeType: 'image/jpeg',
+          mimeType,
           data: base64Data,
         },
       });

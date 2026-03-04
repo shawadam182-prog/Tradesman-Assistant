@@ -1547,6 +1547,17 @@ export const materialsLibraryService = {
     if (error) throw error;
   },
 
+  async deleteAll() {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('materials_library')
+      .delete()
+      .eq('user_id', user.id);
+    if (error) throw error;
+  },
+
   async deleteBySupplier(supplier: string) {
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) throw new Error('Not authenticated');

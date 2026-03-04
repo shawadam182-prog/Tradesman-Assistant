@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MaterialItem } from '../../types';
 import { Plus, Minus, Trash2, BookmarkPlus, Type, Sparkles, Check, X } from 'lucide-react';
+import type { DBMaterialLibraryItem } from '../../types';
 
 interface MaterialItemRowProps {
   item: MaterialItem;
@@ -10,6 +11,7 @@ interface MaterialItemRowProps {
   onIncrement: (sectionId: string, itemId: string) => void;
   onDecrement: (sectionId: string, itemId: string) => void;
   onSaveToLibrary?: (item: MaterialItem) => void;
+  onSearchMaterials?: (query: string) => Promise<DBMaterialLibraryItem[]>;
 }
 
 export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
@@ -20,6 +22,7 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
   onIncrement,
   onDecrement,
   onSaveToLibrary,
+  onSearchMaterials,
 }) => {
   // Track whether to show "Save to materials list?" prompt
   const [showSavePrompt, setShowSavePrompt] = useState(false);
@@ -31,12 +34,88 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
   );
   const [isEditingPrice, setIsEditingPrice] = useState(false);
 
+  // Auto-suggest state
+  const [suggestions, setSuggestions] = useState<DBMaterialLibraryItem[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Sync local state when external value changes (but not while editing)
   useEffect(() => {
     if (!isEditingPrice) {
       setPriceInput(item.unitPrice !== undefined && item.unitPrice !== 0 ? String(item.unitPrice) : '');
     }
   }, [item.unitPrice, isEditingPrice]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node) &&
+          nameInputRef.current && !nameInputRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleNameChange = useCallback((value: string) => {
+    onUpdate(sectionId, item.id, { name: value });
+
+    // Search for suggestions after 2+ characters
+    if (onSearchMaterials && value.trim().length >= 2) {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = setTimeout(async () => {
+        try {
+          const results = await onSearchMaterials(value.trim());
+          setSuggestions(results.slice(0, 6));
+          setShowSuggestions(results.length > 0);
+          setActiveSuggestionIndex(-1);
+        } catch {
+          setSuggestions([]);
+          setShowSuggestions(false);
+        }
+      }, 200);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [onUpdate, sectionId, item.id, onSearchMaterials]);
+
+  const handleSelectSuggestion = useCallback((material: DBMaterialLibraryItem) => {
+    const price = material.sell_price || material.cost_price || 0;
+    onUpdate(sectionId, item.id, {
+      name: material.name,
+      description: material.description || '',
+      unit: material.unit || 'pc',
+      unitPrice: price,
+      quantity: item.quantity || 1,
+      totalPrice: (item.quantity || 1) * price,
+    });
+    setSuggestions([]);
+    setShowSuggestions(false);
+    promptDismissedRef.current = true;
+    initialNameRef.current = material.name;
+  }, [onUpdate, sectionId, item.id, item.quantity]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveSuggestionIndex(prev => Math.min(prev + 1, suggestions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveSuggestionIndex(prev => Math.max(prev - 1, -1));
+    } else if (e.key === 'Enter' && activeSuggestionIndex >= 0) {
+      e.preventDefault();
+      handleSelectSuggestion(suggestions[activeSuggestionIndex]);
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+    }
+  }, [showSuggestions, suggestions, activeSuggestionIndex, handleSelectSuggestion]);
 
   if (item.isHeading) {
     return (
@@ -62,23 +141,66 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
   }
 
   return (
-    <div className={`bg-white p-0.5 md:p-2 rounded-md md:rounded-lg shadow-sm border relative group overflow-hidden ${item.isAIProposed ? 'border-l-2 border-l-teal-400 border-slate-100 md:border-slate-200' : 'border-slate-100 md:border-slate-200'}`}>
+    <div className={`bg-white p-0.5 md:p-2 rounded-md md:rounded-lg shadow-sm border relative group overflow-visible ${item.isAIProposed ? 'border-l-2 border-l-teal-400 border-slate-100 md:border-slate-200' : 'border-slate-100 md:border-slate-200'}`}>
       {/* Name + Actions row */}
       <div className="flex items-center gap-1 md:gap-2 mb-0.5 md:mb-1">
-        <div className="flex-1 min-w-0 flex items-center gap-1">
+        <div className="flex-1 min-w-0 flex items-center gap-1 relative">
           <input
+            ref={nameInputRef}
             type="text"
             className="flex-1 min-w-0 h-4 md:h-7 font-bold text-[10px] md:text-sm text-slate-900 outline-none placeholder:text-slate-300 bg-transparent leading-none md:leading-normal p-0 m-0"
             value={item.name}
-            onChange={e => onUpdate(sectionId, item.id, { name: e.target.value })}
+            onChange={e => handleNameChange(e.target.value)}
+            onKeyDown={handleKeyDown}
             onBlur={() => {
-              // Show save prompt when user finishes typing a new material name
-              if (item.name.trim() && item.name !== initialNameRef.current && onSaveToLibrary && !promptDismissedRef.current) {
-                setShowSavePrompt(true);
+              // Delay to allow suggestion click
+              setTimeout(() => {
+                setShowSuggestions(false);
+                // Show save prompt when user finishes typing a new material name
+                if (item.name.trim() && item.name !== initialNameRef.current && onSaveToLibrary && !promptDismissedRef.current) {
+                  setShowSavePrompt(true);
+                }
+              }, 200);
+            }}
+            onFocus={() => {
+              // Re-show suggestions if they exist
+              if (suggestions.length > 0 && item.name.trim().length >= 2) {
+                setShowSuggestions(true);
               }
             }}
             placeholder="Item Name"
           />
+          {/* Auto-suggest dropdown */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div
+              ref={suggestionsRef}
+              className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-48 overflow-auto"
+            >
+              {suggestions.map((s, idx) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className={`w-full text-left px-3 py-2 text-xs hover:bg-teal-50 transition-colors border-b border-slate-50 last:border-0 flex items-center justify-between gap-2 ${idx === activeSuggestionIndex ? 'bg-teal-50' : ''}`}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleSelectSuggestion(s);
+                  }}
+                >
+                  <div className="min-w-0">
+                    <p className="font-bold text-slate-900 truncate">{s.name}</p>
+                    {s.category && (
+                      <span className="text-[9px] text-slate-400 capitalize">{s.category}</span>
+                    )}
+                  </div>
+                  {(s.sell_price || s.cost_price) ? (
+                    <span className="text-[10px] font-bold text-teal-600 shrink-0">
+                      £{Number(s.sell_price || s.cost_price).toFixed(2)}/{s.unit || 'pc'}
+                    </span>
+                  ) : null}
+                </button>
+              ))}
+            </div>
+          )}
           {item.isAIProposed && (
             <Sparkles size={10} className="text-teal-400 shrink-0" />
           )}
