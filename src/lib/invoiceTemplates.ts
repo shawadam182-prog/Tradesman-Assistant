@@ -203,8 +203,8 @@ export const INVOICE_TEMPLATES: Record<InvoiceTemplate, TemplateConfig> = {
     headerPadding: 'p-0',
     rowPadding: 'py-1 px-2',
     sectionGap: 'space-y-2',
-    fontSize: 'text-xs',
-    headerFontSize: 'text-base',
+    fontSize: 'text-sm',
+    headerFontSize: 'text-lg',
     borderRadius: 'rounded-none',
     supportsColorScheme: true,
     defaultColorScheme: 'executive',
@@ -232,8 +232,8 @@ export const INVOICE_TEMPLATES: Record<InvoiceTemplate, TemplateConfig> = {
     headerPadding: 'p-0',
     rowPadding: 'py-1 px-1.5',
     sectionGap: 'space-y-1.5',
-    fontSize: 'text-[11px]',
-    headerFontSize: 'text-sm',
+    fontSize: 'text-sm',
+    headerFontSize: 'text-base',
     borderRadius: 'rounded-none',
     supportsColorScheme: true,
     defaultColorScheme: 'executive',
@@ -261,8 +261,8 @@ export const INVOICE_TEMPLATES: Record<InvoiceTemplate, TemplateConfig> = {
     headerPadding: 'p-0',
     rowPadding: 'py-4 px-4',       // More vertical & horizontal padding for breathing room
     sectionGap: 'space-y-6',       // More space between sections
-    fontSize: 'text-sm',           // Larger than professional (10px → 14px)
-    headerFontSize: 'text-xl',     // Much larger header text (14px → 20px)
+    fontSize: 'text-base',         // Larger than professional
+    headerFontSize: 'text-2xl',    // Much larger header text
     borderRadius: 'rounded-none',
     supportsColorScheme: true,
     defaultColorScheme: 'executive',
@@ -292,7 +292,7 @@ export const getTableHeaderStyle = (
 ): string => {
   // All templates now support color schemes
   const scheme = getColorScheme(colorScheme || template.defaultColorScheme);
-  return `${scheme.headerBg} ${scheme.headerText} py-1.5 px-2 text-[10px] font-semibold`;
+  return `${scheme.headerBg} ${scheme.headerText} py-1.5 px-2 ${template.fontSize} font-semibold`;
 };
 
 // Template metadata for settings UI
