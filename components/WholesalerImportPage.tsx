@@ -257,7 +257,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
             const base64 = ev.target?.result as string;
             const aiResults = await parsePriceListPdf(base64, customSupplierName || undefined);
 
-            if (aiResults.length === 0) {
+            if (!Array.isArray(aiResults) || aiResults.length === 0) {
               setError('Could not extract any products from the PDF. Try a CSV export instead.');
               setStep('upload');
               setProcessingPdf(false);

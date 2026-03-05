@@ -242,13 +242,13 @@ export const professionalStyles = StyleSheet.create({
     flex: 1,
   },
   companyName: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.slate900,
     marginBottom: 2,
   },
   companyDetails: {
-    fontSize: 9,
+    fontSize: 11,
     color: COLORS.slate600,
     lineHeight: 1.4,
   },
@@ -262,7 +262,7 @@ export const professionalStyles = StyleSheet.create({
     marginBottom: 4,
   },
   invoiceRef: {
-    fontSize: 10,
+    fontSize: 11,
     color: COLORS.slate600,
     marginBottom: 8,
   },
@@ -270,7 +270,7 @@ export const professionalStyles = StyleSheet.create({
     marginTop: 8,
   },
   balanceLabel: {
-    fontSize: 9,
+    fontSize: 11,
     color: COLORS.slate600,
     marginBottom: 2,
   },
@@ -292,19 +292,19 @@ export const professionalStyles = StyleSheet.create({
     flex: 1,
   },
   sectionLabel: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: 'bold',
     color: COLORS.slate900,
     marginBottom: 4,
   },
   customerName: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
     color: COLORS.slate900,
     marginBottom: 2,
   },
   customerDetails: {
-    fontSize: 9,
+    fontSize: 11,
     color: COLORS.slate600,
     lineHeight: 1.4,
   },
@@ -314,11 +314,11 @@ export const professionalStyles = StyleSheet.create({
     marginBottom: 2,
   },
   dateLabel: {
-    fontSize: 9,
+    fontSize: 11,
     color: COLORS.slate600,
   },
   dateValue: {
-    fontSize: 9,
+    fontSize: 11,
     color: COLORS.slate900,
   },
   
@@ -344,27 +344,27 @@ export const professionalStyles = StyleSheet.create({
   },
   colNum: {
     width: 30,
-    fontSize: 9,
+    fontSize: 11,
   },
   colDesc: {
     flex: 1,
-    fontSize: 9,
+    fontSize: 11,
     paddingRight: 8,
   },
   colQty: {
     width: 50,
     textAlign: 'center',
-    fontSize: 9,
+    fontSize: 11,
   },
   colRate: {
     width: 70,
     textAlign: 'right',
-    fontSize: 9,
+    fontSize: 11,
   },
   colAmount: {
     width: 70,
     textAlign: 'right',
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: 'bold',
   },
   sectionHeader: {
@@ -373,24 +373,24 @@ export const professionalStyles = StyleSheet.create({
     marginTop: 8,
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   sectionDesc: {
-    fontSize: 9,
+    fontSize: 11,
     fontStyle: 'italic',
     paddingHorizontal: 8,
     paddingBottom: 4,
   },
   itemName: {
-    fontSize: 9,
+    fontSize: 11,
     color: COLORS.slate900,
     fontWeight: 'bold',
   },
   itemDesc: {
-    fontSize: 8,
+    fontSize: 10,
     color: COLORS.slate500,
     marginTop: 1,
   },
@@ -411,11 +411,11 @@ export const professionalStyles = StyleSheet.create({
     borderBottomStyle: 'solid',
   },
   totalLabel: {
-    fontSize: 9,
+    fontSize: 11,
     color: COLORS.slate500,
   },
   totalValue: {
-    fontSize: 9,
+    fontSize: 11,
     color: COLORS.slate900,
   },
   grandTotalRow: {
@@ -427,11 +427,11 @@ export const professionalStyles = StyleSheet.create({
     borderRadius: 4,
   },
   grandTotalLabel: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: 'bold',
   },
   grandTotalValue: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: 'bold',
   },
   
@@ -444,17 +444,17 @@ export const professionalStyles = StyleSheet.create({
     borderTopStyle: 'solid',
   },
   bankTitle: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: 'bold',
     marginBottom: 4,
     color: COLORS.slate700,
   },
   bankText: {
-    fontSize: 8,
+    fontSize: 10,
     color: COLORS.slate600,
     lineHeight: 1.4,
   },
-  
+
   // Notes
   notes: {
     marginTop: 16,
@@ -464,13 +464,13 @@ export const professionalStyles = StyleSheet.create({
     borderTopStyle: 'solid',
   },
   notesTitle: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: 'bold',
     marginBottom: 4,
     color: COLORS.slate700,
   },
   notesText: {
-    fontSize: 8,
+    fontSize: 10,
     color: COLORS.slate600,
     lineHeight: 1.5,
   },
@@ -490,11 +490,11 @@ export const professionalStyles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   partPaymentLabel: {
-    fontSize: 9,
+    fontSize: 11,
     color: COLORS.teal700,
   },
   partPaymentValue: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: 'bold',
     color: COLORS.teal700,
   },

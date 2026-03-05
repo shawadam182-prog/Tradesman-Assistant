@@ -180,13 +180,8 @@ export const parsePriceListPdf = async (
   pdfBase64: string,
   supplierHint?: string
 ): Promise<ParsedPriceListItem[]> => {
-  try {
-    return await callGemini<ParsedPriceListItem[]>('parsePriceListPdf', {
-      pdfBase64,
-      supplierHint
-    });
-  } catch (error) {
-    console.error('parsePriceListPdf failed:', error);
-    return [];
-  }
+  return await callGemini<ParsedPriceListItem[]>('parsePriceListPdf', {
+    pdfBase64,
+    supplierHint
+  });
 };
