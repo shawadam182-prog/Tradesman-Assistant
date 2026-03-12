@@ -44,14 +44,13 @@ export function buildPDFReference(quote: Quote, settings: AppSettings): string {
 }
 
 /**
- * Generate a PDF blob from a rendered HTML element (the document ref).
- * Uses html2canvas to capture the DOM and jsPDF to paginate into A4.
+ * Shared helper: capture element to canvas, produce jsPDF with JPEG compression.
  */
-export async function generatePDFFromElement(
+async function elementToPdf(
   element: HTMLElement,
   options: PDFGenerationOptions = {}
-): Promise<Blob> {
-  const { scale = 5, format = 'png' } = options;
+): Promise<jsPDF> {
+  const { scale = 3 } = options;
 
   const canvas = await html2canvas(element, {
     scale,
@@ -79,13 +78,8 @@ export async function generatePDFFromElement(
     },
   });
 
-  let imgData: string;
-  try {
-    imgData = canvas.toDataURL(`image/${format}`);
-  } catch {
-    // Fallback to JPEG if PNG fails (e.g. canvas too large)
-    imgData = canvas.toDataURL('image/jpeg', 0.8);
-  }
+  // Use JPEG at 85% quality to keep file size small (~100-300KB vs 60MB+ PNG)
+  const imgData = canvas.toDataURL('image/jpeg', 0.85);
 
   const pdf = new jsPDF({
     orientation: 'portrait',
@@ -105,12 +99,24 @@ export async function generatePDFFromElement(
     if (pageNum > 0) {
       pdf.addPage();
     }
-    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
+    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, scaledHeight);
     heightLeft -= pdfHeight;
     position -= pdfHeight;
     pageNum++;
   }
 
+  return pdf;
+}
+
+/**
+ * Generate a PDF blob from a rendered HTML element (the document ref).
+ * Uses html2canvas to capture the DOM and jsPDF to paginate into A4.
+ */
+export async function generatePDFFromElement(
+  element: HTMLElement,
+  options: PDFGenerationOptions = {}
+): Promise<Blob> {
+  const pdf = await elementToPdf(element, options);
   return pdf.output('blob');
 }
 
@@ -122,42 +128,6 @@ export async function downloadPDF(
   filename: string,
   options: PDFGenerationOptions = {}
 ): Promise<void> {
-  const { scale = 5 } = options;
-
-  const canvas = await html2canvas(element, {
-    scale,
-    useCORS: true,
-    logging: false,
-    backgroundColor: '#ffffff',
-    windowWidth: element.scrollWidth,
-    windowHeight: element.scrollHeight,
-  });
-
-  const imgData = canvas.toDataURL('image/png');
-
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4',
-  });
-
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = pdf.internal.pageSize.getHeight();
-  const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
-
-  let heightLeft = scaledHeight;
-  let position = 0;
-  let pageNum = 0;
-
-  while (heightLeft > 0) {
-    if (pageNum > 0) {
-      pdf.addPage();
-    }
-    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
-    heightLeft -= pdfHeight;
-    position -= pdfHeight;
-    pageNum++;
-  }
-
+  const pdf = await elementToPdf(element, options);
   pdf.save(filename);
 }

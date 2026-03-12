@@ -528,11 +528,9 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
                     type="button"
                     onClick={async () => {
                       if (activeQuote.status === 'draft') {
-                        await sharing.handleDownloadPDF();
-                        if (confirm('PDF downloaded. Mark as Sent?')) {
-                          onUpdateStatus('sent');
-                          hapticSuccess();
-                        }
+                        await sharing.handleDownloadPDFOnly();
+                        onUpdateStatus('sent');
+                        hapticSuccess();
                       } else if (activeQuote.status === 'paid' && confirm('Revert to Sent (Awaiting Payment)?')) {
                         onUpdateStatus('sent');
                         hapticSuccess();

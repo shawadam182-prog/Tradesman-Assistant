@@ -178,7 +178,7 @@ export const JobSheet: React.FC<JobSheetProps> = ({
     setIsGeneratingPdf(true);
     try {
       const isMobile = window.innerWidth < 768;
-      await downloadPDF(printableRef.current, jobSheetFilename, { scale: isMobile ? 3 : 5 });
+      await downloadPDF(printableRef.current, jobSheetFilename, { scale: isMobile ? 2 : 3 });
       toast.success('PDF Downloaded', jobSheetFilename);
     } catch (err) {
       console.error('PDF generation failed:', err);
@@ -194,7 +194,7 @@ export const JobSheet: React.FC<JobSheetProps> = ({
     setShowShareMenu(false);
     try {
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const blob = await generatePDFFromElement(printableRef.current, { scale: isMobile ? 2.5 : 4 });
+      const blob = await generatePDFFromElement(printableRef.current, { scale: isMobile ? 2 : 3 });
 
       if (isMobile && navigator.share && navigator.canShare) {
         try {

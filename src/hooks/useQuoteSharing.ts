@@ -69,7 +69,7 @@ export function useQuoteSharing(options: UseQuoteSharingOptions) {
     try {
       const filename = buildPDFFilename(quote, settings);
       const isMobile = window.innerWidth < 768;
-      const scale = isMobile ? 2.5 : 4;
+      const scale = isMobile ? 2 : 3;
       const blob = await generatePDFFromElement(documentRef.current, { scale });
       return { blob, filename };
     } catch (err) {
@@ -162,7 +162,7 @@ export function useQuoteSharing(options: UseQuoteSharingOptions) {
     setIsDownloading(true);
     try {
       const filename = buildPDFFilename(quote, settings);
-      await downloadPDF(documentRef.current, filename, { scale: 5 });
+      await downloadPDF(documentRef.current, filename);
     } catch (err) {
       console.error('PDF generation failed:', err);
       alert('PDF generation failed. Please try again.');
@@ -196,7 +196,7 @@ export function useQuoteSharing(options: UseQuoteSharingOptions) {
     try {
       const filename = buildPDFFilename(quote, settings);
       const { subject, body, recipientEmail } = buildEmailContent(quote, customer, settings, totals);
-      const blob = await generatePDFFromElement(documentRef.current, { scale: 5 });
+      const blob = await generatePDFFromElement(documentRef.current);
 
       // MOBILE: Use Web Share API
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
