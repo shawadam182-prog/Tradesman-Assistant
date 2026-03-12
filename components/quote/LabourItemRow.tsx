@@ -97,7 +97,7 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
           <select
             value={item.unit || 'hrs'}
             onChange={e => onUpdate(sectionId, item.id, { unit: e.target.value })}
-            className="text-[8px] md:text-sm text-slate-400 font-bold bg-transparent outline-none cursor-pointer appearance-none pr-1"
+            className="text-[10px] md:text-sm text-slate-500 font-bold bg-white outline-none cursor-pointer rounded px-1 py-0.5 border border-slate-200 min-w-[40px] md:min-w-[55px]"
           >
             {(labourUnitPresets || DEFAULT_LABOUR_UNITS).map(u => (
               <option key={u} value={u}>{u}</option>

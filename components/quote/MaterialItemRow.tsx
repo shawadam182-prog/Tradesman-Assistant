@@ -143,12 +143,12 @@ export const MaterialItemRow: React.FC<MaterialItemRowProps> = ({
   return (
     <div className={`bg-white p-0.5 md:p-2 rounded-md md:rounded-lg shadow-sm border relative group overflow-visible ${item.isAIProposed ? 'border-l-2 border-l-teal-400 border-slate-100 md:border-slate-200' : 'border-slate-100 md:border-slate-200'}`}>
       {/* Name + Actions row */}
-      <div className="flex items-center gap-1 md:gap-2 mb-0.5 md:mb-1">
-        <div className="flex-1 min-w-0 flex items-center gap-1 relative">
+      <div className="flex items-center gap-0.5 md:gap-2 mb-0.5 md:mb-1">
+        <div className="flex-[3] min-w-0 flex items-center gap-1 relative">
           <input
             ref={nameInputRef}
             type="text"
-            className="flex-1 min-w-0 h-4 md:h-7 font-bold text-[10px] md:text-sm text-slate-900 outline-none placeholder:text-slate-300 bg-transparent leading-none md:leading-normal p-0 m-0"
+            className="flex-1 min-w-0 h-5 md:h-7 font-bold text-[9px] md:text-[13px] text-slate-900 outline-none placeholder:text-slate-300 bg-transparent leading-none md:leading-normal p-0 m-0"
             value={item.name}
             onChange={e => handleNameChange(e.target.value)}
             onKeyDown={handleKeyDown}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Mail, Copy, Check, Share2, FileDown, Loader2 } from 'lucide-react';
+import { X, Mail, Copy, Check, Share2, FileDown, Loader2, ExternalLink } from 'lucide-react';
 import type { Quote } from '../../types';
 import type { QuoteTotals } from '../../src/utils/quoteCalculations';
 import { PaymentRecorder } from '../PaymentRecorder';
@@ -195,6 +195,17 @@ export const QuoteModals: React.FC<QuoteModalsProps> = ({
           <div className="flex items-center justify-between p-4 bg-slate-900">
             <h3 className="text-white font-bold">PDF Preview</h3>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (pdfPreviewUrl) {
+                    window.open(pdfPreviewUrl, '_blank');
+                  }
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg font-bold text-sm hover:bg-blue-600 transition-colors flex items-center gap-2"
+              >
+                <ExternalLink size={16} />
+                Open
+              </button>
               <button
                 onClick={onDownloadPDF}
                 disabled={isDownloading}

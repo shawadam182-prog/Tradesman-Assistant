@@ -1,7 +1,7 @@
 /// <reference types="@types/google.maps" />
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  MapPin, Mic, Loader2, MapPinned, LocateFixed, Navigation
+  MapPin, Mic, Loader2, MapPinned, LocateFixed, Navigation, X
 } from 'lucide-react';
 import { formatAddressAI, reverseGeocode } from '../src/services/geminiService';
 import { hapticTap } from '../src/hooks/useHaptic';
@@ -272,6 +272,22 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
         {/* Action buttons - hidden on mobile, shown inside input on desktop */}
         <div className="hidden md:flex absolute right-1 top-1/2 -translate-y-1/2 gap-0.5 z-10">
+          {/* Clear button */}
+          {value.trim() && (
+            <button
+              type="button"
+              onClick={() => {
+                onChange('');
+                setSuggestions([]);
+                setShowSuggestions(false);
+                inputRef.current?.focus();
+              }}
+              className="p-2 rounded-lg transition-all text-slate-400 hover:text-red-500 bg-transparent"
+              title="Clear address"
+            >
+              <X size={18} />
+            </button>
+          )}
           {/* Voice input button */}
           {onVoiceStart && (
             <button
@@ -367,6 +383,21 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
       {/* Action buttons - shown below input on mobile only */}
       <div className="flex md:hidden justify-end gap-1 mt-1.5">
+        {/* Clear button */}
+        {value.trim() && (
+          <button
+            type="button"
+            onClick={() => {
+              onChange('');
+              setSuggestions([]);
+              setShowSuggestions(false);
+            }}
+            className="p-1.5 rounded-lg transition-all text-slate-400 hover:text-red-500 bg-slate-100"
+            title="Clear address"
+          >
+            <X size={14} />
+          </button>
+        )}
         {/* Voice input button */}
         {onVoiceStart && (
           <button

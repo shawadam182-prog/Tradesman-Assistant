@@ -78,6 +78,12 @@ export const QuoteDisplayCustomizer: React.FC<QuoteDisplayCustomizerProps> = ({
               activeColor="bg-slate-800 text-white"
               onClick={() => onToggleOption('showMaterialSectionTotal')}
             />
+            <CustomiseToggle
+              label="Show VAT on Materials"
+              isActive={displayOptions.showMaterialVat || false}
+              activeColor="bg-amber-500 text-white"
+              onClick={() => onToggleOption('showMaterialVat' as keyof typeof displayOptions)}
+            />
           </div>
         </div>
 

@@ -8,7 +8,7 @@ import {
   ReceiptText, Share2, Copy, MessageCircle, MapPin, Mail, Banknote, Check, X, Clock, Link2, Phone,
   RefreshCw, Play, Pen, Palette
 } from 'lucide-react';
-import { TEMPLATE_METADATA, COLOR_SCHEMES } from '../src/lib/invoiceTemplates';
+import { COLOR_SCHEMES } from '../src/lib/invoiceTemplates';
 import type { ColorScheme } from '../src/lib/invoiceTemplates';
 import { hapticSuccess } from '../src/hooks/useHaptic';
 import {
@@ -447,12 +447,9 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
                     type="button"
                     onClick={async () => {
                       if (activeQuote.status === 'draft') {
-                        // Download PDF first, then confirm mark as sent
-                        await sharing.handleDownloadPDF();
-                        if (confirm('PDF downloaded. Mark as Sent?')) {
-                          onUpdateStatus('sent');
-                          hapticSuccess();
-                        }
+                        await sharing.handleDownloadPDFOnly();
+                        onUpdateStatus('sent');
+                        hapticSuccess();
                       } else if (activeQuote.status !== 'sent' && activeQuote.status !== 'draft' && confirm('Revert to Sent?')) {
                         onUpdateStatus('sent');
                         hapticSuccess();
@@ -574,11 +571,9 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
             {activeQuote.status === 'draft' && (
               <button
                 onClick={async () => {
-                  await sharing.handleDownloadPDF();
-                  if (confirm('PDF downloaded. Mark as Sent?')) {
-                    onUpdateStatus('sent');
-                    hapticSuccess();
-                  }
+                  await sharing.handleDownloadPDFOnly();
+                  onUpdateStatus('sent');
+                  hapticSuccess();
                 }}
                 disabled={sharing.isDownloading}
                 className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-xl bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-colors disabled:opacity-50"
@@ -642,11 +637,9 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
             {activeQuote.status === 'draft' && (
               <button
                 onClick={async () => {
-                  await sharing.handleDownloadPDF();
-                  if (confirm('PDF downloaded. Mark as Sent?')) {
-                    onUpdateStatus('sent');
-                    hapticSuccess();
-                  }
+                  await sharing.handleDownloadPDFOnly();
+                  onUpdateStatus('sent');
+                  hapticSuccess();
                 }}
                 disabled={sharing.isDownloading}
                 className="flex-shrink-0 flex items-center gap-2 px-2 py-1 rounded-xl bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-colors disabled:opacity-50"
@@ -888,16 +881,10 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
               <div>
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2 block">Document Template</label>
                 <div className="flex flex-wrap gap-2">
-                  {TEMPLATE_METADATA.filter(t => !['trade-pro', 'statement', 'compact', 'minimal', 'detailed'].includes(t.id)).map(template => (
-                    <div
-                      key={template.id}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border ${settings.documentTemplate === template.id ? 'ring-2 ring-violet-400 border-violet-300 bg-violet-50' : 'border-slate-200 bg-white'}`}
-                    >
-                      {template.name}
-                    </div>
-                  ))}
+                  <div className="px-3 py-1.5 rounded-lg text-[10px] font-bold border ring-2 ring-violet-400 border-violet-300 bg-violet-50">
+                    Classic
+                  </div>
                 </div>
-                <p className="text-[8px] text-slate-400 italic mt-1">Template can be changed in Settings.</p>
               </div>
             </div>
             {/* Done button */}

@@ -133,6 +133,14 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     // First check for a saved draft
     const savedDraft = getSavedDraft();
     if (savedDraft) {
+      // Apply project site address if coming from job pack and draft doesn't have one
+      if (projectSiteAddress && !savedDraft.jobAddress) {
+        savedDraft.jobAddress = projectSiteAddress;
+      }
+      // Apply project customer if coming from job pack and draft doesn't have one
+      if (projectCustomerId && !savedDraft.customerId) {
+        savedDraft.customerId = projectCustomerId;
+      }
       // We'll show a toast after mount via useEffect
       return savedDraft;
     }
@@ -1046,9 +1054,9 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                     </div>
                     <div>
                       <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Address</label>
-                      <input
-                        type="text"
-                        className="w-full text-sm font-medium text-slate-900 border-b border-slate-200 pb-1 outline-none focus:border-teal-500 transition-colors bg-transparent"
+                      <textarea
+                        rows={3}
+                        className="w-full text-sm font-medium text-slate-900 border border-slate-200 rounded-lg p-2 outline-none focus:border-teal-500 transition-colors bg-transparent resize-none"
                         value={formData.customerAddressOverride ?? selectedCustomer.address}
                         onChange={e => setFormData(prev => ({ ...prev, customerAddressOverride: e.target.value }))}
                       />
@@ -1185,12 +1193,36 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
           <div className="grid grid-cols-2 gap-3 md:gap-4">
             <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><PoundSterling size={12} className="text-teal-500" /> Default Hourly Rate</label><input type="number" className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 text-slate-950 font-black text-sm outline-none focus:border-teal-400 transition-all" value={formData.labourRate || ''} onChange={e => setFormData({ ...formData, labourRate: parseFloat(e.target.value) || 0 })} placeholder="65.00" /></div>
             <div className="space-y-1"><label className="text-[10px] font-black text-teal-600 uppercase tracking-widest px-1 flex items-center gap-2 italic"><Percent size={12} className="text-teal-500" /> Global Markup %</label><input type="number" min="0" className="w-full bg-teal-50 border-2 border-teal-100 rounded-xl p-3 text-teal-900 font-black text-sm outline-none focus:border-teal-400 transition-all" value={formData.markupPercent ?? ''} onChange={e => setFormData({ ...formData, markupPercent: e.target.value === '' ? 0 : parseFloat(e.target.value) })} placeholder="0" /></div>
-            {settings.enableVat && (
-              <div className="space-y-1"><label className="text-[10px] font-black text-amber-600 uppercase tracking-widest px-1 flex items-center gap-2 italic"><Percent size={12} className="text-amber-500" /> VAT %</label><input type="number" min="0" className="w-full bg-amber-50 border-2 border-amber-100 rounded-xl p-3 text-amber-900 font-black text-sm outline-none focus:border-amber-400 transition-all" value={formData.taxPercent ?? ''} onChange={e => setFormData({ ...formData, taxPercent: e.target.value === '' ? 0 : parseFloat(e.target.value) })} placeholder="20" /></div>
-            )}
-            {settings.enableCis && (
-              <div className="space-y-1"><label className="text-[10px] font-black text-rose-600 uppercase tracking-widest px-1 flex items-center gap-2 italic"><Percent size={12} className="text-rose-500" /> CIS Deduction %</label><input type="number" min="0" className="w-full bg-rose-50 border-2 border-rose-100 rounded-xl p-3 text-rose-900 font-black text-sm outline-none focus:border-rose-400 transition-all" value={formData.cisPercent ?? ''} onChange={e => setFormData({ ...formData, cisPercent: e.target.value === '' ? 0 : parseFloat(e.target.value) })} placeholder="20" /></div>
-            )}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between px-1">
+                <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-2 italic"><Percent size={12} className="text-amber-500" /> VAT %</label>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, taxPercent: (prev.taxPercent || 0) > 0 ? 0 : (settings.defaultTaxRate || 20) }))}
+                  className={`relative w-10 h-5 rounded-full transition-colors ${(formData.taxPercent || 0) > 0 ? 'bg-amber-500' : 'bg-slate-300'}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${(formData.taxPercent || 0) > 0 ? 'translate-x-5' : ''}`} />
+                </button>
+              </div>
+              {(formData.taxPercent || 0) > 0 && (
+                <input type="number" min="0" className="w-full bg-amber-50 border-2 border-amber-100 rounded-xl p-3 text-amber-900 font-black text-sm outline-none focus:border-amber-400 transition-all" value={formData.taxPercent ?? ''} onChange={e => setFormData({ ...formData, taxPercent: e.target.value === '' ? 0 : parseFloat(e.target.value) })} placeholder="20" />
+              )}
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between px-1">
+                <label className="text-[10px] font-black text-rose-600 uppercase tracking-widest flex items-center gap-2 italic"><Percent size={12} className="text-rose-500" /> CIS Deduction %</label>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, cisPercent: (prev.cisPercent || 0) > 0 ? 0 : (settings.defaultCisRate || 20) }))}
+                  className={`relative w-10 h-5 rounded-full transition-colors ${(formData.cisPercent || 0) > 0 ? 'bg-rose-500' : 'bg-slate-300'}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${(formData.cisPercent || 0) > 0 ? 'translate-x-5' : ''}`} />
+                </button>
+              </div>
+              {(formData.cisPercent || 0) > 0 && (
+                <input type="number" min="0" className="w-full bg-rose-50 border-2 border-rose-100 rounded-xl p-3 text-rose-900 font-black text-sm outline-none focus:border-rose-400 transition-all" value={formData.cisPercent ?? ''} onChange={e => setFormData({ ...formData, cisPercent: e.target.value === '' ? 0 : parseFloat(e.target.value) })} placeholder="20" />
+              )}
+            </div>
           </div>
           <div className="pt-2 space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2 italic"><FileText size={14} className="text-teal-500" /> Document Footer / Terms</label><textarea className="w-full bg-slate-50 border-2 border-slate-100 rounded-[20px] p-3 md:p-4 text-slate-900 font-medium text-sm outline-none focus:border-teal-400 transition-all min-h-[100px]" value={formData.notes || ''} onChange={e => setFormData({ ...formData, notes: e.target.value })} placeholder="Final notes, bank details etc..." /></div>
         </div>

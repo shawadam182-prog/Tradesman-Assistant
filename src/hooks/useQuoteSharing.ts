@@ -157,19 +157,23 @@ export function useQuoteSharing(options: UseQuoteSharingOptions) {
     }
   };
 
-  const handleDownloadPDF = async () => {
+  const handleDownloadPDFOnly = async () => {
     if (!documentRef.current) return;
     setIsDownloading(true);
     try {
       const filename = buildPDFFilename(quote, settings);
       await downloadPDF(documentRef.current, filename, { scale: 5 });
-      promptMarkAsSent();
     } catch (err) {
       console.error('PDF generation failed:', err);
       alert('PDF generation failed. Please try again.');
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const handleDownloadPDF = async () => {
+    await handleDownloadPDFOnly();
+    promptMarkAsSent();
   };
 
   const handleWhatsAppShare = () => {
@@ -298,6 +302,7 @@ export function useQuoteSharing(options: UseQuoteSharingOptions) {
     setShowPaymentRecorder,
     // Handlers
     handleDownloadPDF,
+    handleDownloadPDFOnly,
     handlePdfPreview,
     handleWhatsAppShare,
     handleSmsShare,

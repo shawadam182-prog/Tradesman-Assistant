@@ -50,6 +50,7 @@ export interface QuoteDisplayOptions {
   showMaterialUnitPrice: boolean;
   showMaterialLineTotals: boolean;
   showMaterialSectionTotal: boolean;
+  showMaterialVat?: boolean; // Show VAT on materials
 
   // Labour Presentation
   showLabour: boolean;
@@ -201,19 +202,8 @@ export interface JobPack {
   jobSheetPhotos?: SitePhoto[];
 }
 
-// Document template options - 3 professional templates
-export type DocumentTemplate =
-  | 'professional'  // Zoho-style professional invoice (default)
-  | 'spacious'      // Professional with larger text and spacing
-  | 'classic'       // Traditional compact layout
-  // Legacy templates for backwards compatibility:
-  | 'trade-pro'     // Maps to professional
-  | 'statement'     // Maps to professional
-  | 'compact'       // Maps to classic
-  | 'minimal'       // Maps to classic
-  | 'detailed'      // Maps to professional
-  | 'branded'       // Maps to professional
-  | 'modern-card';  // Maps to classic
+// Document template - classic is the only template
+export type DocumentTemplate = 'classic';
 
 // Alias for backwards compatibility
 export type InvoiceTemplate = DocumentTemplate;
