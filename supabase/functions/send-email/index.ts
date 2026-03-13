@@ -59,11 +59,16 @@ Deno.serve(async (req) => {
 
     // Build recipients array
     const toArray = Array.isArray(body.to) ? body.to : [body.to];
-    const personalizations = [
-      {
-        to: toArray.map((email: string) => ({ email })),
-      },
-    ];
+    const personalization: Record<string, unknown> = {
+      to: toArray.map((email: string) => ({ email })),
+    };
+
+    // BCC the sender so they get a copy in their inbox
+    if (body.reply_to) {
+      personalization.bcc = [{ email: body.reply_to }];
+    }
+
+    const personalizations = [personalization];
 
     // Build SendGrid payload
     const payload: Record<string, unknown> = {
