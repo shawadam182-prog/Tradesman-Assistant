@@ -476,7 +476,7 @@ const App: React.FC = () => {
           {activeTab === 'support' && <SupportRequestsAdmin onBack={() => setActiveTab('home')} />}
           {activeTab === 'trial_analytics' && <TrialUsersAdmin onBack={() => setActiveTab('home')} />}
           {activeTab === 'future_jobs' && <FutureJobsPage onBack={() => setActiveTab('home')} onCreateJob={() => setActiveTab('jobpacks')} />}
-          {activeTab === 'customers' && <CustomerManager customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer} deleteCustomer={deleteCustomer} onBack={() => setActiveTab('home')} />}
+          {activeTab === 'customers' && <CustomerManager customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer} deleteCustomer={deleteCustomer} onBack={() => setActiveTab('home')} onViewQuote={(quoteId) => { setViewingQuoteId(quoteId); setActiveTab('view'); }} onViewJob={(jobId) => { setActiveProjectId(jobId); setActiveTab('jobpack_detail'); }} />}
           {activeTab === 'settings' && <SettingsPage settings={settings} setSettings={setSettings} onSave={updateSettings} onBack={() => setActiveTab('home')} />}
           {activeTab === 'team_dashboard' && <TeamDashboard onBack={() => setActiveTab('home')} onViewWorker={(id, name, rate) => { setActiveWorkerId(id); setActiveWorkerName(name); setActiveWorkerRate(rate); setActiveTab('worker_summary'); }} />}
           {activeTab === 'team_settings' && <TeamSettings onBack={() => setActiveTab('home')} />}

@@ -25,6 +25,8 @@ interface CustomerManagerProps {
   updateCustomer: (id: string, updates: Partial<Customer>) => Promise<void>;
   deleteCustomer: (id: string) => Promise<void>;
   onBack?: () => void;
+  onViewQuote?: (quoteId: string) => void;
+  onViewJob?: (jobId: string) => void;
 }
 
 // Detect iOS for voice input fallback
@@ -35,7 +37,7 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
 const FORM_DRAFT_KEY = 'bq_customer_form_draft';
 const EDITING_ID_KEY = 'bq_customer_editing_id';
 
-export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, addCustomer: addCustomerProp, updateCustomer: updateCustomerProp, deleteCustomer: deleteCustomerProp, onBack }) => {
+export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, addCustomer: addCustomerProp, updateCustomer: updateCustomerProp, deleteCustomer: deleteCustomerProp, onBack, onViewQuote, onViewJob }) => {
   const toast = useToast();
   const { quotes, projects } = useData();
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -849,26 +851,48 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({ customers, add
                                           {activitySearchTerm ? 'No matching activity' : 'No activity recorded'}
                                         </div>
                                       ) : (
-                                        filtered.map((item, idx) => (
-                                          <div
-                                            key={item.id}
-                                            className={`flex items-start gap-2 px-2.5 py-2 ${idx < filtered.length - 1 ? 'border-b border-slate-50' : ''}`}
-                                          >
-                                            <div className="mt-0.5 shrink-0">{getIcon(item.type)}</div>
-                                            <div className="flex-1 min-w-0">
-                                              <p className="text-[11px] font-bold text-slate-800 truncate">{item.title}</p>
-                                              {item.detail && (
-                                                <p className="text-[10px] text-slate-400 truncate">{item.detail}</p>
-                                              )}
-                                            </div>
-                                            <div className="shrink-0 text-right flex flex-col items-end gap-0.5">
-                                              <span className="text-[9px] text-slate-400 whitespace-nowrap">
-                                                {new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                                              </span>
-                                              {getStatusBadge(item.status)}
-                                            </div>
-                                          </div>
-                                        ))
+                                        filtered.map((item, idx) => {
+                                          const entityId = item.id.replace(/^(job|quote|invoice|email)-/, '');
+                                          const isClickable = (
+                                            (item.type === 'job_created' && !!onViewJob) ||
+                                            (['quote_created', 'quote_sent', 'quote_accepted'].includes(item.type) && !!onViewQuote) ||
+                                            (['invoice_created', 'invoice_paid'].includes(item.type) && !!onViewQuote) ||
+                                            (item.type === 'email_sent' && !!onViewQuote)
+                                          );
+                                          const handleClick = () => {
+                                            if (item.type === 'job_created' && onViewJob) {
+                                              onViewJob(entityId);
+                                            } else if (['quote_created', 'quote_sent', 'quote_accepted', 'invoice_created', 'invoice_paid'].includes(item.type) && onViewQuote) {
+                                              onViewQuote(entityId);
+                                            } else if (item.type === 'email_sent' && onViewQuote) {
+                                              // Find the quote this email belongs to
+                                              const email = (customerEmails[customer.id] || []).find(e => e.id === entityId);
+                                              if (email?.quoteId) onViewQuote(email.quoteId);
+                                            }
+                                          };
+                                          return (
+                                            <button
+                                              key={item.id}
+                                              type="button"
+                                              onClick={isClickable ? handleClick : undefined}
+                                              className={`w-full text-left flex items-start gap-2 px-2.5 py-2 transition-colors ${idx < filtered.length - 1 ? 'border-b border-slate-50' : ''} ${isClickable ? 'hover:bg-slate-50 active:bg-slate-100 cursor-pointer' : ''}`}
+                                            >
+                                              <div className="mt-0.5 shrink-0">{getIcon(item.type)}</div>
+                                              <div className="flex-1 min-w-0">
+                                                <p className="text-[11px] font-bold text-slate-800 truncate">{item.title}</p>
+                                                {item.detail && (
+                                                  <p className="text-[10px] text-slate-400 truncate">{item.detail}</p>
+                                                )}
+                                              </div>
+                                              <div className="shrink-0 text-right flex flex-col items-end gap-0.5">
+                                                <span className="text-[9px] text-slate-400 whitespace-nowrap">
+                                                  {new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                                </span>
+                                                {getStatusBadge(item.status)}
+                                              </div>
+                                            </button>
+                                          );
+                                        })
                                       )}
                                     </div>
                                   </div>
