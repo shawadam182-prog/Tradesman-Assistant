@@ -64,7 +64,8 @@ Deno.serve(async (req) => {
     };
 
     // BCC the sender so they get a copy in their inbox
-    if (body.reply_to) {
+    // But skip if sender is already in the to list (SendGrid requires unique addresses)
+    if (body.reply_to && !toArray.includes(body.reply_to)) {
       personalization.bcc = [{ email: body.reply_to }];
     }
 
