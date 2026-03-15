@@ -42,6 +42,14 @@ export const emailService = {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('Not authenticated');
 
+    // Check attachment size before sending — Supabase edge functions have ~6MB body limit
+    if (params.attachmentBase64) {
+      const sizeMB = (params.attachmentBase64.length * 3 / 4) / (1024 * 1024);
+      if (sizeMB > 5) {
+        throw new Error(`PDF attachment too large (${sizeMB.toFixed(1)}MB). Please try "Share with app" instead, or regenerate the PDF.`);
+      }
+    }
+
     const response = await supabase.functions.invoke('send-email', {
       body: {
         to: params.to,
@@ -58,7 +66,10 @@ export const emailService = {
     });
 
     if (response.error) {
-      throw new Error(response.error.message || 'Failed to send email');
+      // Try to extract detailed error from the response data
+      const detail = response.data?.error || response.data?.details || '';
+      const message = response.error.message || 'Failed to send email';
+      throw new Error(detail ? `${message}: ${typeof detail === 'string' ? detail : JSON.stringify(detail)}` : message);
     }
 
     return response.data;
