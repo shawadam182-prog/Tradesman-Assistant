@@ -130,6 +130,7 @@ export const InvoicesList: React.FC<InvoicesListProps> = ({
       enableVat: settings.enableVat ?? false,
       enableCis: settings.enableCis ?? false,
       defaultLabourRate: settings.defaultLabourRate ?? 0,
+      defaultDayRate: settings.defaultDayRate,
     });
   };
 

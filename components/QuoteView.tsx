@@ -198,6 +198,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
       showVat: displayOptions.showVat,
       showCis: displayOptions.showCis,
       defaultLabourRate: settings.defaultLabourRate,
+      defaultDayRate: settings.defaultDayRate,
     },
     displayOptions
   );
@@ -1013,6 +1014,7 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
             enableVat: settings.enableVat ?? false,
             enableCis: settings.enableCis ?? false,
             defaultLabourRate: settings.defaultLabourRate ?? 0,
+            defaultDayRate: settings.defaultDayRate,
           });
         }, 0);
         return (

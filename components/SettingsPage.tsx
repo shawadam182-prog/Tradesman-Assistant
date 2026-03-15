@@ -12,7 +12,7 @@ import {
   HelpCircle, MessageSquare, Send, Hammer, Minus, Minimize2, LayoutGrid, Check, Type, Trash2,
   Moon, Sun, Mail
 } from 'lucide-react';
-import { TEMPLATE_METADATA, TEMPLATE_DESCRIPTIONS, COLOR_SCHEMES, getTemplateConfig } from '../src/lib/invoiceTemplates';
+import { TEMPLATE_DESCRIPTIONS, COLOR_SCHEMES, getTemplateConfig } from '../src/lib/invoiceTemplates';
 import { useToast } from '../src/contexts/ToastContext';
 import { hapticSuccess } from '../src/hooks/useHaptic';
 import { handleApiError } from '../src/utils/errorHandler';
@@ -847,7 +847,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-1 md:space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Labour Rate (£/hr)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Hourly Rate (£/hr)</label>
                     <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-teal-400 focus-within:bg-white transition-all">
                       <PoundSterling size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
                       <input
@@ -858,6 +858,20 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         placeholder="65.00"
                       />
                     </div>
+                  </div>
+                  <div className="space-y-1 md:space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Day Rate (£/day)</label>
+                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-teal-400 focus-within:bg-white transition-all">
+                      <PoundSterling size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
+                      <input
+                        type="number"
+                        className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
+                        value={settings.defaultDayRate || ''}
+                        onChange={e => handleNumericChange('defaultDayRate', e.target.value)}
+                        placeholder="450.00"
+                      />
+                    </div>
+                    <p className="text-[9px] text-slate-400 italic px-1">Auto-applied when switching labour to 'days'</p>
                   </div>
                   <div className="space-y-1 md:space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Markup (%)</label>
@@ -1310,7 +1324,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div className="space-y-1 md:space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Labour Rate (£/hr)</label>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Hourly Rate (£/hr)</label>
                       <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
                         <PoundSterling size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
                         <input
@@ -1322,6 +1336,20 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         />
                       </div>
                       <p className="text-[9px] text-slate-400 italic px-1">Applied when creating new invoices</p>
+                    </div>
+                    <div className="space-y-1 md:space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Day Rate (£/day)</label>
+                      <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
+                        <PoundSterling size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
+                        <input
+                          type="number"
+                          className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
+                          value={settings.defaultDayRate || ''}
+                          onChange={e => handleNumericChange('defaultDayRate', e.target.value)}
+                          placeholder="450.00"
+                        />
+                      </div>
+                      <p className="text-[9px] text-slate-400 italic px-1">Auto-applied when switching labour to 'days'</p>
                     </div>
                     <div className="space-y-1 md:space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Markup (%)</label>
@@ -1563,71 +1591,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     </div>
                   </div>
 
-                  {/* Document Template Selection - 8 Templates */}
+                  {/* Document Template Info */}
                   <div className="space-y-3 md:space-y-5 pt-4 md:pt-6 border-t border-slate-100">
                     <div className="flex items-center gap-2 px-1">
                       <Layout size={14} className="md:w-4 md:h-4 text-emerald-500" />
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Invoice Template</label>
                     </div>
-                    <p className="text-[10px] text-slate-500 italic px-1 hidden md:block">
-                      Choose how your invoices and quotes will look when exported as PDF
-                    </p>
-
-                    <div className="grid grid-cols-3 gap-2 md:gap-3">
-                      {TEMPLATE_METADATA.map(template => {
-                        const iconMap: Record<string, React.ElementType> = {
-                          'professional': FileText,
-                          'spacious': Type,
-                          'classic': List,
-                        };
-                        const Icon = iconMap[template.id] || FileText;
-
-                        return (
-                          <button
-                            key={template.id}
-                            onClick={() => setSettings({ ...settings, documentTemplate: template.id as DocumentTemplate })}
-                            className={`relative flex flex-col items-center gap-1 md:gap-2 p-2 md:p-3 rounded-xl md:rounded-2xl border-2 transition-all ${(settings.documentTemplate || 'professional') === template.id
-                              ? 'border-emerald-500 bg-emerald-50/50 shadow-lg'
-                              : 'border-slate-100 bg-white hover:border-emerald-200'
-                              }`}
-                          >
-                            {template.recommended && (
-                              <span className="absolute -top-1 -right-1 md:-top-1.5 md:-right-1.5 bg-amber-400 text-[6px] md:text-[7px] font-black text-amber-900 px-1 md:px-1.5 py-0.5 rounded-full">
-                                ★
-                              </span>
-                            )}
-
-                            <div className="w-full h-10 md:h-14 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-center overflow-hidden">
-                              <pre className="text-[4px] md:text-[5px] text-slate-400 font-mono leading-tight whitespace-pre">
-                                {template.preview}
-                              </pre>
-                            </div>
-
-                            <div className={`w-6 md:w-8 h-6 md:h-8 rounded-lg flex items-center justify-center ${(settings.documentTemplate || 'professional') === template.id
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-slate-100 text-slate-400'
-                              }`}>
-                              <Icon size={10} className="md:w-3 md:h-3" />
-                            </div>
-
-                            <div className="text-center">
-                              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest block">{template.name}</span>
-                              <span className="text-[6px] md:text-[7px] text-slate-400 leading-tight hidden md:block">{template.desc}</span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="bg-slate-50 rounded-xl p-2 md:p-3 border border-slate-100 hidden md:block">
+                    <div className="bg-slate-50 rounded-xl p-2 md:p-3 border border-slate-100">
                       <div className="flex items-center gap-2 mb-2">
-                        <Eye size={12} className="text-slate-400" />
+                        <List size={12} className="text-emerald-500" />
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                          {TEMPLATE_METADATA.find(t => t.id === (settings.documentTemplate || 'professional'))?.name} Template
+                          Classic Template
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-600 leading-relaxed">
-                        {TEMPLATE_DESCRIPTIONS[(settings.documentTemplate || 'professional') as DocumentTemplate]}
+                      <p className="text-[10px] text-slate-600 leading-relaxed hidden md:block">
+                        {TEMPLATE_DESCRIPTIONS['classic']}
                       </p>
                     </div>
                   </div>

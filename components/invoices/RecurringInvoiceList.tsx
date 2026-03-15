@@ -62,6 +62,7 @@ export const RecurringInvoiceList: React.FC<RecurringInvoiceListProps> = ({
           enableVat: settings.enableVat ?? false,
           enableCis: settings.enableCis ?? false,
           defaultLabourRate: settings.defaultLabourRate ?? 0,
+          defaultDayRate: settings.defaultDayRate,
         });
         return (
           <div

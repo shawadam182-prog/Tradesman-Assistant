@@ -8,6 +8,7 @@ export interface QuoteTotalSettings {
   enableVat: boolean;
   enableCis: boolean;
   defaultLabourRate: number;
+  defaultDayRate?: number;
 }
 
 export interface QuoteTotals {
@@ -28,6 +29,7 @@ export interface CalculationOptions {
   showVat: boolean;
   showCis: boolean;
   defaultLabourRate: number;
+  defaultDayRate?: number;
 }
 
 /**
@@ -38,14 +40,18 @@ export interface CalculationOptions {
 export function calculateSectionLabour(
   section: QuoteSection,
   quoteLabourRate: number,
-  defaultLabourRate: number
+  defaultLabourRate: number,
+  defaultDayRate?: number
 ): number {
   const effectiveRate = section.labourRate ?? quoteLabourRate ?? defaultLabourRate;
+  const dayUnits = ['days', 'day'];
 
   // Itemized labour takes priority
   if (section.labourItems && section.labourItems.length > 0) {
     return section.labourItems.reduce((sum, item) => {
-      const rate = item.rate ?? effectiveRate;
+      const isDayUnit = dayUnits.includes((item.unit || 'hrs').toLowerCase());
+      const effectiveDefault = isDayUnit && defaultDayRate ? defaultDayRate : effectiveRate;
+      const rate = item.rate ?? effectiveDefault;
       return sum + (item.hours * rate);
     }, 0);
   }
@@ -174,7 +180,8 @@ export function calculateQuoteTotals(
     const sectionLabour = calculateSectionLabour(
       section,
       quote.labourRate,
-      options.defaultLabourRate
+      options.defaultLabourRate,
+      options.defaultDayRate
     );
     const sectionPrice = calculateSectionPrice(section, sectionMaterials, sectionLabour);
 
@@ -260,6 +267,7 @@ export function getQuoteGrandTotal(
     showVat: quoteShowVat,
     showCis: quoteShowCis,
     defaultLabourRate: settings.defaultLabourRate,
+    defaultDayRate: settings.defaultDayRate,
   }, displayOptions);
 
   return totals.grandTotal;

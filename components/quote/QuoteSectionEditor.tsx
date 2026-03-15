@@ -247,7 +247,7 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
             <span className="text-[9px] md:text-sm font-black text-slate-600 uppercase tracking-widest">Labour</span>
           </div>
           <div className="text-[9px] md:text-sm text-slate-400">
-            Rate: £{sectionRate}/hr
+            Rate: £{sectionRate}/hr{settings.defaultDayRate ? ` · £${settings.defaultDayRate}/day` : ''}
           </div>
         </div>
 
@@ -258,6 +258,7 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
             item={labourItem}
             sectionId={section.id}
             defaultRate={sectionRate}
+            defaultDayRate={settings.defaultDayRate}
             labourRatePresets={settings.labourRatePresets}
             labourUnitPresets={settings.labourUnitPresets}
             onUpdate={onUpdateLabourItem}
@@ -279,16 +280,31 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
 
         {/* Labour Summary */}
         {(section.labourItems && section.labourItems.length > 0) && (() => {
-          const rates = section.labourItems.map(li => li.rate || sectionRate);
-          const allSameRate = rates.every(r => r === rates[0]);
-          const totalHours = getTotalLabourHours(section);
+          const DAY_UNITS_CHECK = ['days', 'day'];
+          const items = section.labourItems;
+          const effectiveRates = items.map(li => {
+            const isDayUnit = DAY_UNITS_CHECK.includes((li.unit || 'hrs').toLowerCase());
+            const effectiveDefault = isDayUnit && settings.defaultDayRate ? settings.defaultDayRate : sectionRate;
+            return li.rate || effectiveDefault;
+          });
+          const units = items.map(li => li.unit || 'hrs');
+          const allSameUnit = units.every(u => u === units[0]);
+          const allSameRate = effectiveRates.every(r => r === effectiveRates[0]);
+          const totalQty = getTotalLabourHours(section);
+
+          let summaryText: string;
+          if (allSameUnit && allSameRate) {
+            summaryText = `Total: ${totalQty} ${units[0]} × £${effectiveRates[0]}/${units[0]}`;
+          } else if (allSameUnit) {
+            summaryText = `Total: ${totalQty} ${units[0]} (mixed rates)`;
+          } else {
+            summaryText = `Total: ${items.length} labour items (mixed units)`;
+          }
+
           return (
             <div className="flex justify-between items-center mt-1 md:mt-3 pt-1 md:pt-3 border-t border-blue-100">
               <span className="text-[9px] md:text-sm text-slate-500">
-                {allSameRate
-                  ? `Total: ${totalHours} hrs × £${rates[0]}/hr`
-                  : `Total: ${totalHours} hrs (mixed rates)`
-                }
+                {summaryText}
               </span>
               <span className="font-black text-blue-600 text-[11px] md:text-lg">
                 £{labourTotal.toFixed(2)}

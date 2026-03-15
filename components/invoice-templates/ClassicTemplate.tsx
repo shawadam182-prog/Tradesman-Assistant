@@ -171,9 +171,12 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
 
         // Calculate labour total for this section
         let sectionLabourTotal = 0;
+        const dayUnitsCheck = ['days', 'day'];
         if (section.labourItems?.length) {
           sectionLabourTotal = section.labourItems.reduce((sum, labour) => {
-            const rate = labour.rate || section.labourRate || quote.labourRate || settings.defaultLabourRate;
+            const isDayUnit = dayUnitsCheck.includes((labour.unit || 'hrs').toLowerCase());
+            const effectiveDefault = isDayUnit && settings.defaultDayRate ? settings.defaultDayRate : (section.labourRate || quote.labourRate || settings.defaultLabourRate);
+            const rate = labour.rate || effectiveDefault;
             return sum + (labour.hours * rate * markupMultiplier);
           }, 0);
         } else if ((section.labourHours || 0) > 0) {
@@ -185,11 +188,13 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
         if (displayOptions.showLabourItems) {
           if (section.labourItems?.length) {
             section.labourItems.forEach(labour => {
-              const rate = labour.rate || section.labourRate || quote.labourRate || settings.defaultLabourRate;
+              const isDayUnit = dayUnitsCheck.includes((labour.unit || 'hrs').toLowerCase());
+              const effectiveDefault = isDayUnit && settings.defaultDayRate ? settings.defaultDayRate : (section.labourRate || quote.labourRate || settings.defaultLabourRate);
+              const rate = labour.rate || effectiveDefault;
               items.push({
                 type: 'item',
                 description: labour.description || 'Labour work',
-                qty: `${labour.hours} hrs`,
+                qty: `${labour.hours} ${labour.unit || 'hrs'}`,
                 rate: rate * markupMultiplier,
                 amount: labour.hours * rate * markupMultiplier,
                 itemType: 'labour',
@@ -226,9 +231,12 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
         .filter(i => !i.isHeading)
         .reduce((sum, item) => sum + ((item.totalPrice || 0) * markupMultiplier), 0);
       let sectionLabourSum = 0;
+      const dayUnitsCheck2 = ['days', 'day'];
       if (section.labourItems?.length) {
         sectionLabourSum = section.labourItems.reduce((sum, labour) => {
-          const rate = labour.rate || section.labourRate || quote.labourRate || settings.defaultLabourRate;
+          const isDayUnit = dayUnitsCheck2.includes((labour.unit || 'hrs').toLowerCase());
+          const effectiveDefault = isDayUnit && settings.defaultDayRate ? settings.defaultDayRate : (section.labourRate || quote.labourRate || settings.defaultLabourRate);
+          const rate = labour.rate || effectiveDefault;
           return sum + (labour.hours * rate * markupMultiplier);
         }, 0);
       } else if ((section.labourHours || 0) > 0) {

@@ -215,6 +215,7 @@ export interface LabourRatePreset {
 
 export interface AppSettings {
   defaultLabourRate: number;
+  defaultDayRate?: number; // Default rate for 'days' unit (e.g., £450/day)
   defaultMarkupPercent: number;
   defaultTaxRate: number;
   defaultCisRate: number;

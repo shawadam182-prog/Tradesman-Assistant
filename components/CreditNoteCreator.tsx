@@ -30,6 +30,7 @@ export const CreditNoteCreator: React.FC<CreditNoteCreatorProps> = ({
       enableVat: settings.enableVat ?? false,
       enableCis: settings.enableCis ?? false,
       defaultLabourRate: settings.defaultLabourRate ?? 0,
+      defaultDayRate: settings.defaultDayRate,
     }),
     [originalInvoice, settings]
   );
@@ -58,6 +59,7 @@ export const CreditNoteCreator: React.FC<CreditNoteCreatorProps> = ({
       enableVat: settings.enableVat ?? false,
       enableCis: settings.enableCis ?? false,
       defaultLabourRate: settings.defaultLabourRate ?? 0,
+      defaultDayRate: settings.defaultDayRate,
     }),
     [creditNoteQuote, settings]
   );

@@ -66,6 +66,7 @@ export const JobProfitSummary: React.FC<JobProfitSummaryProps> = ({
       showVat: true,
       showCis: false,
       defaultLabourRate: settings?.defaultLabourRate ?? 35,
+      defaultDayRate: settings?.defaultDayRate,
     };
 
     let totalQuoted = 0;

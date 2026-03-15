@@ -806,11 +806,16 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
 
   // Calculation helpers
   const calculateSectionLabour = (section: QuoteSection) => {
-    const defaultRate = section.labourRate || formData.labourRate || settings.defaultLabourRate;
+    const defaultHourlyRate = section.labourRate || formData.labourRate || settings.defaultLabourRate;
+    const dayUnits = ['days', 'day'];
     if (section.labourItems && section.labourItems.length > 0) {
-      return section.labourItems.reduce((sum, item) => sum + (item.hours * (item.rate || defaultRate)), 0);
+      return section.labourItems.reduce((sum, item) => {
+        const isDayUnit = dayUnits.includes((item.unit || 'hrs').toLowerCase());
+        const effectiveDefault = isDayUnit && settings.defaultDayRate ? settings.defaultDayRate : defaultHourlyRate;
+        return sum + (item.hours * (item.rate || effectiveDefault));
+      }, 0);
     }
-    return section.labourCost || (section.labourHours || 0) * defaultRate;
+    return section.labourCost || (section.labourHours || 0) * defaultHourlyRate;
   };
 
   const getTotalLabourHours = (section: QuoteSection) => {
