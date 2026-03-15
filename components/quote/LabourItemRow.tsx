@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { LabourItem, LabourRatePreset } from '../../types';
 import { Plus, Minus, Trash2, ChevronDown, Sparkles } from 'lucide-react';
 
@@ -36,6 +37,18 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
   const [showRateDropdown, setShowRateDropdown] = useState(false);
   const [isEditingRate, setIsEditingRate] = useState(false);
   const [rateInputValue, setRateInputValue] = useState('');
+  const rateBtnRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
+
+  useEffect(() => {
+    if (showRateDropdown && rateBtnRef.current) {
+      const rect = rateBtnRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [showRateDropdown]);
 
   const isDayUnit = DAY_UNITS.includes((item.unit || 'hrs').toLowerCase());
   // Use the appropriate default rate based on unit type
@@ -187,6 +200,7 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
               </div>
             ) : (
               <button
+                ref={rateBtnRef}
                 type="button"
                 onClick={startEditingRate}
                 onContextMenu={e => {
@@ -221,13 +235,16 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
               </button>
             )}
 
-            {showRateDropdown && (
+            {showRateDropdown && createPortal(
               <>
                 <div
-                  className="fixed inset-0 z-40"
+                  className="fixed inset-0 z-[9998]"
                   onClick={() => setShowRateDropdown(false)}
                 />
-                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg md:rounded-xl shadow-xl z-50 min-w-[140px] md:min-w-[180px] overflow-hidden">
+                <div
+                  className="fixed bg-white border border-slate-200 rounded-lg md:rounded-xl shadow-xl z-[9999] min-w-[140px] md:min-w-[180px] overflow-hidden"
+                  style={{ top: dropdownPos.top, right: dropdownPos.right }}
+                >
                   {/* Default rate option */}
                   <button
                     type="button"
@@ -287,7 +304,8 @@ export const LabourItemRow: React.FC<LabourItemRowProps> = ({
                     </div>
                   </div>
                 </div>
-              </>
+              </>,
+              document.body
             )}
           </div>
         </div>
