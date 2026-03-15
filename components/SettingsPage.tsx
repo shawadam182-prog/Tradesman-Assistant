@@ -122,11 +122,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
 
   // Load company documents when section is active
   useEffect(() => {
-    if (activeCategory === 'documents') {
+    if (activeCategory === 'documents' || activeCategory === 'company') {
       setLoadingDocs(true);
       companyDocumentsService.getAll()
         .then(setCompanyDocs)
-        .catch(() => toast.showError('Failed to load documents'))
+        .catch(() => toast.error('Load Failed', 'Failed to load documents'))
         .finally(() => setLoadingDocs(false));
     }
   }, [activeCategory]);
@@ -140,10 +140,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
       setCompanyDocs(prev => [doc, ...prev]);
       setDocExpiry('');
       setDocNotes('');
-      toast.showSuccess('Document uploaded');
+      toast.success('Document uploaded');
       hapticSuccess();
     } catch (err) {
-      toast.showError(handleApiError(err));
+      const { message } = handleApiError(err);
+      toast.error('Upload Failed', message);
     } finally {
       setUploadingDoc(false);
       if (docFileRef.current) docFileRef.current.value = '';
@@ -154,9 +155,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
     try {
       await companyDocumentsService.delete(id, storagePath);
       setCompanyDocs(prev => prev.filter(d => d.id !== id));
-      toast.showSuccess('Document deleted');
+      toast.success('Document deleted');
     } catch (err) {
-      toast.showError(handleApiError(err));
+      const { message } = handleApiError(err);
+      toast.error('Delete Failed', message);
     }
   };
 
@@ -165,7 +167,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
       const url = await companyDocumentsService.getUrl(storagePath);
       if (url) window.open(url, '_blank');
     } catch (err) {
-      toast.showError(handleApiError(err));
+      const { message } = handleApiError(err);
+      toast.error('View Failed', message);
     }
   };
 
@@ -414,7 +417,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
             <CategoryButton id="quotes" label="Quote Preferences" icon={FileText} color="bg-blue-500 text-white" />
             <CategoryButton id="invoices" label="Invoice Preferences" icon={ReceiptText} color="bg-emerald-500 text-white" />
             <CategoryButton id="materials" label="Materials Library" icon={Package} color="bg-amber-500 text-white" />
-            <CategoryButton id="documents" label="Company Documents" icon={FileBox} color="bg-indigo-500 text-white" />
+            {/* Company Documents now inside My Company tab */}
 
             <p className="text-[8px] md:text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] px-2 pt-2">Support</p>
             <CategoryButton id="communications" label="Communications" icon={Send} color="bg-blue-500 text-white" />
@@ -820,6 +823,156 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Company Documents - within My Company */}
+              <div className="bg-white rounded-2xl md:rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
+                <button
+                  onClick={() => toggleQuoteSection('company_docs')}
+                  className="w-full flex items-center justify-between p-4 md:p-6 bg-gradient-to-r from-indigo-50 to-slate-50 hover:from-indigo-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="p-2 md:p-3 bg-indigo-100 text-indigo-600 rounded-xl md:rounded-2xl"><FileBox size={20} className="md:w-6 md:h-6" /></div>
+                    <div className="text-left">
+                      <h3 className="text-sm md:text-base font-black text-slate-900 uppercase tracking-tight">Company Documents</h3>
+                      <p className="text-[10px] md:text-xs text-slate-500 font-medium italic">Insurances, certificates, ID, H&S, T&Cs</p>
+                    </div>
+                  </div>
+                  <ChevronDown size={18} className={`text-slate-400 transition-transform duration-200 ${expandedQuoteSections['company_docs'] ? 'rotate-180' : ''}`} />
+                </button>
+
+                {expandedQuoteSections['company_docs'] && (
+                  <div className="p-4 md:p-6 border-t border-slate-100 space-y-6 animate-in slide-in-from-top-2 duration-200">
+                    {/* Upload Section */}
+                    <div className="bg-indigo-50/50 rounded-2xl p-4 md:p-6 border border-indigo-100 space-y-4">
+                      <h4 className="text-xs font-black text-indigo-800 uppercase tracking-widest flex items-center gap-2">
+                        <Upload size={14} /> Upload Document
+                      </h4>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest px-1">Category</label>
+                          <select
+                            value={docCategory}
+                            onChange={e => setDocCategory(e.target.value)}
+                            className="w-full bg-white border-2 border-indigo-100 rounded-xl p-2.5 text-slate-900 font-bold text-xs outline-none focus:border-indigo-400 transition-all"
+                          >
+                            {DOC_CATEGORIES.map(c => (
+                              <option key={c.value} value={c.value}>{c.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest px-1">Expiry Date</label>
+                          <input
+                            type="date"
+                            value={docExpiry}
+                            onChange={e => setDocExpiry(e.target.value)}
+                            className="w-full bg-white border-2 border-indigo-100 rounded-xl p-2.5 text-slate-900 font-bold text-xs outline-none focus:border-indigo-400 transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest px-1">Notes (optional)</label>
+                        <input
+                          type="text"
+                          value={docNotes}
+                          onChange={e => setDocNotes(e.target.value)}
+                          placeholder="e.g. Public liability, £5m cover"
+                          className="w-full bg-white border-2 border-indigo-100 rounded-xl p-2.5 text-slate-900 font-bold text-xs outline-none focus:border-indigo-400 transition-all placeholder:text-slate-300"
+                        />
+                      </div>
+
+                      <input
+                        ref={docFileRef}
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        onChange={handleDocUpload}
+                      />
+                      <button
+                        onClick={() => docFileRef.current?.click()}
+                        disabled={uploadingDoc}
+                        className="w-full flex items-center justify-center gap-2 p-3 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                      >
+                        {uploadingDoc ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                        {uploadingDoc ? 'Uploading...' : 'Choose File & Upload'}
+                      </button>
+                    </div>
+
+                    {/* Documents List */}
+                    {loadingDocs ? (
+                      <div className="flex items-center justify-center py-10">
+                        <Loader2 size={24} className="animate-spin text-indigo-400" />
+                      </div>
+                    ) : companyDocs.length === 0 ? (
+                      <div className="text-center py-10">
+                        <FileBox size={32} className="mx-auto text-slate-200 mb-2" />
+                        <p className="text-xs text-slate-400 font-medium">No documents uploaded yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {DOC_CATEGORIES.map(cat => {
+                          const catDocs = companyDocs.filter((d: any) => d.category === cat.value);
+                          if (catDocs.length === 0) return null;
+                          return (
+                            <div key={cat.value}>
+                              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-2">{cat.label}</h4>
+                              <div className="space-y-2">
+                                {catDocs.map((doc: any) => {
+                                  const isExpired = doc.expiry_date && new Date(doc.expiry_date) < new Date();
+                                  const expiringSoon = doc.expiry_date && !isExpired && new Date(doc.expiry_date) < new Date(Date.now() + 30 * 86400000);
+                                  return (
+                                    <div
+                                      key={doc.id}
+                                      className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                                        isExpired ? 'bg-red-50 border-red-200' : expiringSoon ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-100'
+                                      }`}
+                                    >
+                                      <div className={`p-2 rounded-lg shrink-0 ${isExpired ? 'bg-red-100 text-red-500' : expiringSoon ? 'bg-amber-100 text-amber-500' : 'bg-indigo-100 text-indigo-500'}`}>
+                                        <FileText size={16} />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-slate-900 truncate">{doc.name}</p>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                          {doc.notes && <p className="text-[10px] text-slate-500 truncate">{doc.notes}</p>}
+                                          {doc.expiry_date && (
+                                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                                              isExpired ? 'bg-red-200 text-red-700' : expiringSoon ? 'bg-amber-200 text-amber-700' : 'bg-slate-100 text-slate-500'
+                                            }`}>
+                                              {isExpired ? 'EXPIRED' : expiringSoon ? 'EXPIRING SOON' : `Exp: ${new Date(doc.expiry_date).toLocaleDateString()}`}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <button
+                                          onClick={() => handleDocView(doc.storage_path)}
+                                          className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
+                                          title="View"
+                                        >
+                                          <ExternalLink size={14} />
+                                        </button>
+                                        <button
+                                          onClick={() => handleDocDelete(doc.id, doc.storage_path)}
+                                          className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                                          title="Delete"
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
