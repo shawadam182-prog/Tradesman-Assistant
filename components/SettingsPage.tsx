@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AppSettings, QuoteDisplayOptions, DocumentTemplate, TIER_LIMITS, LabourRatePreset } from '../types';
 import {
   Save, Building2, Calculator, MapPin,
@@ -23,6 +23,7 @@ import { useData } from '../src/contexts/DataContext';
 import { useAuth } from '../src/contexts/AuthContext';
 import { supabase } from '../src/lib/supabase';
 import { useDarkMode } from '../src/hooks/useDarkMode';
+import { useFormDraft } from '../src/hooks/useFormDraft';
 import { EmailTemplateEditor } from './email/EmailTemplateEditor';
 import { PaymentReminderSettings } from './payments/PaymentReminderSettings';
 import { AppointmentReminderSettings } from './schedule/AppointmentReminderSettings';
@@ -73,6 +74,34 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const { quotes, projects, customers } = useData();
   const { user } = useAuth();
   const { isDark, toggle: toggleDarkMode } = useDarkMode();
+
+  // Track whether settings have been modified since mount
+  const initialSettingsRef = useRef(settings);
+  const settingsDirty = JSON.stringify(settings) !== JSON.stringify(initialSettingsRef.current);
+
+  // Auto-save settings to Supabase when app goes to background (prevents data loss on mobile tab kill)
+  const handleBackgroundSave = useCallback(() => {
+    if (onSave && settingsDirty) {
+      onSave(settings).catch(err => console.warn('Background settings save failed:', err));
+    }
+  }, [onSave, settings, settingsDirty]);
+
+  const { savedDraft, clearDraft } = useFormDraft<AppSettings>({
+    key: 'bq_settings_draft',
+    data: settings,
+    enabled: settingsDirty,
+    onBackgroundSave: handleBackgroundSave,
+  });
+
+  // Restore draft on mount if the app was killed mid-edit
+  useEffect(() => {
+    if (savedDraft) {
+      setSettings({ ...settings, ...savedDraft });
+      toast.info('Settings Restored', 'Your unsaved changes were recovered');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [activeCategory, setActiveCategory] = useState<SettingsCategory>('subscription');
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -313,6 +342,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
     setSaving(true);
     try {
       await onSave(settings);
+      clearDraft();
+      initialSettingsRef.current = settings;
       hapticSuccess();
       toast.success('Settings Saved', 'Your preferences have been synchronized');
     } catch (error) {
