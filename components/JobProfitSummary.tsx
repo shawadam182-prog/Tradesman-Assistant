@@ -63,8 +63,6 @@ export const JobProfitSummary: React.FC<JobProfitSummaryProps> = ({
     const calcOptions: CalculationOptions = {
       enableVat: settings?.enableVat ?? true,
       enableCis: settings?.enableCis ?? false,
-      showVat: true,
-      showCis: false,
       defaultLabourRate: settings?.defaultLabourRate ?? 35,
       defaultDayRate: settings?.defaultDayRate,
     };

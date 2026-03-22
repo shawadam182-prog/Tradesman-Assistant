@@ -26,8 +26,6 @@ export interface QuoteTotals {
 export interface CalculationOptions {
   enableVat: boolean;
   enableCis: boolean;
-  showVat: boolean;
-  showCis: boolean;
   defaultLabourRate: number;
   defaultDayRate?: number;
 }
@@ -112,13 +110,15 @@ export function calculateDiscount(
 
 /**
  * Calculate VAT amount.
+ * VAT is calculated based on whether it's enabled in settings only.
+ * The display toggle (showVat) controls visibility, not calculation.
  */
 export function calculateVat(
   afterDiscount: number,
   taxPercent: number,
-  options: { enableVat: boolean; showVat: boolean }
+  options: { enableVat: boolean; showVat?: boolean }
 ): number {
-  if (!options.enableVat || !options.showVat) {
+  if (!options.enableVat) {
     return 0;
   }
   return afterDiscount * ((taxPercent || 0) / 100);
@@ -127,13 +127,14 @@ export function calculateVat(
 /**
  * Calculate CIS deduction.
  * CIS is calculated on labour only, not materials.
+ * The display toggle (showCis) controls visibility, not calculation.
  */
 export function calculateCis(
   labourTotal: number,
   cisPercent: number,
-  options: { enableCis: boolean; showCis: boolean }
+  options: { enableCis: boolean; showCis?: boolean }
 ): number {
-  if (!options.enableCis || !options.showCis) {
+  if (!options.enableCis) {
     return 0;
   }
   return labourTotal * ((cisPercent || 0) / 100);
@@ -202,12 +203,10 @@ export function calculateQuoteTotals(
 
   const taxAmount = calculateVat(afterDiscount, quote.taxPercent, {
     enableVat: options.enableVat,
-    showVat: displayOptions.showVat,
   });
 
   const cisAmount = calculateCis(labourTotal, quote.cisPercent, {
     enableCis: options.enableCis,
-    showCis: displayOptions.showCis,
   });
 
   const grandTotal = (afterDiscount + taxAmount) - cisAmount;
@@ -237,13 +236,9 @@ export function getQuoteGrandTotal(
   quote: Quote,
   settings: QuoteTotalSettings
 ): number {
-  // Use quote's own display options if set, otherwise fall back to global settings
-  const quoteShowVat = quote.displayOptions?.showVat ?? settings.enableVat;
-  const quoteShowCis = quote.displayOptions?.showCis ?? settings.enableCis;
-
   const displayOptions: QuoteDisplayOptions = {
-    showVat: quoteShowVat,
-    showCis: quoteShowCis,
+    showVat: true,
+    showCis: true,
     showMaterials: true,
     showMaterialItems: true,
     showMaterialQty: true,
@@ -259,13 +254,12 @@ export function getQuoteGrandTotal(
     showNotes: true,
     showLogo: true,
     showTotalsBreakdown: true,
+    showWorkSectionTotal: true,
   };
 
   const totals = calculateQuoteTotals(quote, {
     enableVat: settings.enableVat,
     enableCis: settings.enableCis,
-    showVat: quoteShowVat,
-    showCis: quoteShowCis,
     defaultLabourRate: settings.defaultLabourRate,
     defaultDayRate: settings.defaultDayRate,
   }, displayOptions);

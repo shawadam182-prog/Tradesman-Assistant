@@ -671,6 +671,19 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
     if (targetSectionId === id) setTargetSectionId(null);
   };
 
+  const moveSection = (id: string, direction: 'up' | 'down') => {
+    setFormData(prev => {
+      const sections = [...(prev.sections || [])];
+      const idx = sections.findIndex(s => s.id === id);
+      if (idx < 0) return prev;
+      if (direction === 'up' && idx === 0) return prev;
+      if (direction === 'down' && idx === sections.length - 1) return prev;
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+      [sections[idx], sections[swapIdx]] = [sections[swapIdx], sections[idx]];
+      return { ...prev, sections };
+    });
+  };
+
   const updateSectionTitle = (id: string, title: string) => {
     setFormData(prev => ({ ...prev, sections: prev.sections?.map(s => s.id === id ? { ...s, title } : s) }));
   };
@@ -1175,6 +1188,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
               onUpdateLabourCost={updateLabourCost}
               onUpdateSubsectionPrice={updateSubsectionPrice}
               onRemoveSection={removeSection}
+              onMoveSection={moveSection}
               calculateSectionLabour={calculateSectionLabour}
               getTotalLabourHours={getTotalLabourHours}
               onClearAIItems={clearAIItems}

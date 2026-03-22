@@ -61,6 +61,7 @@ const defaultDisplayOptions: QuoteDisplayOptions = {
   showNotes: true,
   showLogo: true,
   showTotalsBreakdown: true,
+  showWorkSectionTotal: true,
 };
 
 describe('calculateSectionLabour', () => {
@@ -194,41 +195,41 @@ describe('calculateDiscount', () => {
 
 describe('calculateVat', () => {
   it('returns 0 when VAT disabled in settings', () => {
-    expect(calculateVat(1000, 20, { enableVat: false, showVat: true })).toBe(0);
+    expect(calculateVat(1000, 20, { enableVat: false })).toBe(0);
   });
 
-  it('returns 0 when VAT hidden in display', () => {
-    expect(calculateVat(1000, 20, { enableVat: true, showVat: false })).toBe(0);
+  it('still calculates VAT when display toggle is off (display toggles are visibility only)', () => {
+    expect(calculateVat(1000, 20, { enableVat: true, showVat: false })).toBe(200);
   });
 
   it('calculates VAT at 20%', () => {
-    expect(calculateVat(1000, 20, { enableVat: true, showVat: true })).toBe(200);
+    expect(calculateVat(1000, 20, { enableVat: true })).toBe(200);
   });
 
   it('calculates VAT at reduced rate', () => {
-    expect(calculateVat(1000, 5, { enableVat: true, showVat: true })).toBe(50);
+    expect(calculateVat(1000, 5, { enableVat: true })).toBe(50);
   });
 
   it('handles 0% VAT rate', () => {
-    expect(calculateVat(1000, 0, { enableVat: true, showVat: true })).toBe(0);
+    expect(calculateVat(1000, 0, { enableVat: true })).toBe(0);
   });
 });
 
 describe('calculateCis', () => {
   it('returns 0 when CIS disabled in settings', () => {
-    expect(calculateCis(500, 20, { enableCis: false, showCis: true })).toBe(0);
+    expect(calculateCis(500, 20, { enableCis: false })).toBe(0);
   });
 
-  it('returns 0 when CIS hidden in display', () => {
-    expect(calculateCis(500, 20, { enableCis: true, showCis: false })).toBe(0);
+  it('still calculates CIS when display toggle is off (display toggles are visibility only)', () => {
+    expect(calculateCis(500, 20, { enableCis: true, showCis: false })).toBe(100);
   });
 
   it('calculates CIS at 20% on labour only', () => {
-    expect(calculateCis(500, 20, { enableCis: true, showCis: true })).toBe(100);
+    expect(calculateCis(500, 20, { enableCis: true })).toBe(100);
   });
 
   it('calculates CIS at 30% (higher rate)', () => {
-    expect(calculateCis(1000, 30, { enableCis: true, showCis: true })).toBe(300);
+    expect(calculateCis(1000, 30, { enableCis: true })).toBe(300);
   });
 });
 
@@ -256,8 +257,6 @@ describe('calculateQuoteTotals', () => {
   const defaultOptions = {
     enableVat: true,
     enableCis: false,
-    showVat: true,
-    showCis: false,
     defaultLabourRate: 65,
   };
 

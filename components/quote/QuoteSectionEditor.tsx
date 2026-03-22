@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { QuoteSection, MaterialItem, LabourItem, AppSettings, LabourRatePreset, DBMaterialLibraryItem } from '../../types';
 import { MaterialItemRow } from './MaterialItemRow';
 import { LabourItemRow } from './LabourItemRow';
-import { Trash2, Plus, Package, HardHat, PoundSterling, ChevronDown, ChevronUp, Layers, Sparkles, X } from 'lucide-react';
+import { Trash2, Plus, Package, HardHat, PoundSterling, ChevronDown, ChevronUp, Layers, Sparkles, X, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface QuoteSectionEditorProps {
   section: QuoteSection;
@@ -32,6 +32,7 @@ interface QuoteSectionEditorProps {
   onUpdateLabourCost: (sectionId: string, cost: number) => void;
   onUpdateSubsectionPrice: (sectionId: string, price: number | undefined) => void;
   onRemoveSection: (sectionId: string) => void;
+  onMoveSection?: (sectionId: string, direction: 'up' | 'down') => void;
   // Calculations
   calculateSectionLabour: (section: QuoteSection) => number;
   getTotalLabourHours: (section: QuoteSection) => number;
@@ -66,6 +67,7 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
   onUpdateLabourCost,
   onUpdateSubsectionPrice,
   onRemoveSection,
+  onMoveSection,
   calculateSectionLabour,
   getTotalLabourHours,
   onClearAIItems,
@@ -157,6 +159,28 @@ export const QuoteSectionEditor: React.FC<QuoteSectionEditorProps> = ({
           </div>
         </div>
         <div className="flex gap-1 md:gap-2">
+          {onMoveSection && totalSections > 1 && (
+            <>
+              <button
+                onClick={() => onMoveSection(section.id, 'up')}
+                disabled={sectionIndex === 0}
+                className="p-1.5 md:p-2 text-slate-300 hover:text-teal-500 transition-colors disabled:opacity-10"
+                title="Move Section Up"
+              >
+                <ArrowUp size={14} className="md:hidden" />
+                <ArrowUp size={20} className="hidden md:block" />
+              </button>
+              <button
+                onClick={() => onMoveSection(section.id, 'down')}
+                disabled={sectionIndex === totalSections - 1}
+                className="p-1.5 md:p-2 text-slate-300 hover:text-teal-500 transition-colors disabled:opacity-10"
+                title="Move Section Down"
+              >
+                <ArrowDown size={14} className="md:hidden" />
+                <ArrowDown size={20} className="hidden md:block" />
+              </button>
+            </>
+          )}
           <button
             onClick={() => onRemoveSection(section.id)}
             disabled={totalSections === 1}

@@ -190,13 +190,13 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
   };
 
   // Use extracted calculation functions
+  // Note: VAT/CIS are always calculated based on enableVat/enableCis settings.
+  // The showVat/showCis display toggles only control visibility, not the total.
   const totals = calculateQuoteTotals(
     activeQuote,
     {
       enableVat: settings.enableVat,
       enableCis: settings.enableCis,
-      showVat: displayOptions.showVat,
-      showCis: displayOptions.showCis,
       defaultLabourRate: settings.defaultLabourRate,
       defaultDayRate: settings.defaultDayRate,
     },

@@ -511,23 +511,34 @@ ${priceListHint ? `Match prices from this list where items match:\n${priceListHi
   async parsePriceListPdf({ pdfBase64, supplierHint }: { pdfBase64: string; supplierHint?: string }) {
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.0-flash',
-      systemInstruction: `You are an expert at extracting product data from UK builders merchant and wholesaler price lists.
+      systemInstruction: `You are an expert at extracting product data from UK builders merchant and wholesaler documents.
+
+This document could be ANY of the following formats:
+- **Price list / catalogue** — product listings with prices
+- **Invoice** — a bill for goods purchased, with line items, quantities, and totals
+- **Statement** — a summary of invoices/transactions over a period
+- **Delivery note** — items delivered with quantities
+- **Credit note** — returned items with quantities and prices
 
 Analyze the PDF document and extract ALL product/material entries into a structured list.
 
 ## EXTRACTION RULES:
-- Extract every product row you can identify
-- Product codes are typically alphanumeric codes at the start of rows
+- Extract every product/material line item you can identify
+- Product codes are typically alphanumeric codes (e.g. "SKU", "Item Code", "Product Ref")
 - Names should be the full product description
-- Prices are in GBP (£) - look for columns labeled "Price", "Cost", "Trade", "Net", etc.
+- Prices are in GBP (£) - look for columns labeled "Price", "Cost", "Trade", "Net", "Unit Price", "Line Total", "Amount", "Ex VAT", etc.
+- For INVOICES: use the unit price (price per item) as costPrice, NOT the line total. If only a line total is shown, divide by quantity to get unit price.
+- For STATEMENTS: extract individual line items from each invoice listed. Look for invoice detail sections.
 - Units might be: each, m, m2, pack, bag, box, roll, sheet, length, pair, set, tin, tube, litre
 - If unit not specified, infer from product name or default to "each"
 - Categories: timber, plasterboard, plaster, fixings, insulation, electrical, plumbing, cement, aggregates, paint, adhesives, roofing, doors, windows, tools, or leave empty
+- IGNORE summary lines, totals, VAT lines, delivery charges, and account balance rows — only extract actual product/material items
 
 ## PRICE HANDLING:
-- costPrice = trade/net/cost price (the price paid)
+- costPrice = the unit price paid per item (NOT the line total for multiple quantities)
 - sellPrice = RRP/retail price if available, otherwise leave undefined
 - If only one price column exists, use it as costPrice
+- If only a line total is shown with a quantity, calculate: costPrice = lineTotal / quantity
 - Remove currency symbols, parse to numbers
 
 ## SUPPLIER CONTEXT:
@@ -542,7 +553,7 @@ Return an array of products. If no products can be extracted, return an empty ar
       contents: [{
         role: 'user',
         parts: [
-          { text: 'Extract all product/material items from this price list PDF:' },
+          { text: 'Extract all product/material items from this document (could be a price list, invoice, statement, delivery note, or credit note):' },
           { inlineData: { mimeType: 'application/pdf', data: base64Data } }
         ]
       }],
