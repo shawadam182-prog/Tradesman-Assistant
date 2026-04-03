@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Upload, FileSpreadsheet, Check, X, AlertCircle,
   Loader2, ArrowRight, Building2, Package, Star,
@@ -97,6 +97,21 @@ interface WholesalerImportPageProps {
   onBack?: () => void;
 }
 
+// Global file input - lives outside React so it survives component remounts.
+// Android destroys the WebView when file picker opens, which remounts all components.
+// This global input keeps its onChange handler alive across remounts.
+let _globalFileInput: HTMLInputElement | null = null;
+function getGlobalFileInput(): HTMLInputElement {
+  if (!_globalFileInput || !document.body.contains(_globalFileInput)) {
+    _globalFileInput = document.createElement('input');
+    _globalFileInput.type = 'file';
+    _globalFileInput.accept = '.csv,.pdf,application/pdf,text/csv';
+    _globalFileInput.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none;';
+    document.body.appendChild(_globalFileInput);
+  }
+  return _globalFileInput;
+}
+
 export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBack }) => {
   const { services } = useData();
   const [step, setStep] = useState<'upload' | 'processing' | 'preview' | 'importing' | 'complete'>('upload');
@@ -113,28 +128,6 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
   const [fileName, setFileName] = useState<string>('');
   const [fileType, setFileType] = useState<'csv' | 'pdf'>('csv');
   const [processingPdf, setProcessingPdf] = useState(false);
-  // Use localStorage for debug info so it survives Android page reloads
-  const [debugInfo, setDebugInfo] = useState<string>(() => {
-    try { return localStorage.getItem('bq_import_debug') || ''; } catch { return ''; }
-  });
-  const logDebug = (msg: string) => {
-    const ts = new Date().toLocaleTimeString();
-    const line = `[${ts}] ${msg}`;
-    setDebugInfo(prev => {
-      const updated = prev ? prev + '\n' + line : line;
-      try { localStorage.setItem('bq_import_debug', updated); } catch {}
-      return updated;
-    });
-  };
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Log component mount to track Android page reloads
-  useEffect(() => {
-    logDebug('Component mounted');
-    return () => {
-      try { localStorage.setItem('bq_import_debug', (localStorage.getItem('bq_import_debug') || '') + '\n[unmount] Component unmounted'); } catch {}
-    };
-  }, []);
 
   const parseCSV = (text: string): string[][] => {
     const lines = text.split(/\r?\n/).filter(line => line.trim());
@@ -250,132 +243,140 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
     return undefined;
   };
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      logDebug('onChange fired');
-      const file = e.target.files?.[0];
-      if (!file) {
-        logDebug('No file in event');
+  // Process a file (called from global input handler or from pending localStorage data)
+  const processFile = useCallback(async (file: { name: string; type: string; size: number; dataUrl: string }) => {
+    const isPdf = file.name.toLowerCase().endsWith('.pdf')
+      || file.type === 'application/pdf'
+      || file.type === 'application/octet-stream';
+    setFileType(isPdf ? 'pdf' : 'csv');
+    setError(null);
+    setFileName(file.name);
+
+    if (isPdf) {
+      if (file.size > 10 * 1024 * 1024) {
+        setError('PDF too large. Maximum size is 10MB.');
         return;
       }
 
-      logDebug(`File: ${file.name} (type=${file.type || 'none'}, ${(file.size / 1024).toFixed(0)}KB)`);
+      setStep('processing');
+      setProcessingPdf(true);
 
-      // Detect PDF by extension OR MIME type (Android often strips extensions from filenames)
-      const isPdf = file.name.toLowerCase().endsWith('.pdf')
-        || file.type === 'application/pdf'
-        || file.type === 'application/octet-stream';
-      setFileType(isPdf ? 'pdf' : 'csv');
-      setError(null);
-      setFileName(file.name);
-
-      if (isPdf) {
-        if (file.size > 10 * 1024 * 1024) {
-          setError('PDF too large. Maximum size is 10MB.');
+      try {
+        const base64 = file.dataUrl;
+        if (!base64) {
+          setError('Failed to read PDF file. Please try again.');
+          setStep('upload');
+          setProcessingPdf(false);
           return;
         }
 
-        // Process PDF with AI
-        setStep('processing');
-        setProcessingPdf(true);
-        logDebug('Reading PDF file...');
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('AI processing timed out. Try a smaller PDF or CSV export.')), 90000)
+        );
 
-        const reader = new FileReader();
-        reader.onload = async (ev) => {
-          try {
-            const base64 = ev.target?.result as string;
-            if (!base64) {
-              setError('Failed to read PDF file contents. Please try again.');
-              setStep('upload');
-              setProcessingPdf(false);
-              return;
-            }
+        const aiResults = await Promise.race([
+          parsePriceListPdf(base64, customSupplierName || undefined),
+          timeoutPromise,
+        ]);
 
-            logDebug(`PDF read OK (${(base64.length / 1024).toFixed(0)}KB). Sending to AI...`);
-
-            // Add timeout for slow AI processing (90 seconds)
-            const timeoutPromise = new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('AI processing timed out. The PDF may be too large or complex. Try a smaller PDF or CSV export.')), 90000)
-            );
-
-            const aiResults = await Promise.race([
-              parsePriceListPdf(base64, customSupplierName || undefined),
-              timeoutPromise,
-            ]);
-
-            if (!Array.isArray(aiResults) || aiResults.length === 0) {
-              setError('Could not extract any products from the PDF. Try a CSV export instead.');
-              setStep('upload');
-              setProcessingPdf(false);
-              return;
-            }
-
-            logDebug(`AI found ${aiResults.length} products`);
-
-            // Convert AI results to ParsedMaterial format
-            const materials: ParsedMaterial[] = aiResults.map(item => ({
-              productCode: item.productCode,
-              name: item.name,
-              description: item.description,
-              unit: item.unit || 'each',
-              costPrice: item.costPrice,
-              sellPrice: item.sellPrice || (item.costPrice ? item.costPrice * (1 + defaultMarkupPercent / 100) : undefined),
-              category: item.category,
-              isValid: !!item.name,
-            }));
-
-            setParsedMaterials(materials);
-            setStep('preview');
-          } catch (err: any) {
-            console.error('PDF parsing error:', err);
-            setError(err.message || 'Failed to analyze PDF with AI. Please try again.');
-            logDebug(`Error: ${err.message || 'Unknown error'}`);
-            setStep('upload');
-          } finally {
-            setProcessingPdf(false);
-          }
-        };
-        reader.onerror = () => {
-          setError('Failed to read PDF file. Please try again.');
-          logDebug('FileReader error');
+        if (!Array.isArray(aiResults) || aiResults.length === 0) {
+          setError('Could not extract any products from the PDF. Try a CSV export instead.');
           setStep('upload');
           setProcessingPdf(false);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        logDebug(`Processing as CSV (type: ${file.type || 'none'})`);
+          return;
+        }
 
-        // Skip MIME validation for CSV - just try to read it
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          try {
-            const text = ev.target?.result as string;
-            const data = parseCSV(text);
-            if (data.length < 2) {
-              setError('File appears to be empty or invalid. If this is a PDF, check the file extension ends in .pdf');
-              logDebug('CSV parse: too few rows');
-              return;
-            }
-            setRawData(data);
-            setStep('preview');
-          } catch (err: any) {
-            setError(`Failed to parse file: ${err.message || 'Unknown error'}`);
-            logDebug(`CSV parse error: ${err.message}`);
-          }
-        };
-        reader.onerror = () => {
-          setError('Failed to read file');
-          logDebug('FileReader error (CSV)');
-        };
-        reader.readAsText(file);
+        const materials: ParsedMaterial[] = aiResults.map(item => ({
+          productCode: item.productCode,
+          name: item.name,
+          description: item.description,
+          unit: item.unit || 'each',
+          costPrice: item.costPrice,
+          sellPrice: item.sellPrice || (item.costPrice ? item.costPrice * (1 + defaultMarkupPercent / 100) : undefined),
+          category: item.category,
+          isValid: !!item.name,
+        }));
+
+        setParsedMaterials(materials);
+        setStep('preview');
+      } catch (err: any) {
+        console.error('PDF parsing error:', err);
+        setError(err.message || 'Failed to analyze PDF with AI. Please try again.');
+        setStep('upload');
+      } finally {
+        setProcessingPdf(false);
+        try { localStorage.removeItem('bq_pending_file'); } catch {}
       }
-    } catch (err: any) {
-      setError(`Unexpected error: ${err.message || 'Unknown'}`);
-      logDebug(`Catch-all error: ${err.message}`);
-      setStep('upload');
-      setProcessingPdf(false);
+    } else {
+      try {
+        // For CSV, the dataUrl is text content
+        const text = file.dataUrl.includes('base64,')
+          ? atob(file.dataUrl.split('base64,')[1])
+          : file.dataUrl;
+        const data = parseCSV(text);
+        if (data.length < 2) {
+          setError('File appears to be empty or invalid.');
+          return;
+        }
+        setRawData(data);
+        setStep('preview');
+      } catch (err: any) {
+        setError(`Failed to parse file: ${err.message || 'Unknown error'}`);
+      } finally {
+        try { localStorage.removeItem('bq_pending_file'); } catch {}
+      }
     }
-  };
+  }, [customSupplierName, defaultMarkupPercent]);
+
+  // On mount: set up global file input handler + check for pending file from Android reload
+  useEffect(() => {
+    // Check if Android killed the page and we have a pending file in localStorage
+    try {
+      const pending = localStorage.getItem('bq_pending_file');
+      if (pending) {
+        const fileData = JSON.parse(pending);
+        if (fileData && fileData.dataUrl) {
+          processFile(fileData);
+        }
+      }
+    } catch {}
+
+    // Set up global file input change handler
+    const input = getGlobalFileInput();
+    const handleChange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      // Read file immediately and store in localStorage (survives Android page reload)
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        if (!dataUrl) return;
+
+        const fileData = {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          dataUrl,
+        };
+
+        // Store in localStorage so it survives Android page reload
+        try { localStorage.setItem('bq_pending_file', JSON.stringify(fileData)); } catch {}
+
+        // Process immediately if component is still mounted
+        processFile(fileData);
+      };
+      reader.readAsDataURL(file);
+
+      // Reset input so same file can be re-selected
+      input.value = '';
+    };
+
+    input.addEventListener('change', handleChange);
+    return () => {
+      input.removeEventListener('change', handleChange);
+    };
+  }, [processFile]);
 
   const handleWholesalerSelect = (wholesalerId: string) => {
     setSelectedWholesaler(wholesalerId);
@@ -512,7 +513,8 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
     setError(null);
     setImportResult(null);
     setFileName('');
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    try { getGlobalFileInput().value = ''; } catch {}
+    try { localStorage.removeItem('bq_pending_file'); } catch {};
   };
 
   const validCount = parsedMaterials.filter(m => m.isValid).length;
@@ -596,28 +598,15 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
                 </div>
               )}
 
-              {debugInfo && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-[10px] font-bold text-blue-500 uppercase">Debug Log</span>
-                    <button onClick={() => { setDebugInfo(''); try { localStorage.removeItem('bq_import_debug'); } catch {} }} className="text-[10px] text-blue-400 underline">Clear</button>
-                  </div>
-                  <pre className="text-[10px] text-blue-700 font-mono whitespace-pre-wrap">{debugInfo}</pre>
-                </div>
-              )}
-
-              <label className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-teal-500 hover:bg-teal-50 transition-colors group block cursor-pointer">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv,.pdf,application/pdf,text/csv"
-                  onChange={handleFileSelect}
-                  style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}
-                />
+              <button
+                type="button"
+                onClick={() => getGlobalFileInput().click()}
+                className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-teal-500 hover:bg-teal-50 transition-colors group block cursor-pointer"
+              >
                 <Upload className="w-10 h-10 text-slate-400 group-hover:text-teal-500 mx-auto mb-3 transition-colors" />
                 <p className="font-bold text-slate-600 group-hover:text-teal-600 mb-1">Tap to upload CSV or PDF</p>
                 <p className="text-xs text-slate-400">PDF files are analyzed with AI to extract products</p>
-              </label>
+              </button>
 
               <div className="mt-8 p-3 md:p-6 bg-slate-50 rounded-2xl">
                 <h3 className="font-black text-sm text-slate-700 mb-3 flex items-center gap-2">
