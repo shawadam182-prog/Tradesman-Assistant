@@ -239,10 +239,11 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
     setFileName(file.name);
 
     if (isPdf) {
-      // Validate PDF file - lenient for mobile browsers that report wrong MIME types
-      const validation = validatePdfFile(file);
-      if (!validation.valid) {
-        setError(validation.error || 'Invalid PDF file');
+      // Skip strict MIME validation - Android browsers report inconsistent MIME types
+      // for PDFs (application/pdf, application/octet-stream, empty, etc.)
+      // The edge function validates the actual content.
+      if (file.size > 10 * 1024 * 1024) {
+        setError('PDF too large. Maximum size is 10MB.');
         return;
       }
 
