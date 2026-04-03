@@ -559,7 +559,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
                 type="file"
                 accept=".csv,.pdf"
                 onChange={handleFileSelect}
-                className="hidden"
+                className="absolute w-0 h-0 opacity-0 overflow-hidden"
               />
 
               <button
