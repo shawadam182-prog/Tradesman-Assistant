@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../src/contexts/DataContext';
 import type { WholesalerPreset } from '../types';
-import { validateCsvFile, validatePdfFile } from '../src/utils/fileValidation';
+// fileValidation removed - using inline validation to prevent silent failures
 import { parsePriceListPdf } from '../src/services/geminiService';
 
 interface ParsedMaterial {
@@ -113,6 +113,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
   const [fileName, setFileName] = useState<string>('');
   const [fileType, setFileType] = useState<'csv' | 'pdf'>('csv');
   const [processingPdf, setProcessingPdf] = useState(false);
+  const [debugStatus, setDebugStatus] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const parseCSV = (text: string): string[][] => {
@@ -230,29 +231,35 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Detect PDF by extension OR MIME type (Android often strips extensions from filenames)
-    const isPdf = file.name.toLowerCase().endsWith('.pdf')
-      || file.type === 'application/pdf'
-      || file.type === 'application/octet-stream';
-    setFileType(isPdf ? 'pdf' : 'csv');
-    setError(null);
-    setFileName(file.name);
-
-    if (isPdf) {
-      if (file.size > 10 * 1024 * 1024) {
-        setError('PDF too large. Maximum size is 10MB.');
+    try {
+      setDebugStatus('File picker triggered...');
+      const file = e.target.files?.[0];
+      if (!file) {
+        setDebugStatus('No file was selected');
         return;
       }
 
-      // Process PDF with AI
-      setStep('processing');
-      setProcessingPdf(true);
-      setError(null);
+      setDebugStatus(`File: ${file.name} (${file.type || 'no-type'}, ${(file.size / 1024).toFixed(0)}KB)`);
 
-      try {
+      // Detect PDF by extension OR MIME type (Android often strips extensions from filenames)
+      const isPdf = file.name.toLowerCase().endsWith('.pdf')
+        || file.type === 'application/pdf'
+        || file.type === 'application/octet-stream';
+      setFileType(isPdf ? 'pdf' : 'csv');
+      setError(null);
+      setFileName(file.name);
+
+      if (isPdf) {
+        if (file.size > 10 * 1024 * 1024) {
+          setError('PDF too large. Maximum size is 10MB.');
+          return;
+        }
+
+        // Process PDF with AI
+        setStep('processing');
+        setProcessingPdf(true);
+        setDebugStatus('Reading PDF file...');
+
         const reader = new FileReader();
         reader.onload = async (ev) => {
           try {
@@ -263,6 +270,8 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
               setProcessingPdf(false);
               return;
             }
+
+            setDebugStatus(`PDF read OK (${(base64.length / 1024).toFixed(0)}KB). Sending to AI...`);
 
             // Add timeout for slow AI processing (90 seconds)
             const timeoutPromise = new Promise<never>((_, reject) =>
@@ -281,6 +290,8 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
               return;
             }
 
+            setDebugStatus(`AI found ${aiResults.length} products`);
+
             // Convert AI results to ParsedMaterial format
             const materials: ParsedMaterial[] = aiResults.map(item => ({
               productCode: item.productCode,
@@ -298,6 +309,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
           } catch (err: any) {
             console.error('PDF parsing error:', err);
             setError(err.message || 'Failed to analyze PDF with AI. Please try again.');
+            setDebugStatus(`Error: ${err.message || 'Unknown error'}`);
             setStep('upload');
           } finally {
             setProcessingPdf(false);
@@ -305,41 +317,43 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
         };
         reader.onerror = () => {
           setError('Failed to read PDF file. Please try again.');
+          setDebugStatus('FileReader error');
           setStep('upload');
           setProcessingPdf(false);
         };
         reader.readAsDataURL(file);
-      } catch (err: any) {
-        console.error('PDF file handling error:', err);
-        setError(err.message || 'Failed to process PDF file. Please try again.');
-        setStep('upload');
-        setProcessingPdf(false);
-      }
-    } else {
-      // Validate CSV file
-      const validation = validateCsvFile(file);
-      if (!validation.valid) {
-        setError(validation.error || 'Invalid file');
-        return;
-      }
+      } else {
+        setDebugStatus(`Processing as CSV (type: ${file.type || 'none'})`);
 
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        try {
-          const text = ev.target?.result as string;
-          const data = parseCSV(text);
-          if (data.length < 2) {
-            setError('CSV file appears to be empty or invalid');
-            return;
+        // Skip MIME validation for CSV - just try to read it
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const text = ev.target?.result as string;
+            const data = parseCSV(text);
+            if (data.length < 2) {
+              setError('File appears to be empty or invalid. If this is a PDF, check the file extension ends in .pdf');
+              setDebugStatus('CSV parse: too few rows');
+              return;
+            }
+            setRawData(data);
+            setStep('preview');
+          } catch (err: any) {
+            setError(`Failed to parse file: ${err.message || 'Unknown error'}`);
+            setDebugStatus(`CSV parse error: ${err.message}`);
           }
-          setRawData(data);
-          setStep('preview');
-        } catch (err) {
-          setError('Failed to parse CSV file');
-        }
-      };
-      reader.onerror = () => setError('Failed to read file');
-      reader.readAsText(file);
+        };
+        reader.onerror = () => {
+          setError('Failed to read file');
+          setDebugStatus('FileReader error (CSV)');
+        };
+        reader.readAsText(file);
+      }
+    } catch (err: any) {
+      setError(`Unexpected error: ${err.message || 'Unknown'}`);
+      setDebugStatus(`Catch-all error: ${err.message}`);
+      setStep('upload');
+      setProcessingPdf(false);
     }
   };
 
@@ -562,13 +576,19 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
                 </div>
               )}
 
+              {debugStatus && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                  <p className="text-xs text-blue-700 font-mono">{debugStatus}</p>
+                </div>
+              )}
+
               <label className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-teal-500 hover:bg-teal-50 transition-colors group block cursor-pointer">
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept=".csv,.pdf,application/pdf,text/csv"
                   onChange={handleFileSelect}
-                  className="sr-only"
+                  style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}
                 />
                 <Upload className="w-10 h-10 text-slate-400 group-hover:text-teal-500 mx-auto mb-3 transition-colors" />
                 <p className="font-bold text-slate-600 group-hover:text-teal-600 mb-1">Tap to upload CSV or PDF</p>
