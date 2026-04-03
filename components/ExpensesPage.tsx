@@ -532,7 +532,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
         id="receipt-file-input"
         ref={fileInputRef}
         type="file"
-        accept="image/*,.pdf,application/pdf"
+        accept="image/jpeg,image/png,image/heic,image/heif,image/webp,.pdf,application/pdf"
         onChange={handleFileSelect}
         className="sr-only"
       />
