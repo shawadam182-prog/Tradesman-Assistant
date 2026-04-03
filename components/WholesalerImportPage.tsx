@@ -233,15 +233,15 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const isPdf = file.name.toLowerCase().endsWith('.pdf');
+    // Detect PDF by extension OR MIME type (Android often strips extensions from filenames)
+    const isPdf = file.name.toLowerCase().endsWith('.pdf')
+      || file.type === 'application/pdf'
+      || file.type === 'application/octet-stream';
     setFileType(isPdf ? 'pdf' : 'csv');
     setError(null);
     setFileName(file.name);
 
     if (isPdf) {
-      // Skip strict MIME validation - Android browsers report inconsistent MIME types
-      // for PDFs (application/pdf, application/octet-stream, empty, etc.)
-      // The edge function validates the actual content.
       if (file.size > 10 * 1024 * 1024) {
         setError('PDF too large. Maximum size is 10MB.');
         return;
@@ -554,6 +554,13 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
                 <h2 className="text-xl font-black text-slate-900 mb-2">Upload Price List</h2>
                 <p className="text-slate-500 text-sm">Export a price list from your wholesaler account and upload it here</p>
               </div>
+
+              {error && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-red-700">
+                  <AlertCircle size={20} className="shrink-0" />
+                  <span className="font-medium text-sm">{error}</span>
+                </div>
+              )}
 
               <label className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-teal-500 hover:bg-teal-50 transition-colors group block cursor-pointer">
                 <input
