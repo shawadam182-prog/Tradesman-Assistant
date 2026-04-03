@@ -113,8 +113,28 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
   const [fileName, setFileName] = useState<string>('');
   const [fileType, setFileType] = useState<'csv' | 'pdf'>('csv');
   const [processingPdf, setProcessingPdf] = useState(false);
-  const [debugStatus, setDebugStatus] = useState<string>('');
+  // Use localStorage for debug info so it survives Android page reloads
+  const [debugInfo, setDebugInfo] = useState<string>(() => {
+    try { return localStorage.getItem('bq_import_debug') || ''; } catch { return ''; }
+  });
+  const logDebug = (msg: string) => {
+    const ts = new Date().toLocaleTimeString();
+    const line = `[${ts}] ${msg}`;
+    setDebugInfo(prev => {
+      const updated = prev ? prev + '\n' + line : line;
+      try { localStorage.setItem('bq_import_debug', updated); } catch {}
+      return updated;
+    });
+  };
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Log component mount to track Android page reloads
+  useEffect(() => {
+    logDebug('Component mounted');
+    return () => {
+      try { localStorage.setItem('bq_import_debug', (localStorage.getItem('bq_import_debug') || '') + '\n[unmount] Component unmounted'); } catch {}
+    };
+  }, []);
 
   const parseCSV = (text: string): string[][] => {
     const lines = text.split(/\r?\n/).filter(line => line.trim());
@@ -232,14 +252,14 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      setDebugStatus('File picker triggered...');
+      logDebug('onChange fired');
       const file = e.target.files?.[0];
       if (!file) {
-        setDebugStatus('No file was selected');
+        logDebug('No file in event');
         return;
       }
 
-      setDebugStatus(`File: ${file.name} (${file.type || 'no-type'}, ${(file.size / 1024).toFixed(0)}KB)`);
+      logDebug(`File: ${file.name} (type=${file.type || 'none'}, ${(file.size / 1024).toFixed(0)}KB)`);
 
       // Detect PDF by extension OR MIME type (Android often strips extensions from filenames)
       const isPdf = file.name.toLowerCase().endsWith('.pdf')
@@ -258,7 +278,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
         // Process PDF with AI
         setStep('processing');
         setProcessingPdf(true);
-        setDebugStatus('Reading PDF file...');
+        logDebug('Reading PDF file...');
 
         const reader = new FileReader();
         reader.onload = async (ev) => {
@@ -271,7 +291,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
               return;
             }
 
-            setDebugStatus(`PDF read OK (${(base64.length / 1024).toFixed(0)}KB). Sending to AI...`);
+            logDebug(`PDF read OK (${(base64.length / 1024).toFixed(0)}KB). Sending to AI...`);
 
             // Add timeout for slow AI processing (90 seconds)
             const timeoutPromise = new Promise<never>((_, reject) =>
@@ -290,7 +310,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
               return;
             }
 
-            setDebugStatus(`AI found ${aiResults.length} products`);
+            logDebug(`AI found ${aiResults.length} products`);
 
             // Convert AI results to ParsedMaterial format
             const materials: ParsedMaterial[] = aiResults.map(item => ({
@@ -309,7 +329,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
           } catch (err: any) {
             console.error('PDF parsing error:', err);
             setError(err.message || 'Failed to analyze PDF with AI. Please try again.');
-            setDebugStatus(`Error: ${err.message || 'Unknown error'}`);
+            logDebug(`Error: ${err.message || 'Unknown error'}`);
             setStep('upload');
           } finally {
             setProcessingPdf(false);
@@ -317,13 +337,13 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
         };
         reader.onerror = () => {
           setError('Failed to read PDF file. Please try again.');
-          setDebugStatus('FileReader error');
+          logDebug('FileReader error');
           setStep('upload');
           setProcessingPdf(false);
         };
         reader.readAsDataURL(file);
       } else {
-        setDebugStatus(`Processing as CSV (type: ${file.type || 'none'})`);
+        logDebug(`Processing as CSV (type: ${file.type || 'none'})`);
 
         // Skip MIME validation for CSV - just try to read it
         const reader = new FileReader();
@@ -333,25 +353,25 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
             const data = parseCSV(text);
             if (data.length < 2) {
               setError('File appears to be empty or invalid. If this is a PDF, check the file extension ends in .pdf');
-              setDebugStatus('CSV parse: too few rows');
+              logDebug('CSV parse: too few rows');
               return;
             }
             setRawData(data);
             setStep('preview');
           } catch (err: any) {
             setError(`Failed to parse file: ${err.message || 'Unknown error'}`);
-            setDebugStatus(`CSV parse error: ${err.message}`);
+            logDebug(`CSV parse error: ${err.message}`);
           }
         };
         reader.onerror = () => {
           setError('Failed to read file');
-          setDebugStatus('FileReader error (CSV)');
+          logDebug('FileReader error (CSV)');
         };
         reader.readAsText(file);
       }
     } catch (err: any) {
       setError(`Unexpected error: ${err.message || 'Unknown'}`);
-      setDebugStatus(`Catch-all error: ${err.message}`);
+      logDebug(`Catch-all error: ${err.message}`);
       setStep('upload');
       setProcessingPdf(false);
     }
@@ -576,9 +596,13 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
                 </div>
               )}
 
-              {debugStatus && (
+              {debugInfo && (
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                  <p className="text-xs text-blue-700 font-mono">{debugStatus}</p>
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-[10px] font-bold text-blue-500 uppercase">Debug Log</span>
+                    <button onClick={() => { setDebugInfo(''); try { localStorage.removeItem('bq_import_debug'); } catch {} }} className="text-[10px] text-blue-400 underline">Clear</button>
+                  </div>
+                  <pre className="text-[10px] text-blue-700 font-mono whitespace-pre-wrap">{debugInfo}</pre>
                 </div>
               )}
 
