@@ -97,22 +97,9 @@ interface WholesalerImportPageProps {
   onBack?: () => void;
 }
 
-// Global file input ID - we append a real <input> to document.body once.
-// Android destroys the WebView when the file picker opens, remounting all
-// React components. A body-level input with a fixed ID lets us use
-// <label htmlFor="..."> which is the ONLY reliable way to open the file
-// picker on Android (programmatic .click() is blocked).
-const GLOBAL_INPUT_ID = 'bq-global-file-input';
-function ensureGlobalFileInput(): void {
-  if (document.getElementById(GLOBAL_INPUT_ID)) return;
-  const input = document.createElement('input');
-  input.id = GLOBAL_INPUT_ID;
-  input.type = 'file';
-  input.accept = '.csv,.pdf,application/pdf,text/csv';
-  // Must be visible to the accessibility tree but off-screen
-  input.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0.01;';
-  document.body.appendChild(input);
-}
+// ANDROID FIX: No global inputs, no hidden inputs, no programmatic .click().
+// Just a plain visible <input type="file"> in the React render.
+// Using ONLY MIME types in accept (dot extensions like .pdf crash Android Intent system).
 
 export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBack }) => {
   const { services } = useData();
@@ -332,11 +319,8 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
 
   // On mount: set up global file input handler + check for pending file from Android reload
   // Set up global file input and check for pending files from Android page reload
+  // On mount, check for pending file from Android page reload
   useEffect(() => {
-    // Ensure the global input exists in the DOM
-    ensureGlobalFileInput();
-
-    // Check if Android killed the page and we have a pending file in localStorage
     try {
       const pending = localStorage.getItem('bq_pending_file');
       if (pending) {
@@ -346,45 +330,31 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
         }
       }
     } catch {}
-
-    // Attach change handler to the global input
-    const input = document.getElementById(GLOBAL_INPUT_ID) as HTMLInputElement | null;
-    if (!input) return;
-
-    const handleChange = () => {
-      const file = input.files?.[0];
-      if (!file) return;
-
-      // Read file immediately and store in localStorage (survives Android page reload)
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const dataUrl = ev.target?.result as string;
-        if (!dataUrl) return;
-
-        const fileData = {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          dataUrl,
-        };
-
-        // Store in localStorage so it survives Android page reload
-        try { localStorage.setItem('bq_pending_file', JSON.stringify(fileData)); } catch {}
-
-        // Process immediately if component is still mounted
-        processFile(fileData);
-      };
-      reader.readAsDataURL(file);
-
-      // Reset input so same file can be re-selected
-      input.value = '';
-    };
-
-    input.addEventListener('change', handleChange);
-    return () => {
-      input.removeEventListener('change', handleChange);
-    };
   }, [processFile]);
+
+  // Handle file selection from the visible input
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Read file and store in localStorage (survives Android page reload)
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      if (!dataUrl) return;
+
+      const fileData = {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        dataUrl,
+      };
+
+      try { localStorage.setItem('bq_pending_file', JSON.stringify(fileData)); } catch {}
+      processFile(fileData);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleWholesalerSelect = (wholesalerId: string) => {
     setSelectedWholesaler(wholesalerId);
@@ -521,7 +491,6 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
     setError(null);
     setImportResult(null);
     setFileName('');
-    try { const inp = document.getElementById(GLOBAL_INPUT_ID) as HTMLInputElement; if (inp) inp.value = ''; } catch {}
     try { localStorage.removeItem('bq_pending_file'); } catch {};
   };
 
@@ -606,14 +575,17 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
                 </div>
               )}
 
-              <label
-                htmlFor={GLOBAL_INPUT_ID}
-                className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-teal-500 hover:bg-teal-50 transition-colors group block cursor-pointer"
-              >
-                <Upload className="w-10 h-10 text-slate-400 group-hover:text-teal-500 mx-auto mb-3 transition-colors" />
-                <p className="font-bold text-slate-600 group-hover:text-teal-600 mb-1">Tap to upload CSV or PDF</p>
-                <p className="text-xs text-slate-400">PDF files are analyzed with AI to extract products</p>
-              </label>
+              <div className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-teal-500 hover:bg-teal-50 transition-colors">
+                <Upload className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+                <p className="font-bold text-slate-600 mb-3">Select your CSV or PDF file</p>
+                <input
+                  type="file"
+                  accept="application/pdf,text/csv"
+                  onChange={handleFileInput}
+                  className="w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-2xl file:border-0 file:text-sm file:font-bold file:bg-teal-500 file:text-white hover:file:bg-teal-600 file:cursor-pointer cursor-pointer"
+                />
+                <p className="text-xs text-slate-400 mt-3">PDF files are analyzed with AI to extract products</p>
+              </div>
 
               <div className="mt-8 p-3 md:p-6 bg-slate-50 rounded-2xl">
                 <h3 className="font-black text-sm text-slate-700 mb-3 flex items-center gap-2">
