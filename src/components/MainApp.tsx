@@ -100,22 +100,22 @@ const App: React.FC = () => {
     refresh,
   } = useData();
 
-  // Restore tab from sessionStorage (handles iOS PWA state loss when camera opens)
+  // Restore tab from localStorage (survives iOS PWA process kills when switching apps)
   const getInitialTab = (): TabType => {
     try {
-      const saved = sessionStorage.getItem('activeTab') as TabType | null;
+      const saved = localStorage.getItem('bq_nav_activeTab') as TabType | null;
       if (saved && RESTORABLE_TABS.includes(saved)) {
         return saved;
       }
-    } catch (e) { /* sessionStorage not available */ }
+    } catch (e) { /* localStorage not available */ }
     return 'home';
   };
 
-  // Restore project ID from sessionStorage (handles iOS PWA state loss when camera opens)
+  // Restore project ID from localStorage (survives iOS PWA process kills when switching apps)
   const getInitialProjectId = (): string | null => {
     try {
-      return sessionStorage.getItem('activeProjectId');
-    } catch (e) { /* sessionStorage not available */ }
+      return localStorage.getItem('bq_nav_activeProjectId');
+    } catch (e) { /* localStorage not available */ }
     return null;
   };
 
@@ -128,32 +128,32 @@ const App: React.FC = () => {
     if (tab !== 'quote_edit') setAiGeneratedDraft(null);
     try {
       if (RESTORABLE_TABS.includes(tab as RestorableTab)) {
-        sessionStorage.setItem('activeTab', tab);
+        localStorage.setItem('bq_nav_activeTab', tab);
       }
-    } catch (e) { /* sessionStorage not available */ }
+    } catch (e) { /* localStorage not available */ }
   };
 
   const [editingQuoteId, setEditingQuoteIdState] = useState<string | null>(() => {
-    try { return sessionStorage.getItem('editingQuoteId'); } catch { return null; }
+    try { return localStorage.getItem('bq_nav_editingQuoteId'); } catch { return null; }
   });
   const [viewingQuoteId, setViewingQuoteIdState] = useState<string | null>(() => {
-    try { return sessionStorage.getItem('viewingQuoteId'); } catch { return null; }
+    try { return localStorage.getItem('bq_nav_viewingQuoteId'); } catch { return null; }
   });
 
   const setEditingQuoteId = (id: string | null) => {
     setEditingQuoteIdState(id);
     try {
-      if (id) { sessionStorage.setItem('editingQuoteId', id); }
-      else { sessionStorage.removeItem('editingQuoteId'); }
-    } catch { /* sessionStorage not available */ }
+      if (id) { localStorage.setItem('bq_nav_editingQuoteId', id); }
+      else { localStorage.removeItem('bq_nav_editingQuoteId'); }
+    } catch { /* localStorage not available */ }
   };
 
   const setViewingQuoteId = (id: string | null) => {
     setViewingQuoteIdState(id);
     try {
-      if (id) { sessionStorage.setItem('viewingQuoteId', id); }
-      else { sessionStorage.removeItem('viewingQuoteId'); }
-    } catch { /* sessionStorage not available */ }
+      if (id) { localStorage.setItem('bq_nav_viewingQuoteId', id); }
+      else { localStorage.removeItem('bq_nav_viewingQuoteId'); }
+    } catch { /* localStorage not available */ }
   };
   const [activeProjectIdState, setActiveProjectIdState] = useState<string | null>(getInitialProjectId);
 
@@ -176,16 +176,16 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Wrapper to persist project ID changes (handles iOS PWA state loss when camera opens)
+  // Wrapper to persist project ID changes (survives iOS PWA process kills when switching apps)
   const setActiveProjectId = (projectId: string | null) => {
     setActiveProjectIdState(projectId);
     try {
       if (projectId) {
-        sessionStorage.setItem('activeProjectId', projectId);
+        localStorage.setItem('bq_nav_activeProjectId', projectId);
       } else {
-        sessionStorage.removeItem('activeProjectId');
+        localStorage.removeItem('bq_nav_activeProjectId');
       }
-    } catch (e) { /* sessionStorage not available */ }
+    } catch (e) { /* localStorage not available */ }
   };
 
   // Alias for backward compatibility
