@@ -458,18 +458,18 @@ ${priceListHint ? `Match prices from this list where items match:\n${priceListHi
   },
 
   // Parse receipt image for expense data
-  async parseReceipt({ imageBase64 }: { imageBase64: string }) {
+  async parseReceipt({ imageBase64, mimeType }: { imageBase64: string; mimeType?: string }) {
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.0-flash',
-      systemInstruction: `You are an expense receipt parser for UK tradesmen.
-        Analyze the receipt image and extract:
+      systemInstruction: `You are an expense receipt/invoice parser for UK tradesmen.
+        Analyze the receipt or invoice (image or PDF) and extract:
         - vendor: The store/supplier name
         - amount: Total amount paid (GBP)
         - vatAmount: VAT amount if shown (GBP), default 0 if not visible
-        - date: Receipt date in YYYY-MM-DD format
+        - date: Receipt/invoice date in YYYY-MM-DD format
         - category: One of: materials, tools, fuel, subcontractor, office, insurance, other
         - description: Brief description of items purchased
-        - paymentMethod: One of: card, cash, bank_transfer, cheque (infer from receipt if possible)
+        - paymentMethod: One of: card, cash, bank_transfer, cheque (infer from document if possible)
 
         Be precise with numbers. If VAT is 20%, calculate it if not shown.
         For builders merchants, default category to 'materials'.
@@ -477,13 +477,14 @@ ${priceListHint ? `Match prices from this list where items match:\n${priceListHi
     });
 
     const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+    const detectedMime = mimeType || (imageBase64.startsWith('data:') ? imageBase64.split(';')[0].split(':')[1] : 'image/jpeg');
 
     const result = await model.generateContent({
       contents: [{
         role: 'user',
         parts: [
-          { text: 'Extract expense details from this receipt:' },
-          { inlineData: { mimeType: 'image/jpeg', data: base64Data } }
+          { text: 'Extract expense details from this receipt or invoice:' },
+          { inlineData: { mimeType: detectedMime, data: base64Data } }
         ]
       }],
       generationConfig: {
@@ -672,7 +673,8 @@ const validationRules: Record<string, (data: any) => string | null> = {
   },
   parseReceipt(data) {
     if (!data?.imageBase64 || typeof data.imageBase64 !== 'string') return 'imageBase64 is required';
-    if (data.imageBase64.length > MAX_IMAGE_BASE64_LENGTH) return 'Image too large (max ~7.5MB)';
+    if (data.imageBase64.length > MAX_IMAGE_BASE64_LENGTH) return 'File too large (max ~7.5MB)';
+    if (data.mimeType && typeof data.mimeType !== 'string') return 'mimeType must be a string';
     return null;
   },
   parsePriceListPdf(data) {

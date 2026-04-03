@@ -287,16 +287,18 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
     try {
       // Revoke previous blob URL if exists to prevent memory leak
       if (receiptPreview) URL.revokeObjectURL(receiptPreview);
-      setReceiptPreview(URL.createObjectURL(file));
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      setReceiptPreview(isPdf ? null : URL.createObjectURL(file));
       setReceiptFile(file);
       setScanning(true);
 
       const base64 = await fileToBase64(file);
+      const mimeType = isPdf ? 'application/pdf' : (file.type || 'image/jpeg');
 
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gemini`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ action: 'parseReceipt', data: { imageBase64: base64 } }),
+        body: JSON.stringify({ action: 'parseReceipt', data: { imageBase64: base64, mimeType } }),
       });
 
       if (response.ok) {
@@ -530,7 +532,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
         id="receipt-file-input"
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,.pdf,application/pdf"
         onChange={handleFileSelect}
         className="sr-only"
       />
@@ -682,17 +684,24 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ projects, onBack }) 
             </div>
             <div className="p-4 md:p-6 space-y-4 md:space-y-6">
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Scan Receipt (Optional)</label>
-                {receiptPreview ? (
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Scan Receipt / Invoice (Optional)</label>
+                {receiptPreview || receiptFile ? (
                   <div className="relative">
-                    <img src={receiptPreview} className="w-full h-48 object-cover rounded-2xl" alt="Receipt" />
+                    {receiptPreview ? (
+                      <img src={receiptPreview} className="w-full h-48 object-cover rounded-2xl" alt="Receipt" />
+                    ) : (
+                      <div className="w-full h-48 bg-slate-100 rounded-2xl flex flex-col items-center justify-center">
+                        <FileText className="w-12 h-12 text-slate-400 mb-2" />
+                        <p className="text-sm font-bold text-slate-600">{receiptFile?.name}</p>
+                      </div>
+                    )}
                     <button onClick={() => { if (receiptPreview) URL.revokeObjectURL(receiptPreview); setReceiptPreview(null); setReceiptFile(null); }} className="absolute top-2 right-2 p-2 bg-white rounded-full shadow"><X size={16} /></button>
-                    {scanning && (<div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center"><div className="text-center text-white"><Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /><p className="text-sm font-bold">Scanning receipt...</p></div></div>)}
+                    {scanning && (<div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center"><div className="text-center text-white"><Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /><p className="text-sm font-bold">Scanning document...</p></div></div>)}
                   </div>
                 ) : (
                   <label htmlFor="receipt-file-input" className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-teal-500 hover:bg-teal-50 transition-colors cursor-pointer block">
                     <Camera className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                    <p className="text-sm font-bold text-slate-600">Tap to scan receipt</p>
+                    <p className="text-sm font-bold text-slate-600">Tap to scan receipt or PDF invoice</p>
                     <p className="text-xs text-slate-400">AI will auto-fill the details</p>
                   </label>
                 )}
