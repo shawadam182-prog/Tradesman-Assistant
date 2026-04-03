@@ -260,7 +260,7 @@ export const ToolInventory: React.FC<ToolInventoryProps> = ({ onBack }) => {
       {/* Search & Filter */}
       <div className="flex gap-2 mb-4">
         <div className="flex-1 relative">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 z-10 pointer-events-none" />
           <input
             type="text"
             placeholder="Search tools..."
