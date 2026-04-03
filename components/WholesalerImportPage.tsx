@@ -239,7 +239,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
     setFileName(file.name);
 
     if (isPdf) {
-      // Validate PDF file
+      // Validate PDF file - lenient for mobile browsers that report wrong MIME types
       const validation = validatePdfFile(file);
       if (!validation.valid) {
         setError(validation.error || 'Invalid PDF file');
@@ -249,13 +249,29 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
       // Process PDF with AI
       setStep('processing');
       setProcessingPdf(true);
+      setError(null);
 
       try {
         const reader = new FileReader();
         reader.onload = async (ev) => {
           try {
             const base64 = ev.target?.result as string;
-            const aiResults = await parsePriceListPdf(base64, customSupplierName || undefined);
+            if (!base64) {
+              setError('Failed to read PDF file contents. Please try again.');
+              setStep('upload');
+              setProcessingPdf(false);
+              return;
+            }
+
+            // Add timeout for slow AI processing (90 seconds)
+            const timeoutPromise = new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('AI processing timed out. The PDF may be too large or complex. Try a smaller PDF or CSV export.')), 90000)
+            );
+
+            const aiResults = await Promise.race([
+              parsePriceListPdf(base64, customSupplierName || undefined),
+              timeoutPromise,
+            ]);
 
             if (!Array.isArray(aiResults) || aiResults.length === 0) {
               setError('Could not extract any products from the PDF. Try a CSV export instead.');
@@ -280,20 +296,21 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
             setStep('preview');
           } catch (err: any) {
             console.error('PDF parsing error:', err);
-            setError(err.message || 'Failed to analyze PDF with AI');
+            setError(err.message || 'Failed to analyze PDF with AI. Please try again.');
             setStep('upload');
           } finally {
             setProcessingPdf(false);
           }
         };
         reader.onerror = () => {
-          setError('Failed to read PDF file');
+          setError('Failed to read PDF file. Please try again.');
           setStep('upload');
           setProcessingPdf(false);
         };
         reader.readAsDataURL(file);
-      } catch (err) {
-        setError('Failed to process PDF file');
+      } catch (err: any) {
+        console.error('PDF file handling error:', err);
+        setError(err.message || 'Failed to process PDF file. Please try again.');
         setStep('upload');
         setProcessingPdf(false);
       }
@@ -403,8 +420,12 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
   }, [rawData, mapping, skipRows, defaultMarkupPercent]);
 
   const handleImport = async () => {
+    // For PDF imports, fall back to filename if no supplier name entered
+    const fallbackName = fileType === 'pdf' && fileName
+      ? fileName.replace(/\.pdf$/i, '')
+      : 'Unknown';
     const supplierName = selectedWholesaler === 'custom'
-      ? (customSupplierName || 'Unknown')
+      ? (customSupplierName || fallbackName)
       : WHOLESALER_PRESETS[selectedWholesaler].name;
 
     if (!supplierName || supplierName === 'Unknown') {
@@ -521,7 +542,8 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
                 <Sparkles className="w-8 h-8 text-amber-500 absolute -top-2 -right-2 animate-pulse" />
               </div>
               <h2 className="text-xl font-black text-slate-900 mb-2">Analyzing PDF with AI...</h2>
-              <p className="text-slate-500 text-sm mb-6">Extracting products and prices from your document</p>
+              <p className="text-slate-500 text-sm mb-4">Extracting products and prices from your document</p>
+              <p className="text-slate-400 text-xs mb-6">This can take up to 30 seconds for large documents</p>
               <Loader2 className="w-8 h-8 text-teal-500 mx-auto animate-spin" />
             </div>
           ) : (

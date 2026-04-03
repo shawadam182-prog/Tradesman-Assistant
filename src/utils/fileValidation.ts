@@ -23,7 +23,7 @@ const ALLOWED_MIME_TYPES = {
     'text/csv',
   ],
   csv: ['text/csv', 'text/plain', 'application/csv'],
-  pdf: ['application/pdf'],
+  pdf: ['application/pdf', 'application/octet-stream', ''],
 } as const;
 
 // Map extensions to expected MIME types
@@ -34,7 +34,7 @@ const EXTENSION_MIME_MAP: Record<string, string[]> = {
   gif: ['image/gif'],
   webp: ['image/webp'],
   svg: ['image/svg+xml'],
-  pdf: ['application/pdf'],
+  pdf: ['application/pdf', 'application/octet-stream', ''],
   doc: ['application/msword'],
   docx: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
   xls: ['application/vnd.ms-excel'],
