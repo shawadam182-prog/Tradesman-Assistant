@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Quote, Customer, AppSettings, MaterialItem, QuoteSection, LabourItem, DBMaterialLibraryItem } from '../types';
+import { Quote, Customer, AppSettings, MaterialItem, QuoteSection, LabourItem, DBMaterialLibraryItem, QuoteDisplayOptions } from '../types';
 import {
   analyzeJobRequirements,
   parseVoiceCommandForItems,
@@ -897,7 +897,16 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
 
   const handleSave = async () => {
     clearDraft(); // Clear the draft on successful save
-    onSave(formData as Quote);
+    // Sync displayOptions with VAT/CIS toggle state before saving
+    const syncedFormData = {
+      ...formData,
+      displayOptions: {
+        ...formData.displayOptions,
+        showVat: (formData.taxPercent || 0) > 0,
+        showCis: (formData.cisPercent || 0) > 0,
+      }
+    };
+    onSave(syncedFormData as Quote);
 
     // Save payment milestones (fire-and-forget after quote save)
     if (paymentMilestones.length > 0 && formData.id) {
@@ -1217,7 +1226,10 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                 <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-2 italic"><Percent size={12} className="text-amber-500" /> VAT %</label>
                 <button
                   type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, taxPercent: (prev.taxPercent || 0) > 0 ? 0 : (settings.defaultTaxRate || 20) }))}
+                  onClick={() => setFormData(prev => {
+                    const newTaxPercent = (prev.taxPercent || 0) > 0 ? 0 : (settings.defaultTaxRate || 20);
+                    return { ...prev, taxPercent: newTaxPercent, displayOptions: { ...(prev.displayOptions || {}), showVat: newTaxPercent > 0 } as QuoteDisplayOptions };
+                  })}
                   className={`relative w-10 h-5 rounded-full transition-colors ${(formData.taxPercent || 0) > 0 ? 'bg-amber-500' : 'bg-slate-300'}`}
                 >
                   <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${(formData.taxPercent || 0) > 0 ? 'translate-x-5' : ''}`} />
@@ -1232,7 +1244,10 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                 <label className="text-[10px] font-black text-rose-600 uppercase tracking-widest flex items-center gap-2 italic"><Percent size={12} className="text-rose-500" /> CIS Deduction %</label>
                 <button
                   type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, cisPercent: (prev.cisPercent || 0) > 0 ? 0 : (settings.defaultCisRate || 20) }))}
+                  onClick={() => setFormData(prev => {
+                    const newCisPercent = (prev.cisPercent || 0) > 0 ? 0 : (settings.defaultCisRate || 20);
+                    return { ...prev, cisPercent: newCisPercent, displayOptions: { ...(prev.displayOptions || {}), showCis: newCisPercent > 0 } as QuoteDisplayOptions };
+                  })}
                   className={`relative w-10 h-5 rounded-full transition-colors ${(formData.cisPercent || 0) > 0 ? 'bg-rose-500' : 'bg-slate-300'}`}
                 >
                   <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${(formData.cisPercent || 0) > 0 ? 'translate-x-5' : ''}`} />

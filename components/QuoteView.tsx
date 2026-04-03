@@ -186,7 +186,15 @@ export const QuoteView: React.FC<QuoteViewProps> = ({
     const newValue = !displayOptions[optionKey];
     const updatedOptions: QuoteDisplayOptions = { ...displayOptions, [optionKey]: newValue };
     setLocalDisplayOptions(updatedOptions);
-    onUpdateQuote({ ...activeQuote, displayOptions: updatedOptions });
+    // Sync VAT/CIS percentages with display toggles
+    const quoteUpdates: Partial<Quote> = { displayOptions: updatedOptions };
+    if (optionKey === 'showVat') {
+      quoteUpdates.taxPercent = newValue ? (settings.defaultTaxRate || 20) : 0;
+    }
+    if (optionKey === 'showCis') {
+      quoteUpdates.cisPercent = newValue ? (settings.defaultCisRate || 20) : 0;
+    }
+    onUpdateQuote({ ...activeQuote, ...quoteUpdates });
   };
 
   // Use extracted calculation functions
