@@ -97,19 +97,21 @@ interface WholesalerImportPageProps {
   onBack?: () => void;
 }
 
-// Global file input - lives outside React so it survives component remounts.
-// Android destroys the WebView when file picker opens, which remounts all components.
-// This global input keeps its onChange handler alive across remounts.
-let _globalFileInput: HTMLInputElement | null = null;
-function getGlobalFileInput(): HTMLInputElement {
-  if (!_globalFileInput || !document.body.contains(_globalFileInput)) {
-    _globalFileInput = document.createElement('input');
-    _globalFileInput.type = 'file';
-    _globalFileInput.accept = '.csv,.pdf,application/pdf,text/csv';
-    _globalFileInput.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none;';
-    document.body.appendChild(_globalFileInput);
-  }
-  return _globalFileInput;
+// Global file input ID - we append a real <input> to document.body once.
+// Android destroys the WebView when the file picker opens, remounting all
+// React components. A body-level input with a fixed ID lets us use
+// <label htmlFor="..."> which is the ONLY reliable way to open the file
+// picker on Android (programmatic .click() is blocked).
+const GLOBAL_INPUT_ID = 'bq-global-file-input';
+function ensureGlobalFileInput(): void {
+  if (document.getElementById(GLOBAL_INPUT_ID)) return;
+  const input = document.createElement('input');
+  input.id = GLOBAL_INPUT_ID;
+  input.type = 'file';
+  input.accept = '.csv,.pdf,application/pdf,text/csv';
+  // Must be visible to the accessibility tree but off-screen
+  input.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0.01;';
+  document.body.appendChild(input);
 }
 
 export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBack }) => {
@@ -329,7 +331,11 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
   }, [customSupplierName, defaultMarkupPercent]);
 
   // On mount: set up global file input handler + check for pending file from Android reload
+  // Set up global file input and check for pending files from Android page reload
   useEffect(() => {
+    // Ensure the global input exists in the DOM
+    ensureGlobalFileInput();
+
     // Check if Android killed the page and we have a pending file in localStorage
     try {
       const pending = localStorage.getItem('bq_pending_file');
@@ -341,8 +347,10 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
       }
     } catch {}
 
-    // Set up global file input change handler
-    const input = getGlobalFileInput();
+    // Attach change handler to the global input
+    const input = document.getElementById(GLOBAL_INPUT_ID) as HTMLInputElement | null;
+    if (!input) return;
+
     const handleChange = () => {
       const file = input.files?.[0];
       if (!file) return;
@@ -513,7 +521,7 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
     setError(null);
     setImportResult(null);
     setFileName('');
-    try { getGlobalFileInput().value = ''; } catch {}
+    try { const inp = document.getElementById(GLOBAL_INPUT_ID) as HTMLInputElement; if (inp) inp.value = ''; } catch {}
     try { localStorage.removeItem('bq_pending_file'); } catch {};
   };
 
@@ -598,15 +606,14 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={() => getGlobalFileInput().click()}
+              <label
+                htmlFor={GLOBAL_INPUT_ID}
                 className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-teal-500 hover:bg-teal-50 transition-colors group block cursor-pointer"
               >
                 <Upload className="w-10 h-10 text-slate-400 group-hover:text-teal-500 mx-auto mb-3 transition-colors" />
                 <p className="font-bold text-slate-600 group-hover:text-teal-600 mb-1">Tap to upload CSV or PDF</p>
                 <p className="text-xs text-slate-400">PDF files are analyzed with AI to extract products</p>
-              </button>
+              </label>
 
               <div className="mt-8 p-3 md:p-6 bg-slate-50 rounded-2xl">
                 <h3 className="font-black text-sm text-slate-700 mb-3 flex items-center gap-2">
