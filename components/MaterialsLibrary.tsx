@@ -25,7 +25,15 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
 }) => {
   const { services } = useData();
   const toast = useToast();
-  const [showImport, setShowImport] = useState(false);
+  // Persist showImport in localStorage so it survives Android WebView reloads
+  // when the file picker opens (Android can kill the page and reload it)
+  const [showImport, setShowImport] = useState(() => {
+    try { return localStorage.getItem('bq_showImport') === 'true'; } catch { return false; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('bq_showImport', String(showImport)); } catch {}
+  }, [showImport]);
   const [materials, setMaterials] = useState<DBMaterialLibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -280,6 +288,7 @@ export const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({
       <WholesalerImportPage
         onBack={() => {
           setShowImport(false);
+          try { localStorage.removeItem('bq_showImport'); } catch {}
           loadMaterials();
         }}
       />
