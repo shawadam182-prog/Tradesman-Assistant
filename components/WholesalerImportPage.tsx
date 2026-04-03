@@ -554,22 +554,18 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
                 <p className="text-slate-500 text-sm">Export a price list from your wholesaler account and upload it here</p>
               </div>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.pdf"
-                onChange={handleFileSelect}
-                className="absolute w-0 h-0 opacity-0 overflow-hidden"
-              />
-
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-teal-500 hover:bg-teal-50 transition-colors group"
-              >
+              <label className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-teal-500 hover:bg-teal-50 transition-colors group block cursor-pointer">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,.pdf,application/pdf,text/csv"
+                  onChange={handleFileSelect}
+                  className="sr-only"
+                />
                 <Upload className="w-10 h-10 text-slate-400 group-hover:text-teal-500 mx-auto mb-3 transition-colors" />
-                <p className="font-bold text-slate-600 group-hover:text-teal-600 mb-1">Click to upload CSV or PDF</p>
+                <p className="font-bold text-slate-600 group-hover:text-teal-600 mb-1">Tap to upload CSV or PDF</p>
                 <p className="text-xs text-slate-400">PDF files are analyzed with AI to extract products</p>
-              </button>
+              </label>
 
               <div className="mt-8 p-3 md:p-6 bg-slate-50 rounded-2xl">
                 <h3 className="font-black text-sm text-slate-700 mb-3 flex items-center gap-2">
