@@ -1948,3 +1948,112 @@ export const materialsImportHistoryService = {
     return data;
   },
 };
+
+// ============================================
+// TOOL INVENTORY
+// ============================================
+
+interface ToolInventoryRow {
+  id: string;
+  user_id: string;
+  name: string;
+  make_model: string | null;
+  serial_number: string | null;
+  category: string | null;
+  purchase_date: string | null;
+  purchase_price: number | null;
+  notes: string | null;
+  photo_storage_path: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const toolInventoryService = {
+  async getAll(): Promise<ToolInventoryRow[]> {
+    const { data, error } = await (supabase as any)
+      .from('tool_inventory')
+      .select('*')
+      .order('name');
+    if (error) throw error;
+    return data as ToolInventoryRow[];
+  },
+
+  async create(tool: {
+    name: string;
+    make_model?: string | null;
+    serial_number?: string | null;
+    category?: string | null;
+    purchase_date?: string | null;
+    purchase_price?: number | null;
+    notes?: string | null;
+    photo_storage_path?: string | null;
+  }): Promise<ToolInventoryRow> {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await (supabase as any)
+      .from('tool_inventory')
+      .insert({ ...tool, user_id: user.id })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as ToolInventoryRow;
+  },
+
+  async update(id: string, updates: {
+    name?: string;
+    make_model?: string | null;
+    serial_number?: string | null;
+    category?: string | null;
+    purchase_date?: string | null;
+    purchase_price?: number | null;
+    notes?: string | null;
+    photo_storage_path?: string | null;
+  }): Promise<ToolInventoryRow> {
+    const { data, error } = await (supabase as any)
+      .from('tool_inventory')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as ToolInventoryRow;
+  },
+
+  async delete(id: string) {
+    const { error } = await (supabase as any)
+      .from('tool_inventory')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async uploadPhoto(toolId: string, file: File) {
+    const validation = validateImageFile(file);
+    if (!validation.valid) throw new Error(validation.error || 'Invalid file');
+
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) throw new Error('Not authenticated');
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${toolId}/${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('tool-photos')
+      .upload(fileName, file);
+    if (uploadError) throw uploadError;
+
+    return fileName;
+  },
+
+  async getPhotoUrl(storagePath: string) {
+    const { data } = await supabase.storage
+      .from('tool-photos')
+      .createSignedUrl(storagePath, 3600);
+    return data?.signedUrl;
+  },
+
+  async deletePhoto(storagePath: string) {
+    await supabase.storage.from('tool-photos').remove([storagePath]);
+  },
+};

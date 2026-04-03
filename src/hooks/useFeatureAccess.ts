@@ -282,6 +282,7 @@ export function getFeatureDisplayName(feature: GatedFeature): string {
     teamDashboard: 'Team Dashboard',
     teamSettings: 'Team Settings',
     timesheetApproval: 'Timesheet Approval',
+    toolInventory: 'Tool Inventory',
   };
   return names[feature] || feature;
 }

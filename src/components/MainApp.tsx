@@ -43,6 +43,7 @@ const TeamDashboard = lazy(() => import('../../components/TeamDashboard').then(m
 const TeamSettings = lazy(() => import('../../components/TeamSettings').then(m => ({ default: m.TeamSettings })));
 const TimesheetApproval = lazy(() => import('../../components/TimesheetApproval').then(m => ({ default: m.TimesheetApproval })));
 const WorkerSummary = lazy(() => import('../../components/WorkerSummary').then(m => ({ default: m.WorkerSummary })));
+const ToolInventory = lazy(() => import('../../components/ToolInventory').then(m => ({ default: m.ToolInventory })));
 
 // Loading fallback component
 const PageLoader: React.FC = () => (
@@ -82,10 +83,11 @@ type TabType =
   | 'team_dashboard'
   | 'team_settings'
   | 'timesheet_approval'
-  | 'worker_summary';
+  | 'worker_summary'
+  | 'tool_inventory';
 
 // Valid main tabs that can be restored after page reload (e.g., returning from camera)
-const RESTORABLE_TABS: readonly TabType[] = ['home', 'ai_quote_builder', 'jobpacks', 'jobpack_detail', 'quotes', 'invoices', 'aged_receivables', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'accountant_export', 'files', 'materials', 'wholesalers', 'support', 'trial_analytics', 'future_jobs', 'view', 'quote_edit', 'profitloss', 'team_dashboard', 'team_settings', 'timesheet_approval', 'worker_summary'];
+const RESTORABLE_TABS: readonly TabType[] = ['home', 'ai_quote_builder', 'jobpacks', 'jobpack_detail', 'quotes', 'invoices', 'aged_receivables', 'customers', 'settings', 'schedule', 'expenses', 'bank', 'reconcile', 'vat', 'payables', 'accountant_export', 'files', 'materials', 'wholesalers', 'support', 'trial_analytics', 'future_jobs', 'view', 'quote_edit', 'profitloss', 'team_dashboard', 'team_settings', 'timesheet_approval', 'worker_summary', 'tool_inventory'];
 type RestorableTab = typeof RESTORABLE_TABS[number];
 
 const App: React.FC = () => {
@@ -472,6 +474,7 @@ const App: React.FC = () => {
           {activeTab === 'accountant_export' && <AccountantExportPage onBack={() => setActiveTab('home')} />}
           {activeTab === 'files' && <FilingCabinetPage onBack={() => setActiveTab('home')} />}
           {activeTab === 'materials' && <MaterialsLibrary onBack={() => setActiveTab('home')} />}
+          {activeTab === 'tool_inventory' && <ToolInventory onBack={() => setActiveTab('home')} />}
           {activeTab === 'wholesalers' && <WholesalerAdmin onBack={() => setActiveTab('home')} />}
           {activeTab === 'support' && <SupportRequestsAdmin onBack={() => setActiveTab('home')} />}
           {activeTab === 'trial_analytics' && <TrialUsersAdmin onBack={() => setActiveTab('home')} />}

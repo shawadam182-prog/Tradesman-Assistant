@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, FileText, Settings, Briefcase, ReceiptText, CalendarDays, Home, LogOut, Receipt, Landmark, Link2, Calculator, CreditCard, FolderOpen, ChevronDown, ChevronRight, Package, MoreHorizontal, X, QrCode, Shield, MessageSquare, TrendingUp, Activity, Download, Clock, Moon, Sun, User } from 'lucide-react';
+import { Users, FileText, Settings, Briefcase, ReceiptText, CalendarDays, Home, LogOut, Receipt, Landmark, Link2, Calculator, CreditCard, FolderOpen, ChevronDown, ChevronRight, Package, MoreHorizontal, X, QrCode, Shield, MessageSquare, TrendingUp, Activity, Download, Clock, Moon, Sun, User, Wrench } from 'lucide-react';
 import { hapticTap } from '../src/hooks/useHaptic';
 import { useAuth } from '../src/contexts/AuthContext';
 import { useData } from '../src/contexts/DataContext';
@@ -156,6 +156,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       tier: 'starter',
       items: [
         { id: 'settings', label: 'Settings', icon: Settings, tier: 'starter' },
+        { id: 'tool_inventory', label: 'Tool Inventory', icon: Wrench, tier: 'professional' },
       ]
     },
     // Admin section - only visible to admin users (system admins, not team admins)

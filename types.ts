@@ -627,7 +627,8 @@ export type GatedFeature =
   | 'recurringInvoices'
   | 'teamDashboard'
   | 'teamSettings'
-  | 'timesheetApproval';
+  | 'timesheetApproval'
+  | 'toolInventory';
 
 // Maps features to their required tier
 export const FEATURE_TIER_MAP: Record<GatedFeature, SubscriptionTier> = {
@@ -647,6 +648,7 @@ export const FEATURE_TIER_MAP: Record<GatedFeature, SubscriptionTier> = {
   materialKits: 'professional',
   paymentMilestones: 'professional',
   appointmentComms: 'professional',
+  toolInventory: 'professional',
 
   // Business tier features
   bankImport: 'business',
@@ -879,6 +881,20 @@ export interface Timesheet {
   // Joined data
   teamMember?: { id: string; display_name: string; user_id: string };
   jobPack?: { id: string; title: string } | null;
+}
+
+export interface ToolInventoryItem {
+  id: string;
+  name: string;
+  makeModel?: string | null;
+  serialNumber?: string | null;
+  category?: string | null;
+  purchaseDate?: string | null;
+  purchasePrice?: number | null;
+  notes?: string | null;
+  photoStoragePath?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface GpsLog {

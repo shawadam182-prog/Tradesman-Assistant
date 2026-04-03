@@ -19,6 +19,7 @@ import {
   sitePhotosService,
   siteNotesService,
   projectMaterialsService,
+  toolInventoryService,
 } from '../services/dataService';
 import { materialKitsService } from '../services/materialKitsService';
 import { paymentMilestoneService } from '../services/paymentMilestoneService';
@@ -148,6 +149,7 @@ interface DataContextType {
     materialKits: typeof materialKitsService;
     paymentMilestones: typeof paymentMilestoneService;
     recurringInvoices: typeof recurringInvoiceService;
+    toolInventory: typeof toolInventoryService;
   };
 
   // Refresh data
@@ -1100,6 +1102,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       materialKits: materialKitsService,
       paymentMilestones: paymentMilestoneService,
       recurringInvoices: recurringInvoiceService,
+      toolInventory: toolInventoryService,
     },
     refresh: fetchData,
   };
