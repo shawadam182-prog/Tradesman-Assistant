@@ -231,7 +231,12 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      window.alert('DEBUG: No file selected');
+      return;
+    }
+
+    window.alert(`DEBUG: File received - ${file.name} (type: ${file.type}, size: ${file.size})`);
 
     // Detect PDF by extension OR MIME type (Android often strips extensions from filenames)
     const isPdf = file.name.toLowerCase().endsWith('.pdf')
