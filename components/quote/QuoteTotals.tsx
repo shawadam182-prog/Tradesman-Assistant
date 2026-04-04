@@ -65,7 +65,7 @@ export const QuoteTotals: React.FC<QuoteTotalsProps> = ({
               <span className="text-emerald-300">-£{totals.discount.toFixed(2)}</span>
             </div>
           )}
-          {settings.enableVat && (
+          {totals.tax > 0 && (
             <div className="flex justify-between gap-4 py-1 border-b border-slate-700/50">
               <span className="text-blue-400">VAT</span>
               <span className="text-blue-300">£{totals.tax.toFixed(2)}</span>

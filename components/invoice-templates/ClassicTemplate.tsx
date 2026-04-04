@@ -496,7 +496,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
               <span>-£{totals.discountAmount.toFixed(2)}</span>
             </div>
           )}
-          {settings.enableVat && displayOptions.showVat && totals.taxAmount > 0 && (
+          {displayOptions.showVat && totals.taxAmount > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '14px', color: '#64748b' }}>
               <span>VAT ({quote.taxPercent}%)</span>
               <span>£{totals.taxAmount.toFixed(2)}</span>

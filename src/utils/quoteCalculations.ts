@@ -110,18 +110,19 @@ export function calculateDiscount(
 
 /**
  * Calculate VAT amount.
- * VAT is calculated based on whether it's enabled in settings only.
- * The display toggle (showVat) controls visibility, not calculation.
+ * VAT is calculated if the document has a taxPercent > 0.
+ * The global enableVat setting only controls the default for new documents,
+ * not whether an individual document can have VAT.
  */
 export function calculateVat(
   afterDiscount: number,
   taxPercent: number,
-  options: { enableVat: boolean; showVat?: boolean }
+  options: { enableVat?: boolean; showVat?: boolean }
 ): number {
-  if (!options.enableVat) {
+  if (!taxPercent || taxPercent <= 0) {
     return 0;
   }
-  return afterDiscount * ((taxPercent || 0) / 100);
+  return afterDiscount * (taxPercent / 100);
 }
 
 /**

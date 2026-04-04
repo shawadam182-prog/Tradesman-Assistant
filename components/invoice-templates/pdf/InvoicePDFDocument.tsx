@@ -21,9 +21,7 @@ import {
 import type { Quote, Customer, AppSettings, QuoteDisplayOptions, QuoteSection } from '../../../types';
 import {
   baseStyles,
-  professionalStyles,
   classicStyles,
-  spaciousStyles,
   COLORS,
   getPDFColorScheme,
 } from './InvoicePDFStyles';
@@ -198,231 +196,7 @@ const getAllLineItems = (
 };
 
 /**
- * Professional Template (Zoho-style)
- */
-const ProfessionalTemplate: React.FC<InvoicePDFDocumentProps> = ({
-  quote,
-  customer,
-  settings,
-  totals,
-  reference,
-}) => {
-  const displayOptions = quote.displayOptions || settings.defaultDisplayOptions;
-  const colorSchemeId = quote.type === 'invoice' ? settings.invoiceColorScheme : settings.quoteColorScheme;
-  const colorScheme = getPDFColorScheme(colorSchemeId);
-  const items = getAllLineItems(quote, settings, displayOptions);
-
-  // Determine which columns to show
-  const showQtyColumn = (displayOptions.showMaterials && displayOptions.showMaterialQty) ||
-    (displayOptions.showLabour && displayOptions.showLabourQty);
-  const showRateColumn = (displayOptions.showMaterials && displayOptions.showMaterialUnitPrice) ||
-    (displayOptions.showLabour && displayOptions.showLabourUnitPrice);
-  const showAmountColumn = (displayOptions.showMaterials && displayOptions.showMaterialLineTotals) ||
-    (displayOptions.showLabour && displayOptions.showLabourLineTotals);
-
-  return (
-    <Page size="A4" style={baseStyles.page}>
-      {/* Header */}
-      <View style={professionalStyles.header}>
-        {/* Company Info */}
-        <View style={professionalStyles.companyInfo}>
-          {displayOptions.showLogo && isRenderableLogo(settings.companyLogo) && (
-            <Image src={settings.companyLogo} style={[baseStyles.logo, { marginBottom: 8 }]} />
-          )}
-          <Text style={professionalStyles.companyName}>{settings.companyName}</Text>
-          {settings.companyAddress && (
-            <Text style={professionalStyles.companyDetails}>{settings.companyAddress}</Text>
-          )}
-          {settings.phone && <Text style={professionalStyles.companyDetails}>{settings.phone}</Text>}
-          {settings.email && <Text style={professionalStyles.companyDetails}>{settings.email}</Text>}
-          {settings.vatNumber && <Text style={professionalStyles.companyDetails}>VAT: {settings.vatNumber}</Text>}
-        </View>
-
-        {/* Invoice Header */}
-        <View style={professionalStyles.invoiceHeader}>
-          <Text style={professionalStyles.invoiceTitle}>
-            {quote.type === 'invoice' ? 'INVOICE' : 'QUOTE'}
-          </Text>
-          <Text style={professionalStyles.invoiceRef}>
-            {quote.type === 'invoice' ? 'Invoice' : 'Quote'}# {reference}
-          </Text>
-          <View style={professionalStyles.balanceDue}>
-            <Text style={professionalStyles.balanceLabel}>Balance Due</Text>
-            <Text style={professionalStyles.balanceAmount}>{formatCurrency(totals.grandTotal)}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Bill To + Dates Row */}
-      <View style={professionalStyles.billToRow}>
-        <View style={professionalStyles.billToSection}>
-          <Text style={professionalStyles.sectionLabel}>Bill To</Text>
-          <Text style={professionalStyles.customerName}>{customer?.name}</Text>
-          {customer?.company && <Text style={professionalStyles.customerDetails}>{customer.company}</Text>}
-          {customer?.address && <Text style={professionalStyles.customerDetails}>{customer.address}</Text>}
-          {quote.jobAddress && (
-            <>
-              <Text style={[professionalStyles.sectionLabel, { marginTop: 4, color: '#d97706' }]}>Site Address</Text>
-              <Text style={professionalStyles.customerDetails}>{quote.jobAddress}</Text>
-            </>
-          )}
-        </View>
-        <View style={professionalStyles.datesSection}>
-          <View style={professionalStyles.dateRow}>
-            <Text style={professionalStyles.dateLabel}>Invoice Date :</Text>
-            <Text style={professionalStyles.dateValue}>{formatDate(quote.date)}</Text>
-          </View>
-          <View style={professionalStyles.dateRow}>
-            <Text style={professionalStyles.dateLabel}>Terms :</Text>
-            <Text style={professionalStyles.dateValue}>Due on Receipt</Text>
-          </View>
-          {quote.dueDate && (
-            <View style={professionalStyles.dateRow}>
-              <Text style={professionalStyles.dateLabel}>Due Date :</Text>
-              <Text style={professionalStyles.dateValue}>{formatDate(quote.dueDate)}</Text>
-            </View>
-          )}
-        </View>
-      </View>
-
-      {/* Line Items Table */}
-      <View style={professionalStyles.table}>
-        {/* Table Header */}
-        <View style={[professionalStyles.tableHeader, { backgroundColor: colorScheme.headerBg }]}>
-          <Text style={[professionalStyles.colNum, { color: colorScheme.headerText, fontWeight: 'bold' }]}>#</Text>
-          <Text style={[professionalStyles.colDesc, { color: colorScheme.headerText, fontWeight: 'bold' }]}>Item & Description</Text>
-          {showQtyColumn && (
-            <Text style={[professionalStyles.colQty, { color: colorScheme.headerText, fontWeight: 'bold' }]}>Qty</Text>
-          )}
-          {showRateColumn && (
-            <Text style={[professionalStyles.colRate, { color: colorScheme.headerText, fontWeight: 'bold' }]}>Rate</Text>
-          )}
-          {showAmountColumn && (
-            <Text style={[professionalStyles.colAmount, { color: colorScheme.headerText, fontWeight: 'bold' }]}>Amount</Text>
-          )}
-        </View>
-
-        {/* Table Body */}
-        {items.map((item, idx) => (
-          item.type === 'header' ? (
-            item.isDescription ? (
-              <View key={`desc-${idx}`} style={professionalStyles.sectionDesc}>
-                <Text style={{ color: COLORS.slate500, fontStyle: 'italic' }}>{item.description}</Text>
-              </View>
-            ) : (
-              <View key={`header-${idx}`} style={[professionalStyles.sectionHeader, { backgroundColor: colorScheme.accentBg }]}>
-                <Text style={[professionalStyles.sectionTitle, { color: colorScheme.accentText }]}>{item.description}</Text>
-              </View>
-            )
-          ) : item.isHeading ? (
-            <View key={`heading-${idx}`} style={[professionalStyles.tableRow, { backgroundColor: COLORS.slate50 }]}>
-              <Text style={{ fontSize: 8, fontWeight: 'bold', color: COLORS.slate500, textTransform: 'uppercase' }}>
-                {item.description}
-              </Text>
-            </View>
-          ) : (
-            <View key={`item-${idx}`} style={professionalStyles.tableRow}>
-              <Text style={professionalStyles.colNum}>{item.lineNum}</Text>
-              <View style={professionalStyles.colDesc}>
-                <Text style={professionalStyles.itemName}>{item.name}</Text>
-                {item.subtext && <Text style={professionalStyles.itemDesc}>{item.subtext}</Text>}
-              </View>
-              {showQtyColumn && <Text style={professionalStyles.colQty}>{item.qty}</Text>}
-              {showRateColumn && <Text style={professionalStyles.colRate}>{item.rate ? formatCurrency(item.rate) : '-'}</Text>}
-              {showAmountColumn && <Text style={professionalStyles.colAmount}>{formatCurrency(item.amount)}</Text>}
-            </View>
-          )
-        ))}
-      </View>
-
-      {/* Totals */}
-      <View style={professionalStyles.totalsContainer}>
-        <View style={professionalStyles.totalsBox}>
-          <View style={professionalStyles.totalRow}>
-            <Text style={professionalStyles.totalLabel}>Sub Total</Text>
-            <Text style={professionalStyles.totalValue}>{formatCurrency(totals.clientSubtotal)}</Text>
-          </View>
-          {totals.discountAmount > 0 && (
-            <View style={professionalStyles.totalRow}>
-              <Text style={professionalStyles.totalLabel}>Discount</Text>
-              <Text style={professionalStyles.totalValue}>-{formatCurrency(totals.discountAmount)}</Text>
-            </View>
-          )}
-          {settings.enableVat && displayOptions.showVat && totals.taxAmount > 0 && (
-            <View style={professionalStyles.totalRow}>
-              <Text style={professionalStyles.totalLabel}>VAT ({quote.taxPercent}%)</Text>
-              <Text style={professionalStyles.totalValue}>{formatCurrency(totals.taxAmount)}</Text>
-            </View>
-          )}
-          {settings.enableCis && displayOptions.showCis && totals.cisAmount > 0 && (
-            <View style={professionalStyles.totalRow}>
-              <Text style={professionalStyles.totalLabel}>CIS Deduction</Text>
-              <Text style={professionalStyles.totalValue}>-{formatCurrency(totals.cisAmount)}</Text>
-            </View>
-          )}
-          <View style={[professionalStyles.grandTotalRow, { backgroundColor: colorScheme.accentBg }]}>
-            <Text style={[professionalStyles.grandTotalLabel, { color: colorScheme.accentText }]}>Balance Due</Text>
-            <Text style={[professionalStyles.grandTotalValue, { color: colorScheme.accentText }]}>{formatCurrency(totals.grandTotal)}</Text>
-          </View>
-        </View>
-
-        {/* Part Payment */}
-        {quote.type === 'invoice' && quote.partPaymentEnabled && quote.partPaymentValue && (
-          <View style={[professionalStyles.partPaymentBox, { width: 180 }]}>
-            <View style={professionalStyles.partPaymentRow}>
-              <Text style={professionalStyles.partPaymentLabel}>
-                {quote.partPaymentLabel || 'Due Now'}
-              </Text>
-              <Text style={professionalStyles.partPaymentValue}>
-                {formatCurrency(
-                  quote.partPaymentType === 'percentage'
-                    ? totals.grandTotal * (quote.partPaymentValue / 100)
-                    : quote.partPaymentValue
-                )}
-              </Text>
-            </View>
-          </View>
-        )}
-      </View>
-
-      {/* Bank Details */}
-      {settings.bankAccountName && (
-        <View style={professionalStyles.bankDetails}>
-          <Text style={professionalStyles.bankTitle}>Payment Details</Text>
-          <Text style={professionalStyles.bankText}>
-            Account Name: {settings.bankAccountName}
-          </Text>
-          <Text style={professionalStyles.bankText}>
-            Account Number: {settings.bankAccountNumber} | Sort Code: {settings.bankSortCode}
-            {settings.bankName && ` | Bank: ${settings.bankName}`}
-          </Text>
-        </View>
-      )}
-
-      {/* Notes */}
-      {displayOptions.showNotes && (quote.notes || (quote.type === 'invoice' ? settings.defaultInvoiceNotes : settings.defaultQuoteNotes)) && (
-        <View style={professionalStyles.notes}>
-          <Text style={professionalStyles.notesTitle}>Notes</Text>
-          <Text style={professionalStyles.notesText}>
-            {quote.notes || (quote.type === 'invoice' ? settings.defaultInvoiceNotes : settings.defaultQuoteNotes)}
-          </Text>
-        </View>
-      )}
-
-      {/* Footer Logos */}
-      {displayOptions.showLogo && settings.footerLogos && settings.footerLogos.filter(isRenderableLogo).length > 0 && (
-        <View style={professionalStyles.footerLogos}>
-          {settings.footerLogos.filter(isRenderableLogo).map((logo, idx) => (
-            <Image key={idx} src={logo} style={professionalStyles.footerLogo} />
-          ))}
-        </View>
-      )}
-    </Page>
-  );
-};
-
-/**
- * Classic Template (compact)
+ * Classic Template
  */
 const ClassicTemplate: React.FC<InvoicePDFDocumentProps> = ({
   quote,
@@ -444,7 +218,7 @@ const ClassicTemplate: React.FC<InvoicePDFDocumentProps> = ({
     (displayOptions.showLabour && displayOptions.showLabourLineTotals);
 
   return (
-    <Page size="A4" style={[baseStyles.page, { padding: 24, fontSize: 9 }]}>
+    <Page size="A4" style={[baseStyles.page, { padding: 24, fontSize: 11 }]}>
       {/* Header */}
       <View style={[classicStyles.header, { borderBottomColor: colorScheme.headerBg }]}>
         <View style={classicStyles.companySection}>
@@ -459,7 +233,7 @@ const ClassicTemplate: React.FC<InvoicePDFDocumentProps> = ({
             {[settings.phone, settings.email].filter(Boolean).join(' • ')}
           </Text>
           {settings.vatNumber && (
-            <Text style={[classicStyles.companyDetails, { fontSize: 7 }]}>VAT: {settings.vatNumber}</Text>
+            <Text style={[classicStyles.companyDetails, { fontSize: 9 }]}>VAT: {settings.vatNumber}</Text>
           )}
         </View>
         <View style={classicStyles.invoiceSection}>
@@ -515,7 +289,7 @@ const ClassicTemplate: React.FC<InvoicePDFDocumentProps> = ({
                 borderBottomColor: COLORS.slate200,
                 borderBottomStyle: 'solid',
               }}>
-                <Text style={{ fontSize: 9, fontStyle: 'italic', color: COLORS.slate500, lineHeight: 1.4 }}>{item.description}</Text>
+                <Text style={{ fontSize: 11, fontStyle: 'italic', color: COLORS.slate500, lineHeight: 1.4 }}>{item.description}</Text>
               </View>
             ) : (
               /* Section title - colored background */
@@ -547,7 +321,7 @@ const ClassicTemplate: React.FC<InvoicePDFDocumentProps> = ({
               <Text>-{formatCurrency(totals.discountAmount)}</Text>
             </View>
           )}
-          {settings.enableVat && displayOptions.showVat && totals.taxAmount > 0 && (
+          {displayOptions.showVat && totals.taxAmount > 0 && (
             <View style={classicStyles.totalRow}>
               <Text>VAT ({quote.taxPercent}%)</Text>
               <Text>{formatCurrency(totals.taxAmount)}</Text>
@@ -589,211 +363,12 @@ const ClassicTemplate: React.FC<InvoicePDFDocumentProps> = ({
 };
 
 /**
- * Spacious Template (larger text and spacing)
- */
-const SpaciousTemplate: React.FC<InvoicePDFDocumentProps> = ({
-  quote,
-  customer,
-  settings,
-  totals,
-  reference,
-}) => {
-  const displayOptions = quote.displayOptions || settings.defaultDisplayOptions;
-  const colorSchemeId = quote.type === 'invoice' ? settings.invoiceColorScheme : settings.quoteColorScheme;
-  const colorScheme = getPDFColorScheme(colorSchemeId);
-  const items = getAllLineItems(quote, settings, displayOptions);
-
-  const showQtyColumn = (displayOptions.showMaterials && displayOptions.showMaterialQty) ||
-    (displayOptions.showLabour && displayOptions.showLabourQty);
-  const showRateColumn = (displayOptions.showMaterials && displayOptions.showMaterialUnitPrice) ||
-    (displayOptions.showLabour && displayOptions.showLabourUnitPrice);
-  const showAmountColumn = (displayOptions.showMaterials && displayOptions.showMaterialLineTotals) ||
-    (displayOptions.showLabour && displayOptions.showLabourLineTotals);
-
-  return (
-    <Page size="A4" style={[baseStyles.page, spaciousStyles.page]}>
-      {/* Header */}
-      <View style={spaciousStyles.header}>
-        <View style={spaciousStyles.companyInfo}>
-          {displayOptions.showLogo && isRenderableLogo(settings.companyLogo) && (
-            <Image src={settings.companyLogo} style={[baseStyles.logoLarge, { marginBottom: 12 }]} />
-          )}
-          <Text style={spaciousStyles.companyName}>{settings.companyName}</Text>
-          {settings.companyAddress && (
-            <Text style={spaciousStyles.companyDetails}>{settings.companyAddress}</Text>
-          )}
-          {settings.phone && <Text style={spaciousStyles.companyDetails}>{settings.phone}</Text>}
-          {settings.email && <Text style={spaciousStyles.companyDetails}>{settings.email}</Text>}
-          {settings.vatNumber && <Text style={spaciousStyles.companyDetails}>VAT: {settings.vatNumber}</Text>}
-        </View>
-
-        <View style={spaciousStyles.invoiceHeader}>
-          <Text style={spaciousStyles.invoiceTitle}>
-            {quote.type === 'invoice' ? 'INVOICE' : 'QUOTE'}
-          </Text>
-          <Text style={spaciousStyles.invoiceRef}>
-            {quote.type === 'invoice' ? 'Invoice' : 'Quote'}# {reference}
-          </Text>
-          <Text style={spaciousStyles.balanceLabel}>Balance Due</Text>
-          <Text style={spaciousStyles.balanceAmount}>{formatCurrency(totals.grandTotal)}</Text>
-        </View>
-      </View>
-
-      {/* Bill To + Dates Row */}
-      <View style={spaciousStyles.billToRow}>
-        <View style={spaciousStyles.billToSection}>
-          <Text style={spaciousStyles.sectionLabel}>Bill To</Text>
-          <Text style={spaciousStyles.customerName}>{customer?.name}</Text>
-          {customer?.company && <Text style={spaciousStyles.customerDetails}>{customer.company}</Text>}
-          {customer?.address && <Text style={spaciousStyles.customerDetails}>{customer.address}</Text>}
-          {quote.jobAddress && (
-            <>
-              <Text style={[spaciousStyles.sectionLabel, { marginTop: 4, color: '#d97706' }]}>Site Address</Text>
-              <Text style={spaciousStyles.customerDetails}>{quote.jobAddress}</Text>
-            </>
-          )}
-        </View>
-        <View style={spaciousStyles.datesSection}>
-          <View style={spaciousStyles.dateRow}>
-            <Text style={spaciousStyles.dateLabel}>Invoice Date :</Text>
-            <Text style={spaciousStyles.dateValue}>{formatDate(quote.date)}</Text>
-          </View>
-          <View style={spaciousStyles.dateRow}>
-            <Text style={spaciousStyles.dateLabel}>Terms :</Text>
-            <Text style={spaciousStyles.dateValue}>Due on Receipt</Text>
-          </View>
-          {quote.dueDate && (
-            <View style={spaciousStyles.dateRow}>
-              <Text style={spaciousStyles.dateLabel}>Due Date :</Text>
-              <Text style={spaciousStyles.dateValue}>{formatDate(quote.dueDate)}</Text>
-            </View>
-          )}
-        </View>
-      </View>
-
-      {/* Line Items Table */}
-      <View style={spaciousStyles.table}>
-        <View style={[spaciousStyles.tableHeader, { backgroundColor: colorScheme.headerBg }]}>
-          <Text style={[spaciousStyles.colNum, { color: colorScheme.headerText, fontWeight: 'bold' }]}>#</Text>
-          <Text style={[spaciousStyles.colDesc, { color: colorScheme.headerText, fontWeight: 'bold' }]}>Item & Description</Text>
-          {showQtyColumn && (
-            <Text style={[spaciousStyles.colQty, { color: colorScheme.headerText, fontWeight: 'bold' }]}>Qty</Text>
-          )}
-          {showRateColumn && (
-            <Text style={[spaciousStyles.colRate, { color: colorScheme.headerText, fontWeight: 'bold' }]}>Rate</Text>
-          )}
-          {showAmountColumn && (
-            <Text style={[spaciousStyles.colAmount, { color: colorScheme.headerText, fontWeight: 'bold' }]}>Amount</Text>
-          )}
-        </View>
-
-        {items.map((item, idx) => (
-          item.type === 'header' ? (
-            item.isDescription ? (
-              <View key={`desc-${idx}`} style={spaciousStyles.sectionDesc}>
-                <Text style={{ color: COLORS.slate500, fontStyle: 'italic' }}>{item.description}</Text>
-              </View>
-            ) : (
-              <View key={`header-${idx}`} style={[spaciousStyles.sectionHeader, { backgroundColor: colorScheme.accentBg }]}>
-                <Text style={[spaciousStyles.sectionTitle, { color: colorScheme.accentText }]}>{item.description}</Text>
-              </View>
-            )
-          ) : item.isHeading ? (
-            <View key={`heading-${idx}`} style={[spaciousStyles.tableRow, { backgroundColor: COLORS.slate50 }]}>
-              <Text style={{ fontSize: 10, fontWeight: 'bold', color: COLORS.slate500, textTransform: 'uppercase' }}>
-                {item.description}
-              </Text>
-            </View>
-          ) : (
-            <View key={`item-${idx}`} style={spaciousStyles.tableRow}>
-              <Text style={spaciousStyles.colNum}>{item.lineNum}</Text>
-              <View style={spaciousStyles.colDesc}>
-                <Text style={spaciousStyles.itemName}>{item.name}</Text>
-                {item.subtext && <Text style={spaciousStyles.itemDesc}>{item.subtext}</Text>}
-              </View>
-              {showQtyColumn && <Text style={spaciousStyles.colQty}>{item.qty}</Text>}
-              {showRateColumn && <Text style={spaciousStyles.colRate}>{item.rate ? formatCurrency(item.rate) : '-'}</Text>}
-              {showAmountColumn && <Text style={spaciousStyles.colAmount}>{formatCurrency(item.amount)}</Text>}
-            </View>
-          )
-        ))}
-      </View>
-
-      {/* Totals */}
-      <View style={spaciousStyles.totalsContainer}>
-        <View style={spaciousStyles.totalsBox}>
-          <View style={spaciousStyles.totalRow}>
-            <Text style={spaciousStyles.totalLabel}>Sub Total</Text>
-            <Text style={spaciousStyles.totalValue}>{formatCurrency(totals.clientSubtotal)}</Text>
-          </View>
-          {totals.discountAmount > 0 && (
-            <View style={spaciousStyles.totalRow}>
-              <Text style={spaciousStyles.totalLabel}>Discount</Text>
-              <Text style={spaciousStyles.totalValue}>-{formatCurrency(totals.discountAmount)}</Text>
-            </View>
-          )}
-          {settings.enableVat && displayOptions.showVat && totals.taxAmount > 0 && (
-            <View style={spaciousStyles.totalRow}>
-              <Text style={spaciousStyles.totalLabel}>VAT ({quote.taxPercent}%)</Text>
-              <Text style={spaciousStyles.totalValue}>{formatCurrency(totals.taxAmount)}</Text>
-            </View>
-          )}
-          {settings.enableCis && displayOptions.showCis && totals.cisAmount > 0 && (
-            <View style={spaciousStyles.totalRow}>
-              <Text style={spaciousStyles.totalLabel}>CIS Deduction</Text>
-              <Text style={spaciousStyles.totalValue}>-{formatCurrency(totals.cisAmount)}</Text>
-            </View>
-          )}
-          <View style={[spaciousStyles.grandTotalRow, { backgroundColor: colorScheme.accentBg }]}>
-            <Text style={[spaciousStyles.grandTotalLabel, { color: colorScheme.accentText }]}>Balance Due</Text>
-            <Text style={[spaciousStyles.grandTotalValue, { color: colorScheme.accentText }]}>{formatCurrency(totals.grandTotal)}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Bank Details */}
-      {settings.bankAccountName && (
-        <View style={spaciousStyles.bankDetails}>
-          <Text style={spaciousStyles.bankTitle}>Payment Details</Text>
-          <Text style={spaciousStyles.bankText}>
-            Account Name: {settings.bankAccountName}
-          </Text>
-          <Text style={spaciousStyles.bankText}>
-            Account Number: {settings.bankAccountNumber} | Sort Code: {settings.bankSortCode}
-            {settings.bankName && ` | Bank: ${settings.bankName}`}
-          </Text>
-        </View>
-      )}
-
-      {/* Notes */}
-      {displayOptions.showNotes && (quote.notes || (quote.type === 'invoice' ? settings.defaultInvoiceNotes : settings.defaultQuoteNotes)) && (
-        <View style={spaciousStyles.notes}>
-          <Text style={spaciousStyles.notesTitle}>Notes</Text>
-          <Text style={spaciousStyles.notesText}>
-            {quote.notes || (quote.type === 'invoice' ? settings.defaultInvoiceNotes : settings.defaultQuoteNotes)}
-          </Text>
-        </View>
-      )}
-    </Page>
-  );
-};
-
-/**
  * Main InvoicePDFDocument component
- * Selects the appropriate template based on settings
  */
 export const InvoicePDFDocument: React.FC<InvoicePDFDocumentProps> = (props) => {
-  const templateId = props.settings.documentTemplate || 'professional';
-
   return (
     <Document>
-      {templateId === 'classic' ? (
-        <ClassicTemplate {...props} />
-      ) : templateId === 'spacious' ? (
-        <SpaciousTemplate {...props} />
-      ) : (
-        <ProfessionalTemplate {...props} />
-      )}
+      <ClassicTemplate {...props} />
     </Document>
   );
 };
