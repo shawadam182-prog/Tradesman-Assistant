@@ -322,13 +322,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
     }
   };
 
-  const toggleDisplayOption = (key: keyof QuoteDisplayOptions) => {
+  const toggleQuoteDisplayOption = (key: keyof QuoteDisplayOptions) => {
+    const current = settings.quoteDisplayOptions || settings.defaultDisplayOptions;
     setSettings({
       ...settings,
-      defaultDisplayOptions: {
-        ...settings.defaultDisplayOptions,
-        [key]: !settings.defaultDisplayOptions[key]
-      }
+      quoteDisplayOptions: { ...current, [key]: !current[key] },
+      // Keep legacy field in sync for backward compat
+      defaultDisplayOptions: { ...current, [key]: !current[key] },
+    });
+  };
+
+  const toggleInvoiceDisplayOption = (key: keyof QuoteDisplayOptions) => {
+    const current = settings.invoiceDisplayOptions || settings.defaultDisplayOptions;
+    setSettings({
+      ...settings,
+      invoiceDisplayOptions: { ...current, [key]: !current[key] },
     });
   };
 
@@ -1226,7 +1234,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 isExpanded={expandedQuoteSections['visibility'] || false}
                 onToggle={() => toggleQuoteSection('visibility')}
               >
-                <p className="text-[10px] text-slate-500 italic mb-3 hidden md:block">Set business-wide standards for what clients see on your quotes.</p>
+                <p className="text-[10px] text-slate-500 italic mb-3 hidden md:block">What clients see on your quotes. These are independent from invoice settings.</p>
                 <div className="grid grid-cols-2 gap-x-4 md:gap-x-12 gap-y-2 md:gap-y-6">
                   <div className="space-y-1 md:space-y-4">
                     <div className="flex items-center gap-1 md:gap-2 px-1 md:px-2 pb-1 md:pb-2 border-b border-slate-100">
@@ -1239,7 +1247,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       { key: 'showMaterialUnitPrice', label: 'Unit Prices', mobileLabel: 'Price', info: 'Display individual costs.' },
                       { key: 'showMaterialLineTotals', label: 'Line Totals', mobileLabel: 'Lines', info: 'Display row subtotals.' },
                       { key: 'showMaterialSectionTotal', label: 'Section Total', mobileLabel: 'Total', info: 'Show materials subtotal.' }
-                    ].map(option => (
+                    ].map(option => {
+                      const opts = settings.quoteDisplayOptions || settings.defaultDisplayOptions;
+                      return (
                       <div key={option.key} className="flex items-center justify-between group py-0 md:py-0">
                         <div className="max-w-[80px] md:max-w-[180px]">
                           <p className="text-[8px] md:text-[10px] font-black text-slate-900 uppercase tracking-tight">
@@ -1249,13 +1259,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                           <p className="text-[8px] text-slate-400 font-bold italic hidden md:block">{option.info}</p>
                         </div>
                         <button
-                          onClick={() => toggleDisplayOption(option.key as keyof QuoteDisplayOptions)}
-                          className={`w-8 md:w-10 h-4 md:h-6 rounded-full relative transition-all duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'bg-purple-500' : 'bg-slate-200'}`}
+                          onClick={() => toggleQuoteDisplayOption(option.key as keyof QuoteDisplayOptions)}
+                          className={`w-8 md:w-10 h-4 md:h-6 rounded-full relative transition-all duration-300 ${opts[option.key as keyof QuoteDisplayOptions] ? 'bg-purple-500' : 'bg-slate-200'}`}
                         >
-                          <div className={`absolute top-0.5 md:top-1 left-0.5 md:left-1 bg-white w-3 md:w-4 h-3 md:h-4 rounded-full transition-transform duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'translate-x-3.5 md:translate-x-4' : 'translate-x-0'}`} />
+                          <div className={`pointer-events-none absolute top-0.5 md:top-1 left-0.5 md:left-1 bg-white w-3 md:w-4 h-3 md:h-4 rounded-full transition-transform duration-300 ${opts[option.key as keyof QuoteDisplayOptions] ? 'translate-x-3.5 md:translate-x-4' : 'translate-x-0'}`} />
                         </button>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div className="space-y-1 md:space-y-4">
@@ -1269,7 +1280,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       { key: 'showLabourUnitPrice', label: 'Hourly Rate', mobileLabel: 'Rate', info: 'Display trade rate.' },
                       { key: 'showLabourLineTotals', label: 'Subtotals', mobileLabel: 'Lines', info: 'Display row subtotals.' },
                       { key: 'showLabourSectionTotal', label: 'Section Total', mobileLabel: 'Total', info: 'Show labour subtotal.' }
-                    ].map(option => (
+                    ].map(option => {
+                      const opts = settings.quoteDisplayOptions || settings.defaultDisplayOptions;
+                      return (
                       <div key={option.key} className="flex items-center justify-between group py-0 md:py-0">
                         <div className="max-w-[80px] md:max-w-[180px]">
                           <p className="text-[8px] md:text-[10px] font-black text-slate-900 uppercase tracking-tight">
@@ -1279,13 +1292,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                           <p className="text-[8px] text-slate-400 font-bold italic hidden md:block">{option.info}</p>
                         </div>
                         <button
-                          onClick={() => toggleDisplayOption(option.key as keyof QuoteDisplayOptions)}
-                          className={`w-8 md:w-10 h-4 md:h-6 rounded-full relative transition-all duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'bg-blue-500' : 'bg-slate-200'}`}
+                          onClick={() => toggleQuoteDisplayOption(option.key as keyof QuoteDisplayOptions)}
+                          className={`w-8 md:w-10 h-4 md:h-6 rounded-full relative transition-all duration-300 ${opts[option.key as keyof QuoteDisplayOptions] ? 'bg-blue-500' : 'bg-slate-200'}`}
                         >
-                          <div className={`absolute top-0.5 md:top-1 left-0.5 md:left-1 bg-white w-3 md:w-4 h-3 md:h-4 rounded-full transition-transform duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'translate-x-3.5 md:translate-x-4' : 'translate-x-0'}`} />
+                          <div className={`pointer-events-none absolute top-0.5 md:top-1 left-0.5 md:left-1 bg-white w-3 md:w-4 h-3 md:h-4 rounded-full transition-transform duration-300 ${opts[option.key as keyof QuoteDisplayOptions] ? 'translate-x-3.5 md:translate-x-4' : 'translate-x-0'}`} />
                         </button>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </CollapsibleSection>
@@ -1675,7 +1689,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 isExpanded={expandedInvoiceSections['visibility'] || false}
                 onToggle={() => toggleInvoiceSection('visibility')}
               >
-                <p className="text-[10px] text-slate-500 italic mb-3">What clients see on invoices (shared with Quote Preferences).</p>
+                <p className="text-[10px] text-slate-500 italic mb-3">What clients see on invoices. These are independent from quote settings.</p>
                 <div className="grid grid-cols-2 gap-x-4 md:gap-x-12 gap-y-2 md:gap-y-6">
                   <div className="space-y-1 md:space-y-4">
                     <div className="flex items-center gap-1 md:gap-2 px-1 md:px-2 pb-1 md:pb-2 border-b border-slate-100">
@@ -1688,20 +1702,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       { key: 'showMaterialUnitPrice', label: 'Unit Prices', mobileLabel: 'Price' },
                       { key: 'showMaterialLineTotals', label: 'Line Totals', mobileLabel: 'Lines' },
                       { key: 'showMaterialSectionTotal', label: 'Section Total', mobileLabel: 'Total' }
-                    ].map(option => (
+                    ].map(option => {
+                      const opts = settings.invoiceDisplayOptions || settings.defaultDisplayOptions;
+                      return (
                       <div key={option.key} className="flex items-center justify-between py-0">
                         <p className="text-[8px] md:text-[10px] font-black text-slate-900 uppercase tracking-tight">
                           <span className="md:hidden">{option.mobileLabel}</span>
                           <span className="hidden md:inline">{option.label}</span>
                         </p>
                         <button
-                          onClick={() => toggleDisplayOption(option.key as keyof QuoteDisplayOptions)}
-                          className={`w-8 md:w-10 h-4 md:h-6 rounded-full relative transition-all duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'bg-purple-500' : 'bg-slate-200'}`}
+                          onClick={() => toggleInvoiceDisplayOption(option.key as keyof QuoteDisplayOptions)}
+                          className={`w-8 md:w-10 h-4 md:h-6 rounded-full relative transition-all duration-300 ${opts[option.key as keyof QuoteDisplayOptions] ? 'bg-purple-500' : 'bg-slate-200'}`}
                         >
-                          <div className={`absolute top-0.5 md:top-1 left-0.5 md:left-1 bg-white w-3 md:w-4 h-3 md:h-4 rounded-full transition-transform duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'translate-x-3.5 md:translate-x-4' : 'translate-x-0'}`} />
+                          <div className={`pointer-events-none absolute top-0.5 md:top-1 left-0.5 md:left-1 bg-white w-3 md:w-4 h-3 md:h-4 rounded-full transition-transform duration-300 ${opts[option.key as keyof QuoteDisplayOptions] ? 'translate-x-3.5 md:translate-x-4' : 'translate-x-0'}`} />
                         </button>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   <div className="space-y-1 md:space-y-4">
                     <div className="flex items-center gap-1 md:gap-2 px-1 md:px-2 pb-1 md:pb-2 border-b border-slate-100">
@@ -1714,20 +1731,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       { key: 'showLabourUnitPrice', label: 'Hourly Rate', mobileLabel: 'Rate' },
                       { key: 'showLabourLineTotals', label: 'Subtotals', mobileLabel: 'Lines' },
                       { key: 'showLabourSectionTotal', label: 'Section Total', mobileLabel: 'Total' }
-                    ].map(option => (
+                    ].map(option => {
+                      const opts = settings.invoiceDisplayOptions || settings.defaultDisplayOptions;
+                      return (
                       <div key={option.key} className="flex items-center justify-between py-0">
                         <p className="text-[8px] md:text-[10px] font-black text-slate-900 uppercase tracking-tight">
                           <span className="md:hidden">{option.mobileLabel}</span>
                           <span className="hidden md:inline">{option.label}</span>
                         </p>
                         <button
-                          onClick={() => toggleDisplayOption(option.key as keyof QuoteDisplayOptions)}
-                          className={`w-8 md:w-10 h-4 md:h-6 rounded-full relative transition-all duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'bg-blue-500' : 'bg-slate-200'}`}
+                          onClick={() => toggleInvoiceDisplayOption(option.key as keyof QuoteDisplayOptions)}
+                          className={`w-8 md:w-10 h-4 md:h-6 rounded-full relative transition-all duration-300 ${opts[option.key as keyof QuoteDisplayOptions] ? 'bg-blue-500' : 'bg-slate-200'}`}
                         >
-                          <div className={`absolute top-0.5 md:top-1 left-0.5 md:left-1 bg-white w-3 md:w-4 h-3 md:h-4 rounded-full transition-transform duration-300 ${settings.defaultDisplayOptions[option.key as keyof QuoteDisplayOptions] ? 'translate-x-3.5 md:translate-x-4' : 'translate-x-0'}`} />
+                          <div className={`pointer-events-none absolute top-0.5 md:top-1 left-0.5 md:left-1 bg-white w-3 md:w-4 h-3 md:h-4 rounded-full transition-transform duration-300 ${opts[option.key as keyof QuoteDisplayOptions] ? 'translate-x-3.5 md:translate-x-4' : 'translate-x-0'}`} />
                         </button>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </CollapsibleSection>

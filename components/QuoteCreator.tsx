@@ -167,7 +167,7 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         status: 'draft',
         type: initialType,
         notes: initialType === 'invoice' ? settings.defaultInvoiceNotes : settings.defaultQuoteNotes,
-        displayOptions: { ...settings.defaultDisplayOptions },
+        displayOptions: { ...(initialType === 'invoice' ? (settings.invoiceDisplayOptions || settings.defaultDisplayOptions) : (settings.quoteDisplayOptions || settings.defaultDisplayOptions)) },
         dueDate: defaultDueDate
       };
 
@@ -447,7 +447,18 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
         dueDate = defaultDue.toISOString().split('T')[0];
       }
 
-      return { ...prev, type: newType, notes: updatedNotes, dueDate };
+      // Swap display options when switching between quote and invoice types
+      const isCurrentlyDefaultDisplay = JSON.stringify(prev.displayOptions) === JSON.stringify(
+        prev.type === 'invoice' ? (settings.invoiceDisplayOptions || settings.defaultDisplayOptions) : (settings.quoteDisplayOptions || settings.defaultDisplayOptions)
+      );
+      let updatedDisplayOptions = prev.displayOptions;
+      if (isCurrentlyDefaultDisplay) {
+        updatedDisplayOptions = newType === 'invoice'
+          ? { ...(settings.invoiceDisplayOptions || settings.defaultDisplayOptions) }
+          : { ...(settings.quoteDisplayOptions || settings.defaultDisplayOptions) };
+      }
+
+      return { ...prev, type: newType, notes: updatedNotes, dueDate, displayOptions: updatedDisplayOptions };
     });
   };
 

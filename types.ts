@@ -239,6 +239,8 @@ export interface AppSettings {
   costBoxColor: 'slate' | 'amber' | 'blue';
   showBreakdown: boolean;
   defaultDisplayOptions: QuoteDisplayOptions;
+  quoteDisplayOptions?: QuoteDisplayOptions;
+  invoiceDisplayOptions?: QuoteDisplayOptions;
   documentTemplate?: DocumentTemplate;
   invoiceColorScheme?: 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal' | 'modern';
   quoteColorScheme?: 'executive' | 'navy' | 'slate' | 'stone' | 'forest' | 'minimal' | 'teal' | 'modern';
