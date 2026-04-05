@@ -35,7 +35,7 @@ interface SettingsPageProps {
   onBack?: () => void;
 }
 
-type SettingsCategory = 'company' | 'quotes' | 'invoices' | 'materials' | 'documents' | 'communications' | 'subscription' | 'help';
+type SettingsCategory = 'company' | 'rates' | 'quotes' | 'invoices' | 'materials' | 'documents' | 'communications' | 'subscription' | 'help';
 
 // Collapsible Section Component for Quote/Invoice Preferences
 const CollapsibleSection: React.FC<{
@@ -121,9 +121,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
   const [quoteFollowUpDays, setQuoteFollowUpDays] = useState(3);
 
   // Collapsible section states for Quote & Invoice preferences (all collapsed by default)
+  const [expandedRatesSections, setExpandedRatesSections] = useState<Record<string, boolean>>({});
   const [expandedQuoteSections, setExpandedQuoteSections] = useState<Record<string, boolean>>({});
   const [expandedInvoiceSections, setExpandedInvoiceSections] = useState<Record<string, boolean>>({});
 
+  const toggleRatesSection = (section: string) => {
+    setExpandedRatesSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
   const toggleQuoteSection = (section: string) => {
     setExpandedQuoteSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
@@ -452,9 +456,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
             <p className="text-[8px] md:text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] px-2 pt-2">Business</p>
             <CategoryButton id="company" label="My Company" icon={Building} color="bg-amber-500 text-slate-900" />
 
+            <CategoryButton id="rates" label="Rates & Tax" icon={PoundSterling} color="bg-teal-500 text-white" />
+
             <p className="text-[8px] md:text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] px-2 pt-2">Documents</p>
-            <CategoryButton id="quotes" label="Quote Preferences" icon={FileText} color="bg-blue-500 text-white" />
-            <CategoryButton id="invoices" label="Invoice Preferences" icon={ReceiptText} color="bg-emerald-500 text-white" />
+            <CategoryButton id="quotes" label="Quotes" icon={FileText} color="bg-blue-500 text-white" />
+            <CategoryButton id="invoices" label="Invoices" icon={ReceiptText} color="bg-emerald-500 text-white" />
             <CategoryButton id="materials" label="Materials Library" icon={Package} color="bg-amber-500 text-white" />
             {/* Company Documents now inside My Company tab */}
 
@@ -1016,26 +1022,26 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
             </div>
           )}
 
-          {activeCategory === 'quotes' && (
+          {/* ========== RATES & TAX TAB ========== */}
+          {activeCategory === 'rates' && (
             <div className="space-y-3 md:space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-              {/* Main Header */}
               <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 shadow-sm p-4 md:p-6">
                 <div className="flex items-center gap-2 md:gap-3">
-                  <div className="p-2 md:p-3 bg-blue-100 text-blue-600 rounded-xl md:rounded-2xl"><Calculator size={20} className="md:w-6 md:h-6" /></div>
+                  <div className="p-2 md:p-3 bg-teal-100 text-teal-600 rounded-xl md:rounded-2xl"><PoundSterling size={20} className="md:w-6 md:h-6" /></div>
                   <div>
-                    <h3 className="text-base md:text-xl font-black text-slate-900 uppercase tracking-tight">Quote Preferences</h3>
-                    <p className="text-slate-500 text-[10px] md:text-xs font-medium italic">Standard trade rates and tax settings for new estimates.</p>
+                    <h3 className="text-base md:text-xl font-black text-slate-900 uppercase tracking-tight">Rates & Tax</h3>
+                    <p className="text-slate-500 text-[10px] md:text-xs font-medium italic">Business-wide rates and tax settings applied to all new quotes and invoices.</p>
                   </div>
                 </div>
               </div>
 
-              {/* Default Rates Section */}
+              {/* Default Rates */}
               <CollapsibleSection
-                title="Default Rates & Prefix"
+                title="Default Rates"
                 icon={<PoundSterling size={16} className="md:w-5 md:h-5" />}
                 iconBg="bg-teal-100 text-teal-600"
-                isExpanded={expandedQuoteSections['rates'] || false}
-                onToggle={() => toggleQuoteSection('rates')}
+                isExpanded={expandedRatesSections['rates'] || false}
+                onToggle={() => toggleRatesSection('rates')}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-1 md:space-y-2">
@@ -1094,39 +1100,70 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       />
                     </div>
                   </div>
-                  <div className="space-y-1 md:space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Reference Prefix</label>
-                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-teal-400 focus-within:bg-white transition-all">
-                      <Hash size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
-                      <input
-                        type="text"
-                        className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
-                        value={settings.quotePrefix}
-                        onChange={e => setSettings({ ...settings, quotePrefix: e.target.value.toUpperCase() })}
-                        placeholder="EST-"
-                      />
+                </div>
+              </CollapsibleSection>
+
+              {/* VAT & CIS Toggles */}
+              <CollapsibleSection
+                title="VAT & CIS Settings"
+                icon={<Landmark size={16} className="md:w-5 md:h-5" />}
+                iconBg="bg-teal-100 text-teal-600"
+                isExpanded={expandedRatesSections['tax'] || false}
+                onToggle={() => toggleRatesSection('tax')}
+              >
+                <p className="text-[10px] text-slate-500 italic mb-3">Controls whether VAT and CIS are enabled by default on new quotes and invoices.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                  <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div className="flex gap-2 md:gap-3">
+                      <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><Landmark size={16} /></div>
+                      <div>
+                        <p className="text-xs font-black text-slate-900 uppercase tracking-tight">Show VAT</p>
+                        <p className="text-[9px] font-medium text-slate-500 italic hidden md:block">Include standard UK tax calculations.</p>
+                      </div>
                     </div>
+                    <button
+                      onClick={() => setSettings({ ...settings, enableVat: !settings.enableVat })}
+                      className={`w-12 h-7 rounded-full relative transition-all duration-300 ${settings.enableVat ? 'bg-teal-500 shadow-lg shadow-teal-200' : 'bg-slate-300'}`}
+                    >
+                      <div className={`pointer-events-none absolute top-1 left-1 bg-white w-5 h-5 rounded-full transition-transform duration-300 ${settings.enableVat ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div className="flex gap-2 md:gap-3">
+                      <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><ShieldCheck size={16} /></div>
+                      <div>
+                        <p className="text-xs font-black text-slate-900 uppercase tracking-tight">Show CIS</p>
+                        <p className="text-[9px] font-medium text-slate-500 italic hidden md:block">Subcontractor tax (Construction Industry Scheme).</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSettings({ ...settings, enableCis: !settings.enableCis })}
+                      className={`w-12 h-7 rounded-full relative transition-all duration-300 ${settings.enableCis ? 'bg-blue-500 shadow-lg shadow-blue-200' : 'bg-slate-300'}`}
+                    >
+                      <div className={`pointer-events-none absolute top-1 left-1 bg-white w-5 h-5 rounded-full transition-transform duration-300 ${settings.enableCis ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
                   </div>
                 </div>
               </CollapsibleSection>
 
-              {/* Labour Rate Presets Section */}
+              {/* Labour Rate Presets */}
               <CollapsibleSection
                 title="Labour Rate Presets"
                 icon={<HardHat size={16} className="md:w-5 md:h-5" />}
                 iconBg="bg-blue-100 text-blue-600"
-                isExpanded={expandedQuoteSections['presets'] || false}
-                onToggle={() => toggleQuoteSection('presets')}
+                isExpanded={expandedRatesSections['presets'] || false}
+                onToggle={() => toggleRatesSection('presets')}
               >
                 <p className="text-[10px] text-slate-500 italic mb-3">
-                  Define quick-select rates for different job types (e.g., Standard, Callout, Overtime).
+                  Quick-select rates for different job types. Used in both quotes and invoices.
                 </p>
                 <div className="space-y-2">
                   {(settings.labourRatePresets || []).map((preset, index) => (
                     <div key={index} className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl p-2 md:p-3">
                       <input
                         type="text"
-                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-blue-400 transition-colors"
+                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-teal-400 transition-colors"
                         value={preset.name}
                         onChange={e => {
                           const newPresets = [...(settings.labourRatePresets || [])];
@@ -1135,7 +1172,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                         }}
                         placeholder="Rate name"
                       />
-                      <div className="flex items-center bg-white border border-slate-200 rounded-lg px-2 py-2 focus-within:border-blue-400 transition-colors">
+                      <div className="flex items-center bg-white border border-slate-200 rounded-lg px-2 py-2 focus-within:border-teal-400 transition-colors">
                         <PoundSterling size={14} className="text-slate-400 mr-1" />
                         <input
                           type="number"
@@ -1163,13 +1200,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       </button>
                     </div>
                   ))}
-
                   <button
                     onClick={() => {
                       const newPresets = [...(settings.labourRatePresets || []), { name: '', rate: settings.defaultLabourRate || 65 }];
                       setSettings({ ...settings, labourRatePresets: newPresets });
                     }}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-50 border-2 border-dashed border-blue-200 rounded-xl text-blue-600 font-bold text-xs uppercase tracking-wider hover:bg-blue-100 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-teal-50 border-2 border-dashed border-teal-200 rounded-xl text-teal-600 font-bold text-xs uppercase tracking-wider hover:bg-teal-100 transition-colors"
                   >
                     <Plus size={16} />
                     Add Rate Preset
@@ -1177,23 +1213,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 </div>
               </CollapsibleSection>
 
-              {/* Labour Units Section */}
+              {/* Labour Units */}
               <CollapsibleSection
                 title="Labour Units"
                 icon={<Clock size={16} className="md:w-5 md:h-5" />}
                 iconBg="bg-blue-100 text-blue-600"
-                isExpanded={expandedQuoteSections['labourUnits'] || false}
-                onToggle={() => toggleQuoteSection('labourUnits')}
+                isExpanded={expandedRatesSections['labourUnits'] || false}
+                onToggle={() => toggleRatesSection('labourUnits')}
               >
                 <p className="text-[10px] text-slate-500 italic mb-3">
-                  Define the time units available when adding labour items (e.g., hrs, days, week).
+                  Time units available when adding labour items. Used in both quotes and invoices.
                 </p>
                 <div className="space-y-2">
                   {(settings.labourUnitPresets || ['hrs', 'days', 'week']).map((unit, index) => (
                     <div key={index} className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl p-2 md:p-3">
                       <input
                         type="text"
-                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-blue-400 transition-colors"
+                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-teal-400 transition-colors"
                         value={unit}
                         onChange={e => {
                           const newUnits = [...(settings.labourUnitPresets || ['hrs', 'days', 'week'])];
@@ -1208,13 +1244,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                           setSettings({ ...settings, labourUnitPresets: newUnits });
                         }}
                         className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Remove unit"
                       >
                         <Trash2 size={16} />
                       </button>
                     </div>
                   ))}
-
                   <button
                     onClick={() => {
                       const newUnits = [...(settings.labourUnitPresets || ['hrs', 'days', 'week']), ''];
@@ -1225,6 +1259,45 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     <Plus size={16} />
                     Add Unit
                   </button>
+                </div>
+              </CollapsibleSection>
+            </div>
+          )}
+
+          {/* ========== QUOTES TAB ========== */}
+          {activeCategory === 'quotes' && (
+            <div className="space-y-3 md:space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+              {/* Main Header */}
+              <div className="bg-white rounded-2xl md:rounded-[32px] border border-slate-200 shadow-sm p-4 md:p-6">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-2 md:p-3 bg-blue-100 text-blue-600 rounded-xl md:rounded-2xl"><FileText size={20} className="md:w-6 md:h-6" /></div>
+                  <div>
+                    <h3 className="text-base md:text-xl font-black text-slate-900 uppercase tracking-tight">Quotes</h3>
+                    <p className="text-slate-500 text-[10px] md:text-xs font-medium italic">How your quotes look and what appears on them.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quote Reference Prefix */}
+              <CollapsibleSection
+                title="Reference Prefix"
+                icon={<Hash size={16} className="md:w-5 md:h-5" />}
+                iconBg="bg-blue-100 text-blue-600"
+                isExpanded={expandedQuoteSections['prefix'] || false}
+                onToggle={() => toggleQuoteSection('prefix')}
+              >
+                <div className="space-y-1 md:space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Quote Reference Prefix</label>
+                  <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-blue-400 focus-within:bg-white transition-all">
+                    <Hash size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
+                    <input
+                      type="text"
+                      className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
+                      value={settings.quotePrefix}
+                      onChange={e => setSettings({ ...settings, quotePrefix: e.target.value.toUpperCase() })}
+                      placeholder="EST-"
+                    />
+                  </div>
                 </div>
               </CollapsibleSection>
 
@@ -1302,49 +1375,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       </div>
                       );
                     })}
-                  </div>
-                </div>
-              </CollapsibleSection>
-
-              {/* Tax Settings Section */}
-              <CollapsibleSection
-                title="VAT & CIS Settings"
-                icon={<Landmark size={16} className="md:w-5 md:h-5" />}
-                iconBg="bg-teal-100 text-teal-600"
-                isExpanded={expandedQuoteSections['tax'] || false}
-                onToggle={() => toggleQuoteSection('tax')}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <div className="flex gap-2 md:gap-3">
-                      <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><Landmark size={16} /></div>
-                      <div>
-                        <p className="text-xs font-black text-slate-900 uppercase tracking-tight">Show VAT</p>
-                        <p className="text-[9px] font-medium text-slate-500 italic hidden md:block">Include standard UK tax calculations.</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setSettings({ ...settings, enableVat: !settings.enableVat })}
-                      className={`w-12 h-7 rounded-full relative transition-all duration-300 ${settings.enableVat ? 'bg-teal-500 shadow-lg shadow-teal-200' : 'bg-slate-300'}`}
-                    >
-                      <div className={`absolute top-1 left-1 bg-white w-5 h-5 rounded-full transition-transform duration-300 ${settings.enableVat ? 'translate-x-5' : 'translate-x-0'}`} />
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <div className="flex gap-2 md:gap-3">
-                      <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-sm flex items-center justify-center text-slate-900"><ShieldCheck size={16} /></div>
-                      <div>
-                        <p className="text-xs font-black text-slate-900 uppercase tracking-tight">Show CIS</p>
-                        <p className="text-[9px] font-medium text-slate-500 italic hidden md:block">Subcontractor tax (Construction Industry Scheme).</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setSettings({ ...settings, enableCis: !settings.enableCis })}
-                      className={`w-12 h-7 rounded-full relative transition-all duration-300 ${settings.enableCis ? 'bg-blue-500 shadow-lg shadow-blue-200' : 'bg-slate-300'}`}
-                    >
-                      <div className={`absolute top-1 left-1 bg-white w-5 h-5 rounded-full transition-transform duration-300 ${settings.enableCis ? 'translate-x-5' : 'translate-x-0'}`} />
-                    </button>
                   </div>
                 </div>
               </CollapsibleSection>
@@ -1493,197 +1523,36 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                 <div className="flex items-center gap-2 md:gap-3">
                   <div className="p-2 md:p-3 bg-emerald-100 text-emerald-600 rounded-xl md:rounded-2xl"><ReceiptText size={20} className="md:w-6 md:h-6" /></div>
                   <div>
-                    <h3 className="text-base md:text-xl font-black text-slate-900 uppercase tracking-tight">Invoice Preferences</h3>
-                    <p className="text-slate-500 text-[10px] md:text-xs font-medium italic">Configure payment instructions and legal terms for final billing.</p>
+                    <h3 className="text-base md:text-xl font-black text-slate-900 uppercase tracking-tight">Invoices</h3>
+                    <p className="text-slate-500 text-[10px] md:text-xs font-medium italic">How your invoices look, payment details, and default terms.</p>
                   </div>
                 </div>
               </div>
 
-              {/* Default Rates Section */}
+              {/* Invoice Reference Prefix */}
               <CollapsibleSection
-                title="Default Rates & Prefix"
-                icon={<PoundSterling size={16} className="md:w-5 md:h-5" />}
+                title="Reference Prefix"
+                icon={<Hash size={16} className="md:w-5 md:h-5" />}
                 iconBg="bg-emerald-100 text-emerald-600"
-                isExpanded={expandedInvoiceSections['rates'] || false}
-                onToggle={() => toggleInvoiceSection('rates')}
+                isExpanded={expandedInvoiceSections['prefix'] || false}
+                onToggle={() => toggleInvoiceSection('prefix')}
               >
-                <div className="space-y-4 md:space-y-6">
-                  <div className="space-y-1 md:space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Invoice Reference Prefix</label>
-                    <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
-                      <Hash size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
-                      <input
-                        type="text"
-                        className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
-                        value={settings.invoicePrefix}
-                        onChange={e => setSettings({ ...settings, invoicePrefix: e.target.value.toUpperCase() })}
-                        placeholder="INV-"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                    <div className="space-y-1 md:space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Hourly Rate (£/hr)</label>
-                      <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
-                        <PoundSterling size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
-                        <input
-                          type="number"
-                          className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
-                          value={settings.defaultLabourRate || ''}
-                          onChange={e => handleNumericChange('defaultLabourRate', e.target.value)}
-                          placeholder="65.00"
-                        />
-                      </div>
-                      <p className="text-[9px] text-slate-400 italic px-1">Applied when creating new invoices</p>
-                    </div>
-                    <div className="space-y-1 md:space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Day Rate (£/day)</label>
-                      <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
-                        <PoundSterling size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
-                        <input
-                          type="number"
-                          className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
-                          value={settings.defaultDayRate || ''}
-                          onChange={e => handleNumericChange('defaultDayRate', e.target.value)}
-                          placeholder="450.00"
-                        />
-                      </div>
-                      <p className="text-[9px] text-slate-400 italic px-1">Auto-applied when switching labour to 'days'</p>
-                    </div>
-                    <div className="space-y-1 md:space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Default Markup (%)</label>
-                      <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
-                        <Calculator size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
-                        <input
-                          type="number"
-                          min="0"
-                          className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
-                          value={settings.defaultMarkupPercent ?? ''}
-                          onChange={e => handleNumericChange('defaultMarkupPercent', e.target.value)}
-                          placeholder="0"
-                        />
-                      </div>
-                      <p className="text-[9px] text-slate-400 italic px-1">Applied when creating new invoices</p>
-                    </div>
-                  </div>
-
-                  {/* Labour Rate Presets - Invoice Section */}
-                  <div className="space-y-2 md:space-y-4 pt-4 md:pt-6 border-t border-slate-100">
-                    <div className="flex items-center gap-2 px-1">
-                      <HardHat size={14} className="md:w-4 md:h-4 text-blue-500" />
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Labour Rate Presets</label>
-                    </div>
-                    <p className="text-[10px] text-slate-500 italic px-1">
-                      Quick-select rates for labour items (shared with Quote Preferences).
-                    </p>
-
-                    <div className="space-y-2">
-                      {(settings.labourRatePresets || []).map((preset, index) => (
-                        <div key={index} className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl p-2 md:p-3">
-                          <input
-                            type="text"
-                            className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-emerald-400 transition-colors"
-                            value={preset.name}
-                            onChange={e => {
-                              const newPresets = [...(settings.labourRatePresets || [])];
-                              newPresets[index] = { ...preset, name: e.target.value };
-                              setSettings({ ...settings, labourRatePresets: newPresets });
-                            }}
-                            placeholder="Rate name"
-                          />
-                          <div className="flex items-center bg-white border border-slate-200 rounded-lg px-2 py-2 focus-within:border-emerald-400 transition-colors">
-                            <PoundSterling size={14} className="text-slate-400 mr-1" />
-                            <input
-                              type="number"
-                              step="0.50"
-                              className="w-16 md:w-20 bg-transparent text-sm font-bold text-slate-900 outline-none"
-                              value={preset.rate}
-                              onChange={e => {
-                                const newPresets = [...(settings.labourRatePresets || [])];
-                                newPresets[index] = { ...preset, rate: parseFloat(e.target.value) || 0 };
-                                setSettings({ ...settings, labourRatePresets: newPresets });
-                              }}
-                              placeholder="0.00"
-                            />
-                            <span className="text-slate-400 text-xs">/hr</span>
-                          </div>
-                          <button
-                            onClick={() => {
-                              const newPresets = (settings.labourRatePresets || []).filter((_, i) => i !== index);
-                              setSettings({ ...settings, labourRatePresets: newPresets });
-                            }}
-                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Remove preset"
-                          >
-                            <Minus size={16} />
-                          </button>
-                        </div>
-                      ))}
-
-                      <button
-                        onClick={() => {
-                          const newPresets = [...(settings.labourRatePresets || []), { name: '', rate: settings.defaultLabourRate || 65 }];
-                          setSettings({ ...settings, labourRatePresets: newPresets });
-                        }}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-50 border-2 border-dashed border-emerald-200 rounded-xl text-emerald-600 font-bold text-xs uppercase tracking-wider hover:bg-emerald-100 transition-colors"
-                      >
-                        <Plus size={16} />
-                        Add Rate Preset
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Labour Units - Shared */}
-                  <div className="space-y-2 md:space-y-4 pt-4 md:pt-6 border-t border-slate-100">
-                    <div className="flex items-center gap-2 px-1">
-                      <Clock size={14} className="md:w-4 md:h-4 text-blue-500" />
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Labour Units</label>
-                    </div>
-                    <p className="text-[10px] text-slate-500 italic px-1">
-                      Time units for labour items (shared with Quote Preferences).
-                    </p>
-                    <div className="space-y-2">
-                      {(settings.labourUnitPresets || ['hrs', 'days', 'week']).map((unit, index) => (
-                        <div key={index} className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl p-2 md:p-3">
-                          <input
-                            type="text"
-                            className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-emerald-400 transition-colors"
-                            value={unit}
-                            onChange={e => {
-                              const newUnits = [...(settings.labourUnitPresets || ['hrs', 'days', 'week'])];
-                              newUnits[index] = e.target.value;
-                              setSettings({ ...settings, labourUnitPresets: newUnits });
-                            }}
-                            placeholder="Unit label"
-                          />
-                          <button
-                            onClick={() => {
-                              const newUnits = (settings.labourUnitPresets || ['hrs', 'days', 'week']).filter((_, i) => i !== index);
-                              setSettings({ ...settings, labourUnitPresets: newUnits });
-                            }}
-                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      ))}
-                      <button
-                        onClick={() => {
-                          const newUnits = [...(settings.labourUnitPresets || ['hrs', 'days', 'week']), ''];
-                          setSettings({ ...settings, labourUnitPresets: newUnits });
-                        }}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-blue-50 border-2 border-dashed border-blue-200 rounded-xl text-blue-600 font-bold text-xs uppercase tracking-wider hover:bg-blue-100 transition-colors"
-                      >
-                        <Plus size={16} />
-                        Add Unit
-                      </button>
-                    </div>
+                <div className="space-y-1 md:space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 italic">Invoice Reference Prefix</label>
+                  <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-[20px] px-3 md:px-5 focus-within:border-emerald-400 focus-within:bg-white transition-all">
+                    <Hash size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
+                    <input
+                      type="text"
+                      className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
+                      value={settings.invoicePrefix}
+                      onChange={e => setSettings({ ...settings, invoicePrefix: e.target.value.toUpperCase() })}
+                      placeholder="INV-"
+                    />
                   </div>
                 </div>
               </CollapsibleSection>
 
-              {/* Default Visibility - Shared */}
+              {/* Default Visibility */}
               <CollapsibleSection
                 title="Default Visibility"
                 icon={<Eye size={16} className="md:w-5 md:h-5" />}
