@@ -834,7 +834,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                     <button
                       onClick={() => setSettings({ ...settings, isVatRegistered: !settings.isVatRegistered })}
                       className={`relative w-14 h-8 rounded-full transition-colors ${settings.isVatRegistered ? "bg-teal-500" : "bg-slate-300"}`}>
-                      <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-all ${settings.isVatRegistered ? "left-7" : "left-1"}`} />
+                      <div className={`pointer-events-none absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-all ${settings.isVatRegistered ? "left-7" : "left-1"}`} />
                     </button>
                   </div>
 
@@ -2197,7 +2197,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                             onClick={() => setQuoteFollowUpEnabled(!quoteFollowUpEnabled)}
                             className={`relative w-11 h-6 rounded-full transition-colors ${quoteFollowUpEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
                           >
-                            <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${quoteFollowUpEnabled ? 'left-[22px]' : 'left-0.5'}`} />
+                            <div className={`pointer-events-none absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${quoteFollowUpEnabled ? 'left-[22px]' : 'left-0.5'}`} />
                           </button>
                         </div>
 

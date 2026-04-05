@@ -176,12 +176,22 @@ export interface ParsedPriceListItem {
   category?: string;
 }
 
+export interface ParsedPriceListResult {
+  supplierName?: string;
+  items: ParsedPriceListItem[];
+}
+
 export const parsePriceListPdf = async (
   pdfBase64: string,
   supplierHint?: string
-): Promise<ParsedPriceListItem[]> => {
-  return await callGemini<ParsedPriceListItem[]>('parsePriceListPdf', {
+): Promise<ParsedPriceListResult> => {
+  const result = await callGemini<ParsedPriceListResult | ParsedPriceListItem[]>('parsePriceListPdf', {
     pdfBase64,
     supplierHint
   });
+  // Handle both old (array) and new (object) response formats
+  if (Array.isArray(result)) {
+    return { items: result };
+  }
+  return result;
 };

@@ -6,8 +6,8 @@ import {
 } from 'lucide-react';
 import { useData } from '../src/contexts/DataContext';
 import type { WholesalerPreset } from '../types';
-// fileValidation removed - using inline validation to prevent silent failures
 import { parsePriceListPdf } from '../src/services/geminiService';
+import { useFileInput } from '../src/hooks/useFileInput';
 
 interface ParsedMaterial {
   productCode?: string;
@@ -263,19 +263,25 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
           setTimeout(() => reject(new Error('AI processing timed out. Try a smaller PDF or CSV export.')), 90000)
         );
 
-        const aiResults = await Promise.race([
+        const aiResult = await Promise.race([
           parsePriceListPdf(base64, customSupplierName || undefined),
           timeoutPromise,
         ]);
 
-        if (!Array.isArray(aiResults) || aiResults.length === 0) {
+        const aiItems = aiResult.items || [];
+        if (aiItems.length === 0) {
           setError('Could not extract any products from the PDF. Try a CSV export instead.');
           setStep('upload');
           setProcessingPdf(false);
           return;
         }
 
-        const materials: ParsedMaterial[] = aiResults.map(item => ({
+        // Auto-fill supplier name if AI extracted one and user hasn't entered one
+        if (aiResult.supplierName && !customSupplierName) {
+          setCustomSupplierName(aiResult.supplierName);
+        }
+
+        const materials: ParsedMaterial[] = aiItems.map(item => ({
           productCode: item.productCode,
           name: item.name,
           description: item.description,
@@ -317,8 +323,6 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
     }
   }, [customSupplierName, defaultMarkupPercent]);
 
-  // On mount: set up global file input handler + check for pending file from Android reload
-  // Set up global file input and check for pending files from Android page reload
   // On mount, check for pending file from Android page reload
   useEffect(() => {
     try {
@@ -332,29 +336,29 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
     } catch {}
   }, [processFile]);
 
-  // Handle file selection from the visible input
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Android-safe file picker: singleton input on document.body, listens to
+  // both 'change' and 'input' events, with visibility polling fallback
+  const openFilePicker = useFileInput(
+    (file: File) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        if (!dataUrl) return;
 
-    // Read file and store in localStorage (survives Android page reload)
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      if (!dataUrl) return;
+        const fileData = {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          dataUrl,
+        };
 
-      const fileData = {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        dataUrl,
+        try { localStorage.setItem('bq_pending_file', JSON.stringify(fileData)); } catch {}
+        processFile(fileData);
       };
-
-      try { localStorage.setItem('bq_pending_file', JSON.stringify(fileData)); } catch {}
-      processFile(fileData);
-    };
-    reader.readAsDataURL(file);
-  };
+      reader.readAsDataURL(file);
+    },
+    { accept: 'application/pdf,text/csv' }
+  );
 
   const handleWholesalerSelect = (wholesalerId: string) => {
     setSelectedWholesaler(wholesalerId);
@@ -575,17 +579,15 @@ export const WholesalerImportPage: React.FC<WholesalerImportPageProps> = ({ onBa
                 </div>
               )}
 
-              <div className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-teal-500 hover:bg-teal-50 transition-colors">
+              <button
+                type="button"
+                onClick={openFilePicker}
+                className="w-full p-4 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-teal-500 hover:bg-teal-50 transition-colors cursor-pointer active:scale-[0.98]"
+              >
                 <Upload className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-                <p className="font-bold text-slate-600 mb-3">Select your CSV or PDF file</p>
-                <input
-                  type="file"
-                  accept="application/pdf,text/csv"
-                  onChange={handleFileInput}
-                  className="w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-2xl file:border-0 file:text-sm file:font-bold file:bg-teal-500 file:text-white hover:file:bg-teal-600 file:cursor-pointer cursor-pointer"
-                />
-                <p className="text-xs text-slate-400 mt-3">PDF files are analyzed with AI to extract products</p>
-              </div>
+                <p className="font-bold text-slate-600 mb-2">Tap to select your CSV or PDF file</p>
+                <p className="text-xs text-slate-400">PDF files are analyzed with AI to extract products</p>
+              </button>
 
               <div className="mt-8 p-3 md:p-6 bg-slate-50 rounded-2xl">
                 <h3 className="font-black text-sm text-slate-700 mb-3 flex items-center gap-2">

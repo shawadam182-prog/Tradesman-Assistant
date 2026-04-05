@@ -510,42 +510,29 @@ ${priceListHint ? `Match prices from this list where items match:\n${priceListHi
 
   // Parse PDF price list for materials library import
   async parsePriceListPdf({ pdfBase64, supplierHint }: { pdfBase64: string; supplierHint?: string }) {
+    // Use gemini-2.5-flash for better structured extraction (2.0-flash has known
+    // controlled generation bugs that skip numeric fields like prices)
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      systemInstruction: `You are an expert at extracting product data from UK builders merchant and wholesaler documents.
+      model: 'gemini-2.5-flash',
+      systemInstruction: `You are an expert at extracting product data from UK builders merchant and wholesaler PDF documents.
 
-This document could be ANY of the following formats:
-- **Price list / catalogue** — product listings with prices
-- **Invoice** — a bill for goods purchased, with line items, quantities, and totals
-- **Statement** — a summary of invoices/transactions over a period
-- **Delivery note** — items delivered with quantities
-- **Credit note** — returned items with quantities and prices
+Your job: extract the supplier name and EVERY product line item with its price.
 
-Analyze the PDF document and extract ALL product/material entries into a structured list.
+## SUPPLIER NAME
+Extract the company name from the document header/letterhead/logo. This is the company that ISSUED the document (the merchant), NOT the customer/delivery address.
+${supplierHint ? `Hint: this may be from "${supplierHint}"` : 'Common UK suppliers: Edmundson Electrical, CEF, City Electrical Factors, Jewson, Travis Perkins, Selco, Screwfix, Toolstation, Howdens, Buildbase, Rexel, Wolseley, Plumbase, etc.'}
 
-## EXTRACTION RULES:
-- Extract every product/material line item you can identify
-- Product codes are typically alphanumeric codes (e.g. "SKU", "Item Code", "Product Ref")
-- Names should be the full product description
-- Prices are in GBP (£) - look for columns labeled "Price", "Cost", "Trade", "Net", "Unit Price", "Line Total", "Amount", "Ex VAT", etc.
-- For INVOICES: use the unit price (price per item) as costPrice, NOT the line total. If only a line total is shown, divide by quantity to get unit price.
-- For STATEMENTS: extract individual line items from each invoice listed. Look for invoice detail sections.
-- Units might be: each, m, m2, pack, bag, box, roll, sheet, length, pair, set, tin, tube, litre
-- If unit not specified, infer from product name or default to "each"
-- Categories: timber, plasterboard, plaster, fixings, insulation, electrical, plumbing, cement, aggregates, paint, adhesives, roofing, doors, windows, tools, or leave empty
-- IGNORE summary lines, totals, VAT lines, delivery charges, and account balance rows — only extract actual product/material items
+## PRICE EXTRACTION (CRITICAL)
+Every line item in the document has a price. You MUST extract it as costPrice.
+- Look for columns: Price, Unit Price, Net, Nett, Cost, Trade, Each, Rate, Ex VAT, Exc VAT, Amount, Value, Ext, Extension
+- For invoices with Qty and Line Total columns: costPrice = Line Total / Qty
+- If only one numeric column exists per row, that is the costPrice
+- Prices are in GBP (£). Convert to plain decimal numbers (e.g. £12.50 → 12.50)
+- costPrice must ALWAYS be a positive number — never return 0 or skip it
 
-## PRICE HANDLING:
-- costPrice = the unit price paid per item (NOT the line total for multiple quantities)
-- sellPrice = RRP/retail price if available, otherwise leave undefined
-- If only one price column exists, use it as costPrice
-- If only a line total is shown with a quantity, calculate: costPrice = lineTotal / quantity
-- Remove currency symbols, parse to numbers
-
-## SUPPLIER CONTEXT:
-${supplierHint ? `This appears to be from: ${supplierHint}` : 'Supplier not specified - infer from document header if visible'}
-
-Return an array of products. If no products can be extracted, return an empty array.`,
+## PRODUCT EXTRACTION
+- Extract EVERY product/material row — do not skip any items on any page
+- Skip only: subtotals, VAT lines, delivery charges, account balances, page headers/footers`,
     });
 
     const base64Data = pdfBase64.includes(',') ? pdfBase64.split(',')[1] : pdfBase64;
@@ -554,46 +541,95 @@ Return an array of products. If no products can be extracted, return an empty ar
       contents: [{
         role: 'user',
         parts: [
-          { text: 'Extract all product/material items from this document (could be a price list, invoice, statement, delivery note, or credit note):' },
+          {
+            text: `Extract EVERY product line item from this document with its price.
+IMPORTANT:
+- Every item MUST have a costPrice — find the actual price from the price/cost/net column
+- Do NOT return 0 for costPrice — find the real price in the document
+- If you see Qty and Line Total but no unit price, calculate: costPrice = Line Total / Qty
+- Extract items from ALL pages — do not stop early
+- Prices are in GBP (British Pounds)`
+          },
           { inlineData: { mimeType: 'application/pdf', data: base64Data } }
         ]
       }],
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: {
-          type: SchemaType.ARRAY,
-          items: {
-            type: SchemaType.OBJECT,
-            properties: {
-              productCode: { type: SchemaType.STRING },
-              name: { type: SchemaType.STRING },
-              description: { type: SchemaType.STRING },
-              unit: { type: SchemaType.STRING },
-              costPrice: { type: SchemaType.NUMBER },
-              sellPrice: { type: SchemaType.NUMBER },
-              category: { type: SchemaType.STRING },
+          type: SchemaType.OBJECT,
+          properties: {
+            supplierName: {
+              type: SchemaType.STRING,
+              description: 'The company name that issued this document, from the header/letterhead/logo',
             },
-            required: ['name'],
+            items: {
+              type: SchemaType.ARRAY,
+              items: {
+                type: SchemaType.OBJECT,
+                properties: {
+                  productCode: {
+                    type: SchemaType.STRING,
+                    description: 'Product SKU, item code, catalogue number, or order code',
+                    nullable: true,
+                  },
+                  name: {
+                    type: SchemaType.STRING,
+                    description: 'Full product description text exactly as shown in the document',
+                  },
+                  description: {
+                    type: SchemaType.STRING,
+                    description: 'Additional product specification or details if present',
+                    nullable: true,
+                  },
+                  unit: {
+                    type: SchemaType.STRING,
+                    description: 'Unit of measure: each, m, m2, pack, bag, box, roll, sheet, length, pair, set, tin, tube, or litre. Default to each.',
+                  },
+                  costPrice: {
+                    type: SchemaType.NUMBER,
+                    description: 'The unit price per item in GBP as a decimal number. MUST be extracted from the document price/cost/net column. If only Qty and Total are shown, calculate costPrice = Total / Qty. Must be a positive number.',
+                  },
+                  sellPrice: {
+                    type: SchemaType.NUMBER,
+                    description: 'RRP or list price if a second price column exists, otherwise omit',
+                    nullable: true,
+                  },
+                  category: {
+                    type: SchemaType.STRING,
+                    description: 'Product category: electrical, plumbing, timber, fixings, insulation, plasterboard, plaster, cement, aggregates, paint, adhesives, roofing, doors, windows, or tools',
+                    nullable: true,
+                  },
+                },
+                required: ['name', 'costPrice', 'unit'],
+              },
+            },
           },
+          required: ['supplierName', 'items'],
         },
       },
     });
 
     const parsed = JSON.parse(result.response.text());
+    const items = Array.isArray(parsed) ? parsed : (parsed?.items || []);
+
+    console.log('[parsePriceListPdf] AI response — supplierName:', JSON.stringify(parsed?.supplierName), 'items:', items.length, 'first item:', JSON.stringify(items[0]));
 
     // Clean and validate results
     const validUnits = ['each', 'm', 'm2', 'pack', 'bag', 'box', 'roll', 'sheet', 'length', 'pair', 'set', 'tin', 'tube', 'litre'];
-    return (parsed || [])
-      .filter((item: any) => item.name && item.name.trim().length > 0)
-      .map((item: any) => ({
-        productCode: item.productCode?.trim() || undefined,
-        name: item.name.trim(),
-        description: item.description?.trim() || undefined,
-        unit: validUnits.includes(item.unit?.toLowerCase()) ? item.unit.toLowerCase() : 'each',
-        costPrice: typeof item.costPrice === 'number' && item.costPrice > 0 ? Math.round(item.costPrice * 100) / 100 : undefined,
-        sellPrice: typeof item.sellPrice === 'number' && item.sellPrice > 0 ? Math.round(item.sellPrice * 100) / 100 : undefined,
-        category: item.category?.trim().toLowerCase() || undefined,
-      }));
+    return {
+      supplierName: parsed?.supplierName?.trim() || undefined,
+      items: items
+        .filter((item: any) => item.name && item.name.trim().length > 0)
+        .map((item: any) => ({
+          productCode: item.productCode?.trim() || undefined,
+          name: item.name.trim(),
+          description: item.description?.trim() || undefined,
+          unit: validUnits.includes(item.unit?.toLowerCase()) ? item.unit.toLowerCase() : 'each',
+          costPrice: typeof item.costPrice === 'number' && item.costPrice > 0 ? Math.round(item.costPrice * 100) / 100 : undefined,
+          sellPrice: typeof item.sellPrice === 'number' && item.sellPrice > 0 ? Math.round(item.sellPrice * 100) / 100 : undefined,
+          category: item.category?.trim().toLowerCase() || undefined,
+        })),
+    };
   },
 };
 

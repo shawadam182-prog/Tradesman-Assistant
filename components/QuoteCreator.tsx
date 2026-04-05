@@ -1230,9 +1230,9 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                     const newTaxPercent = (prev.taxPercent || 0) > 0 ? 0 : (settings.defaultTaxRate || 20);
                     return { ...prev, taxPercent: newTaxPercent, displayOptions: { ...(prev.displayOptions || {}), showVat: newTaxPercent > 0 } as QuoteDisplayOptions };
                   })}
-                  className={`relative w-10 h-5 rounded-full transition-colors ${(formData.taxPercent || 0) > 0 ? 'bg-amber-500' : 'bg-slate-300'}`}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${(formData.taxPercent || 0) > 0 ? 'bg-amber-500' : 'bg-slate-300'}`}
                 >
-                  <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${(formData.taxPercent || 0) > 0 ? 'translate-x-5' : ''}`} />
+                  <span className={`pointer-events-none absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${(formData.taxPercent || 0) > 0 ? 'translate-x-5' : ''}`} />
                 </button>
               </div>
               {(formData.taxPercent || 0) > 0 && (
@@ -1248,9 +1248,9 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                     const newCisPercent = (prev.cisPercent || 0) > 0 ? 0 : (settings.defaultCisRate || 20);
                     return { ...prev, cisPercent: newCisPercent, displayOptions: { ...(prev.displayOptions || {}), showCis: newCisPercent > 0 } as QuoteDisplayOptions };
                   })}
-                  className={`relative w-10 h-5 rounded-full transition-colors ${(formData.cisPercent || 0) > 0 ? 'bg-rose-500' : 'bg-slate-300'}`}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${(formData.cisPercent || 0) > 0 ? 'bg-rose-500' : 'bg-slate-300'}`}
                 >
-                  <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${(formData.cisPercent || 0) > 0 ? 'translate-x-5' : ''}`} />
+                  <span className={`pointer-events-none absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${(formData.cisPercent || 0) > 0 ? 'translate-x-5' : ''}`} />
                 </button>
               </div>
               {(formData.cisPercent || 0) > 0 && (

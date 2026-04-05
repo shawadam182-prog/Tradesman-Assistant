@@ -568,19 +568,36 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [fetchData]);
 
   // Cross-device sync: Refresh data when tab regains focus or window gets focus
-  // This ensures data stays in sync across desktop and mobile (PWA)
+  // Suppressed while a file picker is active (Android kills WebView when file picker
+  // Intent opens, and fetchData on visibility change remounts components, destroying
+  // the file input before onChange can fire).
   useEffect(() => {
+    let syncTimer: ReturnType<typeof setTimeout> | null = null;
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && !loading && user) {
-        fetchData();
+        // Check global suppression flag (set by file input components)
+        if ((window as any).__bqSuppressSync) return;
+        // Still debounce by 3s as a safety net
+        if (syncTimer) clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => {
+          if (!loading && user && !(window as any).__bqSuppressSync) fetchData();
+        }, 3000);
       }
     };
     const handleFocus = () => {
-      if (!loading && user) fetchData();
+      if (!loading && user) {
+        if ((window as any).__bqSuppressSync) return;
+        if (syncTimer) clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => {
+          if (!loading && user && !(window as any).__bqSuppressSync) fetchData();
+        }, 3000);
+      }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
     return () => {
+      if (syncTimer) clearTimeout(syncTimer);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
