@@ -1238,7 +1238,8 @@ export const QuoteCreator: React.FC<QuoteCreatorProps> = ({
                 <button
                   type="button"
                   onClick={() => setFormData(prev => {
-                    const newTaxPercent = (prev.taxPercent || 0) > 0 ? 0 : (settings.defaultTaxRate || 20);
+                    const rate = Math.max(settings.defaultTaxRate || 20, 1);
+                    const newTaxPercent = (prev.taxPercent || 0) > 0 ? 0 : rate;
                     return { ...prev, taxPercent: newTaxPercent, displayOptions: { ...(prev.displayOptions || {}), showVat: newTaxPercent > 0 } as QuoteDisplayOptions };
                   })}
                   className={`relative w-12 h-7 rounded-full transition-colors ${(formData.taxPercent || 0) > 0 ? 'bg-amber-500' : 'bg-slate-300'}`}

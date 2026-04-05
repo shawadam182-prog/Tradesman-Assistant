@@ -535,10 +535,10 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
       )}
 
       {/* NOTES */}
-      {displayOptions.showNotes && (quote.notes || settings.defaultInvoiceNotes) && (
+      {displayOptions.showNotes && (quote.notes || (quote.type === 'invoice' ? settings.defaultInvoiceNotes : settings.defaultQuoteNotes)) && (
         <div style={{ marginTop: '4mm', fontSize: '14px', color: '#64748b', lineHeight: 1.5 }}>
           <div style={{ fontWeight: 'bold', marginBottom: '2mm' }}>Notes</div>
-          <div style={{ whiteSpace: 'pre-line' }}>{quote.notes || settings.defaultInvoiceNotes}</div>
+          <div style={{ whiteSpace: 'pre-line' }}>{quote.notes || (quote.type === 'invoice' ? settings.defaultInvoiceNotes : settings.defaultQuoteNotes)}</div>
         </div>
       )}
     </div>

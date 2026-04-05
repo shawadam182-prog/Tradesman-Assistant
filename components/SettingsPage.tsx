@@ -1085,6 +1085,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ settings, setSetting
                       <Landmark size={16} className="md:w-[18px] md:h-[18px] text-slate-400 mr-2 md:mr-3 shrink-0" />
                       <input
                         type="number"
+                        min="0"
+                        max="100"
                         className="w-full bg-transparent border-none py-3 md:py-5 outline-none text-slate-900 font-bold text-sm"
                         value={settings.defaultTaxRate || ''}
                         onChange={e => handleNumericChange('defaultTaxRate', e.target.value)}
