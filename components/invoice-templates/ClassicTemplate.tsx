@@ -523,8 +523,8 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
         </div>
       </div>
 
-      {/* BANK DETAILS */}
-      {settings.bankAccountName && (
+      {/* BANK DETAILS - invoices only */}
+      {quote.type === 'invoice' && settings.bankAccountName && (
         <div style={{ marginTop: '6mm', paddingTop: '3mm', borderTop: '1px solid #e2e8f0', fontSize: '14px', color: '#64748b' }}>
           <div style={{ fontWeight: 'bold', marginBottom: '2mm' }}>Payment Details</div>
           <div>

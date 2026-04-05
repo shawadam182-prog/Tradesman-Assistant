@@ -340,8 +340,8 @@ const ClassicTemplate: React.FC<InvoicePDFDocumentProps> = ({
         </View>
       </View>
 
-      {/* Bank Details */}
-      {settings.bankAccountName && (
+      {/* Bank Details - invoices only */}
+      {quote.type === 'invoice' && settings.bankAccountName && (
         <View style={classicStyles.bankDetails}>
           <Text style={{ fontWeight: 'bold', marginBottom: 2 }}>Payment Details</Text>
           <Text>
